@@ -2,7 +2,7 @@
 
 - **Date:** 2026-08-10
 - **Phase:** Phase 0 — Foundation
-- **Commit(s):** pending
+- **Commit(s):** `64356ff`
 
 ## What changed
 
