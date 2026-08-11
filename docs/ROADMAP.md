@@ -233,9 +233,9 @@ rest are additive and must not be started before the graph is trusted.
 ### 1.4 Ingestion pipeline
 
 - [x] Ingestion orchestration — **both** paths: pull (poll) and push (receive), converging on one persist-then-reconcile routine
-- [~] Events written before the graph, so a mid-cycle crash leaves replayable telemetry; **remaining:** queue buffering under sustained load
+- [x] Events written before the graph, so a mid-cycle crash leaves replayable telemetry
 - [x] Failures counted and surfaced — one broken connector degrades perception without stopping the others, and never reads as an all-clear
-- [ ] Backpressure and drop policy under sustained load
+- [x] Queue-buffered ingestion — bounded FIFO that drops the **oldest**, because under sustained load the newest telemetry is the most diagnostically useful; every drop counted and surfaced
 - [ ] Retention split across Postgres, OpenSearch, and object storage
 
 ### 1.5 Console (UI/UX)
