@@ -5,6 +5,8 @@ description = "Pashupatastra API — incident, agent, reasoning, policy, action,
 requires-python = ">=3.11"
 dependencies = [
     "pashupatastra-core",
+    "pashupatastra-connectors",
+    "psycopg[binary]>=3.2",
     "fastapi>=0.111",
     "uvicorn[standard]>=0.30",
     "pydantic-settings>=2.3",
@@ -24,6 +26,7 @@ packages = ["app"]
 
 [tool.uv.sources]
 pashupatastra-core = { path = "../../packages/core", editable = true }
+pashupatastra-connectors = { path = "../../packages/connectors", editable = true }
 
 [tool.ruff]
 line-length = 100

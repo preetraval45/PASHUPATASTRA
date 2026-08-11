@@ -228,18 +228,20 @@ rest are additive and must not be started before the graph is trusted.
 - [x] p99 **18.3ms** on 4,009 nodes / 10,006 edges against a 200ms target — *evidence: `scripts/benchgraph.py`*
 - [x] Estimated-users attribution per node, protected against a connector that cannot see counts zeroing them
 - [~] Reconciliation — idempotent upserts done, stale nodes surfaced rather than auto-deleted; **remaining:** the policy for acting on staleness
-- [ ] Graph construction from connector output — services, dependencies, ownership
+- [x] Graph construction from connector output — nodes from any event; edges **only** from observed call paths, never from co-occurrence
 
 ### 1.4 Ingestion pipeline
 
-- [ ] Queue-buffered ingestion so a telemetry spike cannot stall reasoning
-- [ ] Backpressure and drop policy — with drops counted and surfaced, never silent
+- [~] Ingestion orchestration — poll → persist → reconcile, with events written before the graph so a mid-cycle crash leaves replayable telemetry; **remaining:** queue buffering
+- [x] Failures counted and surfaced — one broken connector degrades perception without stopping the others, and never reads as an all-clear
+- [ ] Backpressure and drop policy under sustained load
 - [ ] Retention split across Postgres, OpenSearch, and object storage
 
 ### 1.5 Dashboard
 
 - [ ] Infrastructure map
 - [ ] Service map with live dependency edges
+- [x] Blast-radius API — `/topology/blast-radius/{key}`, served from the graph so there is one answer, not two
 - [ ] Entity detail — metrics, logs, recent changes, blast radius
 
 **Exit criterion:** point Pashupatastra at a live 5-service reference stack; the

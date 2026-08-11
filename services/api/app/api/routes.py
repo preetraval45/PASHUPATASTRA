@@ -21,7 +21,10 @@ from pydantic import BaseModel
 from ..config import get_settings
 from ..engines import astra, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
+from ..graph import GraphStore
 from ..store import STORE
+
+GRAPH = GraphStore()
 
 router = APIRouter()
 
@@ -181,6 +184,31 @@ def observe(request: VerifyRequest) -> Verification:
         checks=verify_engine.build_checks(action.expected_post_state),
     )
     return verify_engine.observe(verification, request.observed, incident_ref=request.incident_ref)
+
+
+# --- topology ----------------------------------------------------------------
+
+
+@router.get("/topology/blast-radius/{entity_key:path}")
+def blast_radius(entity_key: str, max_depth: int = 10) -> dict[str, object]:
+    """What breaks when this breaks, and roughly how many users notice.
+
+    An input to risk scoring, so it is served from the graph rather than
+    recomputed here — a second implementation would be a second answer.
+    """
+    radius = GRAPH.blast_radius(entity_key, max_depth=max_depth)
+    return {
+        "origin": radius.origin,
+        "affected": radius.affected,
+        "entity_count": radius.entity_count,
+        "estimated_users": radius.estimated_users,
+    }
+
+
+@router.get("/topology")
+def topology() -> dict[str, int]:
+    nodes, edges = GRAPH.counts()
+    return {"nodes": nodes, "edges": edges}
 
 
 # --- audit -------------------------------------------------------------------

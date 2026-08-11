@@ -105,6 +105,68 @@ class PostgresStore:
             for row in rows
         ]
 
+    # --- events -------------------------------------------------------------
+
+    def save_events(self, events: list) -> int:
+        """Persist normalized events. Idempotent on the ULID, so a connector
+        re-polling an overlapping window cannot double-count a sample — which
+        would look like a spike that never happened."""
+        if not events:
+            return 0
+        rows = [
+            (
+                e.id,
+                e.schema_version,
+                e.event_class.value,
+                e.source,
+                e.source_version,
+                e.occurred_at,
+                e.observed_at,
+                e.entity_ref.key(),
+                e.severity.value if e.severity else None,
+                json.dumps(e.payload.model_dump(mode="json")),
+                json.dumps(e.provenance.model_dump(mode="json")),
+                json.dumps(e.labels),
+            )
+            for e in events
+        ]
+        with connect(self.database_url) as conn:
+            conn.cursor().executemany(
+                """
+                INSERT INTO event (
+                    id, schema_version, event_class, source, source_version,
+                    occurred_at, observed_at, entity_key, severity,
+                    payload, provenance, labels
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (id) DO NOTHING
+                """,
+                rows,
+            )
+            conn.commit()
+        return len(rows)
+
+    def quarantine(self, events: list) -> int:
+        """Events whose entity could not be resolved. Held and visible, because
+        they signal stale topology rather than nothing at all."""
+        if not events:
+            return 0
+        with connect(self.database_url) as conn:
+            conn.cursor().executemany(
+                "INSERT INTO quarantined_event (raw, source, reason, observed_at)"
+                " VALUES (%s, %s, %s, %s)",
+                [
+                    (json.dumps(q.raw, default=str), q.source, q.reason, q.observed_at)
+                    for q in events
+                ],
+            )
+            conn.commit()
+        return len(events)
+
+    def count_events(self) -> int:
+        with connect(self.database_url) as conn:
+            return int(conn.execute("SELECT count(*) AS n FROM event").fetchone()["n"])
+
     def count_audit(self) -> int:
         with connect(self.database_url) as conn:
             return int(conn.execute("SELECT count(*) AS n FROM audit_record").fetchone()["n"])
