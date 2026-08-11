@@ -2,7 +2,7 @@
 
 - **Date:** 2026-08-10
 - **Phase:** Phase 0 → early Phase 3 (the policy layer landed ahead of schedule)
-- **Commit(s):** pending
+- **Commit(s):** `496960f`
 
 ## What changed
 
