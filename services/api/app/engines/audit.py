@@ -35,24 +35,55 @@ class AuditRecord(BaseModel):
 
 
 class AuditLog:
-    """In-memory for now; Phase 0.5 moves this to Postgres with CloudTrail as an
-    independent mirror (docs/DEPLOYMENT.md). The append-only contract is the part
-    that must not change."""
+    """Writes to Postgres when it is reachable, otherwise to memory.
+
+    The fallback exists so local development and CI without a database still
+    work. It is *not* acceptable in production: an audit trail that disappears
+    on restart is not an audit trail, so `degraded` is surfaced on the health
+    endpoint rather than failing quietly.
+
+    On AWS, CloudTrail is the independent mirror of this record
+    (docs/DEPLOYMENT.md).
+    """
 
     def __init__(self) -> None:
         self._records: list[AuditRecord] = []
+        self._backend: object | None = None
+        self._resolved = False
+
+    def _store(self):
+        if not self._resolved:
+            from ..db import PostgresStore, is_available
+
+            self._backend = PostgresStore() if is_available() else None
+            self._resolved = True
+        return self._backend
+
+    @property
+    def durable(self) -> bool:
+        return self._store() is not None
 
     def append(self, record: AuditRecord) -> AuditRecord:
-        self._records.append(record)
+        store = self._store()
+        if store is not None:
+            store.append_audit(record)
+        else:
+            self._records.append(record)
         return record
 
     def records(self, incident_ref: str | None = None, limit: int = 100) -> list[AuditRecord]:
+        store = self._store()
+        if store is not None:
+            return store.audit_records(incident_ref=incident_ref, limit=limit)
         rows = self._records
         if incident_ref is not None:
             rows = [r for r in rows if r.incident_ref == incident_ref]
         return list(reversed(rows[-limit:]))
 
     def __len__(self) -> int:
+        store = self._store()
+        if store is not None:
+            return store.count_audit()
         return len(self._records)
 
 

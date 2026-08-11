@@ -1,0 +1,7 @@
+# Migration order. One filename per line, applied top to bottom.
+#
+# Order lives here rather than in numbered filenames, matching the repository
+# naming convention. Append new migrations at the bottom; never reorder or edit
+# a line that has been applied anywhere — write a new migration instead.
+
+initial.sql

@@ -34,13 +34,36 @@ jobs:
   api:
     name: api
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pashupatastra
+          POSTGRES_PASSWORD: pashupatastra
+          POSTGRES_DB: pashupatastra
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pashupatastra"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e "services/api[dev]"
-      - run: pytest services/api -q
+      - name: apply migrations
+        working-directory: services/api
+        run: python -m app.migrate
+      - name: tests
+        # Postgres is a service here, so the persistence tests run rather than
+        # skip. A green api job means the schema invariants were exercised.
+        working-directory: services/api
+        run: pytest -q
+      - name: OpenAPI contract is current
+        working-directory: services/api
+        run: python -m app.exportopenapi --check
       - run: ruff check services/api
 
   web:

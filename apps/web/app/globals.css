@@ -10,7 +10,8 @@
   --edge: 32 37 46;
   --ink: 232 236 241;
   --muted: 138 148 163;
-  --astra: 96 165 250;
+  --astra: 47 163 160;   /* teal, carried from the reference artwork */
+  --gold: 201 162 39;    /* the astra itself — the trident head */
 }
 
 body {

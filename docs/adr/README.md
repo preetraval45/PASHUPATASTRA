@@ -10,13 +10,13 @@ in the filename.
 | [Grounding](Grounding.md) — the LLM is not the source of truth | 2026-08-10 | Accepted |
 | [Observability](Observability.md) — sit above existing tooling, never replace it | 2026-08-10 | Accepted |
 | [Platform](Platform.md) — AWS as the target, `packages/core` cloud-free | 2026-08-10 | Accepted |
+| [Schema](Schema.md) — event schema versioning, additive vs. breaking | 2026-08-11 | Accepted |
+| [Graph](Graph.md) — topology store: criteria recorded, decision due Phase 1 | 2026-08-11 | Deferred |
 
 ## Planned
 
 | Topic | Phase |
 |-------|-------|
-| Event schema v0 boundaries and versioning | 0 |
-| Knowledge graph store — Postgres CTEs vs. graph DB | 1 |
 | Smriti retrieval — embeddings vs. hybrid | 2 |
 | Structural enforcement of the Dharma verdict requirement | 3 |
 | PIB harness — fault injection vs. telemetry replay | 5 |

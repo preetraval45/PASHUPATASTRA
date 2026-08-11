@@ -11,6 +11,7 @@ Start here.
 | [ROADMAP.md](ROADMAP.md) | The 24-week plan of action, phase by phase, with exit criteria |
 | [REPOSITORY.md](REPOSITORY.md) | What every directory is for and where new code goes |
 | [GLOSSARY.md](GLOSSARY.md) | Every term and subsystem name, defined once |
+| [BRAND.md](BRAND.md) | The mark, tagline, palette, and what not to do with them |
 
 ## Specifications
 

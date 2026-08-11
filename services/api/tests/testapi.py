@@ -21,8 +21,14 @@ def evaluate(action_id: str, **kwargs: object) -> dict:
 
 def test_health_reports_dry_run_default() -> None:
     body = client.get("/api/v1/health").json()
-    assert body["status"] == "ok"
+    assert body["status"] in {"ok", "degraded"}
     assert body["dry_run"] is True, "dry-run must be the default (SECURITY.md control 1)"
+
+
+def test_health_flags_a_non_durable_audit_trail() -> None:
+    """An in-memory audit trail must never report itself as healthy."""
+    body = client.get("/api/v1/health").json()
+    assert (body["audit_storage"] == "postgres") == (body["status"] == "ok")
 
 
 def test_action_registry_is_exposed() -> None:

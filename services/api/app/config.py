@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     """Dry-run is the default. Live execution is opt-in per environment
     (docs/SECURITY.md, non-negotiable control 1)."""
 
-    database_url: str = "postgresql://pashupatastra:pashupatastra@localhost:5432/pashupatastra"
+    database_url: str = "postgresql://pashupatastra:pashupatastra@localhost:5433/pashupatastra"
     redis_url: str = "redis://localhost:6379/0"
     opensearch_url: str = "http://localhost:9200"
     prometheus_url: str = "http://localhost:9090"

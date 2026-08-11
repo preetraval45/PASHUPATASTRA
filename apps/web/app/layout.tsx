@@ -41,14 +41,42 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
-/** Arrow + trident geometry + closed loop. Geometric, not illustrative. */
+/**
+ * The mark: closed loop, arrow in flight, decision node, trident head.
+ * Inlined rather than an <img> so it inherits colour and stays crisp at 26px.
+ * Canonical source of the same geometry: public/mark.svg
+ */
 function Sigil() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9.5" stroke="rgb(var(--astra))" strokeOpacity="0.45" />
-      <path d="M12 3.5v17" stroke="rgb(var(--astra))" strokeWidth="1.4" />
-      <path d="M7.5 8.5v4M16.5 8.5v4" stroke="rgb(var(--astra))" strokeWidth="1.4" />
-      <path d="M8.6 6.2 12 2.8l3.4 3.4" stroke="rgb(var(--astra))" strokeWidth="1.4" />
+    <svg
+      width="26"
+      height="26"
+      viewBox="0 0 64 64"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="32" cy="32" r="27" stroke="rgb(var(--astra))" strokeOpacity="0.38" strokeWidth="1.5" />
+      <g stroke="rgb(var(--astra))" strokeOpacity="0.55" strokeWidth="1.5">
+        <path d="M6 24 L14 30" />
+        <path d="M6 40 L14 34" />
+        <path d="M13 22 L19 29" />
+        <path d="M13 42 L19 35" />
+      </g>
+      <path d="M12 32 H44" stroke="rgb(var(--astra))" strokeWidth="2.25" />
+      <g stroke="rgb(var(--gold))" strokeWidth="1.6">
+        <path d="M28 32 H36" />
+        <path d="M32 28 V36" />
+        <path d="M29.2 29.2 L34.8 34.8" />
+        <path d="M34.8 29.2 L29.2 34.8" />
+      </g>
+      <g stroke="rgb(var(--gold))" strokeWidth="2.25">
+        <path d="M44 23 V41" />
+        <path d="M44 23 L53.5 29.5" />
+        <path d="M44 32 H58" />
+        <path d="M44 41 L53.5 34.5" />
+      </g>
     </svg>
   );
 }

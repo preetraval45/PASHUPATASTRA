@@ -29,10 +29,14 @@ router = APIRouter()
 @router.get("/health")
 def health() -> dict[str, object]:
     settings = get_settings()
+    durable = AUDIT.durable
     return {
-        "status": "ok",
+        # "degraded" when the audit trail is in memory: it survives no restart,
+        # which is a correctness problem in production, not a convenience one.
+        "status": "ok" if durable else "degraded",
         "environment": settings.environment,
         "dry_run": settings.dry_run,
+        "audit_storage": "postgres" if durable else "memory",
         "incidents": len(STORE.incidents),
         "audit_records": len(AUDIT),
     }

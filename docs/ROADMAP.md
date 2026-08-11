@@ -30,7 +30,7 @@ Week 1 begins **Monday 10 August 2026**.
 
 | Phase | Weeks | Dates | Status |
 |-------|-------|-------|--------|
-| 0 — Foundation | 1–2 | Aug 10 – Aug 23 | **In progress** — 8 of 11 done |
+| 0 — Foundation | 1–2 | Aug 10 – Aug 23 | **In progress** — everything not needing AWS access or a legal decision is done |
 | 1 — Drishti · Perception | 3–6 | Aug 24 – Sep 20 | Not started |
 | 2 — Buddhi + Smriti · Intelligence | 7–10 | Sep 21 – Oct 18 | Not started |
 | 3 — Astra + Dharma · Action | 11–14 | Oct 19 – Nov 15 | Partly built early |
@@ -73,8 +73,8 @@ can violate it.
 - [x] ADR **Grounding** — the LLM is not the source of truth
 - [x] ADR **Observability** — sit above existing tooling, never replace it
 - [x] ADR **Platform** — AWS target, `packages/core` cloud-free
-- [ ] ADR **Event schema** — versioning policy and what constitutes a breaking change
-- [ ] ADR **Graph store** — Postgres recursive CTEs vs. a dedicated store *(deferred to Phase 1 pending real query shapes)*
+- [x] ADR **Schema** — versioning policy, additive vs. breaking, `v0` grace period
+- [x] ADR **Graph** — decision criteria recorded; the decision itself is due in Phase 1, on measurements rather than instinct
 
 ### 0.3 Core domain model
 
@@ -109,8 +109,12 @@ can violate it.
 - [x] Append-only audit log, written **before** execution
 - [x] Engine-level bypass proven impossible — *evidence: test, not just HTTP-level*
 - [x] 14 tests passing
-- [~] OpenAPI specification — FastAPI serves `/openapi.json`; **remaining:** lint it in CI and pin it as a contract
-- [ ] Postgres schema and migrations — incidents, verdicts, actions, audit, topology *(store is in-memory behind one seam)*
+- [x] OpenAPI specification exported to `openapi.json` and pinned — *evidence: CI fails when the surface drifts*
+- [x] Postgres schema and migrations — *evidence: migrations apply clean, 11 persistence tests pass*
+- [x] Append-only enforced by triggers, not convention — *evidence: UPDATE/DELETE on audit raises*
+- [x] `execution.verdict_id` NOT NULL — an unauthorized execution is unwritable at the SQL layer
+- [x] Immutable migrations — an applied file that later changes is an error
+- [ ] API reads and writes Postgres instead of the in-memory store
 
 ### 0.6 Agent specification
 
@@ -119,7 +123,7 @@ can violate it.
 - [x] Example declaration — `services/api/app/policies/databaseresponder.yaml`
 - [x] Least-privilege proven — undeclared tools unreachable, environment promotion explicit — *evidence: tests*
 - [x] Budget ledger with enforced exhaustion
-- [ ] Agent runtime that consumes the declaration *(Phase 3)*
+- [ ] Agent runtime that consumes the declaration *(Phase 3 — needs connectors first)*
 
 ### 0.7 Security
 
@@ -128,18 +132,19 @@ can violate it.
 - [x] AWS credential handling — no long-lived keys, SSO/IRSA/OIDC
 - [x] `.gitignore` covers `.env`, keys, `*.tfstate`
 - [x] Secret scanning in CI — gitleaks
-- [ ] Threat model reviewed by a second person
+- [ ] Threat model reviewed by a second person — **blocked: needs a human reviewer**
 
 ### 0.8 Frontend foundation
 
 - [x] Next.js app, TypeScript strict, Tailwind
 - [x] Design tokens — restrained palette, no mythological ornament
-- [x] Geometric sigil — arrow + trident + closed loop, not an illustration
+- [x] Logo — mark, horizontal lockup with tagline, and `docs/BRAND.md`
+- [x] Geometric mark — loop, shaft, decision node, trident head; teal is perception, gold is action
 - [x] Overview, incident detail, action registry pages
 - [x] Causal chain renders evidence citations per link
 - [x] Dashboard computes no risk itself — renders API answers only
 - [x] Typecheck and production build pass
-- [ ] Deployed to Vercel with the API reachable
+- [ ] Deployed to Vercel with the API reachable — **blocked: needs a Vercel account connected**
 
 ### 0.9 Infrastructure
 
@@ -147,9 +152,9 @@ can violate it.
 - [x] Every managed service has a self-hosted counterpart — *evidence: mapping table in DEPLOYMENT.md*
 - [x] Terraform skeleton — providers, variables, backend, tagging
 - [x] CI — core, api, web, secret scan, cloud-free gate
-- [ ] AWS account structure — dev/staging/prod separation, Identity Center, MFA enforced, root locked down
-- [ ] CloudTrail enabled in all accounts, budget alarms set
-- [ ] Terraform state backend provisioned (S3 + lock table)
+- [ ] AWS account structure — dev/staging/prod separation, Identity Center, MFA enforced, root locked down — **blocked: needs an authenticated AWS CLI profile**
+- [ ] CloudTrail enabled in all accounts, budget alarms set — **blocked: same**
+- [ ] Terraform state backend provisioned (S3 + lock table) — **blocked: same, and `terraform` is not installed locally**
 
 ### 0.10 Name clearance — **blocker**
 
@@ -165,6 +170,22 @@ is not evidence the trademark is.
 
 **Phase 0 exit criterion:** every constraint documented, core and policy tested,
 name decision recorded.
+
+### What is left, and why
+
+Everything buildable from this machine is done. The remainder needs something
+only you can supply:
+
+| Remaining | Needs |
+|-----------|-------|
+| AWS accounts, CloudTrail, budget alarms, state backend | An authenticated AWS CLI profile (`aws configure sso`); `terraform` also not installed locally |
+| Vercel deployment | A connected Vercel account, plus the API reachable at a public URL |
+| Threat model review | A second human reader |
+| Name clearance | A legal/commercial decision, not an engineering one |
+
+The one open engineering task — wiring the API to Postgres instead of the
+in-memory store — is deliberately separate: the schema and its invariants are
+proven, and the swap touches a single seam.
 
 **Risk:** over-specifying schemas before real telemetry exists. Mitigation —
 version the event schema from v0 and treat Phase 1 as the first migration test.
