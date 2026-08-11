@@ -18,6 +18,7 @@ from drishti.topology import TopologyBuilder
 from ..db import PostgresStore
 from ..graph import GraphStore
 from .audit import AUDIT, AuditKind, AuditRecord
+from .buffer import BufferedIngestion
 
 
 @dataclass
@@ -27,6 +28,7 @@ class PollResult:
     quarantined: int = 0
     nodes_upserted: int = 0
     edges_upserted: int = 0
+    dropped: int = 0
     errors: list[str] = field(default_factory=list)
 
     @property
@@ -41,11 +43,16 @@ class Drishti:
         store: PostgresStore | None = None,
         graph: GraphStore | None = None,
         builder: TopologyBuilder | None = None,
+        ingestion: BufferedIngestion | None = None,
     ) -> None:
         self.connectors = connectors
         self.store = store or PostgresStore()
         self.graph = graph or GraphStore()
         self.builder = builder or TopologyBuilder()
+        # Events go through a bounded buffer so a telemetry spike cannot block
+        # the poll loop on database writes — the failure mode where the system
+        # stalls exactly when it is busiest.
+        self.ingestion = ingestion or BufferedIngestion()
 
     def receive_otlp(self, payload: dict) -> PollResult:
         """Ingest a pushed OTLP trace export.
@@ -93,7 +100,18 @@ class Drishti:
         leaves telemetry that can be replayed, rather than a graph that has moved
         ahead of the evidence supporting it."""
         result.errors = list(harvest.errors)
-        result.events_stored = self.store.save_events(harvest.events)
+
+        result.dropped = self.ingestion.submit(harvest.events)
+        written, write_errors = self.ingestion.flush(self.store.save_events)
+        result.events_stored = written
+        result.errors.extend(write_errors)
+        if result.dropped:
+            # Never silent: "we saw nothing" and "we could not keep up" demand
+            # opposite responses.
+            result.errors.append(
+                f"ingestion buffer dropped {result.dropped} events under load"
+            )
+
         result.quarantined = self.store.quarantine(harvest.quarantined)
 
         delta = self.builder.build(harvest.events, observed_edges=harvest.edges)
@@ -111,6 +129,8 @@ class Drishti:
                 detail={
                     **(detail or {}),
                     "quarantined": result.quarantined,
+                    "dropped": result.dropped,
+                    "buffer": self.ingestion.buffer.stats.snapshot(),
                     "errors": result.errors,
                 },
             )
