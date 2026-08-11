@@ -14,7 +14,7 @@ from datetime import datetime
 
 from drishti import Connector, Harvest, OtlpReceiver, Window
 from drishti.topology import TopologyBuilder
-from pashupatastra import Detector, Finding
+from pashupatastra import Correlator, Detector, Finding
 
 from ..db import PostgresStore
 from ..graph import GraphStore
@@ -31,6 +31,8 @@ class PollResult:
     edges_upserted: int = 0
     dropped: int = 0
     findings: list[Finding] = field(default_factory=list)
+    incidents: int = 0
+    compression_ratio: float = 0.0
     errors: list[str] = field(default_factory=list)
 
     @property
@@ -47,6 +49,7 @@ class Drishti:
         builder: TopologyBuilder | None = None,
         ingestion: BufferedIngestion | None = None,
         detector: Detector | None = None,
+        correlator: Correlator | None = None,
     ) -> None:
         self.connectors = connectors
         self.store = store or PostgresStore()
@@ -61,6 +64,10 @@ class Drishti:
         # a detector recreated each poll would never warm up and would report
         # silence forever, which reads as an all-clear.
         self.detector = detector or Detector()
+        # Correlation reads the graph the same poll just reconciled, so
+        # adjacency reflects the topology as it is now rather than as it was
+        # when the process started.
+        self.correlator = correlator or Correlator(adjacency=self.graph)
 
     def receive_otlp(self, payload: dict) -> PollResult:
         """Ingest a pushed OTLP trace export.
@@ -130,6 +137,15 @@ class Drishti:
         result.nodes_upserted = self.graph.upsert_nodes(delta.node_list)
         result.edges_upserted = self.graph.upsert_edges(delta.edge_list)
 
+        # Correlate after reconciliation: a finding on an entity the graph does
+        # not know about yet would be judged unrelated to everything, which is
+        # the conservative answer but the wrong one when the edge exists and was
+        # simply learned in this same poll.
+        if result.findings:
+            correlated = self.correlator.correlate(result.findings)
+            result.incidents = len(correlated.clusters)
+            result.compression_ratio = correlated.compression_ratio
+
         AUDIT.append(
             AuditRecord(
                 kind=AuditKind.OBSERVATION,
@@ -137,7 +153,7 @@ class Drishti:
                 summary=(
                     f"ingested from {source}: {result.events_stored} events, "
                     f"{result.nodes_upserted} nodes, {result.edges_upserted} edges, "
-                    f"{len(result.findings)} findings"
+                    f"{len(result.findings)} findings, {result.incidents} incidents"
                 ),
                 detail={
                     **(detail or {}),
@@ -146,6 +162,7 @@ class Drishti:
                     "buffer": self.ingestion.buffer.stats.snapshot(),
                     "detector": self.detector.warmup(),
                     "findings": [f.describe() for f in result.findings],
+                    "compression_ratio": result.compression_ratio,
                     "errors": result.errors,
                 },
             )

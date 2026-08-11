@@ -5,6 +5,7 @@ a laptop, and it is the future open-source `pashupatastra-core`.
 """
 
 from .baselines import Band, Baseline, BaselineStore, Reading
+from .correlation import Cluster, CorrelationResult, Correlator, MergeQuality, measure_merges
 from .detection import Detector, Finding, UpstreamRules
 from .evaluation import Score, Series, compare, evaluate as evaluate_detector, winner
 from .strategies import STRATEGIES, DetectionStrategy, Ewma, RobustZScore, SeasonalNaive
@@ -58,6 +59,9 @@ __all__ = [
     "Budget",
     "BudgetLedger",
     "CausalLink",
+    "Cluster",
+    "CorrelationResult",
+    "Correlator",
     "STRATEGIES",
     "DetectionStrategy",
     "Detector",
@@ -72,6 +76,7 @@ __all__ = [
     "EventClass",
     "Hypothesis",
     "Impact",
+    "MergeQuality",
     "Incident",
     "IncidentSeverity",
     "IncidentState",
@@ -98,6 +103,7 @@ __all__ = [
     "evaluate_detector",
     "winner",
     "incident_id",
+    "measure_merges",
     "load_agent_spec",
     "require_verdict",
     "score",

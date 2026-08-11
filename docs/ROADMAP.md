@@ -308,9 +308,15 @@ graph auto-builds within 60s and blast radius for any node is queryable in under
 
 ### 2.2 Correlation
 
-- [ ] N alerts → 1 incident, gated by topology adjacency **and** time proximity
-- [ ] Incorrect-merge measurement — two unrelated failures must stay two incidents
-- [ ] Alert-to-incident compression ratio reported as a metric
+- [x] N findings → 1 incident, gated by topology adjacency **and** time proximity — neither alone is sufficient
+- [x] Unknown relationships default to **separate** incidents: splitting costs an operator a little confusion, merging gives them a fabricated causal chain and an inflated blast radius
+- [x] Transitive grouping along a propagation chain, so a failure travelling three hops is one incident
+- [x] Bounded adjacency depth — at enough hops everything reaches everything, and a test that always says yes is not a test
+- [x] Incident inherits the full evidence trail, and takes its **strongest** finding's confidence rather than the average
+- [x] Incorrect-merge measurement, reported **separately** from incorrect splits because they are not equally bad
+- [x] Alert-to-incident compression ratio — read next to the merge rate, since compression is trivially maximized by merging everything
+- [x] Verified on the demo scenario against the live graph: 5 findings → 2 incidents, zero incorrect merges
+- [ ] Correlation window tuned by the benchmark rather than by judgement *(Phase 5)*
 
 ### 2.3 AI Gateway
 
