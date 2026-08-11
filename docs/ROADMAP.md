@@ -222,11 +222,13 @@ rest are additive and must not be started before the graph is trusted.
 
 ### 1.3 Topology graph
 
+- [x] Persistence — **Postgres**, decided by measurement rather than instinct (ADR Graph)
+- [x] Graph store with upsert reconciliation — a failed poll cannot empty the graph, because an empty graph reports zero blast radius and silently lowers risk
+- [x] Blast-radius traversal in Postgres, **parity-tested** against the core reference on transitivity, direction, depth, cycles, and unknown origins — *evidence: 16 tests*
+- [x] p99 **18.3ms** on 4,009 nodes / 10,006 edges against a 200ms target — *evidence: `scripts/benchgraph.py`*
+- [x] Estimated-users attribution per node, protected against a connector that cannot see counts zeroing them
+- [~] Reconciliation — idempotent upserts done, stale nodes surfaced rather than auto-deleted; **remaining:** the policy for acting on staleness
 - [ ] Graph construction from connector output — services, dependencies, ownership
-- [ ] Persistence — decided by ADR **Graph store**, written this phase
-- [ ] Continuous reconciliation — stale nodes decay, new nodes appear
-- [ ] Blast-radius traversal against the persisted store, matching the in-memory semantics
-- [ ] Estimated-users attribution per node
 
 ### 1.4 Ingestion pipeline
 
