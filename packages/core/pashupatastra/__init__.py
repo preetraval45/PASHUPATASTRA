@@ -4,6 +4,8 @@ Contains no cloud-specific types by design (the Platform ADR) — this package m
 a laptop, and it is the future open-source `pashupatastra-core`.
 """
 
+from .baselines import Band, Baseline, BaselineStore, Reading
+from .detection import Detector, Finding, UpstreamRules
 from .agents import AgentSpec, Budget, BudgetLedger, EscalationReason, load_agent_spec
 from .dharma import (
     ActionSpec,
@@ -46,17 +48,22 @@ __all__ = [
     "SCHEMA_VERSION",
     "__version__",
     "ActionSpec",
+    "Band",
+    "Baseline",
+    "BaselineStore",
     "AgentSpec",
     "BlastRadius",
     "Budget",
     "BudgetLedger",
     "CausalLink",
+    "Detector",
     "Edge",
     "EntityKind",
     "EntityRef",
     "Environment",
     "EscalationReason",
     "Event",
+    "Finding",
     "EventClass",
     "Hypothesis",
     "Impact",
@@ -67,11 +74,13 @@ __all__ = [
     "PlanStep",
     "PolicyViolation",
     "Provenance",
+    "Reading",
     "QuarantinedEvent",
     "RiskContext",
     "Severity",
     "Tier",
     "TopologyGraph",
+    "UpstreamRules",
     "Verdict",
     "Verification",
     "VerificationCheck",

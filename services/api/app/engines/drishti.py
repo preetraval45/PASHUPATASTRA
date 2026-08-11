@@ -14,6 +14,7 @@ from datetime import datetime
 
 from drishti import Connector, Harvest, OtlpReceiver, Window
 from drishti.topology import TopologyBuilder
+from pashupatastra import Detector, Finding
 
 from ..db import PostgresStore
 from ..graph import GraphStore
@@ -29,6 +30,7 @@ class PollResult:
     nodes_upserted: int = 0
     edges_upserted: int = 0
     dropped: int = 0
+    findings: list[Finding] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
     @property
@@ -44,6 +46,7 @@ class Drishti:
         graph: GraphStore | None = None,
         builder: TopologyBuilder | None = None,
         ingestion: BufferedIngestion | None = None,
+        detector: Detector | None = None,
     ) -> None:
         self.connectors = connectors
         self.store = store or PostgresStore()
@@ -53,6 +56,11 @@ class Drishti:
         # the poll loop on database writes — the failure mode where the system
         # stalls exactly when it is busiest.
         self.ingestion = ingestion or BufferedIngestion()
+        # Baselines live in the detector and are learned across polls, so it is
+        # held for the lifetime of the engine rather than rebuilt per cycle —
+        # a detector recreated each poll would never warm up and would report
+        # silence forever, which reads as an all-clear.
+        self.detector = detector or Detector()
 
     def receive_otlp(self, payload: dict) -> PollResult:
         """Ingest a pushed OTLP trace export.
@@ -114,6 +122,10 @@ class Drishti:
 
         result.quarantined = self.store.quarantine(harvest.quarantined)
 
+        # Detection runs on what was observed, after persistence: a finding
+        # that cannot cite a stored event is not usable downstream.
+        result.findings = self.detector.process(harvest.events)
+
         delta = self.builder.build(harvest.events, observed_edges=harvest.edges)
         result.nodes_upserted = self.graph.upsert_nodes(delta.node_list)
         result.edges_upserted = self.graph.upsert_edges(delta.edge_list)
@@ -124,13 +136,16 @@ class Drishti:
                 actor="drishti",
                 summary=(
                     f"ingested from {source}: {result.events_stored} events, "
-                    f"{result.nodes_upserted} nodes, {result.edges_upserted} edges"
+                    f"{result.nodes_upserted} nodes, {result.edges_upserted} edges, "
+                    f"{len(result.findings)} findings"
                 ),
                 detail={
                     **(detail or {}),
                     "quarantined": result.quarantined,
                     "dropped": result.dropped,
                     "buffer": self.ingestion.buffer.stats.snapshot(),
+                    "detector": self.detector.warmup(),
+                    "findings": [f.describe() for f in result.findings],
                     "errors": result.errors,
                 },
             )

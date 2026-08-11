@@ -294,9 +294,14 @@ graph auto-builds within 60s and blast radius for any node is queryable in under
 
 ### 2.1 Detection
 
-- [ ] Statistical baselines per metric and entity
-- [ ] Anomaly detection — statistical first, ML only if it beats the baseline
-- [ ] Alert ingestion from upstream rules, without duplicating them
+- [x] Statistical baselines per (entity, metric) — **median and MAD, not mean and stddev**: a sustained outage inflates a mean until the incident teaches the detector it is normal
+- [x] Baselines judge *before* they learn, so a value never partially normalizes itself in the act of being measured
+- [x] A cold baseline reports **unknown, never normal** — those are different claims, and only one of them closes an incident early
+- [x] Confidence scales with sample count as well as deviation, because it feeds effective risk and overstating it would widen what the system may do
+- [x] Anomaly detection producing findings that cite the events behind them
+- [x] Alert ingestion that **defers** to upstream rules instead of seconding them — two findings for one fact read downstream as corroboration
+- [x] Warm-up state is reportable, so an unwarmed detector's silence is not mistaken for an all-clear
+- [ ] ML detection — only if it beats the baseline on the benchmark *(Phase 5 decides)*
 
 ### 2.2 Correlation
 
