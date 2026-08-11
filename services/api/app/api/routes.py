@@ -233,6 +233,14 @@ def topology() -> dict[str, int]:
     return {"nodes": nodes, "edges": edges}
 
 
+@router.get("/topology/graph")
+def topology_graph(limit: int = 400) -> dict:
+    """Nodes and edges for the service map, each node carrying its worst recent
+    severity rather than its latest — a service that went critical and then
+    reported info seconds later is flapping, not healthy."""
+    return GRAPH.snapshot(limit=limit)
+
+
 # --- audit -------------------------------------------------------------------
 
 

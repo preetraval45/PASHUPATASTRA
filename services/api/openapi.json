@@ -1436,6 +1436,49 @@
         "summary": "Blast Radius"
       }
     },
+    "/api/v1/topology/graph": {
+      "get": {
+        "description": "Nodes and edges for the service map, each node carrying its worst recent\nseverity rather than its latest \u2014 a service that went critical and then\nreported info seconds later is flapping, not healthy.",
+        "operationId": "topology_graph_api_v1_topology_graph_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 400,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Topology Graph Api V1 Topology Graph Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Topology Graph"
+      }
+    },
     "/api/v1/verification/observe": {
       "post": {
         "operationId": "observe_api_v1_verification_observe_post",

@@ -95,6 +95,29 @@ export interface Verdict {
   denial_reason: string | null;
 }
 
+export interface GraphNode {
+  key: string;
+  kind: string;
+  name: string;
+  namespace: string | null;
+  estimated_users: number;
+  /** Worst severity in the last 15 minutes, not the latest — a service that
+   *  went critical then reported info seconds later is flapping, not healthy. */
+  severity: "critical" | "warning" | "info" | null;
+  last_seen: string | null;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  kind: string;
+}
+
+export interface TopologySnapshot {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
 export interface Health {
   status: string;
   environment: string;
@@ -118,6 +141,19 @@ async function get<T>(path: string): Promise<T | null> {
 export const getHealth = () => get<Health>("/health");
 export const getIncidents = () => get<Incident[]>("/incidents");
 export const getActions = () => get<ActionSpec[]>("/actions");
+export const getTopology = () => get<TopologySnapshot>("/topology/graph");
+
+/** Namespaces belonging to the platform rather than the customer's workload. */
+const SYSTEM_NAMESPACES = new Set([
+  "kube-system",
+  "kube-public",
+  "kube-node-lease",
+  "local-path-storage",
+]);
+
+export function isInfrastructure(node: GraphNode): boolean {
+  return node.namespace !== null && SYSTEM_NAMESPACES.has(node.namespace);
+}
 
 export function tierLabel(tier: Tier): string {
   return {

@@ -240,8 +240,8 @@ rest are additive and must not be started before the graph is trusted.
 
 ### 1.5 Dashboard
 
-- [ ] Infrastructure map
-- [ ] Service map with live dependency edges
+- [x] Infrastructure map — deterministic rank layout, so a node stays put between refreshes and is comparable with what the operator saw ten minutes ago
+- [x] Service map with live dependency edges, solid for observed calls and dashed for platform ownership
 - [x] Blast-radius API — `/topology/blast-radius/{key}`, served from the graph so there is one answer, not two
 - [ ] Entity detail — metrics, logs, recent changes, blast radius
 

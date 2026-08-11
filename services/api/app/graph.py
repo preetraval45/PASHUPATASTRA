@@ -118,6 +118,68 @@ class GraphStore:
             a in self.blast_radius(b, max_depth).affected
         )
 
+    def snapshot(self, limit: int = 400) -> dict:
+        """Nodes and edges for rendering, each node carrying its worst recent
+        severity.
+
+        Worst rather than latest: a service that emitted `critical` then `info`
+        seconds later is not healthy, it is flapping, and showing the newest
+        reading would hide the incident behind its own recovery.
+        """
+        with connect(self.database_url) as conn:
+            nodes = conn.execute(
+                """
+                SELECT n.key, n.kind, n.name, n.namespace, n.estimated_users,
+                       s.severity, s.last_seen
+                FROM topology_node n
+                LEFT JOIN LATERAL (
+                    SELECT
+                        CASE
+                            WHEN bool_or(e.severity = 'critical') THEN 'critical'
+                            WHEN bool_or(e.severity = 'warning')  THEN 'warning'
+                            WHEN bool_or(e.severity = 'info')     THEN 'info'
+                        END AS severity,
+                        max(e.observed_at) AS last_seen
+                    FROM event e
+                    WHERE e.entity_key = n.key
+                      AND e.observed_at > now() - interval '15 minutes'
+                ) s ON true
+                ORDER BY n.key
+                LIMIT %s
+                """,
+                (limit,),
+            ).fetchall()
+
+            keys = [row["key"] for row in nodes]
+            edges = (
+                conn.execute(
+                    "SELECT source_key, target_key, kind FROM topology_edge"
+                    " WHERE source_key = ANY(%s) AND target_key = ANY(%s)",
+                    (keys, keys),
+                ).fetchall()
+                if keys
+                else []
+            )
+
+        return {
+            "nodes": [
+                {
+                    "key": row["key"],
+                    "kind": row["kind"],
+                    "name": row["name"],
+                    "namespace": row["namespace"],
+                    "estimated_users": row["estimated_users"],
+                    "severity": row["severity"],
+                    "last_seen": row["last_seen"].isoformat() if row["last_seen"] else None,
+                }
+                for row in nodes
+            ],
+            "edges": [
+                {"source": e["source_key"], "target": e["target_key"], "kind": e["kind"]}
+                for e in edges
+            ],
+        }
+
     def counts(self) -> tuple[int, int]:
         with connect(self.database_url) as conn:
             nodes = conn.execute("SELECT count(*) AS n FROM topology_node").fetchone()["n"]
