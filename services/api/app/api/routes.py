@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from ..config import get_settings
 from ..engines import astra, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
+from ..db import PostgresStore
 from ..graph import GraphStore
 from ..store import STORE
 
@@ -239,6 +240,34 @@ def topology_graph(limit: int = 400) -> dict:
     severity rather than its latest — a service that went critical and then
     reported info seconds later is flapping, not healthy."""
     return GRAPH.snapshot(limit=limit)
+
+
+# --- entities ----------------------------------------------------------------
+
+
+@router.get("/entities/{entity_key:path}")
+def entity_detail(entity_key: str, events: int = 50) -> dict[str, object]:
+    """One entity: what it is, what depends on it, and what it has been saying.
+
+    Blast radius is included because "what breaks if this breaks" is the first
+    question anyone asks about an entity, and making it a second request invites
+    a view that renders without it.
+    """
+    store = PostgresStore()
+    node = store.entity(entity_key)
+    if node is None:
+        raise HTTPException(status_code=404, detail=f"unknown entity {entity_key}")
+
+    radius = GRAPH.blast_radius(entity_key)
+    return {
+        "entity": node,
+        "blast_radius": {
+            "affected": radius.affected,
+            "entity_count": radius.entity_count,
+            "estimated_users": radius.estimated_users,
+        },
+        "events": store.entity_events(entity_key, limit=events),
+    }
 
 
 # --- audit -------------------------------------------------------------------

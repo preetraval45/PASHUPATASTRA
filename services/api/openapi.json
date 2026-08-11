@@ -1161,6 +1161,58 @@
         "summary": "Audit"
       }
     },
+    "/api/v1/entities/{entity_key}": {
+      "get": {
+        "description": "One entity: what it is, what depends on it, and what it has been saying.\n\nBlast radius is included because \"what breaks if this breaks\" is the first\nquestion anyone asks about an entity, and making it a second request invites\na view that renders without it.",
+        "operationId": "entity_detail_api_v1_entities__entity_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity_key",
+            "required": true,
+            "schema": {
+              "title": "Entity Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "events",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Events",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Entity Detail Api V1 Entities  Entity Key  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Entity Detail"
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_api_v1_health_get",

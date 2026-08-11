@@ -26,21 +26,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
 
         <header className="sticky top-0 z-40 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/95 backdrop-blur">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-3">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
             <Link href="/" className="focusable flex items-center gap-3 rounded">
               <Sigil />
-              <span className="text-sm font-semibold tracking-[0.18em]">PASHUPATASTRA</span>
+              <span className="text-sm font-semibold tracking-[0.18em]">
+                <span className="sm:hidden">PASHU</span>
+                <span className="hidden sm:inline">PASHUPATASTRA</span>
+              </span>
             </Link>
             <Nav />
             <ModeIndicator health={health} />
           </div>
         </header>
 
-        <main id="main" className="mx-auto max-w-7xl px-6 py-10">
+        <main id="main" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
           {children}
         </main>
 
-        <footer className="mx-auto max-w-7xl px-6 pb-10 text-xs text-[rgb(var(--faint))]">
+        <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-[rgb(var(--faint))] sm:px-6">
           Observe. Reason. Act. Verify.
         </footer>
       </body>
@@ -69,7 +72,7 @@ function ModeIndicator({
 
   const live = !health.dry_run;
   return (
-    <div className="ml-auto flex items-center gap-4 text-xs">
+    <div className="flex w-full items-center gap-3 text-xs sm:ml-auto sm:w-auto sm:gap-4">
       {health.status !== "ok" && (
         <span
           className="text-[rgb(var(--warn))]"

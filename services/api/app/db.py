@@ -163,6 +163,60 @@ class PostgresStore:
             conn.commit()
         return len(events)
 
+    def entity_events(self, entity_key: str, limit: int = 50) -> list[dict]:
+        """Recent events for one entity, newest first.
+
+        Returns raw rows rather than `Event` objects: this feeds a detail view,
+        and rehydrating full models only to flatten them again buys nothing.
+        """
+        with connect(self.database_url) as conn:
+            rows = conn.execute(
+                """
+                SELECT id, event_class, source, occurred_at, observed_at,
+                       severity, payload, provenance, labels
+                FROM event
+                WHERE entity_key = %s
+                ORDER BY occurred_at DESC, id DESC
+                LIMIT %s
+                """,
+                (entity_key, limit),
+            ).fetchall()
+        return [
+            {
+                "id": r["id"],
+                "event_class": r["event_class"],
+                "source": r["source"],
+                "occurred_at": r["occurred_at"].isoformat(),
+                "observed_at": r["observed_at"].isoformat(),
+                "severity": r["severity"],
+                "payload": r["payload"],
+                "provenance": r["provenance"],
+                "labels": r["labels"],
+            }
+            for r in rows
+        ]
+
+    def entity(self, entity_key: str) -> dict | None:
+        with connect(self.database_url) as conn:
+            row = conn.execute(
+                "SELECT key, kind, name, namespace, cluster, owner, estimated_users,"
+                " first_seen_at, last_seen_at FROM topology_node WHERE key = %s",
+                (entity_key,),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "key": row["key"],
+            "kind": row["kind"],
+            "name": row["name"],
+            "namespace": row["namespace"],
+            "cluster": row["cluster"],
+            "owner": row["owner"],
+            "estimated_users": row["estimated_users"],
+            "first_seen": row["first_seen_at"].isoformat(),
+            "last_seen": row["last_seen_at"].isoformat(),
+        }
+
     def count_events(self) -> int:
         with connect(self.database_url) as conn:
             return int(conn.execute("SELECT count(*) AS n FROM event").fetchone()["n"])

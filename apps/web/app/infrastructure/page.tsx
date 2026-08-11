@@ -150,6 +150,7 @@ export default async function InfrastructurePage({
             const status = statusOf(node);
             return (
               <g key={node.key} transform={`translate(${node.x}, ${node.y})`}>
+                <a href={`/entity/${node.key}`} className="focusable">
                 <title>
                   {node.key}
                   {node.namespace ? ` · ${node.namespace}` : ""} · {status.label}
@@ -173,6 +174,7 @@ export default async function InfrastructurePage({
                   {node.kind}
                   {node.estimated_users > 0 && ` · ~${node.estimated_users} users`}
                 </text>
+                </a>
               </g>
             );
           })}
@@ -192,16 +194,72 @@ export default async function InfrastructurePage({
             {isolated.map((node) => {
               const status = statusOf(node);
               return (
-                <li key={node.key} className="flex items-center gap-2">
-                  <span className={status.className}>{status.glyph}</span>
-                  <span className="mono truncate">{node.name}</span>
-                  <span className="ml-auto shrink-0 text-[rgb(var(--muted))]">{node.kind}</span>
+                <li key={node.key}>
+                  <Link
+                    href={`/entity/${node.key}`}
+                    className="focusable flex items-center gap-2 rounded hover:text-[rgb(var(--ink))]"
+                  >
+                    <span className={status.className} aria-hidden="true">
+                      {status.glyph}
+                    </span>
+                    <span className="mono truncate">{node.name}</span>
+                    <span className="ml-auto shrink-0 text-[rgb(var(--muted))]">{node.kind}</span>
+                  </Link>
                 </li>
               );
             })}
           </ul>
         </Panel>
       )}
+
+      <details className="panel group">
+        <summary className="focusable cursor-pointer list-none px-5 py-3 text-[11px] font-medium uppercase tracking-[0.14em] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]">
+          Dependency table
+          <span className="ml-2 normal-case tracking-normal text-[rgb(var(--faint))]">
+            — the same data as the map, for screen readers, search, and copy-paste
+          </span>
+        </summary>
+        <div className="overflow-x-auto border-t border-[rgb(var(--edge))]">
+          <table className="w-full min-w-[36rem] text-left text-sm">
+            <caption className="sr-only">
+              Every mapped entity with its status and what it depends on
+            </caption>
+            <thead>
+              <tr className="border-b border-[rgb(var(--edge))] text-[rgb(var(--muted))]">
+                <th scope="col" className="px-5 py-2 font-medium">Entity</th>
+                <th scope="col" className="px-5 py-2 font-medium">Kind</th>
+                <th scope="col" className="px-5 py-2 font-medium">Status</th>
+                <th scope="col" className="px-5 py-2 font-medium">Depends on</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[rgb(var(--edge))]">
+              {placed.nodes.map((node) => {
+                const status = statusOf(node);
+                const dependencies = edges
+                  .filter((e) => e.source === node.key)
+                  .map((e) => e.target);
+                return (
+                  <tr key={node.key}>
+                    <th scope="row" className="px-5 py-2 text-left font-normal">
+                      <Link href={`/entity/${node.key}`} className="focusable mono rounded">
+                        {node.name}
+                      </Link>
+                    </th>
+                    <td className="px-5 py-2 text-xs text-[rgb(var(--muted))]">{node.kind}</td>
+                    <td className={`px-5 py-2 text-xs ${status.className}`}>
+                      <span aria-hidden="true">{status.glyph} </span>
+                      {status.label}
+                    </td>
+                    <td className="mono px-5 py-2 text-xs text-[rgb(var(--muted))]">
+                      {dependencies.join(", ") || "—"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </details>
 
       <Panel title="Reading this map">
         <ul className="space-y-1 text-xs text-[rgb(var(--muted))]">

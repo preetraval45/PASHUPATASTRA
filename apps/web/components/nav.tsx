@@ -15,7 +15,7 @@ export function Nav() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Primary" className="flex gap-1 text-sm">
+    <nav aria-label="Primary" className="-mx-1 flex gap-1 overflow-x-auto text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {NAV.map((item) => {
         // Exact match for the root, prefix match elsewhere, so a detail page
         // still shows its section as current.
@@ -25,7 +25,7 @@ export function Nav() {
             key={item.href}
             href={item.href}
             aria-current={current ? "page" : undefined}
-            className={`focusable rounded px-3 py-1.5 transition-colors ${
+            className={`focusable shrink-0 rounded px-3 py-1.5 transition-colors ${
               current
                 ? "bg-[rgb(var(--raised))] text-[rgb(var(--ink))]"
                 : "text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"

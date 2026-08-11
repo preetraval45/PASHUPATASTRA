@@ -267,15 +267,15 @@ it is scoped properly here rather than left as an afterthought.
 - [x] Actions — registry, autonomy tiers, and how effective risk is computed
 - [x] Audit — the record every claim rests on, with human and agent actors visually distinct
 - [x] Execution mode (dry-run vs live) in the chrome on every page — the most consequential fact about the system, and not something to learn the hard way
-- [ ] Entity detail — metrics, logs, recent changes, blast radius
+- [x] Entity detail — identity, blast radius with links, and recent events with their provenance
 - [ ] Incident detail as its own route, with a shareable URL
 - [ ] Approval flow — plan, blast radius, expected outcome, one-click approve *(Phase 3)*
 
 **Still owed**
 
-- [ ] Responsive pass below 640px — incidents do not wait for a desk
+- [x] Responsive pass below 640px — nav scrolls rather than wrapping, and execution mode stays visible
 - [ ] Live updates without a manual refresh
-- [ ] Screen-reader pass on the service map; the SVG needs a table equivalent
+- [x] Dependency table beside the map — the same data for screen readers, search, and copy-paste
 - [ ] Light theme, chosen deliberately rather than an automatic inversion
 
 **Exit criterion:** point Pashupatastra at a live 5-service reference stack; the

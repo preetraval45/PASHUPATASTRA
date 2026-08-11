@@ -127,6 +127,34 @@ export interface AuditRecord {
   detail: Record<string, unknown>;
 }
 
+export interface EntityEvent {
+  id: string;
+  event_class: string;
+  source: string;
+  occurred_at: string;
+  observed_at: string;
+  severity: "critical" | "warning" | "info" | null;
+  payload: Record<string, unknown>;
+  provenance: { source_system: string; query?: string | null; url?: string | null };
+  labels: Record<string, string>;
+}
+
+export interface EntityDetail {
+  entity: {
+    key: string;
+    kind: string;
+    name: string;
+    namespace: string | null;
+    cluster: string | null;
+    owner: string | null;
+    estimated_users: number;
+    first_seen: string;
+    last_seen: string;
+  };
+  blast_radius: { affected: string[]; entity_count: number; estimated_users: number };
+  events: EntityEvent[];
+}
+
 export interface Health {
   status: string;
   audit_storage: string;
@@ -154,6 +182,8 @@ export const getActions = () => get<ActionSpec[]>("/actions");
 export const getTopology = () => get<TopologySnapshot>("/topology/graph");
 export const getTopologyCounts = () => get<{ nodes: number; edges: number }>("/topology");
 export const getAudit = (limit = 50) => get<AuditRecord[]>(`/audit?limit=${limit}`);
+export const getEntity = (key: string) =>
+  get<EntityDetail>(`/entities/${encodeURIComponent(key)}`);
 
 /** Namespaces belonging to the platform rather than the customer's workload. */
 const SYSTEM_NAMESPACES = new Set([

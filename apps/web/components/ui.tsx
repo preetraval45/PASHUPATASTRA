@@ -80,7 +80,7 @@ export function Page({
     <div className="space-y-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
           {description && (
             <p className="mt-1 max-w-2xl text-sm text-[rgb(var(--muted))]">{description}</p>
           )}
@@ -106,12 +106,12 @@ export function Panel({
   return (
     <section className={`panel ${className}`}>
       {(title || aside) && (
-        <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--edge))] px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-[rgb(var(--edge))] px-4 py-3 sm:px-5">
           {title && <h2 className="label">{title}</h2>}
           {aside && <div className="text-xs text-[rgb(var(--muted))]">{aside}</div>}
         </div>
       )}
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   );
 }
