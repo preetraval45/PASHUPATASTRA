@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from pashupatastra import Event, QuarantinedEvent
+from pashupatastra.topology import Edge
 
 
 @dataclass
@@ -52,6 +53,14 @@ class Harvest:
     quarantined: list[QuarantinedEvent] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
+    edges: list[Edge] = field(default_factory=list)
+    """Structural dependencies the connector *observed*, not inferred.
+
+    Only sources that read a declaration — Kubernetes ownerReferences, a service
+    selector, a config file — may populate this. A connector that merely sees two
+    entities behave alike must leave it empty (see drishti/topology.py).
+    """
+
     @property
     def healthy(self) -> bool:
         return not self.errors
@@ -60,6 +69,7 @@ class Harvest:
         self.events.extend(other.events)
         self.quarantined.extend(other.quarantined)
         self.errors.extend(other.errors)
+        self.edges.extend(other.edges)
         return self
 
 

@@ -73,12 +73,22 @@ class TopologyDelta:
 class TopologyBuilder:
     """Derives nodes and edges from normalized events."""
 
-    def build(self, events: list[Event]) -> TopologyDelta:
+    def build(self, events: list[Event], observed_edges: list[Edge] | None = None) -> TopologyDelta:
         delta = TopologyDelta()
         for event in events:
             self._add_node(delta, event.entity_ref)
             if event.event_class is EventClass.TRACE:
                 self._add_trace_edges(delta, event)
+
+        # Edges a connector *read from a declaration* — Kubernetes
+        # ownerReferences, a service selector. Trusted for the same reason trace
+        # hops are: something stated the relationship, nothing guessed it.
+        for edge in observed_edges or []:
+            if edge.source in delta.nodes and edge.target not in delta.nodes:
+                # The target was named by an owner reference but emits no events
+                # of its own; it still belongs in the graph, or the edge dangles.
+                delta.nodes[edge.target] = Node(ref=_parse_key(edge.target))
+            delta.edges.add((edge.source, edge.target, edge.kind))
         return delta
 
     @staticmethod

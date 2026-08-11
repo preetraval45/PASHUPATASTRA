@@ -65,7 +65,7 @@ class Drishti:
         result.events_stored = self.store.save_events(harvest.events)
         result.quarantined = self.store.quarantine(harvest.quarantined)
 
-        delta = self.builder.build(harvest.events)
+        delta = self.builder.build(harvest.events, observed_edges=harvest.edges)
         result.nodes_upserted = self.graph.upsert_nodes(delta.node_list)
         result.edges_upserted = self.graph.upsert_edges(delta.edge_list)
 

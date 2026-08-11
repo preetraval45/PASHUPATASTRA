@@ -210,12 +210,12 @@ topology.
 ### 1.2 Connectors
 
 - [x] Prometheus — 9 tests, including one against a live local instance; AMP differs only by base URL and request signing
-- [ ] Kubernetes / EKS — pods, deployments, events, topology source
+- [x] Kubernetes — pods, deployments, services, ownership edges; verified against a live kind cluster. EKS differs only in authentication
 - [ ] OpenTelemetry — traces and service hops
 - [ ] OpenSearch — logs
 - [ ] CI/CD deployment events — the highest-yield causal signal
 - [ ] CloudTrail — control-plane changes
-- [ ] Docker — the local reference stack
+- [x] Docker — container state and restart counts via the CLI rather than the daemon socket, which is root-equivalent and wrong for a read-only connector
 
 **Sequencing:** Prometheus and Kubernetes only until the graph is correct. The
 rest are additive and must not be started before the graph is trusted.
@@ -228,7 +228,7 @@ rest are additive and must not be started before the graph is trusted.
 - [x] p99 **18.3ms** on 4,009 nodes / 10,006 edges against a 200ms target — *evidence: `scripts/benchgraph.py`*
 - [x] Estimated-users attribution per node, protected against a connector that cannot see counts zeroing them
 - [~] Reconciliation — idempotent upserts done, stale nodes surfaced rather than auto-deleted; **remaining:** the policy for acting on staleness
-- [x] Graph construction from connector output — nodes from any event; edges **only** from observed call paths, never from co-occurrence
+- [x] Graph construction from connector output — nodes from any event; edges **only** from observed call paths or platform declarations, never from co-occurrence
 
 ### 1.4 Ingestion pipeline
 
