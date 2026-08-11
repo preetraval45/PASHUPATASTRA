@@ -132,18 +132,25 @@ API Gateway
 
 ## Data
 
-| Store | Role |
-|-------|------|
-| PostgreSQL | Incidents, actions, policies, audit, topology |
-| Redis | Cache, queues, short-lived agent state |
-| Elasticsearch | Logs, events, search |
-| Object storage | Incident artifacts, reports, snapshots |
+| Store | Role | AWS |
+|-------|------|-----|
+| PostgreSQL | Incidents, actions, policies, audit, topology | RDS Multi-AZ |
+| Redis | Cache, queues, short-lived agent state | ElastiCache |
+| Elasticsearch | Logs, events, search | OpenSearch Service |
+| Object storage | Incident artifacts, reports, snapshots | S3 |
+
+AWS is the target deployment platform ([the Platform ADR](adr/Platform.md)),
+but **`packages/core` contains no AWS types**. The domain model runs on a laptop;
+managed services are a deployment concern. Full topology in
+[DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## AI Gateway
 
 All model access flows through one abstraction: provider-neutral, structured
 outputs (validated Pydantic schemas), embeddings, RAG, agent orchestration, and
-an evaluation harness. Engine code never imports a vendor SDK directly.
+an evaluation harness. Engine code never imports a vendor SDK directly. Bedrock
+is the primary provider on AWS; direct provider APIs remain viable behind the
+same interface.
 
 ## Dashboard
 

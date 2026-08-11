@@ -16,11 +16,12 @@ can violate it.
 
 | # | Deliverable | Exit criterion |
 |---|-------------|----------------|
-| 0.1 | Repository scaffold, README, CLAUDE.md | ✅ done (memory 0001) |
+| 0.1 | Repository scaffold, README, CLAUDE.md | ✅ done (memory: Foundation) |
 | 0.2 | `docs/ARCHITECTURE.md` — subsystems, data flow, boundaries | ✅ done |
-| 0.3 | ADR 0001 monorepo boundaries, ADR 0002 event schema | Both merged |
+| 0.3 | Monorepo boundaries, Event schema | Both merged |
 | 0.4 | Normalized event model in `packages/core/` | Pydantic schemas + round-trip tests |
 | 0.5 | Database schema (Postgres) — incidents, actions, audit, topology | Migrations run clean |
+| 0.5b | AWS account structure — dev/staging/prod separation, SSO, MFA enforced, root locked down, CloudTrail on, budget alarms | Terraform applies; no long-lived user keys exist |
 | 0.6 | OpenAPI specification for the gateway | Spec lints; mock server serves it |
 | 0.7 | Agent specification — identity, tools, budget, risk limits | YAML schema + validator |
 | 0.8 | Security & threat model | Documented, reviewed |
@@ -40,7 +41,8 @@ version the event schema from v0 and treat Phase 1 as the first migration test.
 **Goal:** heterogeneous telemetry becomes one normalized stream and one live
 topology.
 
-- Connectors: Prometheus, OpenTelemetry, Elasticsearch, Docker, Kubernetes
+- Connectors: Amazon Managed Prometheus, OpenTelemetry, OpenSearch, EKS,
+  CloudTrail, plus Docker for the local reference stack — all read-only IAM
 - Normalization into the core event model; provenance stamped on every event
 - Topology/knowledge graph construction — services, dependencies, ownership
 - Blast-radius traversal: given a node, who is downstream and how many users
@@ -87,9 +89,13 @@ low confidence.
 - MVP agent set: Incident, Infrastructure, Security + one orchestrator
 - Approval UX: plan, blast radius, expected outcome, one-click approve
 - Append-only audit trail for every decision and execution
+- **IRSA role per agent**, mirroring its declared permissions; write credentials
+  separated from read credentials; destructive permissions granted to no role
 
 **Exit criterion:** a red-team pass finds no execution path that reaches a
-connector without a recorded policy verdict; every action has a tested rollback.
+connector without a recorded policy verdict; every action has a tested rollback;
+CloudTrail confirms no action occurred that the internal audit log does not
+record.
 
 **Risk:** this is where the project can do real damage. Mitigation — dry-run
 mode is the default; live execution is opt-in per environment; blast radius
@@ -133,7 +139,9 @@ verification success rate · blast radius · human intervention rate · root-cau
 accuracy.
 
 **Exit criterion:** full benchmark runs reproducibly from one command and
-produces a metrics table.
+produces a metrics table. The benchmark environment is ephemeral — provisioned
+per run, torn down after — and runs against **both** the AWS stack and the
+docker-compose stack, so the on-prem path cannot silently rot.
 
 **Risk:** benchmarking against yourself proves nothing. Mitigation — scenarios
 are authored before the fix logic, and false remediation rate is reported as

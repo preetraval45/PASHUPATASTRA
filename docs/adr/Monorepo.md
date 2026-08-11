@@ -1,4 +1,4 @@
-# ADR 0001 — Monorepo until the open-source split
+# Monorepo until the open-source split
 
 - **Status:** Accepted
 - **Date:** 2026-08-10

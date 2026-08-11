@@ -57,7 +57,7 @@ PASHUPATASTRA/
 
 ## Import discipline
 
-The monorepo has no repository boundaries yet ([ADR 0001](adr/0001-monorepo-until-oss-split.md)),
+The monorepo has no repository boundaries yet ([the Monorepo ADR](adr/Monorepo.md)),
 so direction is enforced by discipline and CI:
 
 ```

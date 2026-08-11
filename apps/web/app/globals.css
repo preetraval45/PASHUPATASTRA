@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Brand: ancient concept → modern intelligence. Restrained, technical, no
+   mythological ornament (see CLAUDE.md). */
+:root {
+  --ground: 12 14 18;
+  --panel: 18 21 27;
+  --edge: 32 37 46;
+  --ink: 232 236 241;
+  --muted: 138 148 163;
+  --astra: 96 165 250;
+}
+
+body {
+  background-color: rgb(var(--ground));
+  color: rgb(var(--ink));
+  font-feature-settings: "cv02", "cv03", "cv04", "tnum";
+}
+
+.panel {
+  @apply rounded-lg border border-[rgb(var(--edge))] bg-[rgb(var(--panel))];
+}
+
+.label {
+  @apply text-[11px] font-medium uppercase tracking-[0.14em] text-[rgb(var(--muted))];
+}
+
+.mono {
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+}

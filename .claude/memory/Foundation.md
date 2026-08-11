@@ -1,4 +1,4 @@
-# 0001 — Repository foundation
+# Repository foundation
 
 - **Date:** 2026-08-10
 - **Phase:** Phase 0 — Foundation
@@ -54,6 +54,6 @@ sync from day one.
 
 ## Next session should
 
-Write ADR 0001 (monorepo boundaries) and ADR 0002 (event schema), then define
+Write the Monorepo ADR (monorepo boundaries) and the Grounding ADR (event schema), then define
 the normalized event model in `packages/core/` — it is the dependency of every
 other component and should exist before any connector code.

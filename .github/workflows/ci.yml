@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  # OIDC federation for AWS — no long-lived access keys in CI (docs/SECURITY.md T9).
+  id-token: write
+
+jobs:
+  core:
+    name: core (must run without a cloud)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e "packages/core[dev]"
+      - run: pytest packages/core -q
+      - run: ruff check packages/core
+      - name: assert packages/core has no AWS imports
+        # the Platform ADR: the domain model must stay cloud-free and laptop-runnable.
+        run: |
+          if grep -rnE '^\s*(import|from)\s+(boto3|botocore|aiobotocore)' packages/core/pashupatastra; then
+            echo "::error::packages/core must contain zero AWS imports (the Platform ADR)"
+            exit 1
+          fi
+
+  api:
+    name: api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e "services/api[dev]"
+      - run: pytest services/api -q
+      - run: ruff check services/api
+
+  web:
+    name: web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci || npm install
+      - run: npm run typecheck
+      - run: npm run build
+
+  secrets:
+    name: secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

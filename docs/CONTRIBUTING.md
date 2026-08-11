@@ -30,7 +30,7 @@ Scope by subsystem where it helps: `feat(dharma): add novelty penalty`.
 Before pushing, append an entry to `.claude/memory/`:
 
 ```
-.claude/memory/NNNN-<kebab-slug>.md    from TEMPLATE.md
+.claude/memory/<Topic>.md    from TEMPLATE.md
 .claude/memory/INDEX.md                one-line pointer
 ```
 
@@ -41,7 +41,7 @@ ones capturing rejected alternatives and open questions.
 ## Architecture Decision Records
 
 Use an ADR when a decision constrains future work: a boundary, a schema, a
-dependency, a safety rule. Format: `docs/adr/NNNN-kebab-title.md`, using
+dependency, a safety rule. Format: `docs/adr/<Topic>.md`, using
 `docs/adr/TEMPLATE.md`. ADRs are immutable — supersede rather than edit.
 
 ## Review bar

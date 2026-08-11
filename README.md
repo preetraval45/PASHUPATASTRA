@@ -91,6 +91,20 @@ execute it.
 The LLM is never the source of truth. It proposes; deterministic policy,
 structured tools, and post-action verification dispose.
 
+## Platform
+
+Runs on AWS: EKS, RDS PostgreSQL, ElastiCache, OpenSearch, S3, Amazon Managed
+Prometheus, Bedrock behind the AI Gateway, Secrets Manager, and CloudTrail as an
+independent audit mirror.
+
+IAM is the floor beneath the policy engine — an agent's IAM role mirrors its
+declared permissions, so a policy bug still cannot exceed what the role allows.
+Destructive permissions are granted to no Pashupatastra role in any environment.
+
+The core domain model carries no AWS types, so the on-prem/hybrid path stays
+open. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and
+[the Platform ADR](docs/adr/Platform.md).
+
 ## Repository layout
 
 ```

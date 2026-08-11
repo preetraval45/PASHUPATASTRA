@@ -1,6 +1,6 @@
-# ADR NNNN — <Title>
+# <Title>
 
-- **Status:** Proposed | Accepted | Superseded by ADR-NNNN
+- **Status:** Proposed | Accepted | Superseded by <Topic>
 - **Date:** YYYY-MM-DD
 - **Phase:** <Phase N>
 

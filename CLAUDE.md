@@ -53,15 +53,27 @@ docs, or assets. The mythology stays subtle — names only.
 
 - Frontend: Next.js, TypeScript, Tailwind, React
 - Backend: FastAPI, Python, Pydantic, async workers
-- Data: PostgreSQL, Redis, Elasticsearch, object storage
-- Observability: OpenTelemetry, Prometheus, Grafana, Elasticsearch
-- Infra: Docker, Kubernetes, Terraform, GitHub Actions
+- Data: PostgreSQL (RDS), Redis (ElastiCache), OpenSearch, S3
+- Observability: OpenTelemetry, Amazon Managed Prometheus, Managed Grafana
+- Models: Bedrock primary, direct provider APIs fallback — always via AI Gateway
+- Infra: EKS, Terraform, Docker, GitHub Actions
+
+**AWS is the target platform** ([docs/adr/Platform](docs/adr/Platform.md)),
+with one hard boundary:
+
+> `packages/core` contains **zero** AWS imports — no `boto3`, no ARNs in schemas,
+> no assumption a cloud exists. It must run on a laptop. AWS SDK usage belongs in
+> `packages/connectors/`, `services/api/`, and `infra/`.
+
+This keeps the on-prem/hybrid deployment path — the commercial wedge — open. Any
+managed-service feature without a self-hosted equivalent needs an explicit
+decision, not an assumption. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Memory protocol — required on every push
 
 Before each push, append a memory entry under `.claude/memory/`:
 
-- One file per push: `.claude/memory/NNNN-<kebab-slug>.md`
+- One file per push: `.claude/memory/<Topic>.md`
 - Use the template at `.claude/memory/TEMPLATE.md`
 - Add a one-line pointer to `.claude/memory/INDEX.md`
 
@@ -72,4 +84,4 @@ restatement of the diff, which git already holds.
 
 - Commits: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`)
 - Branches: `main` is the default and PR target
-- ADRs: `docs/adr/NNNN-title.md` for any decision that constrains future work
+- ADRs: `docs/adr/<Topic>.md` for any decision that constrains future work

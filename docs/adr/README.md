@@ -1,12 +1,15 @@
 # Architecture Decision Records
 
 Decisions that constrain future work. Immutable — supersede rather than edit.
+Files are named for their topic; order is recorded here by date, not by a number
+in the filename.
 
-| # | Decision | Status |
-|---|----------|--------|
-| [0001](0001-monorepo-until-oss-split.md) | Monorepo until the open-source split | Accepted |
-| [0002](0002-llm-is-not-the-source-of-truth.md) | The LLM is not the source of truth | Accepted |
-| [0003](0003-sit-above-existing-observability.md) | Sit above existing observability, never replace it | Accepted |
+| Decision | Date | Status |
+|----------|------|--------|
+| [Monorepo](Monorepo.md) — one repo until the open-source split | 2026-08-10 | Accepted |
+| [Grounding](Grounding.md) — the LLM is not the source of truth | 2026-08-10 | Accepted |
+| [Observability](Observability.md) — sit above existing tooling, never replace it | 2026-08-10 | Accepted |
+| [Platform](Platform.md) — AWS as the target, `packages/core` cloud-free | 2026-08-10 | Accepted |
 
 ## Planned
 
@@ -19,4 +22,5 @@ Decisions that constrain future work. Immutable — supersede rather than edit.
 | PIB harness — fault injection vs. telemetry replay | 5 |
 | Open-source / commercial boundary | 6 |
 
-Use [TEMPLATE.md](TEMPLATE.md). Number sequentially.
+Use [TEMPLATE.md](TEMPLATE.md). Name the file for the decision, in one or two
+words.

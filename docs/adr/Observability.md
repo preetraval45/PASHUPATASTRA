@@ -1,4 +1,4 @@
-# ADR 0003 — Sit above existing observability, never replace it
+# Sit above existing observability, never replace it
 
 - **Status:** Accepted
 - **Date:** 2026-08-10

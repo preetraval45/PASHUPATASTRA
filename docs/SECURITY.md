@@ -34,6 +34,25 @@ from Dharma, which is deterministic code, not a model call.
 | T6 | Audit tampering to hide an action | Append-only audit store; verdicts recorded before execution, not after |
 | T7 | Runaway agent loop consuming resources or acting repeatedly | Hard per-incident budgets — tokens, actions, wall clock; exhaustion escalates |
 | T8 | Privilege creep via agent redefinition | Agent declarations are versioned, reviewed, and environment-promoted explicitly |
+| T9 | Leaked AWS credentials grant an attacker the platform's own infrastructure authority | No long-lived keys; SSO + MFA for humans, IRSA for workloads, OIDC for CI; per-environment account separation; destructive permissions granted to no role |
+
+## AWS credential handling
+
+The platform is AWS ([the Platform ADR](adr/Platform.md)), which makes
+credential hygiene a first-order concern rather than a checklist item.
+
+- **No long-lived IAM user access keys.** Humans use IAM Identity Center (SSO)
+  with MFA; workloads use IRSA; CI uses GitHub OIDC federation. Nothing static.
+- **Root account is locked down** — MFA, no access keys, used for nothing routine.
+- **Credentials never appear in chat, prompts, issues, commits, or logs.** Any
+  credential that is pasted anywhere is treated as compromised and rotated
+  immediately, regardless of who saw it.
+- **Secrets Manager + KMS** for all connector credentials; none in env files,
+  images, or Terraform state.
+- **Account separation** dev / staging / prod. Production execution credentials
+  are unreachable from lower environments.
+- `.gitignore` blocks `.env`, `*.pem`, `*.key`, `credentials.json`, and
+  `*.tfstate` — but the control is the practice, not the ignore file.
 
 ## Non-negotiable controls
 

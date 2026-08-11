@@ -1,4 +1,4 @@
-# NNNN — <Title>
+# <Title>
 
 - **Date:** YYYY-MM-DD
 - **Phase:** <Phase N — Name>

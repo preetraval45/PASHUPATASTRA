@@ -1,0 +1,145 @@
+"""API tests, centred on the Phase 3 exit criterion: no execution path reaches a
+connector without a recorded policy verdict."""
+
+from __future__ import annotations
+
+import pytest
+from app.main import app
+from fastapi.testclient import TestClient
+from pashupatastra import PolicyViolation
+
+client = TestClient(app)
+
+
+def evaluate(action_id: str, **kwargs: object) -> dict:
+    body: dict[str, object] = {"action_id": action_id}
+    body.update(kwargs)
+    response = client.post("/api/v1/policy/evaluate", json=body)
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def test_health_reports_dry_run_default() -> None:
+    body = client.get("/api/v1/health").json()
+    assert body["status"] == "ok"
+    assert body["dry_run"] is True, "dry-run must be the default (SECURITY.md control 1)"
+
+
+def test_action_registry_is_exposed() -> None:
+    actions = client.get("/api/v1/actions").json()
+    ids = {a["id"] for a in actions}
+    assert "rollback_deployment" in ids
+    assert "delete_infrastructure" in ids
+
+
+def test_unregistered_action_cannot_be_evaluated() -> None:
+    response = client.post("/api/v1/policy/evaluate", json={"action_id": "rm_minus_rf"})
+    assert response.status_code == 404
+
+
+def test_autonomous_action_executes() -> None:
+    verdict = evaluate("restart_service")
+    assert verdict["tier"] == "autonomous"
+    result = client.post(
+        "/api/v1/actions/execute",
+        json={"action_id": "restart_service", "verdict": verdict},
+    )
+    assert result.status_code == 200
+    assert result.json()["dry_run"] is True
+
+
+def test_approval_tier_is_refused_until_approved() -> None:
+    verdict = evaluate("rollback_deployment", environment="prod")
+    assert verdict["tier"] == "approval"
+
+    refused = client.post(
+        "/api/v1/actions/execute",
+        json={"action_id": "rollback_deployment", "verdict": verdict},
+    )
+    assert refused.status_code == 403
+
+    approved = client.post(
+        "/api/v1/policy/approve", json={"verdict": verdict, "approver": "preet"}
+    ).json()
+    allowed = client.post(
+        "/api/v1/actions/execute",
+        json={"action_id": "rollback_deployment", "verdict": approved},
+    )
+    assert allowed.status_code == 200
+
+
+def test_denied_verdict_cannot_be_approved() -> None:
+    verdict = evaluate("delete_infrastructure")
+    assert verdict["tier"] == "denied"
+    response = client.post("/api/v1/policy/approve", json={"verdict": verdict, "approver": "preet"})
+    assert response.status_code == 403
+
+
+def test_verdict_for_another_action_is_rejected() -> None:
+    verdict = evaluate("restart_service")
+    response = client.post(
+        "/api/v1/actions/execute",
+        json={"action_id": "clear_cache", "verdict": verdict},
+    )
+    assert response.status_code == 403
+
+
+def test_execute_requires_a_verdict_argument() -> None:
+    response = client.post("/api/v1/actions/execute", json={"action_id": "restart_service"})
+    assert response.status_code == 422, "verdict must be a required field, not optional"
+
+
+def test_engine_level_bypass_is_impossible() -> None:
+    """The guard lives in the engine, not only in the HTTP layer."""
+    from app.engines import astra
+
+    with pytest.raises(PolicyViolation):
+        astra.execute("restart_service", verdict=None)
+
+
+def test_policy_denials_are_audited() -> None:
+    evaluate("delete_infrastructure", incident_ref="INC-TEST-0001")
+    records = client.get("/api/v1/audit", params={"incident_ref": "INC-TEST-0001"}).json()
+    assert any(r["kind"] == "policy_evaluation" for r in records)
+
+
+def test_execution_is_audited_before_and_after() -> None:
+    verdict = evaluate("restart_service", incident_ref="INC-TEST-0002")
+    client.post(
+        "/api/v1/actions/execute",
+        json={"action_id": "restart_service", "verdict": verdict},
+    )
+    kinds = [r["kind"] for r in client.get(
+        "/api/v1/audit", params={"incident_ref": "INC-TEST-0002"}
+    ).json()]
+    assert "execution_attempt" in kinds
+    assert "execution_result" in kinds
+
+
+def test_verification_grades_thresholds() -> None:
+    body = client.post(
+        "/api/v1/verification/observe",
+        json={
+            "action_id": "rollback_deployment",
+            "observed": {"version": "previous", "error_rate": "0.2%"},
+        },
+    ).json()
+    assert all(check["passed"] for check in body["checks"])
+
+
+def test_missing_observation_fails_verification() -> None:
+    """Absent telemetry means 'don't know', which must never grade as success."""
+    body = client.post(
+        "/api/v1/verification/observe",
+        json={"action_id": "rollback_deployment", "observed": {"version": "previous"}},
+    ).json()
+    failed = [c for c in body["checks"] if not c["passed"]]
+    assert [c["name"] for c in failed] == ["error_rate"]
+
+
+def test_demo_incident_is_available() -> None:
+    incidents = client.get("/api/v1/incidents").json()
+    assert incidents, "expected the seeded demo incident"
+    incident = incidents[0]
+    assert incident["impact"]["estimated_users_affected"] == 1240
+    assert incident["hypotheses"][0]["evidence"], "hypotheses must cite evidence"

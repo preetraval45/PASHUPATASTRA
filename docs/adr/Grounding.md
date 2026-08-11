@@ -1,4 +1,4 @@
-# ADR 0002 — The LLM is not the source of truth
+# The LLM is not the source of truth
 
 - **Status:** Accepted
 - **Date:** 2026-08-10

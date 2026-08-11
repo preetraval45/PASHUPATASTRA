@@ -49,3 +49,6 @@ logs/
 
 # Claude Code — memory IS tracked; local settings are not
 .claude/settings.local.json
+
+# Local virtualenvs
+.venv/
