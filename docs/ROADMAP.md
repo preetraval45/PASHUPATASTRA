@@ -268,15 +268,15 @@ it is scoped properly here rather than left as an afterthought.
 - [x] Audit — the record every claim rests on, with human and agent actors visually distinct
 - [x] Execution mode (dry-run vs live) in the chrome on every page — the most consequential fact about the system, and not something to learn the hard way
 - [x] Entity detail — identity, blast radius with links, and recent events with their provenance
-- [ ] Incident detail as its own route, with a shareable URL
+- [x] Incident detail as its own route with a shareable URL, sharing one view component with the list so the two cannot drift
 - [ ] Approval flow — plan, blast radius, expected outcome, one-click approve *(Phase 3)*
 
 **Still owed**
 
 - [x] Responsive pass below 640px — nav scrolls rather than wrapping, and execution mode stays visible
-- [ ] Live updates without a manual refresh
+- [x] Live updates — 15s poll that pauses when the tab is hidden, states the age of the data, and can be paused mid-read
 - [x] Dependency table beside the map — the same data for screen readers, search, and copy-paste
-- [ ] Light theme, chosen deliberately rather than an automatic inversion
+- [x] Light theme with its own status steps — an inverted dark palette fails contrast on white — applied before first paint to avoid a flash
 
 **Exit criterion:** point Pashupatastra at a live 5-service reference stack; the
 graph auto-builds within 60s and blast radius for any node is queryable in under

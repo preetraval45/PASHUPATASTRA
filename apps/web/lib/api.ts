@@ -182,6 +182,9 @@ export const getActions = () => get<ActionSpec[]>("/actions");
 export const getTopology = () => get<TopologySnapshot>("/topology/graph");
 export const getTopologyCounts = () => get<{ nodes: number; edges: number }>("/topology");
 export const getAudit = (limit = 50) => get<AuditRecord[]>(`/audit?limit=${limit}`);
+export const getIncident = (id: string) => get<Incident>(`/incidents/${encodeURIComponent(id)}`);
+export const getIncidentAudit = (id: string) =>
+  get<AuditRecord[]>(`/audit?incident_ref=${encodeURIComponent(id)}&limit=100`);
 export const getEntity = (key: string) =>
   get<EntityDetail>(`/entities/${encodeURIComponent(key)}`);
 

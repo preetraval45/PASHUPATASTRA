@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Live } from "@/components/live";
 import { Nav } from "@/components/nav";
+import { ThemeToggle, themeScript } from "@/components/theme";
 import { getHealth } from "@/lib/api";
 import "./globals.css";
 
@@ -14,7 +16,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const health = await getHealth();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Before first paint: a flash of the wrong theme on every navigation
+            makes a tool feel unreliable. */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-screen antialiased">
         {/* Keyboard operators are faster than mouse operators during an
             incident, and this is the first thing they reach for. */}
@@ -35,7 +42,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </span>
             </Link>
             <Nav />
-            <ModeIndicator health={health} />
+            <div className="flex w-full items-center gap-3 sm:ml-auto sm:w-auto">
+              <ModeIndicator health={health} />
+              <Live />
+              <ThemeToggle />
+            </div>
           </div>
         </header>
 
@@ -64,7 +75,7 @@ function ModeIndicator({
 }) {
   if (!health) {
     return (
-      <span className="ml-auto flex items-center gap-2 text-xs text-[rgb(var(--warn))]">
+      <span className="flex items-center gap-2 text-xs text-[rgb(var(--warn))]">
         <span aria-hidden="true">◆</span> API unreachable
       </span>
     );
@@ -72,7 +83,7 @@ function ModeIndicator({
 
   const live = !health.dry_run;
   return (
-    <div className="flex w-full items-center gap-3 text-xs sm:ml-auto sm:w-auto sm:gap-4">
+    <div className="flex items-center gap-3 text-xs sm:gap-4">
       {health.status !== "ok" && (
         <span
           className="text-[rgb(var(--warn))]"

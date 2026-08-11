@@ -37,6 +37,33 @@
   --radius: 8px;
 }
 
+/* Light theme.
+   Chosen, not inverted. A flipped dark palette produces washed-out status
+   colours that fail contrast on white — so the status steps are darker here
+   while keeping the same hue, and the surfaces are warm-neutral rather than
+   pure white, which is fatiguing on a screen someone stares at for an hour.
+   Dark stays the default: this is an operations console, usually opened at
+   night, and the map reads better on a dark ground. */
+:root[data-theme="light"] {
+  --ground: 247 247 245;
+  --panel: 255 255 255;
+  --raised: 240 240 238;
+  --edge: 223 224 221;
+  --edge-strong: 197 199 195;
+
+  --ink: 24 27 32;
+  --muted: 92 100 112;
+  --faint: 128 136 148;
+
+  --astra: 17 116 114;
+  --gold: 146 113 12;
+
+  --ok: 4 120 87;
+  --warn: 161 98 7;
+  --high: 154 52 18;
+  --crit: 190 18 60;
+}
+
 body {
   background-color: rgb(var(--ground));
   color: rgb(var(--ink));
