@@ -1,4 +1,4 @@
-"""HTTP surface. Storage is in-memory until Phase 0.5 lands Postgres."""
+"""HTTP surface."""
 
 from __future__ import annotations
 
@@ -33,11 +33,11 @@ def health() -> dict[str, object]:
     return {
         # "degraded" when the audit trail is in memory: it survives no restart,
         # which is a correctness problem in production, not a convenience one.
-        "status": "ok" if durable else "degraded",
+        "status": "ok" if durable and STORE.durable else "degraded",
         "environment": settings.environment,
         "dry_run": settings.dry_run,
         "audit_storage": "postgres" if durable else "memory",
-        "incidents": len(STORE.incidents),
+        "incidents": len(STORE.all()),
         "audit_records": len(AUDIT),
     }
 
@@ -47,12 +47,12 @@ def health() -> dict[str, object]:
 
 @router.get("/incidents", response_model=list[Incident])
 def list_incidents() -> list[Incident]:
-    return list(STORE.incidents.values())
+    return STORE.all()
 
 
 @router.get("/incidents/{incident_id}", response_model=Incident)
 def get_incident(incident_id: str) -> Incident:
-    incident = STORE.incidents.get(incident_id)
+    incident = STORE.get(incident_id)
     if incident is None:
         raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
     return incident

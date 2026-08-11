@@ -114,7 +114,7 @@ can violate it.
 - [x] Append-only enforced by triggers, not convention — *evidence: UPDATE/DELETE on audit raises*
 - [x] `execution.verdict_id` NOT NULL — an unauthorized execution is unwritable at the SQL layer
 - [x] Immutable migrations — an applied file that later changes is an error
-- [ ] API reads and writes Postgres instead of the in-memory store
+- [x] API reads and writes Postgres — *evidence: `/health` reports `audit_storage: postgres`, rows persist across processes*
 
 ### 0.6 Agent specification
 
@@ -187,9 +187,8 @@ only you can supply:
 | Threat model review | A second human reader |
 | Name clearance | A legal/commercial decision, not an engineering one |
 
-The one open engineering task — wiring the API to Postgres instead of the
-in-memory store — is deliberately separate: the schema and its invariants are
-proven, and the swap touches a single seam.
+No engineering tasks remain open in Phase 0. The API now reads and writes
+Postgres and reports `degraded` on `/health` if it ever falls back to memory.
 
 **Risk:** over-specifying schemas before real telemetry exists. Mitigation —
 version the event schema from v0 and treat Phase 1 as the first migration test.

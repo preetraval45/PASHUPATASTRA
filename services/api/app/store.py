@@ -1,8 +1,8 @@
-"""In-memory store.
+"""Incident store.
 
-Placeholder until Phase 0.5 lands the Postgres schema. Kept behind one object so
-the swap touches a single seam. Seeded with the demo incident so the dashboard
-and the killer demo have something to render before connectors exist.
+Backed by Postgres when reachable, with an in-memory mirror so local
+development and CI without a database still work. Seeded with the demo
+incident so the dashboard has something to render before connectors exist.
 """
 
 from __future__ import annotations
@@ -30,9 +30,53 @@ def _ref(kind: EntityKind, name: str) -> EntityRef:
 
 
 class Store:
+    """Incident store.
+
+    Reads and writes Postgres when it is reachable, and keeps an in-memory
+    mirror so local development and CI without a database still work. Writes go
+    to both, so a restart against a live database loses nothing.
+    """
+
     def __init__(self) -> None:
         self.incidents: dict[str, Incident] = {}
         self.verdicts: dict[str, Verdict] = {}
+        self._backend: object | None = None
+        self._resolved = False
+
+    def _durable(self):
+        if not self._resolved:
+            from .db import PostgresStore, is_available
+
+            self._backend = PostgresStore() if is_available() else None
+            self._resolved = True
+        return self._backend
+
+    @property
+    def durable(self) -> bool:
+        return self._durable() is not None
+
+    def save(self, incident: Incident) -> Incident:
+        self.incidents[incident.id] = incident
+        backend = self._durable()
+        if backend is not None:
+            backend.save_incident(incident)
+        return incident
+
+    def get(self, incident_id: str) -> Incident | None:
+        backend = self._durable()
+        if backend is not None:
+            stored = backend.get_incident(incident_id)
+            if stored is not None:
+                return stored
+        return self.incidents.get(incident_id)
+
+    def all(self) -> list[Incident]:
+        backend = self._durable()
+        if backend is not None:
+            stored = backend.list_incidents()
+            if stored:
+                return stored
+        return list(self.incidents.values())
 
     def seed_demo(self) -> Incident:
         """The Phase-6 demo incident: DB connection exhaustion from a bad deploy."""
@@ -123,8 +167,7 @@ class Store:
             "dharma",
             "rollback_deployment in prod scores 60 → approval tier",
         )
-        self.incidents[incident.id] = incident
-        return incident
+        return self.save(incident)
 
 
 STORE = Store()
