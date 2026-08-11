@@ -1,0 +1,47 @@
+# Example agent declaration. See docs/specs/Agent Spec.md.
+#
+# Everything this agent can do, it can do because a line below says so. A tool
+# absent from `tools` is unreachable, not merely discouraged.
+
+agent:
+  name: database-responder
+  role: Diagnose and remediate database-layer incidents
+  version: 1
+
+identity:
+  # Environment promotion is explicit — proving out in staging grants no
+  # production authority.
+  environments: [staging]
+
+permissions:
+  read_metrics: true
+  read_logs: true
+  restart_service: true
+  modify_database: false
+
+tools:
+  - prometheus.query
+  - elasticsearch.search
+  - topology.blast_radius
+  - smriti.retrieve
+  - astra.restart_service
+
+memory:
+  smriti_scope: [database, cache]
+
+# A ceiling, not a preference: this agent cannot execute a risk-45 action even
+# with human approval. Approval routes to a principal authorized for that tier.
+risk_limit: 40
+
+approval:
+  required_above: 40
+
+budget:
+  tokens_per_incident: 200000
+  actions_per_incident: 5
+  wall_clock_seconds: 600
+
+goals:
+  - Restore database availability
+  - Minimize blast radius
+  - Escalate rather than guess
