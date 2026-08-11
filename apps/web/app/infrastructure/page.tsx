@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Empty, Offline, Page, Panel } from "@/components/ui";
 import { getTopology, isInfrastructure, type GraphNode } from "@/lib/api";
 import { layout, NODE_HEIGHT, NODE_WIDTH, severityWeight } from "@/lib/layout";
 
@@ -30,21 +31,15 @@ export default async function InfrastructurePage({
   const showAll = scope === "all";
   const snapshot = await getTopology();
 
-  if (!snapshot) {
-    return (
-      <div className="panel p-6 text-sm text-[rgb(var(--muted))]">
-        API unreachable. Start it with <code className="mono">uvicorn app.main:app --reload</code>{" "}
-        in <code className="mono">services/api</code>.
-      </div>
-    );
-  }
+  if (!snapshot) return <Offline />;
 
   if (snapshot.nodes.length === 0) {
     return (
-      <div className="panel p-6 text-sm text-[rgb(var(--muted))]">
-        No topology yet. Run a Drishti poll to populate it from Prometheus,
-        Kubernetes, or Docker.
-      </div>
+      <Page title="Infrastructure">
+        <Empty title="No topology yet.">
+          Run a Drishti poll to populate it from Prometheus, Kubernetes, or Docker.
+        </Empty>
+      </Page>
     );
   }
 
@@ -77,14 +72,10 @@ export default async function InfrastructurePage({
   const counts = tally(visible);
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Infrastructure</h1>
-        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
-          What depends on what. Callers on the left, their dependencies to the right — so a
-          failure propagates right-to-left across this map.
-        </p>
-      </header>
+    <Page
+      title="Infrastructure"
+      description="What depends on what. Callers on the left, their dependencies to the right — so a failure propagates right-to-left across this map."
+    >
 
       <section className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
         {(["critical", "warning", "info", "unknown"] as const).map((key) => (
@@ -190,11 +181,8 @@ export default async function InfrastructurePage({
       )}
 
       {isolated.length > 0 && (
-        <section className="panel p-5">
-          <h2 className="label">
-            No observed dependencies yet · {isolated.length}
-          </h2>
-          <p className="mt-2 text-xs text-[rgb(var(--muted))]">
+        <Panel title={`No observed dependencies yet · ${isolated.length}`}>
+          <p className="text-xs text-[rgb(var(--muted))]">
             These entities are known to exist but nothing has yet revealed what they depend
             on. Metrics prove existence; only traces and platform ownership prove
             dependency — so this list shrinks as coverage improves, and it is worth
@@ -212,12 +200,11 @@ export default async function InfrastructurePage({
               );
             })}
           </ul>
-        </section>
+        </Panel>
       )}
 
-      <section className="panel p-5">
-        <h2 className="label">Reading this map</h2>
-        <ul className="mt-3 space-y-1 text-xs text-[rgb(var(--muted))]">
+      <Panel title="Reading this map">
+        <ul className="space-y-1 text-xs text-[rgb(var(--muted))]">
           <li>Solid lines are observed dependencies — a trace recorded the call.</li>
           <li>Dashed lines are ownership, declared by the platform.</li>
           <li>
@@ -230,8 +217,8 @@ export default async function InfrastructurePage({
             silently.
           </li>
         </ul>
-      </section>
-    </div>
+      </Panel>
+    </Page>
   );
 }
 

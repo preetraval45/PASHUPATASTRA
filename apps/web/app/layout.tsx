@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+
+import { Nav } from "@/components/nav";
+import { getHealth } from "@/lib/api";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,35 +10,38 @@ export const metadata: Metadata = {
   description: "Autonomous intelligence for complex systems. Observe. Reason. Act. Verify.",
 };
 
-const NAV = [
-  { href: "/", label: "Overview" },
-  { href: "/incidents", label: "Incidents" },
-  { href: "/infrastructure", label: "Infrastructure" },
-  { href: "/actions", label: "Actions" },
-];
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const health = await getHealth();
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen antialiased">
-        <header className="border-b border-[rgb(var(--edge))]">
-          <div className="mx-auto flex max-w-6xl items-center gap-8 px-6 py-4">
-            <Link href="/" className="flex items-center gap-3">
+        {/* Keyboard operators are faster than mouse operators during an
+            incident, and this is the first thing they reach for. */}
+        <a
+          href="#main"
+          className="focusable sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-[rgb(var(--raised))] focus:px-3 focus:py-2 focus:text-sm"
+        >
+          Skip to content
+        </a>
+
+        <header className="sticky top-0 z-40 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/95 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-3">
+            <Link href="/" className="focusable flex items-center gap-3 rounded">
               <Sigil />
-              <span className="text-sm font-semibold tracking-[0.2em]">PASHUPATASTRA</span>
+              <span className="text-sm font-semibold tracking-[0.18em]">PASHUPATASTRA</span>
             </Link>
-            <nav className="flex gap-6 text-sm text-[rgb(var(--muted))]">
-              {NAV.map((item) => (
-                <Link key={item.href} href={item.href} className="hover:text-[rgb(var(--ink))]">
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <Nav />
+            <ModeIndicator health={health} />
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
-        <footer className="mx-auto max-w-6xl px-6 pb-10 text-xs text-[rgb(var(--muted))]">
-          Observe. Reason. Act. Verify. — Phase 0 preview, dry-run by default.
+
+        <main id="main" className="mx-auto max-w-7xl px-6 py-10">
+          {children}
+        </main>
+
+        <footer className="mx-auto max-w-7xl px-6 pb-10 text-xs text-[rgb(var(--faint))]">
+          Observe. Reason. Act. Verify.
         </footer>
       </body>
     </html>
@@ -43,15 +49,59 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 
 /**
+ * Execution mode is in the chrome, on every page, because it is the single most
+ * consequential fact about the system: whether an approval will change
+ * production or only describe what it would have changed. Burying it on a
+ * settings screen is how someone learns the answer the hard way.
+ */
+function ModeIndicator({
+  health,
+}: {
+  health: Awaited<ReturnType<typeof getHealth>>;
+}) {
+  if (!health) {
+    return (
+      <span className="ml-auto flex items-center gap-2 text-xs text-[rgb(var(--warn))]">
+        <span aria-hidden="true">◆</span> API unreachable
+      </span>
+    );
+  }
+
+  const live = !health.dry_run;
+  return (
+    <div className="ml-auto flex items-center gap-4 text-xs">
+      {health.status !== "ok" && (
+        <span
+          className="text-[rgb(var(--warn))]"
+          title="The audit trail or incident store is not durable — it will not survive a restart."
+        >
+          <span aria-hidden="true">◆</span> degraded
+        </span>
+      )}
+      <span className="text-[rgb(var(--faint))]">{health.environment}</span>
+      <span
+        className={
+          live
+            ? "rounded border border-[rgb(var(--crit))]/40 bg-[rgb(var(--crit))]/10 px-2 py-0.5 text-[rgb(var(--crit))]"
+            : "rounded border border-[rgb(var(--edge))] px-2 py-0.5 text-[rgb(var(--muted))]"
+        }
+      >
+        {live ? "LIVE EXECUTION" : "dry run"}
+      </span>
+    </div>
+  );
+}
+
+/**
  * The mark: closed loop, arrow in flight, decision node, trident head.
- * Inlined rather than an <img> so it inherits colour and stays crisp at 26px.
+ * Inlined rather than an <img> so it inherits colour and stays crisp.
  * Canonical source of the same geometry: public/mark.svg
  */
 function Sigil() {
   return (
     <svg
-      width="26"
-      height="26"
+      width="24"
+      height="24"
       viewBox="0 0 64 64"
       fill="none"
       strokeLinecap="round"

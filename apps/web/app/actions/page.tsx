@@ -1,88 +1,96 @@
-import { getActions, riskBand } from "@/lib/api";
+import { Badge, Ident, Offline, Page, Panel, statusForRisk } from "@/components/ui";
+import { getActions } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+const TIERS = [
+  { range: "0–30", label: "Autonomous", status: "ok", note: "an agent may act alone" },
+  { range: "31–60", label: "Approval required", status: "warning", note: "an operator decides" },
+  { range: "61–80", label: "Senior approval", status: "high", note: "a senior operator decides" },
+  { range: "81–100", label: "Never autonomous", status: "critical", note: "no path to automatic execution" },
+] as const;
+
 export default async function ActionsPage() {
   const actions = await getActions();
+  if (!actions) return <Offline />;
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Action registry</h1>
-        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
-          The closed set of operations the system can perform. Anything not listed here cannot
-          be executed — actions are registered, never generated.
-        </p>
-      </header>
-
-      {!actions ? (
-        <div className="panel p-6 text-sm text-[rgb(var(--muted))]">API unreachable.</div>
-      ) : (
-        <div className="panel overflow-x-auto">
-          <table className="w-full text-left text-sm">
+    <Page
+      title="Action registry"
+      description="The closed set of operations this system can perform. Anything not listed here cannot be executed — actions are registered, never generated."
+    >
+      <Panel title="Registered actions" aside={`${actions.length} actions`}>
+        <div className="-mx-5 overflow-x-auto">
+          <table className="w-full min-w-[42rem] text-left text-sm">
+            <caption className="sr-only">
+              Registered actions with base risk, rollback, and expected post-state
+            </caption>
             <thead>
               <tr className="border-b border-[rgb(var(--edge))] text-[rgb(var(--muted))]">
-                <th className="p-3 font-medium">Action</th>
-                <th className="p-3 font-medium">Base risk</th>
-                <th className="p-3 font-medium">Rollback</th>
-                <th className="p-3 font-medium">Expected post-state</th>
+                <th scope="col" className="px-5 py-2 font-medium">Action</th>
+                <th scope="col" className="px-5 py-2 font-medium">Base risk</th>
+                <th scope="col" className="px-5 py-2 font-medium">Rollback</th>
+                <th scope="col" className="px-5 py-2 font-medium">Expected post-state</th>
               </tr>
             </thead>
-            <tbody>
-              {actions.map((action) => {
-                const band = riskBand(action.base_risk);
-                return (
-                  <tr key={action.id} className="border-b border-[rgb(var(--edge))] last:border-0">
-                    <td className="p-3">
-                      <div className="mono">{action.id}</div>
-                      <div className="text-xs text-[rgb(var(--muted))]">{action.description}</div>
-                    </td>
-                    <td className="p-3">
-                      <span className={`rounded border px-2 py-0.5 text-xs ${band.className}`}>
-                        {action.base_risk}
-                      </span>
-                    </td>
-                    <td className="mono p-3 text-xs">
-                      {action.irreversible ? (
-                        <span className="text-rose-400">irreversible</span>
-                      ) : (
-                        (action.rollback_action_id ?? "—")
-                      )}
-                    </td>
-                    <td className="mono p-3 text-xs text-[rgb(var(--muted))]">
-                      {Object.entries(action.expected_post_state)
-                        .map(([k, v]) => `${k} ${v}`)
-                        .join(", ") || "—"}
-                    </td>
-                  </tr>
-                );
-              })}
+            <tbody className="divide-y divide-[rgb(var(--edge))]">
+              {actions.map((action) => (
+                <tr key={action.id}>
+                  <td className="px-5 py-3 align-top">
+                    <Ident>{action.id}</Ident>
+                    <div className="mt-0.5 text-xs text-[rgb(var(--muted))]">
+                      {action.description}
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 align-top">
+                    <Badge status={statusForRisk(action.base_risk)}>{action.base_risk}</Badge>
+                  </td>
+                  <td className="px-5 py-3 align-top text-xs">
+                    {action.irreversible ? (
+                      <span className="text-[rgb(var(--crit))]">irreversible</span>
+                    ) : (
+                      <span className="mono">{action.rollback_action_id ?? "—"}</span>
+                    )}
+                  </td>
+                  <td className="mono px-5 py-3 align-top text-xs text-[rgb(var(--muted))]">
+                    {Object.entries(action.expected_post_state)
+                      .map(([k, v]) => `${k} ${v}`)
+                      .join(", ") || "—"}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-      )}
+      </Panel>
 
-      <div className="panel p-5">
-        <h2 className="label">Autonomy tiers</h2>
-        <p className="mt-3 text-xs text-[rgb(var(--muted))]">
-          Base risk is only the starting point. Effective risk rises with blast radius,
-          production environment, low diagnostic confidence, and novelty — never falls.
-        </p>
-        <ul className="mono mt-3 space-y-1 text-xs">
-          <li>
-            <span className="text-emerald-400">0–30</span> autonomous
-          </li>
-          <li>
-            <span className="text-amber-400">31–60</span> approval required
-          </li>
-          <li>
-            <span className="text-orange-400">61–80</span> senior approval
-          </li>
-          <li>
-            <span className="text-rose-400">81–100</span> never autonomous
-          </li>
-        </ul>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Panel title="Autonomy tiers">
+          <ul className="space-y-3">
+            {TIERS.map((tier) => (
+              <li key={tier.range} className="flex items-baseline gap-3 text-sm">
+                <Badge status={tier.status}>{tier.range}</Badge>
+                <span>{tier.label}</span>
+                <span className="ml-auto text-xs text-[rgb(var(--faint))]">{tier.note}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+
+        <Panel title="How effective risk is computed">
+          <p className="text-sm text-[rgb(var(--muted))]">
+            Base risk is only the starting point. It rises with blast radius, production
+            environment, low diagnostic confidence, and novelty — and never falls. An action
+            cannot argue its way into a lower tier.
+          </p>
+          <ul className="mt-4 space-y-1 text-xs text-[rgb(var(--muted))]">
+            <li>Blast radius above threshold escalates a tier regardless of score.</li>
+            <li>An action with no tested rollback cannot be autonomous.</li>
+            <li>Irreversible actions are permanently outside autonomy.</li>
+            <li>An agent may never exceed its own configured risk ceiling.</li>
+          </ul>
+        </Panel>
       </div>
-    </div>
+    </Page>
   );
 }

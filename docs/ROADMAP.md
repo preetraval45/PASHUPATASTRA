@@ -238,12 +238,45 @@ rest are additive and must not be started before the graph is trusted.
 - [ ] Backpressure and drop policy under sustained load
 - [ ] Retention split across Postgres, OpenSearch, and object storage
 
-### 1.5 Dashboard
+### 1.5 Console (UI/UX)
 
+This section was originally two lines — "infrastructure map, service map" — and
+the under-specification showed in the product: a working map bolted to a
+skeleton. The console is what an operator judges the whole system by at 3am, so
+it is scoped properly here rather than left as an afterthought.
+
+**Foundations**
+
+- [x] Design tokens — surfaces, ink, brand, and a **reserved** status palette that never carries a non-status meaning
+- [x] Component primitives — one place where status, time, empty states, and identifiers are decided, so an operator does not re-learn the interface on every screen
+- [x] Status is never colour-alone: every state ships a glyph and a word
+- [x] Tabular figures on all numerals — digits that jitter between refreshes read as unreliable, whatever they say
+- [x] Focus-visible treatment on every interactive element, plus a skip link
+- [x] `prefers-reduced-motion` respected
+- [x] Loading, error, and not-found states — a blank screen mid-incident is indistinguishable from a broken one
+- [x] Errors never fall back to cached numbers; a stale figure shown as current is worse than an honest gap
+- [x] Bounded lists state their bound — "newest 100 of more", never a silent truncation
+
+**Screens**
+
+- [x] Overview — a verdict sentence first, metrics second, for an operator arriving cold
+- [x] Incidents — causal chain with per-link evidence, alternatives with their contradictions, plan with per-action risk
 - [x] Infrastructure map — deterministic rank layout, so a node stays put between refreshes and is comparable with what the operator saw ten minutes ago
 - [x] Service map with live dependency edges, solid for observed calls and dashed for platform ownership
 - [x] Blast-radius API — `/topology/blast-radius/{key}`, served from the graph so there is one answer, not two
+- [x] Actions — registry, autonomy tiers, and how effective risk is computed
+- [x] Audit — the record every claim rests on, with human and agent actors visually distinct
+- [x] Execution mode (dry-run vs live) in the chrome on every page — the most consequential fact about the system, and not something to learn the hard way
 - [ ] Entity detail — metrics, logs, recent changes, blast radius
+- [ ] Incident detail as its own route, with a shareable URL
+- [ ] Approval flow — plan, blast radius, expected outcome, one-click approve *(Phase 3)*
+
+**Still owed**
+
+- [ ] Responsive pass below 640px — incidents do not wait for a desk
+- [ ] Live updates without a manual refresh
+- [ ] Screen-reader pass on the service map; the SVG needs a table equivalent
+- [ ] Light theme, chosen deliberately rather than an automatic inversion
 
 **Exit criterion:** point Pashupatastra at a live 5-service reference stack; the
 graph auto-builds within 60s and blast radius for any node is queryable in under

@@ -118,8 +118,18 @@ export interface TopologySnapshot {
   edges: GraphEdge[];
 }
 
+export interface AuditRecord {
+  at: string;
+  kind: string;
+  actor: string;
+  incident_ref: string | null;
+  summary: string;
+  detail: Record<string, unknown>;
+}
+
 export interface Health {
   status: string;
+  audit_storage: string;
   environment: string;
   dry_run: boolean;
   incidents: number;
@@ -142,6 +152,8 @@ export const getHealth = () => get<Health>("/health");
 export const getIncidents = () => get<Incident[]>("/incidents");
 export const getActions = () => get<ActionSpec[]>("/actions");
 export const getTopology = () => get<TopologySnapshot>("/topology/graph");
+export const getTopologyCounts = () => get<{ nodes: number; edges: number }>("/topology");
+export const getAudit = (limit = 50) => get<AuditRecord[]>(`/audit?limit=${limit}`);
 
 /** Namespaces belonging to the platform rather than the customer's workload. */
 const SYSTEM_NAMESPACES = new Set([
