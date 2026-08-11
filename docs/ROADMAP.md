@@ -301,7 +301,10 @@ graph auto-builds within 60s and blast radius for any node is queryable in under
 - [x] Anomaly detection producing findings that cite the events behind them
 - [x] Alert ingestion that **defers** to upstream rules instead of seconding them — two findings for one fact read downstream as corroboration
 - [x] Warm-up state is reportable, so an unwarmed detector's silence is not mistaken for an all-clear
-- [ ] ML detection — only if it beats the baseline on the benchmark *(Phase 5 decides)*
+- [x] Evaluation harness — one interface for every detector, scored online on labelled series by precision, episode recall, **lead time**, and false alarms per 1000. Makes the ML decision a measurement rather than an argument
+- [x] Three statistical candidates to beat: robust-z (incumbent), EWMA, seasonal-naive
+- [ ] **Seasonality gap — measured, not suspected.** The shipped robust-z default scores 859 false alarms per 1000 on a daily-shaped series; EWMA scores 43. A detector that cries wolf every morning is one operators learn to ignore
+- [ ] ML detection — only if it beats the best statistical strategy on the benchmark *(Phase 5 decides)*
 
 ### 2.2 Correlation
 

@@ -6,6 +6,8 @@ a laptop, and it is the future open-source `pashupatastra-core`.
 
 from .baselines import Band, Baseline, BaselineStore, Reading
 from .detection import Detector, Finding, UpstreamRules
+from .evaluation import Score, Series, compare, evaluate as evaluate_detector, winner
+from .strategies import STRATEGIES, DetectionStrategy, Ewma, RobustZScore, SeasonalNaive
 from .agents import AgentSpec, Budget, BudgetLedger, EscalationReason, load_agent_spec
 from .dharma import (
     ActionSpec,
@@ -56,7 +58,10 @@ __all__ = [
     "Budget",
     "BudgetLedger",
     "CausalLink",
+    "STRATEGIES",
+    "DetectionStrategy",
     "Detector",
+    "Ewma",
     "Edge",
     "EntityKind",
     "EntityRef",
@@ -75,6 +80,10 @@ __all__ = [
     "PolicyViolation",
     "Provenance",
     "Reading",
+    "RobustZScore",
+    "Score",
+    "SeasonalNaive",
+    "Series",
     "QuarantinedEvent",
     "RiskContext",
     "Severity",
@@ -84,7 +93,10 @@ __all__ = [
     "Verdict",
     "Verification",
     "VerificationCheck",
+    "compare",
     "evaluate",
+    "evaluate_detector",
+    "winner",
     "incident_id",
     "load_agent_spec",
     "require_verdict",
