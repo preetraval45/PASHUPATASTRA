@@ -7,9 +7,36 @@ written; it is done when the criterion is demonstrably met. Phases 1–4 build t
 loop in the order the loop runs, so every phase ends with something
 demonstrable rather than a half-wired layer.
 
+## Schedule
+
+Week 1 begins **Monday 10 August 2026**.
+
+| Phase | Weeks | Dates | Status |
+|-------|-------|-------|--------|
+| 0 — Foundation | 1–2 | Aug 10 – Aug 23 | **In progress** |
+| 1 — Drishti · Perception | 3–6 | Aug 24 – Sep 20 | Not started |
+| 2 — Buddhi + Smriti · Intelligence | 7–10 | Sep 21 – Oct 18 | Not started |
+| 3 — Astra + Dharma · Action | 11–14 | Oct 19 – Nov 15 | Partly built early |
+| 4 — Verification | 15–17 | Nov 16 – Dec 6 | Partly built early |
+| 5 — PIB · Benchmark | 18–20 | Dec 7 – Dec 27 | Not started |
+| 6 — Research & OSS release | 21–24 | Dec 28 – Jan 24 2027 | Not started |
+
+### Why Phases 3 and 4 are partly built already
+
+The policy engine, the guarded execution path, and expected-state verification
+were written during Phase 0 rather than deferred. This is deliberate, not scope
+creep: had Astra been built first and Dharma retrofitted, the verdict argument
+would have been optional in practice and every execution path added afterward
+would have been somewhere to forget it. Building the constraint first makes it
+structural.
+
+What remains for those phases is the part that needs Phase 1 and 2 to exist —
+real connectors behind the executors, agent runtime and budgets, approval UX,
+IRSA roles, and verification against live telemetry rather than supplied values.
+
 ---
 
-## Phase 0 — Foundation · Weeks 1–2
+## Phase 0 — Foundation · Weeks 1–2 · Aug 10 – Aug 23
 
 **Goal:** every constraint that governs the system is written down before code
 can violate it.
@@ -36,7 +63,7 @@ version the event schema from v0 and treat Phase 1 as the first migration test.
 
 ---
 
-## Phase 1 — Drishti · Perception · Weeks 3–6
+## Phase 1 — Drishti · Perception · Weeks 3–6 · Aug 24 – Sep 20
 
 **Goal:** heterogeneous telemetry becomes one normalized stream and one live
 topology.
@@ -57,7 +84,7 @@ only until the graph is correct; the rest are additive afterward.
 
 ---
 
-## Phase 2 — Buddhi + Smriti · Intelligence · Weeks 7–10
+## Phase 2 — Buddhi + Smriti · Intelligence · Weeks 7–10 · Sep 21 – Oct 18
 
 **Goal:** signals become one incident with a defensible causal chain.
 
@@ -78,7 +105,7 @@ low confidence.
 
 ---
 
-## Phase 3 — Astra + Dharma · Action · Weeks 11–14
+## Phase 3 — Astra + Dharma · Action · Weeks 11–14 · Oct 19 – Nov 15
 
 **Goal:** the system can act, and cannot act outside its bounds.
 
@@ -103,7 +130,7 @@ above a configured threshold always escalates regardless of risk score.
 
 ---
 
-## Phase 4 — Verification · Weeks 15–17
+## Phase 4 — Verification · Weeks 15–17 · Nov 16 – Dec 6
 
 **Goal:** the loop closes. The system knows whether it actually fixed anything.
 
@@ -118,7 +145,7 @@ injected faults including deliberately wrong remediations.
 
 ---
 
-## Phase 5 — PIB · Benchmark · Weeks 18–20
+## Phase 5 — PIB · Benchmark · Weeks 18–20 · Dec 7 – Dec 27
 
 **Goal:** claims become numbers.
 
@@ -149,7 +176,7 @@ prominently as success rate.
 
 ---
 
-## Phase 6 — Research & Open-Source Release · Weeks 21–24
+## Phase 6 — Research & Open-Source Release · Weeks 21–24 · Dec 28 – Jan 24 2027
 
 - **Paper:** *Pashupatastra: Policy-Constrained Closed-Loop Autonomous
   Infrastructure Operations*
