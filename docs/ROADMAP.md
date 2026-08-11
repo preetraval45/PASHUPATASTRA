@@ -211,7 +211,7 @@ topology.
 
 - [x] Prometheus — 9 tests, including one against a live local instance; AMP differs only by base URL and request signing
 - [x] Kubernetes — pods, deployments, services, ownership edges; verified against a live kind cluster. EKS differs only in authentication
-- [ ] OpenTelemetry — traces and service hops
+- [x] OpenTelemetry — OTLP/HTTP receive endpoint; service hops rebuilt from the span tree, not span ordering, which concurrency makes meaningless
 - [ ] OpenSearch — logs
 - [ ] CI/CD deployment events — the highest-yield causal signal
 - [ ] CloudTrail — control-plane changes
@@ -232,7 +232,8 @@ rest are additive and must not be started before the graph is trusted.
 
 ### 1.4 Ingestion pipeline
 
-- [~] Ingestion orchestration — poll → persist → reconcile, with events written before the graph so a mid-cycle crash leaves replayable telemetry; **remaining:** queue buffering
+- [x] Ingestion orchestration — **both** paths: pull (poll) and push (receive), converging on one persist-then-reconcile routine
+- [~] Events written before the graph, so a mid-cycle crash leaves replayable telemetry; **remaining:** queue buffering under sustained load
 - [x] Failures counted and surfaced — one broken connector degrades perception without stopping the others, and never reads as an all-clear
 - [ ] Backpressure and drop policy under sustained load
 - [ ] Retention split across Postgres, OpenSearch, and object storage

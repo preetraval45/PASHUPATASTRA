@@ -186,6 +186,28 @@ def observe(request: VerifyRequest) -> Verification:
     return verify_engine.observe(verification, request.observed, incident_ref=request.incident_ref)
 
 
+# --- ingestion ---------------------------------------------------------------
+
+
+@router.post("/ingest/otlp")
+def ingest_otlp(payload: dict) -> dict[str, object]:
+    """OTLP/HTTP trace endpoint.
+
+    Point an OpenTelemetry collector's OTLP/HTTP exporter here. Traces are the
+    strongest edge source available: a span with a parent is direct evidence
+    that one service called another.
+    """
+    from ..engines.drishti import Drishti
+
+    result = Drishti(connectors=[]).receive_otlp(payload)
+    return {
+        "events_stored": result.events_stored,
+        "nodes_upserted": result.nodes_upserted,
+        "edges_upserted": result.edges_upserted,
+        "quarantined": result.quarantined,
+    }
+
+
 # --- topology ----------------------------------------------------------------
 
 

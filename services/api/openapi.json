@@ -1242,6 +1242,49 @@
         "summary": "Get Incident"
       }
     },
+    "/api/v1/ingest/otlp": {
+      "post": {
+        "description": "OTLP/HTTP trace endpoint.\n\nPoint an OpenTelemetry collector's OTLP/HTTP exporter here. Traces are the\nstrongest edge source available: a span with a parent is direct evidence\nthat one service called another.",
+        "operationId": "ingest_otlp_api_v1_ingest_otlp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Ingest Otlp Api V1 Ingest Otlp Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ingest Otlp"
+      }
+    },
     "/api/v1/policy/approve": {
       "post": {
         "operationId": "approve_api_v1_policy_approve_post",

@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from drishti import Connector, Harvest, Window
+from drishti import Connector, Harvest, OtlpReceiver, Window
 from drishti.topology import TopologyBuilder
 
 from ..db import PostgresStore
@@ -47,6 +47,17 @@ class Drishti:
         self.graph = graph or GraphStore()
         self.builder = builder or TopologyBuilder()
 
+    def receive_otlp(self, payload: dict) -> PollResult:
+        """Ingest a pushed OTLP trace export.
+
+        Same persistence and reconciliation path as `poll`, because the
+        difference between push and pull ends at the connector: downstream, an
+        event is an event.
+        """
+        result = PollResult(started_at=datetime.now().astimezone())
+        harvest = OtlpReceiver().receive(payload)
+        return self._absorb(harvest, result, source="otlp")
+
     def poll(self, window: Window | None = None) -> PollResult:
         window = window or Window.trailing(300)
         result = PollResult(started_at=datetime.now().astimezone())
@@ -61,6 +72,26 @@ class Drishti:
                 # nothing downstream mistakes a blind spot for an all-clear.
                 harvest.errors.append(f"{connector.name}: {type(exc).__name__}: {exc}")
 
+        return self._absorb(
+            harvest,
+            result,
+            source=f"{len(self.connectors)} connector(s)",
+            detail={
+                "window_start": window.start.isoformat(),
+                "window_end": window.end.isoformat(),
+            },
+        )
+
+    def _absorb(
+        self,
+        harvest: Harvest,
+        result: PollResult,
+        source: str,
+        detail: dict | None = None,
+    ) -> PollResult:
+        """Persist, then reconcile. Events are written first so a crash mid-cycle
+        leaves telemetry that can be replayed, rather than a graph that has moved
+        ahead of the evidence supporting it."""
         result.errors = list(harvest.errors)
         result.events_stored = self.store.save_events(harvest.events)
         result.quarantined = self.store.quarantine(harvest.quarantined)
@@ -74,13 +105,11 @@ class Drishti:
                 kind=AuditKind.OBSERVATION,
                 actor="drishti",
                 summary=(
-                    f"polled {len(self.connectors)} connector(s): "
-                    f"{result.events_stored} events, {result.nodes_upserted} nodes, "
-                    f"{result.edges_upserted} edges"
+                    f"ingested from {source}: {result.events_stored} events, "
+                    f"{result.nodes_upserted} nodes, {result.edges_upserted} edges"
                 ),
                 detail={
-                    "window_start": window.start.isoformat(),
-                    "window_end": window.end.isoformat(),
+                    **(detail or {}),
                     "quarantined": result.quarantined,
                     "errors": result.errors,
                 },
