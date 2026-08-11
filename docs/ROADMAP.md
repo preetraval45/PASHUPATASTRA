@@ -151,10 +151,14 @@ can violate it.
 - [x] `docker-compose` reference stack — Postgres, Redis, OpenSearch, Prometheus, Grafana, MinIO
 - [x] Every managed service has a self-hosted counterpart — *evidence: mapping table in DEPLOYMENT.md*
 - [x] Terraform skeleton — providers, variables, backend, tagging
+- [x] RDS PostgreSQL module — Multi-AZ in prod, encrypted, private, deletion-protected, password generated into Secrets Manager — *evidence: `terraform validate` passes*
+- [x] AWS CLI and Terraform installed locally
+- [x] Per-environment tfvars and backend config
 - [x] CI — core, api, web, secret scan, cloud-free gate
-- [ ] AWS account structure — dev/staging/prod separation, Identity Center, MFA enforced, root locked down — **blocked: needs an authenticated AWS CLI profile**
+- [ ] AWS account structure — dev/staging/prod separation, Identity Center, MFA enforced, root locked down — **blocked: needs `aws configure sso`**
 - [ ] CloudTrail enabled in all accounts, budget alarms set — **blocked: same**
-- [ ] Terraform state backend provisioned (S3 + lock table) — **blocked: same, and `terraform` is not installed locally**
+- [ ] Terraform state backend provisioned (S3 + lock table) — **blocked: same**
+- [ ] `terraform apply` the RDS instance — **blocked: same**
 
 ### 0.10 Name clearance — **blocker**
 
@@ -178,7 +182,7 @@ only you can supply:
 
 | Remaining | Needs |
 |-----------|-------|
-| AWS accounts, CloudTrail, budget alarms, state backend | An authenticated AWS CLI profile (`aws configure sso`); `terraform` also not installed locally |
+| AWS accounts, CloudTrail, budget alarms, state backend, **RDS apply** | An authenticated AWS CLI profile. Tooling is installed and the RDS config validates; only credentials are missing |
 | Vercel deployment | A connected Vercel account, plus the API reachable at a public URL |
 | Threat model review | A second human reader |
 | Name clearance | A legal/commercial decision, not an engineering one |
