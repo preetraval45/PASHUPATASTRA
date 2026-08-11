@@ -1,0 +1,29 @@
+[project]
+name = "pashupatastra-connectors"
+version = "0.1.0"
+description = "Drishti connectors: Prometheus, Kubernetes, OpenSearch, CloudTrail"
+requires-python = ">=3.11"
+dependencies = [
+    "pashupatastra-core",
+    "httpx>=0.27",
+]
+
+# AWS-specific connectors live here, never in packages/core (Platform ADR).
+[project.optional-dependencies]
+aws = ["boto3>=1.34"]
+dev = ["pytest>=8.0", "respx>=0.21", "ruff>=0.5"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["drishti"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test*.py"]

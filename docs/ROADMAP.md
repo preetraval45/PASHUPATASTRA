@@ -31,7 +31,7 @@ Week 1 begins **Monday 10 August 2026**.
 | Phase | Weeks | Dates | Status |
 |-------|-------|-------|--------|
 | 0 — Foundation | 1–2 | Aug 10 – Aug 23 | **In progress** — everything not needing AWS access or a legal decision is done |
-| 1 — Drishti · Perception | 3–6 | Aug 24 – Sep 20 | Not started |
+| 1 — Drishti · Perception | 3–6 | Aug 24 – Sep 20 | **Started early** — framework and Prometheus connector done |
 | 2 — Buddhi + Smriti · Intelligence | 7–10 | Sep 21 – Oct 18 | Not started |
 | 3 — Astra + Dharma · Action | 11–14 | Oct 19 – Nov 15 | Partly built early |
 | 4 — Verification | 15–17 | Nov 16 – Dec 6 | Partly built early |
@@ -202,14 +202,14 @@ topology.
 
 ### 1.1 Connector framework
 
-- [ ] Connector interface — pull loop, backoff, health, provenance stamping
-- [ ] Read-only credentials enforced at the interface *(perception cannot mutate)*
-- [ ] Normalization into the core event model, with quarantine on failure
+- [x] Connector interface — `Connector`, `Window`, `Harvest`; provenance stamped by the connector, not the caller
+- [x] Read-only by construction — no connector exposes a mutating method
+- [x] Normalization into the core event model, with quarantine on unresolvable entities — *evidence: tests*
 - [ ] Schema migration test — v0 survives contact with real telemetry, or bumps
 
 ### 1.2 Connectors
 
-- [ ] Prometheus / Amazon Managed Prometheus — metrics
+- [x] Prometheus — 9 tests, including one against a live local instance; AMP differs only by base URL and request signing
 - [ ] Kubernetes / EKS — pods, deployments, events, topology source
 - [ ] OpenTelemetry — traces and service hops
 - [ ] OpenSearch — logs
