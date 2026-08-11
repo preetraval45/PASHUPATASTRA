@@ -1,7 +1,7 @@
 # Topology graph store
 
-- **Status:** Deferred — decision due in Phase 1
-- **Date:** 2026-08-11
+- **Status:** Accepted — Postgres (was Deferred; resolved by measurement)
+- **Date:** 2026-08-11 (criteria) → 2026-08-11 (decided)
 - **Phase:** Phase 0 (criteria) → Phase 1 (decision)
 
 ## Context
@@ -35,9 +35,38 @@ Deciding before Phase 1 measures these would encode a guess as an ADR, which is
 worse than no ADR — it would carry the authority of a decision without the
 evidence of one.
 
-## Decision criteria
+## Decision: Postgres
 
-Phase 1 must produce these numbers before this ADR is written:
+Measured, so no longer a guess. `scripts/benchgraph.py` on a 4,009-node,
+10,006-edge graph shaped like a real service topology — six tiers, each node
+depending on up to three in the tier below:
+
+| Metric | Result |
+|--------|--------|
+| Affected nodes per query | median 244, max 770 |
+| p50 traversal | 5.7 ms |
+| p95 traversal | 12.2 ms |
+| **p99 traversal** | **18.3 ms** |
+| Roadmap target | < 200 ms |
+
+An order of magnitude inside the budget, on a graph larger than the reference
+stack will ever be. Criterion 3 is met decisively, so the default stands.
+
+The recursive CTE lives in `migrations/graph.sql`, and `testgraph.py` asserts it
+reproduces `TopologyGraph` in packages/core on every structural case —
+transitivity, direction, depth limits, cycles, unknown origins, and the
+adjacency gate. That parity matters because blast radius feeds risk scoring: if
+the two implementations disagreed, the same action would carry different
+authority depending on which code path answered.
+
+**Still open:** criterion 5. Phase 2's query shapes are not yet known, and
+path-finding or structural similarity could still justify a dedicated store. The
+bar is now higher than it was — a second datastore must beat 18 ms p99 *and*
+justify the consistency risk of holding topology apart from the incident record.
+
+## Original decision criteria
+
+Recorded before the measurement, for honesty about what was and was not known:
 
 1. Node and edge counts on the reference stack, and a projection for a realistic
    customer estimate
@@ -47,9 +76,8 @@ Phase 1 must produce these numbers before this ADR is written:
 4. Reconciliation write volume per minute under normal churn
 5. Whether Phase 2's planned queries exceed bounded-depth reachability
 
-**Default:** Postgres, unless (3) misses the latency target or (5) is true. The
-schema already carries `topology_node` and `topology_edge` with a `target_key`
-index, so the default is testable on day one of Phase 1 at no cost.
+**Default was:** Postgres, unless (3) missed the latency target or (5) proved
+true. (3) passed by a wide margin; (5) remains unmeasured until Phase 2.
 
 The bar for adding a second datastore is high. It is another thing to run,
 back up, secure, and keep consistent with Postgres — and inconsistency between
@@ -72,8 +100,8 @@ justify the split.
   expensive. Mitigation: all traversal goes through the `TopologyGraph`
   interface; no caller writes SQL against `topology_edge` directly.
 
-**Revisit:** when Phase 1's exit criterion is measured. This ADR is then either
-superseded by **Graph store: Postgres** or **Graph store: dedicated**.
+**Revisit:** if Phase 2 needs queries beyond bounded-depth reachability, or if
+a real customer topology proves an order of magnitude larger than the benchmark.
 
 ## Alternatives considered
 

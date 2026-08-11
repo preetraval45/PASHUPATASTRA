@@ -5,3 +5,4 @@
 # a line that has been applied anywhere — write a new migration instead.
 
 initial.sql
+graph.sql

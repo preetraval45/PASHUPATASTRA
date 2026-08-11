@@ -11,7 +11,7 @@ in the filename.
 | [Observability](Observability.md) — sit above existing tooling, never replace it | 2026-08-10 | Accepted |
 | [Platform](Platform.md) — AWS as the target, `packages/core` cloud-free | 2026-08-10 | Accepted |
 | [Schema](Schema.md) — event schema versioning, additive vs. breaking | 2026-08-11 | Accepted |
-| [Graph](Graph.md) — topology store: criteria recorded, decision due Phase 1 | 2026-08-11 | Deferred |
+| [Graph](Graph.md) — topology store: Postgres, p99 18ms vs. a 200ms target | 2026-08-11 | Accepted |
 
 ## Planned
 
