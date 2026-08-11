@@ -209,6 +209,46 @@ def test_incident_round_trip(store: PostgresStore) -> None:
     assert restored.top_hypothesis.evidence == ["evt-deploy-421", "evt-pg-connections"]
 
 
+def test_incident_round_trip_keeps_plan_chain_and_timeline(store: PostgresStore) -> None:
+    """These were silently dropped once. Without them the detail view loses the
+    evidence and the remediation it exists to show — and it looks fine doing it,
+    because an empty list renders as an empty section rather than an error."""
+    from pashupatastra import CausalLink, EntityKind, EntityRef, PlanStep
+
+    incident = Incident(
+        id=incident_id(2026, 997),
+        severity=IncidentSeverity.CRITICAL,
+        opened_at=datetime.now().astimezone(),
+        hypotheses=[Hypothesis(statement="pool saturated", confidence=0.9, evidence=["e1"])],
+        causal_chain=[
+            CausalLink(
+                entity=EntityRef(kind=EntityKind.DATABASE, id="pg", name="pg"),
+                transition="connections 41% → 98%",
+                evidence=["e1"],
+            )
+        ],
+        plan=[
+            PlanStep(
+                order=1,
+                action_id="rollback_deployment",
+                expected_post_state={"error_rate": "<1%"},
+                rollback_action_id="redeploy_version",
+            )
+        ],
+    )
+    incident.transition_to(IncidentState.DIAGNOSED, "agent:incident", "deployment matched")
+    store.save_incident(incident)
+
+    restored = store.get_incident(incident.id)
+    assert restored is not None
+    assert len(restored.causal_chain) == 1
+    assert restored.causal_chain[0].evidence == ["e1"]
+    assert len(restored.plan) == 1
+    assert restored.plan[0].action_id == "rollback_deployment"
+    assert restored.plan[0].expected_post_state == {"error_rate": "<1%"}
+    assert [t.to_state for t in restored.transitions] == [IncidentState.DIAGNOSED]
+
+
 def test_transitions_append_rather_than_rewrite(store: PostgresStore) -> None:
     incident = Incident(
         id=incident_id(2026, 998),

@@ -144,8 +144,23 @@ def test_missing_observation_fails_verification() -> None:
 
 
 def test_demo_incident_is_available() -> None:
+    """Looked up by id rather than by position: the store also holds incidents
+    written by other tests, and ordering is by recency."""
     incidents = client.get("/api/v1/incidents").json()
-    assert incidents, "expected the seeded demo incident"
-    incident = incidents[0]
-    assert incident["impact"]["estimated_users_affected"] == 1240
-    assert incident["hypotheses"][0]["evidence"], "hypotheses must cite evidence"
+    assert incidents, "expected at least the seeded demo incident"
+
+    demo = next((i for i in incidents if i["id"] == "INC-2026-0810"), None)
+    assert demo is not None, "the seeded demo incident should be present"
+    assert demo["impact"]["estimated_users_affected"] == 1240
+    assert demo["hypotheses"][0]["evidence"], "hypotheses must cite evidence"
+
+
+def test_incident_detail_keeps_plan_and_causal_chain() -> None:
+    """The detail route once returned an incident with an empty plan and no
+    causal chain, and rendered without complaint — an empty section looks like
+    'nothing to show' rather than 'we lost it'."""
+    incident = client.get("/api/v1/incidents/INC-2026-0810").json()
+    assert incident["plan"], "plan must survive the round trip"
+    assert incident["causal_chain"], "causal chain must survive the round trip"
+    assert incident["transitions"], "timeline must survive the round trip"
+    assert all(link["evidence"] for link in incident["causal_chain"])

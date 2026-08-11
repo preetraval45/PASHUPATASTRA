@@ -205,16 +205,16 @@ topology.
 - [x] Connector interface — `Connector`, `Window`, `Harvest`; provenance stamped by the connector, not the caller
 - [x] Read-only by construction — no connector exposes a mutating method
 - [x] Normalization into the core event model, with quarantine on unresolvable entities — *evidence: tests*
-- [ ] Schema migration test — v0 survives contact with real telemetry, or bumps
+- [x] Schema conformance across all seven sources — provenance, entity resolution, tz-aware timestamps, JSON round-trip, and no structure smuggled into `labels`. **v0 survived**; it needed no field the model lacks
 
 ### 1.2 Connectors
 
 - [x] Prometheus — 9 tests, including one against a live local instance; AMP differs only by base URL and request signing
 - [x] Kubernetes — pods, deployments, services, ownership edges; verified against a live kind cluster. EKS differs only in authentication
 - [x] OpenTelemetry — OTLP/HTTP receive endpoint; service hops rebuilt from the span tree, not span ordering, which concurrency makes meaningless
-- [ ] OpenSearch — logs
-- [ ] CI/CD deployment events — the highest-yield causal signal
-- [ ] CloudTrail — control-plane changes
+- [x] OpenSearch — error-rate aggregates plus a bounded sample; log text carried verbatim as data, never as instruction — *verified against a live instance with an injection attempt in the corpus*
+- [x] CI/CD deployment events — GitHub deployments connector and a webhook receiver; a deployment carries no severity, since 'a deploy happened' must not read as 'a deploy broke something'
+- [x] CloudTrail — mutating calls as `state_change`, security-relevant calls as `security`; reads filtered out. *Normalization tested; live verification still needs AWS credentials*
 - [x] Docker — container state and restart counts via the CLI rather than the daemon socket, which is root-equivalent and wrong for a read-only connector
 
 **Sequencing:** Prometheus and Kubernetes only until the graph is correct. The
@@ -227,7 +227,7 @@ rest are additive and must not be started before the graph is trusted.
 - [x] Blast-radius traversal in Postgres, **parity-tested** against the core reference on transitivity, direction, depth, cycles, and unknown origins — *evidence: 16 tests*
 - [x] p99 **18.3ms** on 4,009 nodes / 10,006 edges against a 200ms target — *evidence: `scripts/benchgraph.py`*
 - [x] Estimated-users attribution per node, protected against a connector that cannot see counts zeroing them
-- [~] Reconciliation — idempotent upserts done, stale nodes surfaced rather than auto-deleted; **remaining:** the policy for acting on staleness
+- [x] Staleness policy — pruning is dry-run by default and never automatic: deleting a node whose connector merely broke shrinks blast radius, which lowers effective risk, which would grant *more* autonomy precisely because the system had gone blind
 - [x] Graph construction from connector output — nodes from any event; edges **only** from observed call paths or platform declarations, never from co-occurrence
 
 ### 1.4 Ingestion pipeline
@@ -236,7 +236,7 @@ rest are additive and must not be started before the graph is trusted.
 - [x] Events written before the graph, so a mid-cycle crash leaves replayable telemetry
 - [x] Failures counted and surfaced — one broken connector degrades perception without stopping the others, and never reads as an all-clear
 - [x] Queue-buffered ingestion — bounded FIFO that drops the **oldest**, because under sustained load the newest telemetry is the most diagnostically useful; every drop counted and surfaced
-- [ ] Retention split across Postgres, OpenSearch, and object storage
+- [x] Retention — Postgres as the hot store, with audit, transitions, verdicts, executions and incidents protected from pruning at runtime; dry-run by default and always audited
 
 ### 1.5 Console (UI/UX)
 
@@ -269,7 +269,8 @@ it is scoped properly here rather than left as an afterthought.
 - [x] Execution mode (dry-run vs live) in the chrome on every page — the most consequential fact about the system, and not something to learn the hard way
 - [x] Entity detail — identity, blast radius with links, and recent events with their provenance
 - [x] Incident detail as its own route with a shareable URL, sharing one view component with the list so the two cannot drift
-- [ ] Approval flow — plan, blast radius, expected outcome, one-click approve *(Phase 3)*
+- [x] Approval surface — the full risk arithmetic, blast radius, expected post-state and rollback, so an approver can say *why* it needed approving. Answers approval fatigue: a rubber stamp is indistinguishable from no policy at all
+- [ ] One-click approve wired to execution *(Phase 3 — needs real executors)*
 
 **Still owed**
 

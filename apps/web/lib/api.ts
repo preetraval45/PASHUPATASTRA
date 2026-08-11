@@ -87,11 +87,12 @@ export interface Verdict {
   action_id: string;
   incident_ref: string | null;
   base_risk: number;
-  adjustments: { reason: string; delta: number }[];
+  adjustments: RiskAdjustment[];
   effective_risk: number;
   tier: Tier;
   required_approvers: string[];
   granted_by: string | null;
+  expires_at: string | null;
   denial_reason: string | null;
 }
 
@@ -155,6 +156,11 @@ export interface EntityDetail {
   events: EntityEvent[];
 }
 
+export interface RiskAdjustment {
+  reason: string;
+  delta: number;
+}
+
 export interface Health {
   status: string;
   audit_storage: string;
@@ -162,6 +168,21 @@ export interface Health {
   dry_run: boolean;
   incidents: number;
   audit_records: number;
+}
+
+async function post<T>(path: string, body: unknown): Promise<T | null> {
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
 }
 
 async function get<T>(path: string): Promise<T | null> {
@@ -185,6 +206,19 @@ export const getAudit = (limit = 50) => get<AuditRecord[]>(`/audit?limit=${limit
 export const getIncident = (id: string) => get<Incident>(`/incidents/${encodeURIComponent(id)}`);
 export const getIncidentAudit = (id: string) =>
   get<AuditRecord[]>(`/audit?incident_ref=${encodeURIComponent(id)}&limit=100`);
+/** Evaluate policy for an action. This is the only way to obtain authorization,
+ *  and the dashboard never computes risk itself — a second implementation would
+ *  be a second, contradictory answer. */
+export async function evaluatePolicy(body: {
+  action_id: string;
+  incident_ref?: string | null;
+  blast_radius_entities?: number;
+  blast_radius_users?: number;
+  diagnostic_confidence?: number;
+}): Promise<Verdict | null> {
+  return post<Verdict>("/policy/evaluate", body);
+}
+
 export const getEntity = (key: string) =>
   get<EntityDetail>(`/entities/${encodeURIComponent(key)}`);
 

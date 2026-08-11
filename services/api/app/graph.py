@@ -81,19 +81,72 @@ class GraphStore:
             conn.commit()
         return len(edges)
 
-    def stale_nodes(self, older_than: timedelta) -> list[str]:
-        """Nodes not seen recently.
-
-        Surfaced rather than auto-deleted. A node disappearing may mean it was
-        decommissioned, or may mean the connector broke — and those need
-        different responses, so a human or a later reconciliation policy decides.
-        """
+    def stale_nodes(self, older_than: timedelta) -> list[dict]:
+        """Nodes not seen recently, with how long they have been missing."""
         cutoff = datetime.now().astimezone() - older_than
         with connect(self.database_url) as conn:
             rows = conn.execute(
-                "SELECT key FROM topology_node WHERE last_seen_at < %s ORDER BY key", (cutoff,)
+                """
+                SELECT key, kind, name, last_seen_at,
+                       EXTRACT(EPOCH FROM (now() - last_seen_at))::BIGINT AS missing_seconds
+                FROM topology_node
+                WHERE last_seen_at < %s
+                ORDER BY last_seen_at
+                """,
+                (cutoff,),
             ).fetchall()
-        return [row["key"] for row in rows]
+        return [
+            {
+                "key": r["key"],
+                "kind": r["kind"],
+                "name": r["name"],
+                "last_seen": r["last_seen_at"].isoformat(),
+                "missing_seconds": int(r["missing_seconds"]),
+            }
+            for r in rows
+        ]
+
+    def prune_stale(self, older_than: timedelta, dry_run: bool = True) -> dict:
+        """Remove nodes not seen for `older_than`.
+
+        **Dry-run by default, and never called automatically.** The temptation
+        is to expire stale nodes on a timer, and it is the wrong instinct: a
+        node disappears either because it was decommissioned or because the
+        connector watching it broke, and those demand opposite responses. Worse,
+        deleting on the second case shrinks blast radius — which lowers
+        effective risk, which can hand an action more autonomy than it should
+        have. Silence would make the system *more* willing to act precisely
+        because it had gone blind.
+
+        So expiry is an explicit, audited act with a stated threshold, and the
+        default answer to "should this be removed" is "a human decides".
+        """
+        candidates = self.stale_nodes(older_than)
+        if dry_run or not candidates:
+            return {
+                "dry_run": True,
+                "candidates": candidates,
+                "removed": 0,
+                "edges_removed": 0,
+            }
+
+        keys = [c["key"] for c in candidates]
+        with connect(self.database_url) as conn:
+            edges = conn.execute(
+                "DELETE FROM topology_edge WHERE source_key = ANY(%s) OR target_key = ANY(%s)",
+                (keys, keys),
+            ).rowcount
+            nodes = conn.execute(
+                "DELETE FROM topology_node WHERE key = ANY(%s)", (keys,)
+            ).rowcount
+            conn.commit()
+
+        return {
+            "dry_run": False,
+            "candidates": candidates,
+            "removed": nodes,
+            "edges_removed": edges,
+        }
 
     # --- queries ------------------------------------------------------------
 

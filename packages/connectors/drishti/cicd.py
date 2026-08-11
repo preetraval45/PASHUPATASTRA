@@ -174,8 +174,17 @@ class WebhookDeployments:
                     strategy=str(payload.get("strategy") or "") or None,
                 ),
                 provenance=Provenance(
+                    # A pushed event has no query to re-run, so the reference
+                    # names the delivery itself. Weaker than a re-fetchable
+                    # URL — which is why the caller is urged to send one — but
+                    # provenance is mandatory, and "none" is not an option.
                     source_system=str(payload.get("source") or "ci"),
                     url=str(payload.get("url") or "") or None,
+                    query=(
+                        None
+                        if payload.get("url")
+                        else f"webhook deployment {service}@{version}"
+                    ),
                 ),
                 labels={"environment": str(payload.get("environment") or "")},
             )

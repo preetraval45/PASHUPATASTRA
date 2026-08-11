@@ -2,9 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { VerdictPanel } from "@/components/approval";
 import { IncidentView } from "@/components/incident";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
-import { getActions, getIncident, getIncidentAudit, type AuditRecord } from "@/lib/api";
+import {
+  evaluatePolicy,
+  getActions,
+  getIncident,
+  getIncidentAudit,
+  type AuditRecord,
+} from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +61,23 @@ export default async function IncidentDetailPage({
 
   const risk = new Map((actions ?? []).map((a) => [a.id, a.base_risk]));
 
+  // Authorization is shown for the plan's riskiest step, evaluated against this
+  // incident's real blast radius and confidence. The dashboard asks the policy
+  // engine rather than scoring anything itself.
+  const riskiest = [...incident.plan].sort(
+    (a, b) => (risk.get(b.action_id) ?? 0) - (risk.get(a.action_id) ?? 0),
+  )[0];
+  const spec = (actions ?? []).find((a) => a.id === riskiest?.action_id);
+  const verdict = riskiest
+    ? await evaluatePolicy({
+        action_id: riskiest.action_id,
+        incident_ref: incident.id,
+        blast_radius_entities: incident.impact.blast_radius_entities,
+        blast_radius_users: incident.impact.estimated_users_affected,
+        diagnostic_confidence: incident.hypotheses[0]?.confidence ?? 1,
+      })
+    : null;
+
   return (
     <Page
       title={id}
@@ -68,6 +92,16 @@ export default async function IncidentDetailPage({
       }
     >
       <IncidentView incident={incident} risk={risk} />
+
+      {verdict && (
+        <VerdictPanel
+          verdict={verdict}
+          blastRadius={incident.impact.blast_radius_entities}
+          affectedUsers={incident.impact.estimated_users_affected}
+          expectedPostState={riskiest?.expected_post_state}
+          rollback={riskiest?.rollback_action_id ?? spec?.rollback_action_id ?? null}
+        />
+      )}
 
       <Panel title="Audit trail" aside={`${audit?.length ?? 0} records`}>
         {!audit?.length ? (

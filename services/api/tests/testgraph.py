@@ -170,6 +170,33 @@ def test_a_connector_without_user_counts_does_not_zero_them(store: GraphStore) -
 
 def test_stale_nodes_are_surfaced_not_deleted(store: GraphStore) -> None:
     assert store.stale_nodes(timedelta(days=365)) == []
-    stale = store.stale_nodes(timedelta(seconds=-1))
+    stale = {n["key"] for n in store.stale_nodes(timedelta(seconds=-1))}
     assert "service:api" in stale
     assert store.counts()[0] > 0, "listing stale nodes must not delete them"
+
+
+def test_pruning_is_dry_run_by_default(store: GraphStore) -> None:
+    """Expiring stale nodes on a timer is the wrong instinct: deleting a node
+    whose connector merely broke shrinks blast radius, which lowers effective
+    risk, which would hand actions more autonomy precisely because the system
+    had gone blind."""
+    before = store.counts()
+    result = store.prune_stale(timedelta(seconds=-1))
+
+    assert result["dry_run"] is True
+    assert result["removed"] == 0
+    assert result["candidates"], "it still says what it would remove"
+    assert store.counts() == before
+
+
+def test_pruning_removes_only_when_explicitly_asked(store: GraphStore) -> None:
+    store.upsert_nodes([Node(ref=ref(EntityKind.SERVICE, "doomed"))])
+    store.upsert_edges([Edge(source="service:doomed", target="database:postgres")])
+    before_nodes, before_edges = store.counts()
+
+    result = store.prune_stale(timedelta(seconds=-1), dry_run=False)
+
+    assert result["dry_run"] is False
+    assert result["removed"] == before_nodes
+    assert result["edges_removed"] == before_edges
+    assert store.counts() == (0, 0)

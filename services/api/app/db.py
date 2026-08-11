@@ -15,12 +15,15 @@ from typing import Any, Iterator
 
 import psycopg
 from pashupatastra import (
+    CausalLink,
     Hypothesis,
     Incident,
     IncidentSeverity,
     IncidentState,
+    PlanStep,
     Verdict,
 )
+from pashupatastra.incidents import Transition
 from psycopg.rows import dict_row
 
 from .config import get_settings
@@ -359,6 +362,23 @@ class PostgresStore:
                     ),
                 )
 
+            conn.execute("DELETE FROM plan_step WHERE incident_id = %s", (incident.id,))
+            for step in incident.plan:
+                conn.execute(
+                    """
+                    INSERT INTO plan_step (incident_id, step_order, action_id,
+                                           expected_post_state, rollback_action_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (
+                        incident.id,
+                        step.order,
+                        step.action_id,
+                        json.dumps(step.expected_post_state),
+                        step.rollback_action_id,
+                    ),
+                )
+
             conn.execute("DELETE FROM hypothesis WHERE incident_id = %s", (incident.id,))
             for hypothesis in incident.hypotheses:
                 conn.execute(
@@ -390,6 +410,14 @@ class PostgresStore:
                 "SELECT * FROM hypothesis WHERE incident_id = %s ORDER BY confidence DESC",
                 (incident_id,),
             ).fetchall()
+            steps = conn.execute(
+                "SELECT * FROM plan_step WHERE incident_id = %s ORDER BY step_order",
+                (incident_id,),
+            ).fetchall()
+            transitions = conn.execute(
+                "SELECT * FROM incident_transition WHERE incident_id = %s ORDER BY id",
+                (incident_id,),
+            ).fetchall()
 
         incident = Incident(
             id=row["id"],
@@ -411,6 +439,29 @@ class PostgresStore:
                 mechanism=list(h["mechanism"]),
             )
             for h in hypotheses
+        ]
+        # Causal chain, plan, and timeline are part of the incident, not
+        # decoration: without them the detail view silently loses the evidence
+        # and the remediation it exists to show.
+        incident.causal_chain = [CausalLink.model_validate(link) for link in (row["causal_chain"] or [])]
+        incident.plan = [
+            PlanStep(
+                order=s["step_order"],
+                action_id=s["action_id"],
+                expected_post_state=s["expected_post_state"] or {},
+                rollback_action_id=s["rollback_action_id"],
+            )
+            for s in steps
+        ]
+        incident.transitions = [
+            Transition(
+                at=tr["at"],
+                from_state=IncidentState(tr["from_state"]) if tr["from_state"] else None,
+                to_state=IncidentState(tr["to_state"]),
+                actor=tr["actor"],
+                justification=tr["justification"],
+            )
+            for tr in transitions
         ]
         return incident
 
