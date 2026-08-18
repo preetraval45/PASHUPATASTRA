@@ -101,9 +101,36 @@ Plus ablations — see [../docs/research/Paper Outline.md](../docs/research/Pape
 
 ## Harness
 
-Fault injection against a real containerized reference stack rather than
-telemetry replay, wherever feasible — replay is cheaper but far less credible
-for the paper's claims. Each run must be reproducible from a single command and
+Built (Phase 5.2), in `harness/`. Fault injection against a real cluster rather
+than telemetry replay — real `kubectl` changes producing real unavailable
+replicas and real rollout history.
+
+```
+python -m benchmark.harness.run --plan              # coverage, touches nothing
+python -m benchmark.harness.run --runs 3 --arm none # run it
+```
+
+> ### It runs 31 of 104 scenarios
+>
+> The other 73 are excluded **by name, with a stated reason** — an exclusion
+> without one raises. Roughly: 11 security scenarios need an adversary
+> simulated, 8 need a load generator, 5 would require destroying real data, 4
+> need schema state, and most of the remainder name a recovery condition
+> (`error_rate`, `latency_p95_ms`, `hit_rate`) that a stateless five-deployment
+> stack cannot report.
+>
+> **The runnable subset is not representative.** It is 20 negatives, 6
+> escalations and 5 remediations, so it under-tests remediation and a score
+> drawn from it flatters restraint. The runner prints this on every invocation.
+> Closing the gap needs a load generator, an instrumented reference
+> application, and a stateful database.
+
+Variance is reported per scenario rather than averaged: a scenario correct in 3
+runs of 5 is marked `UNSTABLE` rather than contributing 0.6 to a mean. Harness
+errors are graded separately and excluded from the failure rate, since a rig
+that could not inject the fault has said nothing about the system.
+
+Each run must be reproducible from a single command and
 emit the metrics table defined in
 [../docs/research/METRICS.md](../docs/research/METRICS.md).
 

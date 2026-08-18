@@ -555,10 +555,14 @@ injected faults, including deliberately wrong remediations.
 
 ### 5.2 Harness
 
-- [ ] Fault injection against the real containerized stack
-- [ ] Ephemeral environment — provisioned per run, torn down after
-- [ ] N runs per scenario; variance reported
-- [ ] One-command reproducibility
+- [x] Fault injection against the real containerized stack — `benchmark/harness/`, real `kubectl` changes producing real unavailable replicas and real rollout history, not simulated telemetry
+- [x] Ephemeral environment — a namespace per run, torn down in `__exit__` so it happens on success, failure and interrupt alike. A run inheriting the previous run's broken deployment produces a result about the wrong fault and nothing in the output would say so
+- [x] N runs per scenario; variance reported **per scenario**, not as a mean. Passing 3 of 5 and passing 5 of 5 average to "mostly fine" and only one is a system you would turn on, so mixed results are flagged `UNSTABLE` by name
+- [x] One-command reproducibility — `python -m benchmark.harness.run --runs 3 --arm none`
+- [x] Harness errors are graded separately and excluded from the failure rate — a rig that could not set up the fault has said nothing about the system, and folding it in makes a flaky cluster look like a wrong answer
+- [x] **Only 31 of 104 scenarios (30%) are runnable, and the other 73 are excluded by name with a stated reason.** An exclusion with no reason raises. The alternative is a harness that runs what is easy and reports it as the corpus, and the easy scenarios are biased in exactly the direction that flatters the system
+- [x] The runnable subset is **not representative**, and the runner says so on every invocation: 20 negatives, 6 escalations, 5 remediations. A score from it flatters restraint and is not a corpus score
+- [ ] The excluded 70% — needs a load generator, an instrumented reference application, and a stateful database. Until then the benchmark cannot grade `error_rate`, `latency_p95_ms`, or any application metric, which is most of the corpus
 
 ### 5.3 Arms
 

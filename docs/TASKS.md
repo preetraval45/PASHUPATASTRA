@@ -520,11 +520,14 @@ Contracts and grading exist. Live observation does not.
   - c. `[x]` **Negative scenarios** — 25, one or more in every category
   - d. `[x]` **Escalation scenarios** — 19, each stating why it escalates
   - e. `[x]` All authored **before** the logic that resolves them — 5.2 is unbuilt
-- `[ ]` **T-5.2 — Harness** · L
-  - a. Fault injection against the real containerized stack
-  - b. Ephemeral environment per run
-  - c. N runs per scenario, variance reported
-  - d. One-command reproducibility
+- `[~]` **T-5.2 — Harness** · L
+  - a. `[~]` Fault injection against the real containerized stack — works for 31 of
+    104 scenarios; the rest are excluded by name with a reason
+  - b. `[x]` Ephemeral environment per run — namespace per run, torn down on every exit path
+  - c. `[x]` N runs per scenario, variance reported per scenario rather than averaged
+  - d. `[x]` One-command reproducibility — `python -m benchmark.harness.run`
+  - e. `[ ]` Load generator, instrumented reference app, and a stateful database —
+    without them no application metric is gradeable, which is most of the corpus
 - `[ ]` **T-5.3 — Arms and ablations** · L — human, runbook automation, naive LLM
   agent, full system; then remove one component at a time
 - `[ ]` **T-5.4 — Reporting** · M
