@@ -189,8 +189,9 @@ def _write_records(args, results, exclusions) -> Path:
                 "outcome": outcomes.get(result.scenario_id, ""),
                 "action_taken": result.action_taken,
                 "escalated": result.escalated,
+                "executed": result.executed,
                 "cause": result.cause,
-                "verified": result.verdict.value == "correct" and result.action_taken is not None,
+                "verified": result.verdict.value == "correct" and result.executed,
                 "duration_seconds": result.duration_seconds,
             }) + "\n")
 
@@ -231,6 +232,7 @@ def run_once(
                 verdict=verdict,
                 action_taken=decision.action,
                 escalated=decision.escalated,
+                executed=decision.executed,
                 duration_seconds=round(time.monotonic() - started, 2),
                 cause=decision.cause,
                 detail=f"{injection.describe} | {decision.rationale}",

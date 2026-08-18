@@ -592,6 +592,7 @@ injected faults, including deliberately wrong remediations.
 - [x] Human-intervention rate broken down by **where autonomy stopped** — policy ceiling, verification failure, unrecognised situation — carried as a token rather than parsed back out of prose
 - [x] Three of METRICS.md's eight metrics are **not computable** here and are printed as absent with reasons — RCA needs the reasoning layer, detection accuracy is never exercised, and the recorded clock is not MTTR's clock. A table showing five of eight with no note reads as complete
 - [ ] Runs against both the AWS stack and the compose stack — only the kind cluster so far
+- [x] The benchmark arm delegates to the same `Remediator` the API route drives, rather than re-implementing the sequence. A benchmark measuring a copy of the system is measuring whether two implementations happen to agree, and the shared loop immediately contributed behaviour the copy lacked — the self-rollback guard fired on the first run after the change
 
 #### The ordering confound, found and fixed
 

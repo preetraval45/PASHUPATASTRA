@@ -205,9 +205,14 @@ measure.
 **A single reference architecture.** Five stateless deployments on one Kubernetes
 cluster. Generality is a claim the benchmark cannot support.
 
-**The measured harness is not the production loop.** The benchmark arm
-re-implements the decision sequence against the same policy engine; it does not
-drive `POST /actions/remediate`. Agreement between them is assumed, not shown.
+**The measured harness shares the production sequencing, not the production
+entry point.** The benchmark arm previously re-implemented the decision sequence,
+which meant the benchmark measured a copy of the system and agreement between
+the two was assumed rather than shown. The arm now delegates to the same
+`Remediator` that `POST /actions/remediate` drives, so capture, execution,
+observation, verification and rollback are one implementation with one set of
+tests. What remains untested is the HTTP layer above it — the arm calls the loop
+directly rather than through the route.
 
 ## 10. Conclusion and future work
 

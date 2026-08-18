@@ -23,8 +23,10 @@ import time
 from enum import StrEnum
 
 from pashupatastra.arms import Brief, Decision, unhealthy
-from pashupatastra.dharma import Environment, RiskContext, Tier, evaluate
+from pashupatastra.dharma import ActionSpec, Environment, RiskContext, Tier, evaluate
+from pashupatastra.incidents import VerificationCheck
 from pashupatastra.registry import get as get_action
+from pashupatastra.remediation import Disposition, Remediator
 
 from .stack import BASELINE_READY, REPLICAS, EphemeralStack, kubectl
 
@@ -97,7 +99,9 @@ class RunbookArm:
         action = propose(brief)
         if action is None:
             return Decision(rationale="no threshold crossed")
-        return Decision(action=action, rationale="threshold crossed; ran the runbook")
+        return Decision(
+            action=action, executed=True, rationale="threshold crossed; ran the runbook"
+        )
 
 
 class NaiveLLMArm:
@@ -146,6 +150,7 @@ class PashupatastraArm:
             raise ArmUnavailable(f"ablation {ablation.value!r} is not measurable here — {reason}")
         self.stack = stack
         self.ablation = ablation
+        self._touched = False
 
     def decide(self, brief: Brief) -> Decision:
         action_id = propose(brief)
@@ -203,32 +208,91 @@ class PashupatastraArm:
                 ),
             )
 
-        # Act, then check. Verification ran before the action in the first cut
-        # of this arm, which meant it was grading a stack that still had the
-        # fault in it and escalating every remediation it had just authorised.
-        self._execute(action_id)
-        if self.ablation is Ablation.NO_VERIFICATION:
-            # Reports the action as done without checking, which is what a system
-            # with no verification stage genuinely does.
-            return Decision(action=action_id, rationale=f"authorised at {verdict.tier}; unverified")
+        # From here the *shared* Remediator runs the sequence — capture, act,
+        # observe, verify, roll back on failure. This arm used to re-implement
+        # that, which meant the benchmark measured a copy of the system rather
+        # than the system, and agreement between the two was assumed. There is
+        # one implementation now, and services/api drives the same one.
+        self._touched = False
+        remediation = Remediator(
+            runner=self._runner(),
+            observer=self._observer(),
+            rollback_of=self._rollback_of,
+            capture=self._capture,
+        ).remediate(spec, verdict, {})
 
-        if not self._verified():
+        executed = self._touched
+
+        # A system with no verification stage reports the action as done. It is
+        # applied here rather than inside the observer so the ablation removes a
+        # stage rather than corrupting one — an observer rigged to always pass
+        # would be modelling a broken verifier, which is a different experiment.
+        if self.ablation is Ablation.NO_VERIFICATION:
             return Decision(
-                escalated=True,
-                cause="verification_failed",
-                rationale=f"{action_id} did not reach its expected post-state; escalating",
+                action=action_id,
+                executed=executed,
+                rationale=f"authorised at {verdict.tier}; unverified",
+            )
+
+        if remediation.disposition is Disposition.RESOLVED:
+            return Decision(
+                action=action_id,
+                executed=executed,
+                rationale=f"authorised at {verdict.tier} and verified",
             )
 
         return Decision(
-            action=action_id,
-            rationale=f"authorised at {verdict.tier} and verified",
+            escalated=True,
+            executed=executed,
+            cause="verification_failed",
+            rationale=f"{action_id}: {remediation.reason}",
         )
 
-    def _execute(self, action_id: str) -> None:
-        """Apply the action to whichever services are actually degraded."""
+    # -- adapters the shared loop runs against --------------------------------
+
+    def _runner(self):
+        def run(spec: ActionSpec, params: dict[str, str]) -> str:
+            self._touched = self._execute(spec.id) or self._touched
+            return f"applied {spec.id}"
+
+        return run
+
+    def _observer(self):
+        def observe(spec: ActionSpec, params: dict[str, str]) -> list[VerificationCheck]:
+            healthy = self._verified()
+            return [
+                VerificationCheck(
+                    name="availability",
+                    expected="100",
+                    observed=str(self.stack.observe().get("availability")) if self.stack else None,
+                    passed=healthy if self.stack else None,
+                )
+            ]
+
+        return observe
+
+    def _capture(self, spec: ActionSpec, params: dict[str, str]) -> dict[str, str]:
+        return {}
+
+    @staticmethod
+    def _rollback_of(action_id: str) -> ActionSpec | None:
+        spec = get_action(action_id)
+        if spec.rollback_action_id is None:
+            return None
+        try:
+            return get_action(spec.rollback_action_id)
+        except KeyError:
+            return None
+
+    def _execute(self, action_id: str) -> bool:
+        """Apply the action to whichever services are actually degraded.
+
+        Returns whether anything reached the cluster.
+        """
         if self.stack is None:
-            return
+            return False
         ns = self.stack.namespace
+        touched = False
         for service in self.stack.unhealthy_services():
             target = f"deployment/{service}"
             try:
@@ -240,10 +304,12 @@ class PashupatastraArm:
                     kubectl("scale", target, "--replicas=2", "-n", ns, context=self.stack.context)
                 elif action_id == "disable_deployment":
                     kubectl("rollout", "pause", target, "-n", ns, context=self.stack.context)
+                touched = True
             except Exception:  # noqa: BLE001
                 # A failed execution is a failed remediation, not a crash. It
                 # surfaces through verification below rather than as an error.
-                return
+                return touched
+        return touched
 
     def _verified(self, settle: float = 12.0) -> bool:
         """Whether the stack actually recovered.

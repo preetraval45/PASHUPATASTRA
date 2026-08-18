@@ -63,6 +63,16 @@ class Decision:
     escalated: bool = False
     rationale: str = ""
 
+    executed: bool = False
+    """Whether an action actually reached the stack, regardless of what the arm
+    reported afterwards.
+
+    Distinct from `action` on purpose. An arm that executes and then escalates
+    because verification failed has still changed production, and recording only
+    the reported action left FRR and VSR with an empty denominator — an arm that
+    touched five deployments read as having never acted, and "FRR 0.0" then means
+    "never acted" rather than "acted safely"."""
+
     cause: str = ""
     """Why autonomy stopped, as a stable token rather than prose.
 

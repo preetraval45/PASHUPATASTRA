@@ -126,11 +126,15 @@ def test_an_unregistered_action_escalates_rather_than_running() -> None:
 
 def test_an_authorised_action_with_no_stack_to_verify_escalates() -> None:
     """Unobserved never counts as success — the same rule the production loop
-    follows. With no stack attached nothing can be verified, so the honest
-    outcome is a hand-off rather than a claimed fix."""
+    follows, and now literally the same code: the arm delegates to the shared
+    Remediator instead of re-implementing it.
+
+    Asserted on the cause token rather than the wording. The rationale comes
+    from the shared loop now, and a test pinned to its phrasing would break on
+    every improvement to the message."""
     decision = PashupatastraArm(stack=None).decide(brief(DEGRADED))
     assert decision.escalated
-    assert "post-state" in decision.rationale
+    assert decision.cause == "verification_failed"
 
 
 def test_blast_radius_is_derived_from_affected_services_not_healthy_ones() -> None:
@@ -140,8 +144,8 @@ def test_blast_radius_is_derived_from_affected_services_not_healthy_ones() -> No
     eight."""
     decision = PashupatastraArm().decide(brief(DEGRADED, ceiling=60))
     # 8 of 10 ready is one affected service, so the risk stays inside the
-    # ceiling and the arm gets as far as trying to verify.
-    assert "post-state" in decision.rationale, decision.rationale
+    # ceiling and the arm gets past policy into the loop.
+    assert decision.cause == "verification_failed", decision.rationale
 
 
 # --- ablations ----------------------------------------------------------------
@@ -163,6 +167,7 @@ def test_removing_the_policy_gate_makes_the_arm_act_where_it_should_hand_off() -
     off; without it, the same proposal executes."""
     guarded = PashupatastraArm().decide(brief(DEGRADED, allowed=(), ceiling=0))
     assert guarded.escalated
+    assert guarded.cause == "policy_ceiling"
 
     assert "ceiling of 0" in guarded.rationale
 
@@ -173,8 +178,8 @@ def test_removing_the_policy_gate_makes_the_arm_act_where_it_should_hand_off() -
     ablated = PashupatastraArm(ablation=Ablation.NO_POLICY).decide(
         brief(DEGRADED, allowed=(), ceiling=0)
     )
+    assert ablated.cause == "verification_failed"
     assert "ceiling" not in ablated.rationale
-    assert "post-state" in ablated.rationale
 
 
 def test_removing_verification_reports_success_without_checking() -> None:

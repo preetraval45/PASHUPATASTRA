@@ -75,6 +75,9 @@ class RunResult:
     verdict: Verdict
     action_taken: str | None = None
     escalated: bool = False
+    executed: bool = False
+    """Whether an action reached the stack, regardless of what was reported."""
+
     duration_seconds: float = 0.0
     cause: str = ""
     """Why autonomy stopped, so the human-intervention breakdown does not have to

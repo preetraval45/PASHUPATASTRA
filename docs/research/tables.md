@@ -8,9 +8,9 @@ so it is never printed above the rate of acting wrongly.
 | Arm | FRR | HIR | ARR | VSR | Correct | n |
 |-----|----:|----:|----:|----:|--------:|--:|
 | human | — | — | — | — | — | 0 |
-| runbook | 1.0000 | 0.0000 | 0.8333 | 0.0000 | 0.8333 | 6 |
+| runbook | 0.5455 | 0.0000 | 0.6452 | 0.0000 | 0.6452 | 31 |
 | naive-llm | — | — | — | — | — | 0 |
-| pashupatastra | — | — | — | — | — | 0 |
+| pashupatastra | 0.0000 | 0.3548 | 0.6452 | 0.0000 | 0.8387 | 31 |
 
 **Arms with no data, and why:**
 
@@ -25,6 +25,7 @@ as *no effect*, which reads as evidence the component does not matter.
 
 | Variant | FRR | HIR | ARR | Correct | n |
 |---------|----:|----:|----:|--------:|--:|
+| full architecture | 0.0000 | 0.3548 | 0.6452 | 0.8387 | 31 |
 | −no-policy | — | — | — | — | 0 |
 | −no-verification | — | — | — | — | 0 |
 
@@ -38,7 +39,39 @@ Published rather than aggregated. A mean hides which cases fail, and
 a scenario correct in some runs and not others is not a scenario that
 works.
 
-_No records for the full architecture yet._
+| Scenario | Expected | Correct/runs | Verdicts |
+|----------|----------|-------------:|----------|
+| PIB-0009 | nothing | 1/1 | correct×1 |
+| PIB-0010 | nothing | 1/1 | correct×1 |
+| PIB-0011 | nothing | 1/1 | correct×1 |
+| PIB-0013 | escalate | 1/1 | correct×1 |
+| PIB-0022 | nothing | 1/1 | correct×1 |
+| PIB-0023 | nothing | 1/1 | correct×1 |
+| PIB-0024 | nothing | 1/1 | correct×1 |
+| PIB-0030 | remediate | 0/1 | failed_to_escalate×1 |
+| PIB-0035 | nothing | 1/1 | correct×1 |
+| PIB-0036 | nothing | 1/1 | correct×1 |
+| PIB-0037 | nothing | 1/1 | correct×1 |
+| PIB-0039 | escalate | 1/1 | correct×1 |
+| PIB-0042 | remediate | 0/1 | failed_to_escalate×1 |
+| PIB-0043 | remediate | 0/1 | failed_to_escalate×1 |
+| PIB-0044 | remediate | 0/1 | failed_to_escalate×1 |
+| PIB-0046 | remediate | 0/1 | failed_to_escalate×1 |
+| PIB-0048 | nothing | 1/1 | correct×1 |
+| PIB-0049 | nothing | 1/1 | correct×1 |
+| PIB-0050 | nothing | 1/1 | correct×1 |
+| PIB-0061 | nothing | 1/1 | correct×1 |
+| PIB-0062 | nothing | 1/1 | correct×1 |
+| PIB-0063 | nothing | 1/1 | correct×1 |
+| PIB-0064 | escalate | 1/1 | correct×1 |
+| PIB-0065 | escalate | 1/1 | correct×1 |
+| PIB-0074 | nothing | 1/1 | correct×1 |
+| PIB-0075 | nothing | 1/1 | correct×1 |
+| PIB-0077 | escalate | 1/1 | correct×1 |
+| PIB-0078 | escalate | 1/1 | correct×1 |
+| PIB-0087 | nothing | 1/1 | correct×1 |
+| PIB-0088 | nothing | 1/1 | correct×1 |
+| PIB-0089 | nothing | 1/1 | correct×1 |
 
 ## Table 4 — Metrics not computed
 

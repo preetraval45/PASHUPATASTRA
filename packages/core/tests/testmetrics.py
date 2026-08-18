@@ -24,6 +24,7 @@ def record(
     outcome: str = "remediate",
     action: str | None = "rollback_deployment",
     escalated: bool = False,
+    executed: bool | None = None,
     cause: str = "",
     verified: bool = True,
     scenario: str = "PIB-0001",
@@ -38,6 +39,7 @@ def record(
         outcome=outcome,
         action_taken=action,
         escalated=escalated,
+        executed=action is not None if executed is None else executed,
         cause=cause,
         verified=verified,
         duration_seconds=seconds,
@@ -178,7 +180,8 @@ def test_records_survive_the_json_round_trip(tmp_path) -> None:
         json.dumps({
             "scenario_id": "PIB-0001", "arm": "runbook", "ablation": "none",
             "run_index": 0, "verdict": "false_remediation", "outcome": "nothing",
-            "action_taken": "restart_service", "escalated": False, "cause": "",
+            "action_taken": "restart_service", "escalated": False,
+            "executed": True, "cause": "",
             "verified": False, "duration_seconds": 12.5,
         }) + "\n",
         encoding="utf-8",
@@ -187,3 +190,31 @@ def test_records_survive_the_json_round_trip(tmp_path) -> None:
     assert len(loaded) == 1
     assert loaded[0].acted
     assert compute(loaded).frr == 1.0
+
+
+def test_an_arm_that_executed_then_escalated_still_counts_as_having_acted() -> None:
+    """The second wrong denominator, and the more dangerous one.
+
+    An arm that runs an action and then escalates because verification failed
+    reports no action, so reading the denominator off `action_taken` recorded an
+    arm that had changed five deployments as never having acted. Its FRR of 0.0
+    then meant "never acted", which is a completely different claim from "acted
+    safely" and looks identical in a table.
+    """
+    metrics = compute([
+        record(verdict="failed_to_escalate", action=None, escalated=True,
+               executed=True, cause="verification_failed", verified=False)
+        for _ in range(5)
+    ])
+    assert metrics.actions_executed == 5, "five deployments were changed"
+    assert metrics.vsr == 0.0, "and none of them reached the expected post-state"
+
+
+def test_an_escalation_that_never_touched_the_stack_is_not_an_action() -> None:
+    """The policy gate refusing before execution is the opposite case, and it
+    must not inflate the denominator either."""
+    metrics = compute([
+        record(verdict="correct", outcome="escalate", action=None, escalated=True,
+               executed=False, cause="policy_ceiling", verified=False)
+    ])
+    assert metrics.actions_executed == 0
