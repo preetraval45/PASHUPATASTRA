@@ -11,9 +11,31 @@
 | **Kavach** (कवच, *armor*) | Security. Detection and correlation of adversarial signals. Defensive only. |
 | **Dharma** (धर्म, *law*) | Policy engine. Risk scoring and bounded-autonomy enforcement. |
 | **Kaal** (काल, *time*) | Simulation / digital twin. "What happens if…" before acting. |
+| **Sati** (स्मृति/सति, *mindfulness, recollection*) | **The AI agent.** The reasoning actor that observes, investigates, proposes, and — within Dharma's bounds — acts. |
 
 Names are load-bearing in code — module prefixes, not decoration. Brand tone is
 "ancient concept → modern intelligence"; no religious or fantasy imagery.
+
+### Sati and the engines
+
+The engines are capabilities. **Sati is the actor that uses them.** Drishti
+perceives, Buddhi reasons, Smriti remembers, Astra executes; Sati is what decides
+which to reach for, in what order, and when to stop and ask a human.
+
+The distinction is not cosmetic, and it decides where code goes. An engine is
+deterministic, testable in isolation, and has no opinion about what to do next.
+Sati is the part that has opinions — and is therefore the part that must never be
+trusted without evidence, must carry a budget, and must pass every action through
+Dharma. Keeping the boundary sharp is what makes "the LLM is not the source of
+truth" enforceable rather than aspirational: the engines hold the truth, Sati
+holds the reasoning, and only Dharma authorises the consequence.
+
+Sati is a single identity with specialised roles rather than a fleet of separate
+products — `sati.sentinel` triages, `sati.hunter` hunts, `sati.analyst`
+reconstructs. Each is an `AgentSpec` with its own tools, budget and risk ceiling.
+The name is chosen for *recollection under attention* — the discipline of holding
+what was seen and checking it, which is exactly what separates an investigator
+from a generator.
 
 ## Concepts
 

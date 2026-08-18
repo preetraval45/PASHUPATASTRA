@@ -27,10 +27,24 @@ Subsystems use the Sanskrit names, consistently, in code and docs:
 | Kavach    | Security               | `kavach`              |
 | Dharma    | Policy engine          | `dharma`              |
 | Kaal      | Simulation / twin      | `kaal`                |
+| Sati      | **The AI agent**       | `sati`                |
 
-Brand tone is "ancient concept → modern intelligence". Do **not** add religious
-or fantasy imagery, illustrated deities, or mythological flourish to UI copy,
-docs, or assets. The mythology stays subtle — names only.
+**Sati is the agent; the others are engines.** Engines are deterministic and have
+no opinion about what to do next. Sati is the reasoning actor that chooses which
+engine to reach for and when to stop and ask a human. Roles are namespaced under
+one identity — `sati.sentinel`, `sati.hunter`, `sati.analyst` — not shipped as
+separate agents. Nothing about this exempts it from rule 2 below: Sati proposes,
+Dharma authorises.
+
+Brand tone is "ancient concept → modern intelligence". The **logo is illustrated
+artwork** — the Pashupatastra spear — by an owner decision on 17 August 2026 that
+reversed the earlier geometric-mark rule. See [docs/BRAND.md](docs/BRAND.md) for
+that decision and the constraints the file brings.
+
+That exception is the logo and nothing else. Do not add deities, weapons, flames,
+or mythological flourish to UI copy, docs, or other assets, and do not translate
+the tagline into mystical language — it is a technical claim. Elsewhere the
+mythology stays subtle: names only.
 
 ## Engineering rules
 
