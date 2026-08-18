@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { VerdictPanel } from "@/components/approval";
 import { IncidentView } from "@/components/incident";
+import { Timeline } from "@/components/timeline";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
 import {
   evaluatePolicy,
@@ -93,6 +94,13 @@ export default async function IncidentDetailPage({
     >
       <IncidentView incident={incident} risk={risk} />
 
+      <Panel
+        title="The loop"
+        aside="every stage, including the ones that did not run"
+      >
+        <Timeline incident={incident} audit={audit ?? []} />
+      </Panel>
+
       {verdict && (
         <VerdictPanel
           verdict={verdict}
@@ -111,7 +119,7 @@ export default async function IncidentDetailPage({
         ) : (
           <ol className="divide-y divide-[rgb(var(--edge))]">
             {audit.map((record, index) => (
-              <AuditRow key={index} record={record} />
+              <AuditRow key={index} record={record} index={index} />
             ))}
           </ol>
         )}
@@ -120,11 +128,16 @@ export default async function IncidentDetailPage({
   );
 }
 
-function AuditRow({ record }: { record: AuditRecord }) {
+function AuditRow({ record, index }: { record: AuditRecord; index: number }) {
   const kind = KIND[record.kind] ?? { label: record.kind, status: "neutral" as Status };
   const human = record.actor.startsWith("human:");
   return (
-    <li className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-3 first:pt-0 last:pb-0">
+    // The anchor is what the timeline links to, so a stage can point at the
+    // exact record it claims as evidence rather than at the trail in general.
+    <li
+      id={`audit-${index}`}
+      className="flex scroll-mt-24 flex-wrap items-baseline gap-x-3 gap-y-1 py-3 target:bg-[rgb(var(--raised))] first:pt-0 last:pb-0"
+    >
       <span className="w-16 shrink-0 text-xs text-[rgb(var(--faint))]">
         <Ago at={record.at} />
       </span>

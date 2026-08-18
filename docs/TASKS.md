@@ -501,9 +501,13 @@ Contracts and grading exist. Live observation does not.
   - c. `[x]` Predicted vs actual blast radius tracked — the system's estimation error is a
     metric it should publish about itself. Signed, so under-estimation is visible
     rather than averaged away
-- `[ ]` **T-4.4 — Timeline UI** · M
-  - a. Detection → hypothesis → plan → approval → execution → verification
-  - b. Every step linked to its audit record
+- `[x]` **T-4.4 — Timeline UI** · M
+  - a. `[x]` Detection → hypothesis → plan → approval → execution → verification —
+    six fixed stages, so a stage that never ran is visible rather than absent
+  - b. `[x]` Every step linked to its audit record, by anchor to the specific rows
+  - c. `[x]` A stage is evidenced by an audit record, a state transition, or the
+    artefact it produces — records alone wrongly accused Detection of never running
+  - d. `[ ]` No frontend test framework; verified by rendering both paths instead
 
 ---
 

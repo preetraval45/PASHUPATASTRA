@@ -527,8 +527,11 @@ default, per-environment opt-in, blast-radius escalation regardless of score.
 
 ### 4.4 Timeline UI
 
-- [ ] Detection → hypothesis → plan → approval → execution → verification
-- [ ] Every step linked to its audit record and evidence
+- [x] Detection → hypothesis → plan → approval → execution → verification, drawn as six fixed stages rather than assembled from audit records. A timeline built from records shows what happened and silently omits what did not, so an incident that closed without verifying would render identically to one that verified cleanly — the reader would have to notice an absence
+- [x] A stage the loop passed over is labelled `never ran` and says so in words, distinct from `not yet`
+- [x] `resolved` is deliberately **not** accepted as evidence that verification ran. Reaching resolved is the claim that the fix worked, and verification is what justifies that claim; accepting it would hide the exact anomaly the timeline exists to surface — *evidence: a probe incident resolved without verifying renders `never ran`, while the normal incident renders no false alarm*
+- [x] Every step linked to its audit record and evidence — each stage links to the specific audit rows it claims, by anchor, rather than to the trail in general
+- [ ] Frontend has no test framework, so the timeline is verified by rendering rather than by test. Worth adding before the logic grows
 
 **Exit criterion:** verification correctly classifies success and failure on 20
 injected faults, including deliberately wrong remediations.
