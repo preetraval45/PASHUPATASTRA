@@ -15,6 +15,7 @@ from pashupatastra import (
     Verification,
     evaluate,
 )
+from pashupatastra.approvals import ApprovalLog, Decision
 from pashupatastra.registry import all_actions, get as get_action
 from pydantic import BaseModel
 
@@ -22,10 +23,15 @@ from ..config import get_settings
 from ..engines import astra, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
 from ..db import PostgresStore
+from ..engines.buddhi import model_health
 from ..graph import GraphStore
 from ..store import STORE
 
 GRAPH = GraphStore()
+
+APPROVALS = ApprovalLog()
+"""Process-wide, like the audit log. In-memory for now — the fatigue numbers are
+per-process until this moves to Postgres alongside the audit trail."""
 
 router = APIRouter()
 
@@ -43,6 +49,11 @@ def health() -> dict[str, object]:
         "audit_storage": "postgres" if durable else "memory",
         "incidents": len(STORE.all()),
         "audit_records": len(AUDIT),
+        # Which model is wired up, and what it has spent. `configured: false`
+        # means the deterministic stub is answering — the correct default for a
+        # fresh checkout, and something an operator should see rather than infer
+        # from suspiciously empty reasoning output.
+        "model": model_health(),
     }
 
 
@@ -143,6 +154,21 @@ def execute_action(request: ExecuteRequest) -> astra.ExecutionResult:
 class ApproveRequest(BaseModel):
     verdict: Verdict
     approver: str
+    presented_at: datetime | None = None
+    """When the request reached the operator's screen.
+
+    Supplied by the client because only the client knows it. The gap between
+    Dharma issuing a verdict and a human seeing it is queueing, not deliberation,
+    and timing from issuance would flatter every measurement. Absent, the
+    decision is recorded without a duration rather than with a wrong one.
+    """
+
+
+class DenyRequest(BaseModel):
+    verdict: Verdict
+    approver: str
+    reason: str
+    presented_at: datetime | None = None
 
 
 @router.post("/policy/approve", response_model=Verdict)
@@ -150,8 +176,20 @@ def approve(request: ApproveRequest) -> Verdict:
     verdict = request.verdict
     if verdict.tier.value == "denied":
         raise HTTPException(status_code=403, detail="denied verdicts cannot be approved")
+    if verdict.expires_at is not None and datetime.now().astimezone() > verdict.expires_at:
+        # A stale approval must visibly fail rather than quietly succeed and then
+        # be refused later by `is_executable`, which would leave the operator
+        # believing they had authorised something.
+        raise HTTPException(
+            status_code=409,
+            detail=f"verdict for {verdict.action_id} expired at {verdict.expires_at.isoformat()}",
+        )
+
+    now = datetime.now().astimezone()
     verdict.granted_by = f"human:{request.approver}"
-    verdict.granted_at = datetime.now().astimezone()
+    verdict.granted_at = now
+    _record_decision(verdict, Decision.APPROVED, request.approver, request.presented_at, now)
+
     AUDIT.append(
         AuditRecord(
             kind=AuditKind.APPROVAL,
@@ -161,6 +199,57 @@ def approve(request: ApproveRequest) -> Verdict:
         )
     )
     return verdict
+
+
+@router.post("/policy/deny", response_model=Verdict)
+def deny(request: DenyRequest) -> Verdict:
+    """Refuse an action. A first-class outcome, not an error path.
+
+    Returns the verdict with the refusal recorded rather than raising: a denial
+    is the approval step working, and expressing it as an HTTP error would make
+    the client's success path the one where a human said yes.
+    """
+    verdict = request.verdict
+    now = datetime.now().astimezone()
+    verdict.denial_reason = request.reason
+    verdict.granted_by = None
+    _record_decision(verdict, Decision.DENIED, request.approver, request.presented_at, now)
+
+    AUDIT.append(
+        AuditRecord(
+            kind=AuditKind.APPROVAL,
+            actor=f"human:{request.approver}",
+            incident_ref=verdict.incident_ref,
+            summary=f"denied {verdict.action_id}: {request.reason}",
+        )
+    )
+    return verdict
+
+
+def _record_decision(
+    verdict: Verdict,
+    decision: Decision,
+    approver: str,
+    presented_at: datetime | None,
+    now: datetime,
+) -> None:
+    """Log the decision for the fatigue measurement."""
+    request = APPROVALS.present(verdict, at=presented_at or now)
+    APPROVALS.resolve(request, decision, at=now, approver=approver)
+
+
+@router.get("/policy/approvals/fatigue")
+def approval_fatigue() -> dict[str, object]:
+    """Whether the approval step is doing anything.
+
+    Exposed as an endpoint rather than buried in a log because a metric nobody
+    looks at cannot change behaviour — and this one is meant to be uncomfortable.
+    `looks_decorative` requires *both* near-total approval and near-instant
+    decisions; either alone is consistent with a well-calibrated system.
+    """
+    APPROVALS.expire_stale(datetime.now().astimezone())
+    fatigue = APPROVALS.fatigue()
+    return {**fatigue.summary(), "by_approver": fatigue.by_approver()}
 
 
 # --- verification ------------------------------------------------------------

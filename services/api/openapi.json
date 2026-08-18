@@ -57,6 +57,18 @@
             "title": "Approver",
             "type": "string"
           },
+          "presented_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presented At"
+          },
           "verdict": {
             "$ref": "#/components/schemas/Verdict"
           }
@@ -149,6 +161,40 @@
           "evidence"
         ],
         "title": "CausalLink",
+        "type": "object"
+      },
+      "DenyRequest": {
+        "properties": {
+          "approver": {
+            "title": "Approver",
+            "type": "string"
+          },
+          "presented_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presented At"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          }
+        },
+        "required": [
+          "verdict",
+          "approver",
+          "reason"
+        ],
+        "title": "DenyRequest",
         "type": "object"
       },
       "EntityKind": {
@@ -1337,6 +1383,27 @@
         "summary": "Ingest Otlp"
       }
     },
+    "/api/v1/policy/approvals/fatigue": {
+      "get": {
+        "description": "Whether the approval step is doing anything.\n\nExposed as an endpoint rather than buried in a log because a metric nobody\nlooks at cannot change behaviour \u2014 and this one is meant to be uncomfortable.\n`looks_decorative` requires *both* near-total approval and near-instant\ndecisions; either alone is consistent with a well-calibrated system.",
+        "operationId": "approval_fatigue_api_v1_policy_approvals_fatigue_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Approval Fatigue Api V1 Policy Approvals Fatigue Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Approval Fatigue"
+      }
+    },
     "/api/v1/policy/approve": {
       "post": {
         "operationId": "approve_api_v1_policy_approve_post",
@@ -1373,6 +1440,45 @@
           }
         },
         "summary": "Approve"
+      }
+    },
+    "/api/v1/policy/deny": {
+      "post": {
+        "description": "Refuse an action. A first-class outcome, not an error path.\n\nReturns the verdict with the refusal recorded rather than raising: a denial\nis the approval step working, and expressing it as an HTTP error would make\nthe client's success path the one where a human said yes.",
+        "operationId": "deny_api_v1_policy_deny_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DenyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verdict"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Deny"
       }
     },
     "/api/v1/policy/evaluate": {
