@@ -507,10 +507,11 @@ default, per-environment opt-in, blast-radius escalation regardless of score.
 
 ### 4.2 Live verification
 
-- [ ] Post-action observation window against real telemetry
-- [ ] Per-action window tuning — a restart settles faster than a rollback
-- [ ] Automatic rollback on verification failure
-- [ ] Escalation when rollback itself fails *(the worst case, and it must be handled)*
+- [ ] Post-action observation window against real telemetry *(built and wired into the kubectl router; not yet re-run against a live cluster)*
+- [x] Per-action window tuning — a restart settles faster than a rollback
+- [x] Automatic rollback on verification failure — graded over the window, so a metric that merely bounces no longer closes the incident
+- [x] Escalation when rollback itself fails *(the worst case, and it must be handled)*
+- [x] Settling is named rather than boolean — `held`, `never_reached`, `flapping`, `regressed`, `timed_out`. "Never recovered" and "recovered then lost it" lead somewhere different, and a boolean cannot carry that
 
 ### 4.3 Learning
 

@@ -25,9 +25,12 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import time
+from collections.abc import Callable
 
 from pashupatastra import ActionSpec
 from pashupatastra.incidents import VerificationCheck
+from pashupatastra.observation import WindowObserver, as_checks
 
 DEFAULT_TIMEOUT = 60.0
 """Longer than the connectors' read timeout: a rollout takes time to settle, and
@@ -243,6 +246,23 @@ class NotifyExecutor:
                 passed=bool(self.sink),
             )
         ]
+
+
+def windowed_observer(router: "Router", observer: WindowObserver | None = None) -> Callable[
+    [ActionSpec, dict[str, str]], list[VerificationCheck]
+]:
+    """Adapt the router into an observer the remediation loop can use.
+
+    Samples over the action's window instead of once, so a metric that is merely
+    bouncing does not read as recovery.
+    """
+    watcher = observer or WindowObserver(sleep=time.sleep)
+
+    def observe(action: ActionSpec, params: dict[str, str]) -> list[VerificationCheck]:
+        result = watcher.watch(action.id, lambda: router.observe(action, params))
+        return as_checks(result)
+
+    return observe
 
 
 class Router:

@@ -481,14 +481,16 @@ lacks is the ability to act, and a way to know whether approval means anything.
 
 Contracts and grading exist. Live observation does not.
 
-- `[ ]` **T-4.1 — Post-action observation** · L
-  - a. Observation window against real telemetry
-  - b. Per-action tuning — a restart settles faster than a rollback
-  - c. Missing observation grades as **failure**, never success. Already true; keep it true
-- `[ ]` **T-4.2 — Automatic rollback** · L
-  - a. Roll back on verification failure
-  - b. Escalate when rollback itself fails
-  - c. Never loop — bounded attempts, then a human
+- `[~]` **T-4.1 — Post-action observation** · L
+  - a. `[ ]` Observation window against real telemetry — built and wired into the
+    kubectl router, but not yet re-run against a live cluster
+  - b. `[x]` Per-action tuning — a restart settles faster than a rollback
+  - c. `[x]` Missing observation grades as **failure**, never success. Already true; keep it true
+- `[x]` **T-4.2 — Automatic rollback** · L
+  - a. `[x]` Roll back on verification failure — now graded over a window, so a
+    metric that merely bounces no longer closes the incident
+  - b. `[x]` Escalate when rollback itself fails
+  - c. `[x]` Never loop — one attempt, one undo, then a human
 - `[ ]` **T-4.3 — Learning** · M
   - a. Outcomes to Smriti, **successes and failures with equal prominence**
   - b. Novelty penalty fed by execution history
