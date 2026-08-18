@@ -5,44 +5,52 @@ not in the artwork.
 
 ## The mark
 
-```
-        ╭─────────────────────╮
-       ╱                       ╲
-      │   ⋰                     │
-      │  ⋰⋰  ─────✳─────═╪══►   │
-      │   ⋰                     │
-       ╲                       ╱
-        ╰─────────────────────╯
-```
+The mark is the **Pashupatastra spear**, rendered as illustrated artwork:
+crimson flame-head, gold fittings, dark shaft.
 
-Read outward from the centre:
+File: [`apps/web/public/logo.webp`](../apps/web/public/logo.webp) — 176×176, with
+an alpha channel, so it sits on both the dark and light grounds without a plate.
+The same file is `apps/web/app/icon.webp`, which Next's file convention serves as
+the favicon. The header in `apps/web/app/layout.tsx` renders it as an `<img>`;
+unlike the previous geometric mark it does **not** inherit theme colour, because
+it carries its own.
 
-| Element | Meaning |
-|---------|---------|
-| Circle | The closed loop — Observe → Reason → Act → Verify → Learn |
-| Converging lines | Signals arriving: metrics, logs, traces, events |
-| Shaft | The arrow in flight, left to right |
-| Star node | The decision point, where policy is evaluated |
-| Trident head | The astra itself — the action, in gold |
+### Decision of record — this reverses an earlier one
 
-Two colours carry the whole idea: **teal is perception**, **gold is action**.
-Nothing is gold until it can act, which is also the product's argument.
+An earlier version of this document rejected illustrated artwork in favour of a
+geometric mark, reasoning that "an illustrated weapon reads as a game studio or a
+personal project" while precise geometry "reads as infrastructure — which is what
+a buyer is being asked to give production credentials to."
 
-Files: [`apps/web/public/mark.svg`](../apps/web/public/mark.svg) (icon),
-[`apps/web/public/logo.svg`](../apps/web/public/logo.svg) (horizontal lockup with
-tagline). The header component in `apps/web/app/layout.tsx` inlines the same
-geometry so it inherits theme colour.
+**That decision was reversed by the project owner on 17 August 2026.** The
+artwork is now the mark, on every surface. The earlier geometric files
+([`mark.svg`](../apps/web/public/mark.svg),
+[`logo.svg`](../apps/web/public/logo.svg)) are retained but unused; keep them
+until the identity is settled, then delete them rather than leaving two marks in
+the repository for someone to pick between.
 
-## Relationship to the reference artwork
+### Constraints the artwork brings
 
-The mark descends from an illustrated Pashupatastra arrow — trident head, shaft,
-star, fletching, teal and gold on cream. The **structure and palette are kept**;
-the folk-art execution is not.
+These are properties of the file, not opinions about it. They govern how it is
+used until a purpose-built version exists.
 
-This is deliberate. An illustrated weapon reads as a game studio or a personal
-project. The same geometry drawn precisely reads as infrastructure — which is
-what a buyer is being asked to give production credentials to. The mythology
-earns its place by being the *organising idea*, not the decoration.
+| Constraint | Consequence |
+|-----------|-------------|
+| The subject is a thin diagonal with wide empty margins | The drawn spear is a fraction of its box. Set it at **32px minimum** in chrome; below roughly 24px it reads as a smudge rather than a mark |
+| Source is 176×176 | Adequate for chrome and favicon. **Too small for hero or print** — anything above ~176px will be visibly soft, and upscaling will not fix it |
+| Its crimson is close to `--crit` | `--crit` means live execution and critical severity in this interface. Keep the mark out of the status region and never place it beside a severity badge, or the two reds compete for the same meaning |
+| It is raster, not vector | It cannot be recoloured, themed, or animated cleanly |
+
+**Owed:** a vector redraw of this artwork at full scale, which removes every row
+of that table at once. Until then, treat the current file as the working mark.
+
+### Unresolved: provenance
+
+The artwork's origin and licensing have not been established. This matters more
+than a normal asset question, because [ROADMAP.md](ROADMAP.md) Phase 0.10 gates
+public launch on trademark clearance, and a logo cannot be registered — or safely
+commercialised — without clear rights to it. **Resolve before any public launch,
+not after.** See the note in that section.
 
 ## Tagline
 
