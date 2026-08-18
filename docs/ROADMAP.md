@@ -515,9 +515,11 @@ default, per-environment opt-in, blast-radius escalation regardless of score.
 
 ### 4.3 Learning
 
-- [ ] Outcomes written back to Smriti — successes and failures with equal prominence
-- [ ] Novelty penalty fed by execution history
-- [ ] Estimation error tracked — predicted vs. actual blast radius
+- [x] Outcomes written back to Smriti — successes and failures with equal prominence. Enforced structurally: one `learn()` path with no success-only branch, and a test asserting a failure is stored with the same kind, retention and trust as a success. Equal prominence stated in a docstring is not equal prominence
+- [x] Novelty penalty fed by execution history — familiarity is per environment, because succeeding in dev says nothing about prod, and expires at a horizon since an action last run against infrastructure that has since been rebuilt is closer to novel than familiar
+- [x] Tried-and-failed distinguished from never-tried, and it raises risk. Repeated failure pushes an action out of `AUTONOMOUS`, so the loop stops quietly retrying something that keeps not working
+- [x] Estimation error tracked — predicted vs. actual blast radius, signed rather than absolute. Under-estimating is the direction that lets an action run autonomously when it should have gone to a human, and a mean absolute error reports it identically to the harmless direction
+- [ ] The loop is wired into a live execution path. `Remediator` is still constructed only in tests — 4.2 and 4.3 are core capability, not yet a running service
 
 ### 4.4 Timeline UI
 

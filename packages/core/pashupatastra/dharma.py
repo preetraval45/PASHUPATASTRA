@@ -57,6 +57,10 @@ class RiskContext(BaseModel):
     blast_radius_users: int = 0
     diagnostic_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     executed_here_before: bool = True
+    failed_here_before: int = Field(default=0, ge=0)
+    """Prior failures of this action in this environment. An action that has been
+    tried here and did not work is riskier than one never tried."""
+
     dry_run: bool = True
 
 
@@ -149,6 +153,15 @@ def score(action: ActionSpec, context: RiskContext) -> tuple[int, list[RiskAdjus
         )
     if not context.executed_here_before:
         adjustments.append(RiskAdjustment(reason="never executed in this environment", delta=10))
+    if context.failed_here_before:
+        # Capped so a run of failures cannot on its own push an action to DENIED
+        # — that call belongs to the tier thresholds, not to this term.
+        adjustments.append(
+            RiskAdjustment(
+                reason=f"failed here {context.failed_here_before}× before",
+                delta=min(context.failed_here_before * 8, 24),
+            )
+        )
 
     effective = min(action.base_risk + sum(a.delta for a in adjustments), 100)
     return effective, adjustments

@@ -491,10 +491,14 @@ Contracts and grading exist. Live observation does not.
     metric that merely bounces no longer closes the incident
   - b. `[x]` Escalate when rollback itself fails
   - c. `[x]` Never loop — one attempt, one undo, then a human
-- `[ ]` **T-4.3 — Learning** · M
-  - a. Outcomes to Smriti, **successes and failures with equal prominence**
-  - b. Novelty penalty fed by execution history
-  - c. Predicted vs actual blast radius tracked — the system's estimation error is a metric it should publish about itself
+- `[x]` **T-4.3 — Learning** · M
+  - a. `[x]` Outcomes to Smriti, **successes and failures with equal prominence** —
+    one write path, no success-only branch, same kind and retention either way
+  - b. `[x]` Novelty penalty fed by execution history — per environment, with a
+    horizon; tried-and-failed now scores above never-tried
+  - c. `[x]` Predicted vs actual blast radius tracked — the system's estimation error is a
+    metric it should publish about itself. Signed, so under-estimation is visible
+    rather than averaged away
 - `[ ]` **T-4.4 — Timeline UI** · M
   - a. Detection → hypothesis → plan → approval → execution → verification
   - b. Every step linked to its audit record
