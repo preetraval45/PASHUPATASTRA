@@ -575,11 +575,12 @@ injected faults, including deliberately wrong remediations.
 
 ### 5.4 Ablations
 
-- [ ] Without the hypothesis evidence requirement
-- [ ] Without Smriti retrieval
-- [ ] Without topology-adjacency correlation
-- [ ] Without the verification stage
-- [ ] Without policy tiers
+- [x] **Without policy tiers** — `--ablation no-policy`. The gate is removed and nothing else, so the arm acts where it should hand off
+- [x] **Without the verification stage** — `--ablation no-verification`. Reports the action as done without checking, which is what a system with no verification genuinely does
+- [ ] Without the hypothesis evidence requirement — **refuses to run.** It lives in the reasoning layer, which the benchmark arm never invokes; the shared proposer stands in for diagnosis because there is no model
+- [ ] Without Smriti retrieval — **refuses to run.** Not part of this arm's decision path; each scenario runs in a fresh namespace with no prior incidents to recall
+- [ ] Without topology-adjacency correlation — **refuses to run.** Correlation happens before an incident is formed, and the harness hands the arm one already-scoped fault
+- [x] An ablation the arm cannot exercise raises rather than running. Removing a stage that never ran produces an identical score and would be reported as *"no effect"* — the most misleading result available here, because it reads as evidence the component does not matter
 
 ### 5.5 Reporting
 

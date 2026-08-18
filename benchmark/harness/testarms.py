@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 
 from benchmark.harness.arms import (
+    Ablation,
     ArmUnavailable,
     HumanArm,
     NaiveLLMArm,
@@ -141,3 +142,54 @@ def test_blast_radius_is_derived_from_affected_services_not_healthy_ones() -> No
     # 8 of 10 ready is one affected service, so the risk stays inside the
     # ceiling and the arm gets as far as trying to verify.
     assert "post-state" in decision.rationale, decision.rationale
+
+
+# --- ablations ----------------------------------------------------------------
+
+
+def test_an_ablation_the_arm_cannot_exercise_refuses_to_run() -> None:
+    """Three of the five ablations the roadmap names live in the reasoning path,
+    which this arm never invokes. Removing a stage that never ran produces an
+    identical score and would be reported as "no effect" — the most misleading
+    result available, because it reads as evidence the component does not
+    matter."""
+    for ablation in (Ablation.NO_EVIDENCE, Ablation.NO_MEMORY, Ablation.NO_ADJACENCY):
+        with pytest.raises(ArmUnavailable, match="not measurable"):
+            PashupatastraArm(ablation=ablation)
+
+
+def test_removing_the_policy_gate_makes_the_arm_act_where_it_should_hand_off() -> None:
+    """The escalation scenarios grant no authority. With the gate the arm hands
+    off; without it, the same proposal executes."""
+    guarded = PashupatastraArm().decide(brief(DEGRADED, allowed=(), ceiling=0))
+    assert guarded.escalated
+
+    assert "ceiling of 0" in guarded.rationale
+
+    # The ablated arm gets past the gate and on to executing. It still escalates
+    # here, but at verification rather than at policy — asserted on the reason
+    # rather than the outcome, because two different failures reaching the same
+    # verdict is exactly what an outcome-only check would miss.
+    ablated = PashupatastraArm(ablation=Ablation.NO_POLICY).decide(
+        brief(DEGRADED, allowed=(), ceiling=0)
+    )
+    assert "ceiling" not in ablated.rationale
+    assert "post-state" in ablated.rationale
+
+
+def test_removing_verification_reports_success_without_checking() -> None:
+    """With no stack attached the full arm escalates, because unobserved never
+    counts as success. The ablated arm claims the action worked."""
+    full = PashupatastraArm(stack=None).decide(brief(DEGRADED))
+    assert full.escalated
+
+    ablated = PashupatastraArm(stack=None, ablation=Ablation.NO_VERIFICATION).decide(
+        brief(DEGRADED)
+    )
+    assert ablated.action == "rollback_deployment"
+    assert not ablated.escalated
+    assert "unverified" in ablated.rationale
+
+
+def test_the_unablated_arm_is_the_default() -> None:
+    assert PashupatastraArm().ablation is Ablation.NONE

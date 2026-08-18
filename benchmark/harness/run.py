@@ -23,6 +23,7 @@ sys.path.insert(0, ".")
 
 from benchmark.harness.arms import (  # noqa: E402
     GATED,
+    Ablation,
     ArmUnavailable,
     PashupatastraArm,
     RunbookArm,
@@ -59,7 +60,7 @@ class AlwaysActArm:
         return Decision(action="restart_service", rationale="rig check: always acts")
 
 
-def build_arm(name: str, stack: EphemeralStack | None):
+def build_arm(name: str, stack: EphemeralStack | None, ablation: str = "none"):
     if name == "none":
         return NoneArm()
     if name == "always-act":
@@ -67,7 +68,7 @@ def build_arm(name: str, stack: EphemeralStack | None):
     if name == "runbook":
         return RunbookArm()
     if name == "pashupatastra":
-        return PashupatastraArm(stack=stack)
+        return PashupatastraArm(stack=stack, ablation=Ablation(ablation))
     return GATED[name]()
 
 
@@ -88,9 +89,23 @@ def main() -> int:
     parser.add_argument("--corpus", default="benchmark/incidents/pib")
     parser.add_argument("--limit", type=int, default=0, help="cap scenarios (smoke runs)")
     parser.add_argument(
+        "--ablation", choices=[a.value for a in Ablation], default="none",
+        help="remove one component from the pashupatastra arm",
+    )
+    parser.add_argument(
         "--plan", action="store_true", help="report coverage and exit without touching a cluster"
     )
     args = parser.parse_args()
+
+    # Checked before anything else, including --plan. An unmeasurable ablation
+    # must refuse loudly rather than plan a run it would score as "no effect".
+    if args.ablation != "none":
+        try:
+            PashupatastraArm(ablation=Ablation(args.ablation))
+        except ArmUnavailable as error:
+            print(f"ABLATION UNAVAILABLE — {args.ablation}\n  {error}")
+            return 2
+        print(f"ablation: {args.ablation} (removed from the pashupatastra arm)\n")
 
     corpus = load_corpus(args.corpus)
     runnable: list[PibScenario] = []
@@ -129,7 +144,9 @@ def main() -> int:
     print(f"\nrunning {len(runnable)} scenarios x {args.runs} against arm '{args.arm}'\n")
     for index, scenario in enumerate(runnable, 1):
         for run_index in range(args.runs):
-            result = run_once(scenario, arm, run_index, args.arm, args.context)
+            result = run_once(
+                scenario, arm, run_index, args.arm, args.context, args.ablation
+            )
             results.append(result)
             flag = "" if result.verdict.is_correct else f"  <- {result.verdict.value}"
             print(
@@ -148,6 +165,7 @@ def run_once(
     run_index: int,
     arm_name: str,
     context: str | None,
+    ablation: str = "none",
 ) -> RunResult:
     """One scenario, one repetition, in its own namespace."""
     # The arm is part of the namespace, or two arms run against the same cluster
@@ -161,7 +179,7 @@ def run_once(
             # rather than the fault, and the arm would be deciding on noise.
             time.sleep(8)
             brief = brief_for(scenario, stack.observe())
-            decision = build_arm(arm_name, stack).decide(brief)
+            decision = build_arm(arm_name, stack, ablation).decide(brief)
             verdict = grade(scenario, decision.action, decision.escalated)
             return RunResult(
                 scenario_id=scenario.id,

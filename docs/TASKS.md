@@ -537,7 +537,9 @@ Contracts and grading exist. Live observation does not.
     run against the stub rather than approximating an LLM baseline
   - e. `[!]` Human operator — **blocked on recruiting operators**, not on code.
     Protocol and recording format in `benchmark/results/human/`
-  - f. `[ ]` Ablations — remove one component at a time (5.4)
+  - f. `[~]` Ablations — policy tiers and verification are removable and measurable;
+    the three reasoning-path ablations refuse to run rather than report "no effect"
+    for a stage the arm never invoked
 - `[ ]` **T-5.4 — Reporting** · M
   - a. Metrics from the audit log alone, per [research/METRICS.md](research/METRICS.md)
   - b. **False remediation rate before autonomous resolution rate**

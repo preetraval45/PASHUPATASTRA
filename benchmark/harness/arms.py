@@ -20,6 +20,7 @@ honest thing to build here is somewhere to record their results.
 from __future__ import annotations
 
 import time
+from enum import StrEnum
 
 from pashupatastra.arms import Brief, Decision, unhealthy
 from pashupatastra.dharma import Environment, RiskContext, Tier, evaluate
@@ -30,6 +31,42 @@ from .stack import BASELINE_READY, REPLICAS, EphemeralStack, kubectl
 
 class ArmUnavailable(RuntimeError):
     """An arm that cannot run honestly under the current configuration."""
+
+
+class Ablation(StrEnum):
+    """One component removed from the full architecture.
+
+    An ablation is only meaningful if the arm actually uses the component. Three
+    of the five the roadmap names live in the reasoning path — hypotheses,
+    memory, correlation — and this arm does not exercise any of them: the shared
+    proposer stands in for diagnosis precisely because there is no model to do
+    it. Removing a stage that never ran would produce an identical score and be
+    reported as "no effect", which is the most misleading result available here.
+    """
+
+    NONE = "none"
+    NO_POLICY = "no-policy"
+    NO_VERIFICATION = "no-verification"
+    NO_EVIDENCE = "no-evidence"
+    NO_MEMORY = "no-memory"
+    NO_ADJACENCY = "no-adjacency"
+
+
+UNMEASURABLE: dict[Ablation, str] = {
+    Ablation.NO_EVIDENCE: (
+        "the hypothesis evidence requirement sits in the reasoning layer, which "
+        "this arm never invokes — the shared proposer replaces diagnosis. "
+        "Removing it would change nothing and report as 'no effect'"
+    ),
+    Ablation.NO_MEMORY: (
+        "Smriti retrieval is not part of this arm's decision path; each scenario "
+        "runs in a fresh namespace with no prior incidents to recall"
+    ),
+    Ablation.NO_ADJACENCY: (
+        "topology-adjacency correlation runs before an incident is formed, and "
+        "the harness hands the arm one already-scoped fault"
+    ),
+}
 
 
 def propose(brief: Brief) -> str | None:
@@ -100,8 +137,15 @@ class PashupatastraArm:
 
     name = "pashupatastra"
 
-    def __init__(self, stack: EphemeralStack | None = None) -> None:
+    def __init__(
+        self,
+        stack: EphemeralStack | None = None,
+        ablation: Ablation = Ablation.NONE,
+    ) -> None:
+        if reason := UNMEASURABLE.get(ablation):
+            raise ArmUnavailable(f"ablation {ablation.value!r} is not measurable here — {reason}")
         self.stack = stack
+        self.ablation = ablation
 
     def decide(self, brief: Brief) -> Decision:
         action_id = propose(brief)
@@ -142,7 +186,10 @@ class PashupatastraArm:
         # AUTONOMOUS instead would make the arm escalate every remediation in the
         # corpus — rollback_deployment alone is base risk 45 — which measures the
         # absence of a human in the loop rather than the architecture.
-        if verdict.tier is Tier.DENIED or verdict.effective_risk > brief.risk_ceiling:
+        # The policy ablation removes exactly this gate and nothing else.
+        if self.ablation is not Ablation.NO_POLICY and (
+            verdict.tier is Tier.DENIED or verdict.effective_risk > brief.risk_ceiling
+        ):
             return Decision(
                 escalated=True,
                 rationale=(
@@ -155,6 +202,11 @@ class PashupatastraArm:
         # of this arm, which meant it was grading a stack that still had the
         # fault in it and escalating every remediation it had just authorised.
         self._execute(action_id)
+        if self.ablation is Ablation.NO_VERIFICATION:
+            # Reports the action as done without checking, which is what a system
+            # with no verification stage genuinely does.
+            return Decision(action=action_id, rationale=f"authorised at {verdict.tier}; unverified")
+
         if not self._verified():
             return Decision(
                 escalated=True,
