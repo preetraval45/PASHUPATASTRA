@@ -1,0 +1,84 @@
+{
+  "_comment": [
+    "The single source of truth shared by Terraform and the test suite.",
+    "",
+    "`tools` mirrors AgentSpec.tools in packages/core/pashupatastra/runtime.py.",
+    "A test asserts the two match exactly, so an agent granted a new tool without",
+    "a corresponding IAM change — or the reverse — fails CI. That drift is the",
+    "whole failure mode this file exists to prevent: the runtime enforces the",
+    "declaration, IAM enforces the credential, and if they disagree the weaker",
+    "one is the real policy.",
+    "",
+    "`read` and `write` are separated so a role that only investigates cannot be",
+    "handed a write action by editing one list."
+  ],
+
+  "sati.orchestrator": {
+    "service_account": "sati-orchestrator",
+    "tools": ["smriti.retrieve", "topology.blast_radius"],
+    "read": [
+      "s3:GetObject",
+      "s3:ListBucket"
+    ],
+    "write": []
+  },
+
+  "sati.incident": {
+    "service_account": "sati-incident",
+    "tools": [
+      "prometheus.query",
+      "opensearch.search",
+      "topology.blast_radius",
+      "smriti.retrieve",
+      "astra.restart_service"
+    ],
+    "read": [
+      "aps:QueryMetrics",
+      "aps:GetLabels",
+      "aps:GetSeries",
+      "es:ESHttpGet",
+      "es:ESHttpPost",
+      "logs:FilterLogEvents",
+      "logs:GetLogEvents",
+      "s3:GetObject",
+      "s3:ListBucket"
+    ],
+    "write": [
+      "eks:DescribeCluster"
+    ]
+  },
+
+  "sati.infrastructure": {
+    "service_account": "sati-infrastructure",
+    "tools": [
+      "prometheus.query",
+      "topology.blast_radius",
+      "astra.restart_service",
+      "astra.scale_service",
+      "astra.rollback_deployment"
+    ],
+    "read": [
+      "aps:QueryMetrics",
+      "aps:GetLabels",
+      "eks:DescribeCluster",
+      "eks:DescribeNodegroup",
+      "s3:GetObject"
+    ],
+    "write": [
+      "eks:AccessKubernetesApi"
+    ]
+  },
+
+  "sati.security": {
+    "service_account": "sati-security",
+    "tools": ["opensearch.search", "cloudtrail.lookup", "smriti.retrieve"],
+    "read": [
+      "cloudtrail:LookupEvents",
+      "cloudtrail:GetTrailStatus",
+      "es:ESHttpGet",
+      "logs:FilterLogEvents",
+      "s3:GetObject"
+    ],
+    "write": []
+  }
+}
