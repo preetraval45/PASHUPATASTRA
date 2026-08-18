@@ -614,11 +614,13 @@ authored first, negative cases included, failure reported first.
 
 ### 6.1 Paper
 
-- [ ] Draft — *Pashupatastra: Policy-Constrained Closed-Loop Autonomous Infrastructure Operations*
-- [ ] Results and ablation tables
-- [ ] Threats to validity stated plainly, including the self-authored benchmark
-- [ ] Failure analysis — what the escalation cases have in common
-- [ ] Submission or arXiv preprint
+- [~] Draft — [PAPER.md](research/PAPER.md). Architecture, bounded autonomy, verification and PIB are written; background, evaluation prose, failure analysis and conclusion are not, and the draft says which and why rather than reading as finished
+- [x] Results and ablation tables — **generated** by `scripts/papertables.py` from the run records and included, never transcribed. A number copied into prose stops tracking the data the moment either changes, and the stale number still looks like a number
+- [x] An arm with no data gets a row saying so. A four-column comparison with two columns silently missing reads as a two-arm study that always intended to be one
+- [x] Threats to validity stated plainly, and placed **before** the results discussion rather than after it — a limitations section following a favourable result is read as boilerplate
+- [x] The self-authored benchmark is stated as the first threat, together with the ordering confound that was found and corrected, since that confound is evidence the risk is real rather than theoretical
+- [ ] Failure analysis — what the escalation cases have in common. Needs the corrected corpus at N≥3; answering it from one run per scenario would be over-reading
+- [ ] Submission or arXiv preprint — **the author's call, not a task to complete on their behalf**, and blocked on everything above
 
 ### 6.2 Open source
 
