@@ -481,10 +481,9 @@ lacks is the ability to act, and a way to know whether approval means anything.
 
 Contracts and grading exist. Live observation does not.
 
-- `[~]` **T-4.1 — Post-action observation** · L
-  - a. `[~]` Observation window against real telemetry — reachable from
-    `POST /actions/remediate` and wired to the kubectl router, but not yet re-run
-    against a live cluster
+- `[x]` **T-4.1 — Post-action observation** · L
+  - a. `[x]` Observation window against real telemetry — verified on a live kind
+    cluster, including real sample pacing, which a fake clock cannot check
   - b. `[x]` Per-action tuning — a restart settles faster than a rollback
   - c. `[x]` Missing observation grades as **failure**, never success. Already true; keep it true
 - `[x]` **T-4.2 — Automatic rollback** · L

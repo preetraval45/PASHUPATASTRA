@@ -507,7 +507,7 @@ default, per-environment opt-in, blast-radius escalation regardless of score.
 
 ### 4.2 Live verification
 
-- [ ] Post-action observation window against real telemetry *(built and wired into the kubectl router; not yet re-run against a live cluster)*
+- [x] Post-action observation window against real telemetry — verified against a live kind cluster by `scripts/verifywindow.py`: a healthy deployment holds across consecutive samples, an unpullable image reports `never_reached` rather than recovered, and recovery after a rollback is observed as held
 - [x] Per-action window tuning — a restart settles faster than a rollback
 - [x] Automatic rollback on verification failure — graded over the window, so a metric that merely bounces no longer closes the incident
 - [x] Escalation when rollback itself fails *(the worst case, and it must be handled)*
