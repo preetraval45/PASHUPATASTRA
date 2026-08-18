@@ -43,6 +43,22 @@ class DryRunExecutor(Executor):
         return f"[dry-run] would execute {action.id} with {params or '{}'}"
 
 
+def live_executor() -> Executor:
+    """The real write path, built only when both gates are open.
+
+    Constructed lazily rather than at import: a process that is not permitted to
+    write should not hold a configured cluster client at all, so a bug cannot
+    reach one.
+    """
+    from .executors import KubernetesExecutor, NotifyExecutor, Router
+
+    settings = get_settings()
+    return Router(  # type: ignore[return-value]
+        KubernetesExecutor(context=settings.kube_context),
+        NotifyExecutor(),
+    )
+
+
 def execute(
     action_id: str,
     verdict: Verdict | None,
@@ -55,7 +71,14 @@ def execute(
     verdict = require_verdict(verdict, action)
 
     settings = get_settings()
-    dry_run = settings.dry_run or verdict.constraints.get("dry_run") == "true"
+    # Three ways to stay in dry-run and only one way out. `live_execution_enabled`
+    # already requires both `dry_run: false` and this environment being named in
+    # `live_environments`; a per-verdict constraint can additionally force dry-run
+    # but never grant live execution. Every gate can veto; none can override.
+    dry_run = (
+        not settings.live_execution_enabled
+        or verdict.constraints.get("dry_run") == "true"
+    )
     params = params or {}
 
     # Written before execution, not after — a crash mid-action must still leave
@@ -71,7 +94,7 @@ def execute(
     )
 
     started = datetime.now().astimezone()
-    runner = executor or DryRunExecutor()
+    runner = executor or (DryRunExecutor() if dry_run else live_executor())
     try:
         output = runner.run(action, params) if not dry_run else DryRunExecutor().run(action, params)
         succeeded = True
