@@ -138,8 +138,9 @@ can violate it.
 
 - [x] Next.js app, TypeScript strict, Tailwind
 - [x] Design tokens — restrained palette, no mythological ornament
-- [x] Logo — mark, horizontal lockup with tagline, and `docs/BRAND.md`
-- [x] Geometric mark — loop, shaft, decision node, trident head; teal is perception, gold is action
+- [x] Logo and `docs/BRAND.md`
+- [~] Mark — the illustrated spear artwork is wired into the header and favicon and the build passes. **Owed: a vector redraw.** The source is 176×176 raster, too small for hero or print, and its crimson sits close to `--crit`, which means critical severity everywhere else in the interface
+- [x] ~~Geometric mark — loop, shaft, decision node, trident head~~ — *superseded 17 Aug 2026 by the owner's decision to use the artwork; `mark.svg` and `logo.svg` retained but unused*
 - [x] Overview, incident detail, action registry pages
 - [x] Causal chain renders evidence citations per link
 - [x] Dashboard computes no risk itself — renders API answers only
@@ -166,11 +167,17 @@ can violate it.
 - [ ] State corporate-name availability
 - [ ] Domains — `.com`, `.ai`, `.dev`
 - [ ] GitHub organization, LinkedIn page, social handles
+- [ ] **Logo provenance and licensing established** — the artwork now used as the
+      mark arrived without a stated source or licence. A logo cannot be
+      registered, and should not be commercialised, without clear rights to it.
+      This belongs in the same clearance pass as the name, and carries the same
+      consequence if skipped
 - [ ] Written go/no-go decision recorded as an ADR
 
 **This gates all public activity.** Build under the name; do not launch,
 incorporate, or buy a domain portfolio until it clears. A domain being available
-is not evidence the trademark is.
+is not evidence the trademark is — and artwork being in hand is not evidence it
+is yours to use.
 
 **Phase 0 exit criterion:** every constraint documented, core and policy tested,
 name decision recorded.
@@ -303,7 +310,11 @@ graph auto-builds within 60s and blast radius for any node is queryable in under
 - [x] Warm-up state is reportable, so an unwarmed detector's silence is not mistaken for an all-clear
 - [x] Evaluation harness — one interface for every detector, scored online on labelled series by precision, episode recall, **lead time**, and false alarms per 1000. Makes the ML decision a measurement rather than an argument
 - [x] Three statistical candidates to beat: robust-z (incumbent), EWMA, seasonal-naive
-- [ ] **Seasonality gap — measured, not suspected.** The shipped robust-z default scores 859 false alarms per 1000 on a daily-shaped series; EWMA scores 43. A detector that cries wolf every morning is one operators learn to ignore
+- [x] **Seasonality gap — closed, and the diagnosis corrected.** The 859-per-1000 figure came from a *square-wave* fixture; on a realistic sine shape robust-z emits **zero** false alarms. Its true failure is the opposite and worse: seasonal spread inflates MAD until the band (−26…157) is wider than the data (38…102), so it needs a spike near **180** on a series peaking at 100 while the seasonal strategy catches **110**. Blind, not noisy — and blindness reads as an all-clear. *Evidence: [ADR Seasonality](adr/Seasonality.md), `scripts/benchdetect.py`, 8 tests*
+- [x] `SeasonalRobustZ` — per-phase median with robust residuals; best on every workload, and free of the echo that pins seasonal-naive's precision at 0.50
+- [x] **Kept opt-in rather than made the default**, against the original plan: a *wrong* period makes it blind rather than noisy (period 30 against a true 60 misses even a 200 spike), and its 3-cycle warm-up swallowed a real outage at period 288. Guessing a period is not safe
+- [x] Mis-specification reported — spread ÷ volatility separates healthy series (0.73–0.96) from structured ones (1.93–10.08); `Detector.warmup()` now surfaces `unmodelled` beside `warm`, so a blind baseline is visible instead of quietly reporting `NORMAL`
+- [ ] Period detection by autocorrelation, to make the opt-in automatic and safe *(Phase 5 — needs labelled scenarios to validate against)*
 - [ ] ML detection — only if it beats the best statistical strategy on the benchmark *(Phase 5 decides)*
 
 ### 2.2 Correlation
@@ -316,34 +327,76 @@ graph auto-builds within 60s and blast radius for any node is queryable in under
 - [x] Incorrect-merge measurement, reported **separately** from incorrect splits because they are not equally bad
 - [x] Alert-to-incident compression ratio — read next to the merge rate, since compression is trivially maximized by merging everything
 - [x] Verified on the demo scenario against the live graph: 5 findings → 2 incidents, zero incorrect merges
-- [ ] Correlation window tuned by the benchmark rather than by judgement *(Phase 5)*
+- [x] Must-not-merge case pinned in the labelled corpus (SC-0002) — two unrelated services degrading in the same minute stay two incidents, which time proximity alone would merge into one with a fabricated causal chain and an inflated blast radius
+- [ ] Correlation window *tuned* by the benchmark rather than by judgement *(Phase 5 — 8 scenarios pin the behaviour but are far too few to tune a threshold against)*
 
 ### 2.3 AI Gateway
 
-- [ ] Vendor-neutral interface — Bedrock primary, direct APIs behind the same shape
-- [ ] Structured outputs only; validated schemas, no free-text parsing
-- [ ] Prompt-injection defense — telemetry quoted as data, never as instruction
-- [ ] Token accounting per incident, feeding agent budgets
-- [ ] Evaluation harness with regression cases
+- [x] Vendor-neutral interface — the `Provider` protocol lives in `packages/core`, providers in `services/api`; **selected by configuration, never by an import**, so core never learns which one is in use — *evidence: CI gate fails if core imports a model SDK, or if anything outside `providers/` does*
+- [x] Bedrock primary (Mantle client, Messages API — not the legacy InvokeModel path), direct API behind the identical shape; one request builder shared by both, so the two cannot drift
+- [x] Structured outputs only — every call names a schema from a closed registry and receives a validated object. **No path returns free text**, because that path becomes the one everything uses and a parser is where an ungrounded claim gets laundered into a field the UI trusts
+- [x] Schemas encode the grounding rule structurally: a claim sits beside a required `evidence_refs`, so an uncited hypothesis fails validation at the provider boundary rather than being suppressed later
+- [x] Prompt-injection defense — instructions and evidence are separate fields that cannot be concatenated by accident; evidence is fenced, provenance-labelled, and fence-lookalikes are neutralised. *Evidence: a 6-case adversarial corpus asserting hostile content cannot escape its block* — **and cannot suppress its own ingestion**, since text that could delete itself would let an attacker blind the detector by writing a string into a log
+- [x] Refusals and truncation are typed errors, not content — reading `content[0]` on a refusal raises something unrelated and sends the caller looking in the wrong place
+- [x] Token accounting per incident, agent and purpose, checked **before** each call — a budget enforced after the spend is a report, not a limit
+- [x] Bounded failure — retry with backoff, and a circuit breaker so a hung provider degrades one incident instead of silently stalling the loop meant to be diagnosing the outage. A schema violation deliberately does *not* trip it, or one bad schema takes a healthy provider offline
+- [x] Evaluation harness — 4 regression cases run end to end on a deterministic stub provider, so schema, prompt assembly and accounting are exercised on every change without a credential or a cent. The stub **invents nothing**: a stub that fabricates findings makes a demo look like a working system
+- [x] `/health` reports the provider, model and spend, with `configured: false` when the stub is answering *(evidence: 61 tests — 32 core, 29 api)*
+- [ ] Cache-aware prompt assembly — stable prefix first, so multi-turn investigations stop paying full price *(deferred: needs real traffic to measure against)*
 
 ### 2.4 Reasoning
 
-- [ ] Hypothesis generation with confidence and mandatory evidence citations
-- [ ] Suppression of unsupported hypotheses *(not low-confidence surfacing)*
-- [ ] `contradicted_by` population — the system shows its own doubt
-- [ ] Change correlation — deployments matched against degradation onset
-- [ ] Causal chain assembly, each link citing its events
+- [x] Hypothesis generation with confidence and mandatory evidence citations
+- [x] **Citations are verified, not merely required** — the schema forces a ref to be *present*; admission checks it is *real*, against the events the incident holds. A model can satisfy every structural check by citing `evt-99`, and a fabricated citation is worse than a missing one: a missing one is visibly ungrounded, a fabricated one is indistinguishable from a good one until an operator clicks it
+- [x] A partly-fabricated hypothesis is **dropped, not trimmed** — stripping the bad ref would leave the claim standing on evidence the model never had, which is the failure rather than the citation formatting
+- [x] Suppression of unsupported hypotheses *(not low-confidence surfacing)* — a low-confidence hypothesis on screen is read as a lead, and someone spends an hour on it
+- [x] **Suppression is counted and attributable**, never silent — a layer that discards most of what it produces is broken, and nobody finds out unless the discards show. Reported by reason, with a suppression rate
+- [x] `contradicted_by` population — the system shows its own doubt. A *fabricated* counter-ref is dropped without killing the hypothesis, or a fabrication could suppress a well-supported finding
+- [x] Change correlation — deployments matched against degradation onset, deterministically and without a model, since "did something change just before this broke?" is a question about timestamps. Deploys *after* onset are excluded; candidates are offered as citable evidence and **never as a conclusion**, holding the Phase 1 connector rule at the layer most tempted to break it
+- [x] Causal chain assembly, each link citing its events — ordered by observation time rather than the model's narrative, because a model asked for a sequence produces one whether or not the timestamps agree. Built from admitted hypotheses only, so the chain cannot be where an unverified ref sneaks back in
+- [x] No events means no speculation — the model is not called at all, since asking it to explain an incident with no telemetry is asking it to invent one
+- [x] Measurement apparatus for the phase exit criterion — top-1 accuracy, precision-when-answering, and grounding reported **separately**, with abstentions counted against accuracy *(evidence: 28 tests)*
+- [ ] Run it against 20 labelled incidents *(needs the Phase 5 scenario library — the apparatus exists, the corpus does not)*
 
 ### 2.5 Smriti — memory
 
-- [ ] Incident embedding and storage
-- [ ] Hybrid retrieval — embeddings plus structured entity/symptom filters
-- [ ] "We have seen this before" surfaced with the prior incident and its outcome
-- [ ] Runbook and architecture-decision ingestion
+- [x] Incident embedding and storage, with mandatory provenance — source, timestamp, owner, confidence, retention. Retention enforced **on read**, so an expired memory cannot resurface because a pruning job did not run
+- [x] **Tenant isolation is structural, from the first commit** — `tenant` is a required positional argument on every read and no method reads across tenants. An unknown tenant returns empty rather than erroring, so the API cannot be used to enumerate which tenants exist
+- [x] Hybrid retrieval — and the **match basis is reported, never blended into one score** ([ADR Smriti](adr/Smriti.md)). Two incidents both described as "connection pool exhausted" may share nothing but a phrase; no embedding model can separate them, because what distinguishes them is not in the prose. Matches are labelled `same_entity` / `same_signal` / `text_only`, ranked *within* a basis, and only the first two justify the phrase "we have seen this before"
+- [x] The asymmetry that makes it hybrid rather than filtered — a text-only match must clear a similarity floor, a structural match need not. Filter-then-rank would lose the case where the same service failed before and nobody described it the same way, which is common and often the most useful recollection available
+- [x] "We have seen this before" surfaced with the prior incident **and its outcome** — and the outcome is the valuable half. A wrong prior diagnosis, a failed remediation, or an unresolved incident is surfaced as a `CAUTION`, injected into the evidence the model sees rather than only the UI. Recalling a misdiagnosed incident silently lends the authority of history to a mistake, and the operator inherits it with more confidence than the person who made it
+- [x] Nothing is recalled that was not stored — an unmatched query returns nothing and says so. A fabricated precedent is an uncited hypothesis one layer down, and harder to catch, because "we have seen this before" is exactly the claim people stop questioning
+- [x] Runbook and architecture-decision ingestion — **always untrusted**, with no `trust=` parameter to pass `VERIFIED` to by accident. The only route to trusted is `promote()`, which requires a named actor and records them as owner
+- [x] Wired into reasoning: precedents become citable evidence, so a recalled incident is a verifiable reference rather than a hint the model half-remembers. Past incidents are trusted (platform-authored); an unpromoted runbook is not *(evidence: 30 memory tests, 9 integration tests)*
+- [x] Retrieval quality measurable — `false_precedents` reported **separately** from misses, since a missed precedent costs time the operator would have spent anyway while a false one sends them confidently down a path that does not exist
+- [ ] Recall measured on real incident pairs, and a hosted embedder adopted on that evidence *(the local embedder is lexical: "pool exhausted" and "no free connections" will not match)*
+
+### 2.6 Labelled corpus *(added — three deferred items all blocked on it)*
+
+- [x] Scenario schema, strict loader, replay at a fixed epoch so results do not shift with the calendar
+- [x] 8 scenarios in `benchmark/incidents/`, weighted toward cases this implementation could plausibly get wrong: a deploy that is a **red herring**, two unrelated failures in the same minute, a prior incident whose diagnosis was **wrong**, and a near-identical prior on an unrelated service
+- [x] **Negative cases** (2) where the correct answer is silence — without them a system that flags everything scores perfectly — and an **escalation** case, without which the corpus rewards guessing over handing off
+- [x] `scripts/benchphase2.py`, in CI, reporting **failures before passes**. Current: 0 false alarms, 0 missed, 0 mis-grouped, 0 false precedents, 8/8
+- [x] The corpus found two real defects on its first run: it had **too few samples to warm a detector** (every incident missed — the detector was right to report `UNKNOWN`, the corpus was wrong), and the runner judged memory retention against wall-clock while dating it from a fixed epoch, so every precedent silently expired
+- [x] SC-0003 confirms the [Seasonality](adr/Seasonality.md) work: robust-z does not fire on a genuine ramp, **and** the baseline reports `unmodelled: True` (structure 5.7) — it knows it is mis-specified there rather than being quietly confident
+
+> **This is not PIB and must not be quoted as one.** It replays telemetry rather
+> than injecting faults, and — unlike PIB — the scenarios were authored *after*
+> the logic they score. One person wrote both the code and the answer key.
+> Negative cases, adversarial cases and failure-first reporting reduce that; none
+> of them eliminate it. It belongs in threats to validity, not a footnote.
 
 **Exit criterion:** on 20 hand-labelled historical incidents, the top-1
 root-cause hypothesis is correct ≥70% of the time, and every hypothesis cites
 the telemetry supporting it.
+
+**Status: NOT MET.** The corpus is 8 scenarios, not 20, and **reasoning quality
+is not measured at all** — top-1 accuracy needs a real model, and scoring it
+against the deterministic stub would measure a fixture this repository wrote. The
+apparatus exists (`score_diagnoses`); the number is deliberately absent rather
+than reported as a pass. Closing this needs a model credential and a larger
+corpus. Detection, correlation and recall *are* genuinely scored and currently
+pass.
 
 **Risk:** the model produces a plausible but unsupported causal chain.
 Mitigation — the evidence requirement is a validator, not a guideline.
@@ -364,25 +417,53 @@ Mitigation — the evidence requirement is a validator, not a guideline.
 
 ### 3.2 Real executors
 
-- [ ] Kubernetes executor — restart, scale, rollback, halt deployment
-- [ ] Cache executor — flush, warm
-- [ ] Ticketing and notification executors
-- [ ] Rollback tested for every action — *the registry guard is compile-time; this is runtime*
-- [ ] Live execution opt-in, per environment, off by default
+- [x] Kubernetes executor — restart, scale, rollback, redeploy, halt, via `kubectl` against the active kubeconfig. On EKS the same calls work unchanged; only authentication differs, and that is IRSA rather than anything in the file
+- [x] Missing parameters refused rather than defaulted — `kubectl` with no namespace does not error, it targets `default`, which is a different part of the cluster than the caller meant
+- [x] A timeout raises rather than assuming either outcome: a timed-out rollout may still be in progress, and guessing in either direction is worse than routing it to the rollback path
+- [x] Ticketing and notification executors — escalation is a **registered action**, not application code. If telling a human is not an action it is not audited, not measured, and not something the policy layer can choose
+- [x] **The guarded remediation loop** (`packages/core/pashupatastra/remediation.py`) — act → verify → roll back → escalate, with no cycles. The original action is **never retried**: it has already changed the system, and running it again changes it further while the diagnosis is in doubt
+- [x] `ROLLBACK_FAILED` modelled as a first-class state, not an exception — the system acted, it did not work, the undo did not work, and the environment is in a state nobody designed. It pages a human **in prose**, because the reader has just been woken up and needs to know what state the system is in, not which enum was returned
+- [x] An **unverified** rollback counts as a failed rollback — an undo that cannot be shown to have worked is indistinguishable from no undo, and assuming otherwise is how an environment drifts silently
+- [x] An execution *error* also triggers rollback: the effect is ambiguous, and a rollback on an unchanged system is usually a no-op while skipping one on a changed system leaves it altered with nobody aware
+- [x] Rollback tested for every action at runtime — *the registry guard proves an ID was written down; these walk the real registry, force each rollback, and assert it resolves and completes*. A second test asserts every rollback is **performable** by some executor, which the registry cannot see
+- [x] Live execution opt-in — **two independent gates**, both required: `dry_run: false` *and* the environment named in `live_environments` (empty by default). One flag is one accident away from a production write. Every gate can veto; none can override, so a misconfiguration fails closed into dry-run *(evidence: 19 remediation tests, 23 executor tests)*
+- [x] **Verified against a live kind cluster** — `scripts/verifyexecutors.py`, 11 checks, all passing against Kubernetes v1.36.1. Real rollout restart, real scale (cluster reports the new count), real `rollout undo` (revision advanced), a real missing-deployment error, and the full remediation loop rolling back for real
+- [x] **The cluster run found two bugs the mocked tests could not**, which is why it was owed:
+  - **The rollback ran with the original parameters.** Undoing a scale-to-5 by scaling to 5 would report success and change nothing — the most dangerous shape available here, since every layer above records a successful undo. Fixed with a `capture` step that snapshots prior state *before* acting; if the snapshot fails the loop refuses to act at all, because not acting costs an escalation while acting blind costs an unrecoverable change
+  - **`restart_service` declares itself as its own rollback.** Repeating a restart undoes nothing, and Kubernetes rejects two restarts within a second — which surfaced as `ROLLBACK_FAILED`, a page for a state that was never broken. The registry's guard is satisfied by *declaring* an ID; it cannot tell that repeating an action undoes it. A self-rollback with no captured prior state now escalates instead
+- [ ] **Registry gap, pinned not patched:** `restart_service` and `modify_db_config` declare themselves as their rollback while undoing nothing (`scale_service` is the legitimate case — genuinely its own inverse, but only with different parameters). Deciding what the rollback of a restart *should* be is a policy question, and the current binary rollback-or-irreversible model cannot express "low risk, self-healing, not undoable"
+- [ ] Cache executor — flush, warm *(registered and deniable by policy, but no executor performs them; an unowned action fails loudly rather than appearing to succeed)*
 
 ### 3.3 Agent runtime
 
-- [ ] Loads declarations, enforces tool allow-lists at call time
-- [ ] Budget enforcement — tokens, actions, wall clock; exhaustion escalates
-- [ ] Escalation paths with reasons recorded
-- [ ] MVP fleet — orchestrator plus Incident, Infrastructure, Security agents
+- [x] Loads declarations and enforces tool allow-lists **at call time, not load time** — a runtime that validates once and then trusts itself is one refactor away from a tool acquired mid-run being callable. *Evidence: a test mutates the declaration after construction and the next call is still refused*
+- [x] An undeclared callable is never even held, so a bug cannot reach one — belt and braces on top of the call-time check
+- [x] Denied calls are **recorded, not discarded**: an agent repeatedly reaching for something it cannot have means its declaration is too narrow or its prompt is wrong, and dropping those attempts hides it
+- [x] Budget enforcement — tokens, actions, wall clock, all checked **before** the spend. Enforced afterwards, a budget is a report of where it stopped rather than a ceiling
+- [x] Exhaustion **escalates** rather than failing silently or continuing — a runaway loop that quietly stops looks identical to a task that finished, and the incident sits untouched while everyone believes an agent has it
+- [x] A refused action does not spend the action budget: charging for a refusal would make the budget punish caution
+- [x] **The risk ceiling is enforced above approval** — an agent with limit 40 cannot execute a risk-45 action *even with a human granting it*. Approval answers "may this be done"; the ceiling answers "may this actor do it", and collapsing them lets an agent escalate its own authority by asking nicely
+- [x] Escalation paths with reasons recorded; the **first** reason wins, since it is the true one and everything after is a consequence
+- [x] MVP fleet — `sati.orchestrator`, `sati.incident`, `sati.infrastructure`, `sati.security`. The orchestrator has **risk limit 0** (one that can act accumulates the union of every role's authority without declaring it) and security is **read-only by declaration** (the role an attacker most wants to reach). Tested to have genuinely different tool sets, since four identical specs would satisfy least-privilege in form and none of its intent
+- [x] Every role is dev-only, pinned by a test — if it starts failing, someone widened production authority, and that should be a visible diff
+- [x] **Verified live**: `sati.infrastructure` scaled a real deployment through the runtime, was refused an undeclared tool, and had a risk-65 action denied by Dharma against its ceiling of 45 *(16 live checks, 25 runtime tests)*
 
 ### 3.4 Approval UX
 
-- [ ] Plan presentation — steps, risk breakdown, blast radius, expected outcome
-- [ ] One-click approve with the approver recorded
-- [ ] Denial and escalation surfaced as first-class outcomes, not errors
-- [ ] Approval fatigue guard — measure how often approvals are rubber-stamped
+- [x] Plan presentation — the approval surface already renders the risk arithmetic, blast radius, expected post-state and rollback *(built in Phase 1)*
+- [x] One-click approve with the approver recorded, plus `POST /policy/deny`
+- [x] **Denial is a first-class outcome, not an HTTP error** — expressing it as an error would make the client's success path the one where a human said yes, which is exactly the wrong pressure to build into a UI
+- [x] **A stale verdict fails loudly (409) rather than quietly succeeding.** `is_executable` already refused expired verdicts, but only later and somewhere else — leaving the operator believing they had authorised something. Expiry is now visible at the moment of clicking
+- [x] Expiry counted **apart from denials**: an unanswered request means the routing or the load is wrong, which is a different problem from a considered no
+- [x] **Approval fatigue guard** (`packages/core/pashupatastra/approvals.py`) — a policy layer that routes risky actions to a human is only a safety mechanism if the human is deciding. Approving everything in two seconds makes the tier system a speed bump with an audit trail, and is arguably **worse than no approval step**, because it manufactures accountability: an operator's name sits on a decision they did not make, and everyone downstream reads it as evidence the action was considered
+- [x] **The signal is a combination, and is deliberately not collapsed into one score.** A high approval rate alone is what a well-calibrated system produces; a fast decision alone may be entirely informed. Only *near-total approval together with near-instant decisions* indicates a formality — and both halves are tested to be innocent on their own
+- [x] "Too fast to have read" is named for what it measures — elapsed time — not for what it implies. The system cannot see attention, and presenting an inference as an observation is the error the reasoning layer exists to avoid
+- [x] Timed from **presentation, not verdict issuance**: the gap between Dharma deciding and an operator seeing the request is queueing, and charging it to the human would flatter every number
+- [x] Below 10 decisions the verdict is `None`, not a reassuring `False` — "not enough evidence" and "no problem" are different claims, and only one should let someone stop worrying
+- [x] Per-approver breakdown, because one person waving everything through behind a healthy team average is a different problem from a uniformly rushed team
+- [x] Exposed at `GET /policy/approvals/fatigue`, summary leading with the uncomfortable number — a metric nobody looks at cannot change behaviour *(evidence: 18 core tests, 8 API tests)*
+- [ ] Wire the web approve button to the endpoint *(the surface renders; the click is not yet bound)*
+- [ ] Persist approvals alongside the audit trail — fatigue numbers are per-process until then, so a restart currently resets the measurement
 
 ### 3.5 AWS enforcement floor
 
@@ -539,9 +620,18 @@ connectors and real executors.
 |---------|-------|
 | V1 | Infrastructure intelligence |
 | V2 | Autonomous DevOps |
-| V3 | AI cyber defense (**Kavach** expands) |
+| V3 | AI cyber defense — **[KAVACH.md](KAVACH.md)**, Phases 7–12 |
 | V4 | Enterprise systems intelligence |
 | V5 | Physical + digital systems — factories, machines, robots, IoT |
+
+The cyber defense program is planned in full in [KAVACH.md](KAVACH.md). It
+extends this roadmap rather than replacing it: Phases 0–6 close the loop over
+infrastructure, Phases 7–12 close the same loop over adversaries, reusing the
+event model, graph, detection harness, policy engine and audit trail unchanged.
+Two hard gates connect them — the Phase 2 seasonality gap blocks Phase 9, and the
+Phase 3 executors block Phase 10.
+
+Task-level breakdowns for every phase live in [TASKS.md](TASKS.md).
 
 **Kaal** (digital twin / simulation) slots in after Phase 4: answer "what happens
 if I restart PostgreSQL?" *before* acting — expected downtime, affected services,
