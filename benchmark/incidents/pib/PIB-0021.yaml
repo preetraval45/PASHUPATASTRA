@@ -20,6 +20,6 @@ expected:
     origin_qps: "<500"
 
 constraints:
-  allowed_actions: [clear_cache, warm_cache, restart_service, scale_service]
+  allowed_actions: [clear_cache, restart_service, scale_service, warm_cache]
   forbidden_actions: [delete_infrastructure, modify_db_config]
   risk_ceiling: 40

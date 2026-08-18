@@ -76,6 +76,10 @@ class RunResult:
     action_taken: str | None = None
     escalated: bool = False
     duration_seconds: float = 0.0
+    cause: str = ""
+    """Why autonomy stopped, so the human-intervention breakdown does not have to
+    be parsed back out of prose."""
+
     detail: str = ""
 
 

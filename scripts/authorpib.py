@@ -605,8 +605,12 @@ def main() -> None:
                       f"  action: {action}", "  recovery_state:"]
             for k, v in recovery.items():
                 lines.append(f'    {k}: "{v}"')
+            # Sorted, so position carries no signal. Authored in the order the
+            # expected action came first, which meant an arm picking
+            # allowed_actions[0] scored every remediation correctly without
+            # diagnosing anything — the benchmark was rewarding list order.
             lines += ["", "constraints:",
-                      f"  allowed_actions: [{', '.join(allowed)}]",
+                      f"  allowed_actions: [{', '.join(sorted(allowed))}]",
                       f"  forbidden_actions: [{', '.join(NEVER)}]",
                       f"  risk_ceiling: {ceiling}"]
             write(OUT / f"{sid}.yaml", lines)

@@ -15,8 +15,10 @@ should score exactly opposite on the same scenarios.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
+from pathlib import Path
 
 sys.path.insert(0, "packages/core")
 sys.path.insert(0, ".")
@@ -154,9 +156,50 @@ def main() -> int:
                 f"  {result.verdict.value}{flag}"
             )
 
+    written = _write_records(args, results, exclusions)
     report = collect(arm, args.runs, results, exclusions)
     _print_report(report, args.arm)
+    print(f"\n  run record: {written}")
+    print("  metrics:    python scripts/pibreport.py")
     return 0
+
+
+def _write_records(args, results, exclusions) -> Path:
+    """Append the run to the record metrics are computed from.
+
+    Written before anything is reported, so the numbers printed above and the
+    numbers a third party recomputes come from the same source. Metrics read off
+    in-memory state are a claim rather than a measurement — nobody else can
+    reproduce them.
+    """
+    outcomes = {s.id: s.outcome.value for s in load_corpus(args.corpus)}
+    directory = Path("benchmark/results") / args.arm
+    directory.mkdir(parents=True, exist_ok=True)
+    suffix = "" if args.ablation == "none" else f"-{args.ablation}"
+    path = directory / f"runs{suffix}.jsonl"
+
+    with path.open("w", encoding="utf-8") as handle:
+        for result in results:
+            handle.write(json.dumps({
+                "scenario_id": result.scenario_id,
+                "arm": args.arm,
+                "ablation": args.ablation,
+                "run_index": result.run_index,
+                "verdict": result.verdict.value,
+                "outcome": outcomes.get(result.scenario_id, ""),
+                "action_taken": result.action_taken,
+                "escalated": result.escalated,
+                "cause": result.cause,
+                "verified": result.verdict.value == "correct" and result.action_taken is not None,
+                "duration_seconds": result.duration_seconds,
+            }) + "\n")
+
+    with (directory / f"exclusions{suffix}.jsonl").open("w", encoding="utf-8") as handle:
+        for exclusion in exclusions:
+            handle.write(json.dumps({
+                "scenario_id": exclusion.scenario_id, "reason": exclusion.reason,
+            }) + "\n")
+    return path
 
 
 def run_once(
@@ -189,6 +232,7 @@ def run_once(
                 action_taken=decision.action,
                 escalated=decision.escalated,
                 duration_seconds=round(time.monotonic() - started, 2),
+                cause=decision.cause,
                 detail=f"{injection.describe} | {decision.rationale}",
             )
     except (StackError, ValueError, OSError) as error:

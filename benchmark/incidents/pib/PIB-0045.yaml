@@ -20,6 +20,6 @@ expected:
     error_rate: "<1%"
 
 constraints:
-  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  allowed_actions: [disable_deployment, redeploy_version, rollback_deployment]
   forbidden_actions: [delete_infrastructure, modify_db_config]
   risk_ceiling: 50

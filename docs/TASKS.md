@@ -540,10 +540,14 @@ Contracts and grading exist. Live observation does not.
   - f. `[~]` Ablations — policy tiers and verification are removable and measurable;
     the three reasoning-path ablations refuse to run rather than report "no effect"
     for a stage the arm never invoked
-- `[ ]` **T-5.4 — Reporting** · M
-  - a. Metrics from the audit log alone, per [research/METRICS.md](research/METRICS.md)
-  - b. **False remediation rate before autonomous resolution rate**
-  - c. Per-scenario results, not only aggregates; excluded scenarios state why
+- `[~]` **T-5.4 — Reporting** · M
+  - a. `[x]` Metrics from the run record alone — `scripts/pibreport.py` never
+    imports the harness, so the numbers are reproducible by a third party
+  - b. `[x]` **False remediation rate before autonomous resolution rate**
+  - c. `[x]` Per-scenario results, not only aggregates; excluded scenarios state why
+  - d. `[x]` Three METRICS.md metrics are declared not-computable with reasons
+    rather than silently omitted
+  - e. `[ ]` Runs against the compose stack as well as the cluster
 
 ---
 

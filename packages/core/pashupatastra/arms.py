@@ -63,6 +63,15 @@ class Decision:
     escalated: bool = False
     rationale: str = ""
 
+    cause: str = ""
+    """Why autonomy stopped, as a stable token rather than prose.
+
+    METRICS.md breaks the human-intervention rate down by cause — policy,
+    confidence, budget, verification, unrecognised situation — and says the
+    breakdown is more informative than the aggregate because it shows *where*
+    autonomy stops. Parsing that back out of a rationale string would make the
+    metric depend on wording."""
+
     def __post_init__(self) -> None:
         if self.action and self.escalated:
             raise ValueError(

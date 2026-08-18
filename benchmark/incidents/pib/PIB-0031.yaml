@@ -20,6 +20,6 @@ expected:
     latency_p95_ms: "<400"
 
 constraints:
-  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  allowed_actions: [restart_service, rollback_deployment, scale_service]
   forbidden_actions: [delete_infrastructure, modify_db_config]
   risk_ceiling: 50

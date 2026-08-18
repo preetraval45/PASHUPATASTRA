@@ -157,7 +157,11 @@ class PashupatastraArm:
         try:
             spec = get_action(action_id)
         except KeyError:
-            return Decision(escalated=True, rationale=f"{action_id} is not a registered action")
+            return Decision(
+                escalated=True,
+                cause="unrecognised_situation",
+                rationale=f"{action_id} is not a registered action",
+            )
 
         # Blast radius is the number of services actually affected. Passing the
         # count of *healthy* replicas here scored every action at 100 and denied
@@ -192,6 +196,7 @@ class PashupatastraArm:
         ):
             return Decision(
                 escalated=True,
+                cause="policy_ceiling",
                 rationale=(
                     f"Dharma scored {action_id} at {verdict.effective_risk} against a "
                     f"ceiling of {brief.risk_ceiling} → handing off"
@@ -210,6 +215,7 @@ class PashupatastraArm:
         if not self._verified():
             return Decision(
                 escalated=True,
+                cause="verification_failed",
                 rationale=f"{action_id} did not reach its expected post-state; escalating",
             )
 

@@ -584,11 +584,23 @@ injected faults, including deliberately wrong remediations.
 
 ### 5.5 Reporting
 
-- [ ] Metrics computed from the audit log alone, by the definitions in `research/METRICS.md`
-- [ ] False remediation rate reported **before** autonomous resolution rate
-- [ ] Per-scenario results published, not only aggregates
-- [ ] Any excluded scenario states its reason in the table
-- [ ] Runs against both the AWS stack and the compose stack
+- [x] Metrics computed from the run record alone — every run appends to `benchmark/results/**/runs.jsonl`, and `scripts/pibreport.py` reads that and nothing else. It never imports the harness, which is the point: a number nobody else can reproduce is a claim rather than a measurement
+- [x] False remediation rate reported **before** autonomous resolution rate, in the table and in the summary dict. ARR is trivially maximised by acting recklessly, and whichever number is read first is the one that gets quoted
+- [x] FRR and VSR are rates over **actions actually executed**. Deriving "acted" from the verdict counted every correct negative — where the right answer was to do nothing — as an executed action, inflating the denominator with runs that touched nothing and making the safety metric look far better than it was
+- [x] Per-scenario results published, not only aggregates, with mixed runs flagged `UNSTABLE`
+- [x] Any excluded scenario states its reason in the table; an exclusion with no reason raises
+- [x] Human-intervention rate broken down by **where autonomy stopped** — policy ceiling, verification failure, unrecognised situation — carried as a token rather than parsed back out of prose
+- [x] Three of METRICS.md's eight metrics are **not computable** here and are printed as absent with reasons — RCA needs the reasoning layer, detection accuracy is never exercised, and the recorded clock is not MTTR's clock. A table showing five of eight with no note reads as complete
+- [ ] Runs against both the AWS stack and the compose stack — only the kind cluster so far
+
+#### The ordering confound, found and fixed
+
+The first full comparison gave Pashupatastra 31/31. It was largely an artefact:
+the corpus listed each scenario's expected action **first** in `allowed_actions`
+(44 of 60 scenarios, 5 of 5 runnable), and the shared proposer picks
+`allowed_actions[0]`. Every remediation both arms got right was won by list
+order rather than by diagnosis. `allowed_actions` is now sorted, so position
+carries no signal, and the corpus was regenerated and re-run.
 
 **Exit criterion:** the full benchmark runs reproducibly from one command and
 produces the metrics table.
