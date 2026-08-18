@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0034
+  name: "Node pressure from over-scheduling"
+  category: compute
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: scaling
+    detail: "three services scale simultaneously onto the same node pool"
+
+expected:
+  root_cause: node_resource_pressure_from_concurrent_scaling
+  causal_chain: [concurrent_scale, node_pressure, eviction]
+  action: scale_service
+  recovery_state:
+    node_memory_pct: "<70%"
+    evictions: "<1"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

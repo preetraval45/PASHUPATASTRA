@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0042
+  name: "Crash loop from a missing environment variable"
+  category: deployment
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "a required variable is dropped from the manifest"
+
+expected:
+  root_cause: missing_required_env_var
+  causal_chain: [deploy, startup_failure, crash_loop]
+  action: rollback_deployment
+  recovery_state:
+    restarts: "<1"
+    availability: ">99%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0018
+  name: "Hot key saturating a single shard"
+  category: cache
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: load
+    detail: "one product page accounts for 60% of reads"
+
+expected:
+  root_cause: hot_key_shard_saturation
+  causal_chain: [traffic_skew, shard_cpu, latency]
+  action: scale_service
+  recovery_state:
+    shard_cpu_pct: "<70%"
+    latency_p95_ms: "<200"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

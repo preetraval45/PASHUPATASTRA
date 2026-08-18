@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0024
+  name: "Deliberate TTL reduction, hit rate within target"
+  category: cache
+  difficulty: hard
+  outcome: nothing
+  notes: "Structurally identical to the eviction-storm scenario. The difference is that the change was intended and the hit rate stays above target — a system that cannot tell these apart will revert deliberate work."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "TTL cut from 1h to 15m as an intentional freshness change"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

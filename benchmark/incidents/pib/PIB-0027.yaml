@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0027
+  name: "CPU saturation from a runaway loop"
+  category: compute
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "v2.4 introduces an unbounded retry loop"
+
+expected:
+  root_cause: unbounded_retry_loop_cpu_saturation
+  causal_chain: [deploy, cpu_saturation, throttling, latency]
+  action: rollback_deployment
+  recovery_state:
+    cpu_pct: "<70%"
+    latency_p95_ms: "<400"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0094
+  name: "RBAC change granting excess permissions"
+  category: security
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "a role binding is widened to cluster-admin by mistake"
+
+expected:
+  root_cause: over_permissive_role_binding
+  causal_chain: [config_change, excess_permissions]
+  action: rollback_deployment
+  recovery_state:
+    cluster_admin_bindings: "<2"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

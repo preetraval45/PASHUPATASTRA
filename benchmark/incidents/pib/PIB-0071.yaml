@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0071
+  name: "Network policy blocking legitimate traffic"
+  category: network
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "a tightened policy omits the checkout namespace"
+
+expected:
+  root_cause: network_policy_over_restrictive
+  causal_chain: [policy_change, denied_traffic, connection_timeout]
+  action: rollback_deployment
+  recovery_state:
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

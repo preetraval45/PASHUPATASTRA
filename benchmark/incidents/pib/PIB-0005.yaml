@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0005
+  name: "Connection leak after a client config change"
+  category: database
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "pool close disabled by a config regression"
+
+expected:
+  root_cause: connection_leak_from_config_regression
+  causal_chain: [config_change, unreleased_connections, pool_exhaustion]
+  action: rollback_deployment
+  recovery_state:
+    db_connections: "<70%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0086
+  name: "Dead letter queue filling after a schema change"
+  category: queue
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "producers emit a new schema consumers cannot parse"
+
+expected:
+  root_cause: producer_consumer_schema_skew
+  causal_chain: [deploy, parse_failure, dlq_growth]
+  action: rollback_deployment
+  recovery_state:
+    dlq_depth: "<100"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

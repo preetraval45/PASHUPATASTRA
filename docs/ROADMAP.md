@@ -544,11 +544,14 @@ injected faults, including deliberately wrong remediations.
 
 ### 5.1 Scenario library
 
-- [ ] Scenario schema and validator
-- [ ] 100+ scenarios across the eight seed categories
-- [ ] **Negative scenarios** — degradations where the correct answer is to do nothing
-- [ ] **Escalation scenarios** — where the correct answer is to hand off
-- [ ] All scenarios authored **before** the logic that resolves them
+- [x] Scenario schema and validator — `packages/core/pashupatastra/pib.py`, separate from the Phase 2 replay corpus so benchmark results and development measurements cannot be confused for each other
+- [x] The validator rejects rather than warns. Each rule blocks a mistake that is invisible in one file and silently changes what the benchmark measures: an expected action missing from its own allow-list, an action both allowed and forbidden, a remediate case with no recovery state and therefore no answer to "did it work?"
+- [x] 100+ scenarios across the eight seed categories — 104, validated by `python scripts/validatepib.py`
+- [x] **Negative scenarios** — 25, and present in *every* category. Aggregate counts hide the real failure: all the negatives in one category is negatives on paper and blind spots in the other seven
+- [x] **Escalation scenarios** — 19, likewise per category, each stating why it escalates so the grader can tell a correct hand-off from a system that gave up
+- [x] A negative case cannot carry an expected action and an escalation case cannot expect a remediation — enforced by the validator, since either would score a system that acted as correct and reward exactly the behaviour the category exists to penalise
+- [x] `security` is deliberately escalation-heavy — 5 escalations to 4 remediations. Revoking a credential, judging an exfiltration, or confirming a supply-chain compromise are human calls, and shaping that category like the others would teach the wrong lesson
+- [x] All scenarios authored **before** the logic that resolves them — the harness (5.2) does not exist yet
 
 ### 5.2 Harness
 

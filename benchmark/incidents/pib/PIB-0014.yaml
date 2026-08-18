@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0014
+  name: "Redis memory growth from unbounded key namespace"
+  category: cache
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: application
+    detail: "session keys written without a TTL"
+
+expected:
+  root_cause: unbounded_key_growth_without_ttl
+  causal_chain: [missing_ttl, memory_growth, eviction, hit_rate_drop]
+  action: restart_service
+  recovery_state:
+    cache_memory_pct: "<70%"
+    hit_rate: ">90%"
+
+constraints:
+  allowed_actions: [clear_cache, warm_cache, restart_service, scale_service]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

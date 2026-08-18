@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0060
+  name: "Dependency bump breaking a response contract"
+  category: dependency
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "a minor version bump changes a field from string to object"
+
+expected:
+  root_cause: dependency_response_contract_change
+  causal_chain: [dependency_bump, parse_failure, 5xx]
+  action: rollback_deployment
+  recovery_state:
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

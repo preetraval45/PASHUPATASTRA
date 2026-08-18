@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0025
+  name: "Cache holding the only copy of pending writes"
+  category: cache
+  difficulty: hard
+  outcome: escalate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: data
+    detail: "write-behind entries not yet flushed to the database"
+
+expected:
+  escalation_reason: "Every remediation in the cache action set discards entries. Here that is data loss, not a cache flush."
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

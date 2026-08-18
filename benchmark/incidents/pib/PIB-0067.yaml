@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0067
+  name: "Ingress routing regression after a rule change"
+  category: network
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "a path rule change shadows the checkout route"
+
+expected:
+  root_cause: ingress_rule_shadowing
+  causal_chain: [config_change, misrouted_traffic, 404]
+  action: rollback_deployment
+  recovery_state:
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

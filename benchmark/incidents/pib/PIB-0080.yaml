@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0080
+  name: "Consumer death after a deploy"
+  category: queue
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "v1.7 throws on startup when a header is absent"
+
+expected:
+  root_cause: consumer_startup_failure
+  causal_chain: [deploy, startup_exception, no_consumers, backlog]
+  action: rollback_deployment
+  recovery_state:
+    consumer_lag: "<1000"
+    active_consumers: ">2"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

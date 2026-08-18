@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0082
+  name: "Consumer lag from insufficient partition parallelism"
+  category: queue
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "consumers scaled up but partitions left at two"
+
+expected:
+  root_cause: parallelism_capped_by_partition_count
+  causal_chain: [scale_up, partition_cap, lag_growth]
+  action: scale_service
+  recovery_state:
+    consumer_lag: "<1000"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

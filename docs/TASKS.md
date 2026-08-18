@@ -513,12 +513,13 @@ Contracts and grading exist. Live observation does not.
 
 # Phase 5 — PIB · Benchmark
 
-- `[ ]` **T-5.1 — Scenario library** · L
-  - a. Schema and validator
-  - b. 100+ scenarios across the eight seed categories
-  - c. **Negative scenarios** — where the correct answer is to do nothing
-  - d. **Escalation scenarios** — where the correct answer is to hand off
-  - e. All authored **before** the logic that resolves them
+- `[x]` **T-5.1 — Scenario library** · L
+  - a. `[x]` Schema and validator — rejects rather than warns; 27 tests, most of
+    them feeding it scenarios that are wrong in one specific way
+  - b. `[x]` 104 scenarios across the eight seed categories
+  - c. `[x]` **Negative scenarios** — 25, one or more in every category
+  - d. `[x]` **Escalation scenarios** — 19, each stating why it escalates
+  - e. `[x]` All authored **before** the logic that resolves them — 5.2 is unbuilt
 - `[ ]` **T-5.2 — Harness** · L
   - a. Fault injection against the real containerized stack
   - b. Ephemeral environment per run

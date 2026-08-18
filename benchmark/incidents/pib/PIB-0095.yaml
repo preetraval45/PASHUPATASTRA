@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0095
+  name: "Debug endpoint exposed by a config change"
+  category: security
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "a profiling endpoint is enabled on the public listener"
+
+expected:
+  root_cause: debug_endpoint_publicly_exposed
+  causal_chain: [config_change, endpoint_exposed, information_disclosure]
+  action: rollback_deployment
+  recovery_state:
+    public_debug_endpoints: "<1"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

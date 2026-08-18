@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0036
+  name: "Heap growth within a normal GC sawtooth"
+  category: compute
+  difficulty: hard
+  outcome: nothing
+  notes: "Every upward leg looks like a leak if you sample the wrong window."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: diurnal
+    detail: "heap climbs to 80% then drops on collection, repeatedly"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

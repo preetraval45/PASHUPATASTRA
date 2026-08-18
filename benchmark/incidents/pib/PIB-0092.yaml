@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0092
+  name: "Anomalous egress from a single pod"
+  category: security
+  difficulty: hard
+  outcome: remediate
+  notes: "Containment is in the action set; attribution and remediation are not. The correct action isolates and stops there."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: security
+    detail: "one pod opens sustained connections to an unrecognised host"
+
+expected:
+  root_cause: anomalous_egress_from_workload
+  causal_chain: [unexpected_connection, sustained_egress, data_volume]
+  action: disable_deployment
+  recovery_state:
+    egress_to_unknown: "<1"
+
+constraints:
+  allowed_actions: [disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

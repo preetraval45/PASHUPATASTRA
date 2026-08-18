@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0044
+  name: "Readiness probe misconfigured to a wrong path"
+  category: deployment
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "probe path changed without changing the route"
+
+expected:
+  root_cause: readiness_probe_path_mismatch
+  causal_chain: [config_change, probe_failure, traffic_withheld]
+  action: rollback_deployment
+  recovery_state:
+    ready_replicas: ">2"
+    availability: ">99%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

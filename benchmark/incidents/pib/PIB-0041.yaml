@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0041
+  name: "Config regression breaking authentication"
+  category: deployment
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "issuer URL changed to a staging value"
+
+expected:
+  root_cause: auth_issuer_misconfiguration
+  causal_chain: [config_change, token_validation_failure, 401_storm]
+  action: rollback_deployment
+  recovery_state:
+    auth_failure_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

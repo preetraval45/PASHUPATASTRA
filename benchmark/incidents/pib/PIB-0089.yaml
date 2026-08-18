@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0089
+  name: "Consumer restart during a planned rollout"
+  category: queue
+  difficulty: medium
+  outcome: nothing
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "lag rises for 90 seconds as consumers roll"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

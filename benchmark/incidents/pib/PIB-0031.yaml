@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0031
+  name: "Insufficient replicas for sustained load"
+  category: compute
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: load
+    detail: "steady traffic growth against a fixed replica count"
+
+expected:
+  root_cause: replica_count_below_demand
+  causal_chain: [traffic_growth, cpu_saturation, queueing]
+  action: scale_service
+  recovery_state:
+    cpu_pct: "<70%"
+    latency_p95_ms: "<400"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

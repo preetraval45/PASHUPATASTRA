@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0056
+  name: "Connection pool to an upstream exhausted"
+  category: dependency
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "pool size unchanged after upstream added latency"
+
+expected:
+  root_cause: upstream_client_pool_exhaustion
+  causal_chain: [upstream_latency, pool_exhaustion, queueing]
+  action: restart_service
+  recovery_state:
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

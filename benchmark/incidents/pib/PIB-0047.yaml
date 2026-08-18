@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0047
+  name: "Feature flag default flipped by a deploy"
+  category: deployment
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "a flag defaulting to off ships defaulting to on"
+
+expected:
+  root_cause: feature_flag_default_inverted
+  causal_chain: [deploy, new_code_path, latency, error_rate]
+  action: rollback_deployment
+  recovery_state:
+    error_rate: "<1%"
+    latency_p95_ms: "<400"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

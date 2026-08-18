@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0015
+  name: "Eviction storm after a TTL config change"
+  category: cache
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "TTL reduced from 1h to 30s across all keys"
+
+expected:
+  root_cause: ttl_reduction_causing_eviction_storm
+  causal_chain: [config_change, mass_expiry, eviction, origin_load]
+  action: rollback_deployment
+  recovery_state:
+    hit_rate: ">90%"
+    origin_qps: "<500"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

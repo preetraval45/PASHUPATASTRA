@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0081
+  name: "Consumer OOM on an oversized batch"
+  category: queue
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "batch size raised tenfold without raising the memory limit"
+
+expected:
+  root_cause: batch_size_exceeds_consumer_memory
+  causal_chain: [config_change, oom, crash_loop, backlog]
+  action: rollback_deployment
+  recovery_state:
+    restarts: "<1"
+    consumer_lag: "<1000"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

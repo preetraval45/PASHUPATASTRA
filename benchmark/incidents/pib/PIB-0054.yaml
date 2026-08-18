@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0054
+  name: "Circuit breaker flapping on an aggressive threshold"
+  category: dependency
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "breaker threshold lowered to 2 failures"
+
+expected:
+  root_cause: breaker_threshold_too_sensitive
+  causal_chain: [config_change, premature_open, flapping, partial_outage]
+  action: rollback_deployment
+  recovery_state:
+    breaker_state: "closed"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0053
+  name: "Timeout cascade from a slow upstream"
+  category: dependency
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: dependency
+    detail: "the pricing service p99 rises from 40ms to 3s"
+
+expected:
+  root_cause: upstream_latency_cascading_to_timeouts
+  causal_chain: [upstream_latency, thread_hold, queue_growth, 5xx]
+  action: scale_service
+  recovery_state:
+    error_rate: "<1%"
+    latency_p95_ms: "<400"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

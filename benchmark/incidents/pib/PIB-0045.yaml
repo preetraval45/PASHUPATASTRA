@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0045
+  name: "Canary showing elevated errors against baseline"
+  category: deployment
+  difficulty: medium
+  outcome: remediate
+  notes: "The correct action stops the rollout rather than reverting the fleet — the stable version is still serving, and a full rollback is a bigger change than the situation calls for."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "canary at 10% shows a 4x error rate versus stable"
+
+expected:
+  root_cause: canary_regression_detected_early
+  causal_chain: [canary_deploy, error_divergence]
+  action: disable_deployment
+  recovery_state:
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

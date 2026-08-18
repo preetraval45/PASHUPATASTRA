@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0079
+  name: "Backlog growth from consumer slowdown"
+  category: queue
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: load
+    detail: "message volume doubles against a fixed consumer count"
+
+expected:
+  root_cause: consumer_throughput_below_arrival_rate
+  causal_chain: [arrival_increase, lag_growth, backlog]
+  action: scale_service
+  recovery_state:
+    consumer_lag: "<1000"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

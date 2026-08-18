@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0055
+  name: "Retry storm amplifying upstream load"
+  category: dependency
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "retry count raised from 3 to 30 without backoff"
+
+expected:
+  root_cause: retry_amplification_without_backoff
+  causal_chain: [config_change, retry_amplification, upstream_saturation]
+  action: rollback_deployment
+  recovery_state:
+    upstream_qps: "<1000"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

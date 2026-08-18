@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0033
+  name: "CPU throttling from a limit misconfiguration"
+  category: compute
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "CPU limit set below the request in a manifest change"
+
+expected:
+  root_cause: cpu_limit_below_request
+  causal_chain: [config_change, throttling, latency]
+  action: rollback_deployment
+  recovery_state:
+    throttle_pct: "<5%"
+    latency_p95_ms: "<400"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

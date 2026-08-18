@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0091
+  name: "Ordering guarantee violated after a rebalance"
+  category: queue
+  difficulty: hard
+  outcome: escalate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: data
+    detail: "consumers processed two partitions out of order during a rebalance"
+
+expected:
+  escalation_reason: "A correctness question about work already done. No forward action repairs it, and the remedy depends on what the out-of-order writes touched."
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

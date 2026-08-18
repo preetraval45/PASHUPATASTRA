@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0006
+  name: "Max connections reached from an over-scaled service"
+  category: database
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: scaling
+    detail: "checkout scaled to 40 replicas, each holding a pool"
+
+expected:
+  root_cause: connection_ceiling_from_replica_count
+  causal_chain: [scale_up, pool_per_replica, max_connections]
+  action: scale_service
+  recovery_state:
+    db_connections: "<70%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

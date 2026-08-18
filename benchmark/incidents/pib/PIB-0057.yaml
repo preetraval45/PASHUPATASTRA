@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0057
+  name: "Stale DNS for an upstream after its migration"
+  category: dependency
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: infrastructure
+    detail: "upstream changes IPs; cached records point at the old ones"
+
+expected:
+  root_cause: stale_dns_for_upstream
+  causal_chain: [upstream_migration, stale_resolution, connection_refused]
+  action: restart_service
+  recovery_state:
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

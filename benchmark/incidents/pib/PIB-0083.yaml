@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0083
+  name: "Producer flood from a retry bug"
+  category: queue
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "producers re-enqueue on ack timeout without deduplication"
+
+expected:
+  root_cause: duplicate_enqueue_on_ack_timeout
+  causal_chain: [deploy, duplicate_publish, queue_growth]
+  action: rollback_deployment
+  recovery_state:
+    queue_depth: "<10000"
+    duplicate_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0021
+  name: "Cold cache after an unplanned restart"
+  category: cache
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: infrastructure
+    detail: "cache node restarted, losing all entries"
+
+expected:
+  root_cause: cold_cache_after_restart
+  causal_chain: [restart, empty_cache, origin_load]
+  action: warm_cache
+  recovery_state:
+    hit_rate: ">90%"
+    origin_qps: "<500"
+
+constraints:
+  allowed_actions: [clear_cache, warm_cache, restart_service, scale_service]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 40

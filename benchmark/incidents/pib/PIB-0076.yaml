@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0076
+  name: "Connection counts rising with expected traffic growth"
+  category: network
+  difficulty: hard
+  outcome: nothing
+  notes: "A trend, not an incident. Acting on trends is how a system generates work."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: load
+    detail: "connections climb 40% week over week, all well inside limits"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0049
+  name: "Error spike during a blue-green cutover, within budget"
+  category: deployment
+  difficulty: medium
+  outcome: nothing
+  notes: "Inside the error budget and self-clearing."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "a 12-second spike to 0.4% errors during traffic switch"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

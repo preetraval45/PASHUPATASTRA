@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0073
+  name: "Connection churn from a keepalive misconfiguration"
+  category: network
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "idle timeout set below the client keepalive interval"
+
+expected:
+  root_cause: keepalive_shorter_than_client_interval
+  causal_chain: [config_change, connection_churn, handshake_load, latency]
+  action: rollback_deployment
+  recovery_state:
+    latency_p95_ms: "<400"
+    connection_rate: "<1000"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0093
+  name: "Secret baked into a new image layer"
+  category: security
+  difficulty: medium
+  outcome: remediate
+  notes: "Rolling back removes the running exposure. Revocation is a separate human task and is deliberately not part of the expected action."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "a build change copies .env into the image"
+
+expected:
+  root_cause: credential_embedded_in_image
+  causal_chain: [build_change, secret_in_layer, exposure]
+  action: rollback_deployment
+  recovery_state:
+    images_with_secrets: "<1"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

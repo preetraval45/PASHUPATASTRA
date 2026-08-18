@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0062
+  name: "Upstream latency rise inside its SLO"
+  category: dependency
+  difficulty: medium
+  outcome: nothing
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: dependency
+    detail: "upstream p95 moves from 40ms to 180ms against a 250ms SLO"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

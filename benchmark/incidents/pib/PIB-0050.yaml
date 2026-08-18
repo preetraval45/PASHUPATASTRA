@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0050
+  name: "Unrelated deploy coinciding with normal variance"
+  category: deployment
+  difficulty: hard
+  outcome: nothing
+  notes: "The correlation is real and the causation is not. This is the case that punishes a system treating deploy proximity as sufficient evidence."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "the search service deploys while checkout latency varies normally"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

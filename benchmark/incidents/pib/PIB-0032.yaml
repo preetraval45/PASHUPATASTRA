@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0032
+  name: "Thread pool exhaustion under slow downstream"
+  category: compute
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: dependency
+    detail: "downstream latency rises, holding threads open"
+
+expected:
+  root_cause: thread_pool_exhaustion_from_downstream_latency
+  causal_chain: [downstream_latency, thread_hold, pool_exhaustion, 5xx]
+  action: restart_service
+  recovery_state:
+    available_threads: ">10"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

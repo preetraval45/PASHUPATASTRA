@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0002
+  name: "Slow query from index dropped in migration"
+  category: database
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: migration
+    detail: "migration 0042 drops an index still used by the orders query"
+
+expected:
+  root_cause: missing_index_after_migration
+  causal_chain: [migration, seq_scan, query_latency, pool_saturation]
+  action: rollback_deployment
+  recovery_state:
+    query_p95_ms: "<400"
+    db_connections: "<70%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

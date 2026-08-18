@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0039
+  name: "Kernel-level fault on a node"
+  category: compute
+  difficulty: hard
+  outcome: escalate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: infrastructure
+    detail: "repeated kernel oops messages on one node"
+
+expected:
+  escalation_reason: "Outside the action set entirely — no registered action addresses a host kernel, and restarting workloads only moves the symptom."
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

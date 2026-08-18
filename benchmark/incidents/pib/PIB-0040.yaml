@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0040
+  name: "Bad deploy causing sustained 5xx"
+  category: deployment
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "v5.0 ships a null dereference on the checkout path"
+
+expected:
+  root_cause: null_dereference_in_new_version
+  causal_chain: [deploy, exception, 5xx]
+  action: rollback_deployment
+  recovery_state:
+    error_rate: "<1%"
+    availability: ">99%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

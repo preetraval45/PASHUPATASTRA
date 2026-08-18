@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0085
+  name: "Consumer group rebalance storm"
+  category: queue
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "session timeout set below the processing time per batch"
+
+expected:
+  root_cause: session_timeout_below_batch_duration
+  causal_chain: [config_change, missed_heartbeat, rebalance, throughput_collapse]
+  action: restart_service
+  recovery_state:
+    rebalances_per_hour: "<2"
+    consumer_lag: "<1000"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

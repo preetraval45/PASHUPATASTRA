@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0059
+  name: "Stale service discovery entries after a rollout"
+  category: dependency
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: infrastructure
+    detail: "deregistration fails, leaving dead endpoints registered"
+
+expected:
+  root_cause: stale_service_discovery_entries
+  causal_chain: [rollout, failed_deregistration, requests_to_dead_endpoints]
+  action: restart_service
+  recovery_state:
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

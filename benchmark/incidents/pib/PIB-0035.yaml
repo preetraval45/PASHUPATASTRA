@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0035
+  name: "CPU rise during the nightly batch window"
+  category: compute
+  difficulty: easy
+  outcome: nothing
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: scheduled
+    detail: "CPU reaches 75% for 30 minutes during the reconciliation job"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

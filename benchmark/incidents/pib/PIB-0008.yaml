@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0008
+  name: "Pool sized below sustained traffic growth"
+  category: database
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: load
+    detail: "organic traffic growth outpaces a fixed pool size"
+
+expected:
+  root_cause: pool_undersized_for_current_load
+  causal_chain: [traffic_growth, pool_saturation, queueing]
+  action: scale_service
+  recovery_state:
+    db_connections: "<70%"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

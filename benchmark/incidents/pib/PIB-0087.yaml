@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0087
+  name: "Backlog during the nightly batch ingest"
+  category: queue
+  difficulty: easy
+  outcome: nothing
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: scheduled
+    detail: "queue depth reaches 40k and drains by 04:00"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

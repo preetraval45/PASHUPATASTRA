@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0043
+  name: "Image pull failure from a bad tag"
+  category: deployment
+  difficulty: easy
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "manifest references a tag that was never pushed"
+
+expected:
+  root_cause: unresolvable_image_tag
+  causal_chain: [deploy, image_pull_backoff, unavailable_replicas]
+  action: rollback_deployment
+  recovery_state:
+    ready_replicas: ">2"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

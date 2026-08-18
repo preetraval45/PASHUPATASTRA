@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0097
+  name: "Announced penetration test window"
+  category: security
+  difficulty: medium
+  outcome: nothing
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: security
+    detail: "a contracted test generates exploitation attempts"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

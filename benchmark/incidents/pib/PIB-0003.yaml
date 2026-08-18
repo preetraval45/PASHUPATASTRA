@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0003
+  name: "Read replica lag under sustained write burst"
+  category: database
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: load
+    detail: "write volume triples for 20 minutes from a bulk import"
+
+expected:
+  root_cause: replica_lag_from_write_burst
+  causal_chain: [write_burst, replication_delay, stale_reads]
+  action: scale_service
+  recovery_state:
+    replica_lag_seconds: "<5"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

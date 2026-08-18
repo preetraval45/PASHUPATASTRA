@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0011
+  name: "Analytics batch raising query latency within SLO"
+  category: database
+  difficulty: hard
+  outcome: nothing
+  notes: "Latency moves visibly and stays inside the objective. Acting here trades a real risk for a metric that was never out of bounds."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: scheduled
+    detail: "the hourly rollup raises p95 from 90ms to 260ms, SLO is 400ms"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

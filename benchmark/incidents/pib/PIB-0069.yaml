@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0069
+  name: "Service mesh sidecar crash looping"
+  category: network
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: infrastructure
+    detail: "sidecar OOMs under a new telemetry configuration"
+
+expected:
+  root_cause: mesh_sidecar_oom
+  causal_chain: [config_change, sidecar_oom, connection_failure]
+  action: restart_service
+  recovery_state:
+    restarts: "<1"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

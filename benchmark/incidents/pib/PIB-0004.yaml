@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0004
+  name: "Lock contention from a long-running transaction"
+  category: database
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: application
+    detail: "a reporting job holds a row lock across the checkout table"
+
+expected:
+  root_cause: long_transaction_lock_contention
+  causal_chain: [report_job, row_lock, write_queue, timeout]
+  action: restart_service
+  recovery_state:
+    lock_waits: "<10"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

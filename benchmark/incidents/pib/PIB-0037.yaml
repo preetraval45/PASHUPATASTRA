@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0037
+  name: "Autoscaler adding replicas as designed"
+  category: compute
+  difficulty: medium
+  outcome: nothing
+  notes: "The system is working. Acting on it would fight the autoscaler."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: scaling
+    detail: "replica count moves from 4 to 9 as traffic rises"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

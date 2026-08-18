@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0020
+  name: "Client connection pool to Redis exhausted"
+  category: cache
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "pool size left at default after a replica increase"
+
+expected:
+  root_cause: cache_client_pool_exhaustion
+  causal_chain: [replica_increase, pool_exhaustion, cache_timeout]
+  action: restart_service
+  recovery_state:
+    cache_timeouts: "<10"
+    hit_rate: ">90%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

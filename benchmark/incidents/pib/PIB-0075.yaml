@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0075
+  name: "Brief packet loss during a node rotation"
+  category: network
+  difficulty: easy
+  outcome: nothing
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: infrastructure
+    detail: "a 20-second loss window as a node drains"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

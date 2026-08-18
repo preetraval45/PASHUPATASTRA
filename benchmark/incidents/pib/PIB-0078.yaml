@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0078
+  name: "Suspected upstream routing fault"
+  category: network
+  difficulty: hard
+  outcome: escalate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: infrastructure
+    detail: "traffic from two ASNs is failing to reach the edge"
+
+expected:
+  escalation_reason: "Provider territory. Every available action changes something inside a perimeter the fault is outside of."
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

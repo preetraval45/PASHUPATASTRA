@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0019
+  name: "Hit rate collapse after a key format change"
+  category: cache
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "key builder changes delimiter, orphaning every existing entry"
+
+expected:
+  root_cause: key_format_change_orphaning_entries
+  causal_chain: [deploy, key_mismatch, total_miss, origin_load]
+  action: rollback_deployment
+  recovery_state:
+    hit_rate: ">90%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

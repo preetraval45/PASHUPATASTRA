@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0065
+  name: "Upstream contract change requiring a code change"
+  category: dependency
+  difficulty: hard
+  outcome: escalate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: dependency
+    detail: "the provider removes a field with no compatibility window"
+
+expected:
+  escalation_reason: "The fix is a code change. Rolling back reaches a version that also does not work, since the break is on the other side."
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

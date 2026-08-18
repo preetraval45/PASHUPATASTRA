@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0028
+  name: "Memory leak in a long-running worker"
+  category: compute
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: application
+    detail: "listener registered per request and never removed"
+
+expected:
+  root_cause: listener_leak_growing_heap
+  causal_chain: [leak, heap_growth, gc_pressure, oom_risk]
+  action: restart_service
+  recovery_state:
+    memory_pct: "<70%"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 40

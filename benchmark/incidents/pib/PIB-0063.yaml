@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0063
+  name: "Elevated retries with unaffected success rate"
+  category: dependency
+  difficulty: hard
+  outcome: nothing
+  notes: "The retry layer is doing its job. The alarming metric is the one that shows the system working."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: dependency
+    detail: "retry count triples while end-user success stays at 99.98%"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

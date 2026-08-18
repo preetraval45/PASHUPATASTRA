@@ -1,0 +1,20 @@
+scenario:
+  id: PIB-0048
+  name: "Available replicas dipping during a rolling update"
+  category: deployment
+  difficulty: easy
+  outcome: nothing
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "ready replicas drop from 6 to 4 mid-rollout"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

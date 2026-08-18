@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0058
+  name: "Upstream rate limiting after a client change"
+  category: dependency
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "a batch endpoint is called per-item after a refactor"
+
+expected:
+  root_cause: request_amplification_hitting_rate_limit
+  causal_chain: [deploy, request_amplification, 429, degraded]
+  action: rollback_deployment
+  recovery_state:
+    rate_limit_hits: "<10"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

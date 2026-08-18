@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0007
+  name: "Deadlock storm after a schema migration"
+  category: database
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: migration
+    detail: "migration reorders columns, inverting lock acquisition order"
+
+expected:
+  root_cause: deadlock_from_lock_order_inversion
+  causal_chain: [migration, lock_order_change, deadlock, retry_storm]
+  action: rollback_deployment
+  recovery_state:
+    deadlocks_per_minute: "<1"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

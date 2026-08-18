@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0029
+  name: "Disk exhaustion from unrotated debug logging"
+  category: compute
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "debug logging enabled in production without rotation"
+
+expected:
+  root_cause: log_growth_filling_disk
+  causal_chain: [debug_enabled, log_growth, disk_full, write_failure]
+  action: rollback_deployment
+  recovery_state:
+    disk_pct: "<70%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

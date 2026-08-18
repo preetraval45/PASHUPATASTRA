@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0070
+  name: "Connection limit reached on the load balancer"
+  category: network
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: load
+    detail: "keepalive connections accumulate past the configured ceiling"
+
+expected:
+  root_cause: load_balancer_connection_ceiling
+  causal_chain: [connection_growth, limit_reached, refused_connections]
+  action: scale_service
+  recovery_state:
+    refused_connections: "<10"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

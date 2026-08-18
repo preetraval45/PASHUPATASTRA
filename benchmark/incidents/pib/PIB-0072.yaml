@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0072
+  name: "MTU mismatch after a CNI configuration change"
+  category: network
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: infrastructure
+    detail: "CNI MTU raised above what the underlay supports"
+
+expected:
+  root_cause: mtu_exceeds_path_capability
+  causal_chain: [config_change, fragmentation, packet_loss, timeout]
+  action: rollback_deployment
+  recovery_state:
+    packet_loss_pct: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

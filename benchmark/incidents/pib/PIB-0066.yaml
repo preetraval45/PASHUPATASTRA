@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0066
+  name: "DNS resolution failure after a config change"
+  category: network
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: config
+    detail: "a resolver change points at an unreachable nameserver"
+
+expected:
+  root_cause: resolver_misconfiguration
+  causal_chain: [config_change, resolution_failure, connection_error]
+  action: rollback_deployment
+  recovery_state:
+    dns_failure_rate: "<1%"
+    error_rate: "<1%"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

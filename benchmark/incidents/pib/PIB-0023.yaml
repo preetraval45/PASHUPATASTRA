@@ -1,0 +1,21 @@
+scenario:
+  id: PIB-0023
+  name: "Morning warm-up after an idle night"
+  category: cache
+  difficulty: medium
+  outcome: nothing
+  notes: "The shape resembles a recovering incident because it is a recovery — from nothing having happened."
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: diurnal
+    detail: "hit rate climbs from 55% to 94% over the first hour of traffic"
+
+expected:
+  recovery_state: {}
+
+constraints:
+  allowed_actions: []
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 0

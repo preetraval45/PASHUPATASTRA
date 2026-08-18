@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0068
+  name: "Packet loss from an overloaded ingress"
+  category: network
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: load
+    detail: "traffic doubles against a fixed ingress replica count"
+
+expected:
+  root_cause: ingress_capacity_below_demand
+  causal_chain: [traffic_growth, ingress_saturation, packet_loss]
+  action: scale_service
+  recovery_state:
+    packet_loss_pct: "<1%"
+    latency_p95_ms: "<400"
+
+constraints:
+  allowed_actions: [restart_service, scale_service, rollback_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50

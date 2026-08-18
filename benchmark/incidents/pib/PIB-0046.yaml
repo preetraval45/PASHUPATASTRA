@@ -1,0 +1,24 @@
+scenario:
+  id: PIB-0046
+  name: "Resource limits too low in the new version"
+  category: deployment
+  difficulty: medium
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: deployment
+    detail: "v2.1 halves the memory limit while adding a cache"
+
+expected:
+  root_cause: resource_limits_below_new_working_set
+  causal_chain: [deploy, oomkill, crash_loop]
+  action: rollback_deployment
+  recovery_state:
+    restarts: "<1"
+
+constraints:
+  allowed_actions: [rollback_deployment, redeploy_version, disable_deployment]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 60

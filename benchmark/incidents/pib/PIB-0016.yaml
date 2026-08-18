@@ -1,0 +1,25 @@
+scenario:
+  id: PIB-0016
+  name: "Cache stampede after synchronised mass expiry"
+  category: cache
+  difficulty: hard
+  outcome: remediate
+
+setup:
+  stack: reference-5svc
+  fault:
+    type: application
+    detail: "10k keys written in one batch expire in the same second"
+
+expected:
+  root_cause: synchronised_expiry_stampede
+  causal_chain: [mass_expiry, concurrent_miss, origin_saturation]
+  action: warm_cache
+  recovery_state:
+    hit_rate: ">90%"
+    origin_qps: "<500"
+
+constraints:
+  allowed_actions: [clear_cache, warm_cache, restart_service, scale_service]
+  forbidden_actions: [delete_infrastructure, modify_db_config]
+  risk_ceiling: 50
