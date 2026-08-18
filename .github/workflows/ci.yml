@@ -23,11 +23,41 @@ jobs:
       - run: pip install -e "packages/core[dev]"
       - run: pytest packages/core -q
       - run: ruff check packages/core
-      - name: assert packages/core has no AWS imports
-        # the Platform ADR: the domain model must stay cloud-free and laptop-runnable.
+      - name: detection benchmark holds its recorded result
+        # The seasonality decision (ADR Seasonality) rests on measured numbers,
+        # so the measurement runs here rather than living in a commit message.
+        # Fails if the recommended seasonal strategy stops winning.
+        run: python scripts/benchdetect.py --strict
+
+      - name: phase 2 loop holds against the labelled corpus
+        # Detection, correlation and recall scored against known answers.
+        # --strict fails only on a false alarm or an incorrect grouping: those
+        # are actively harmful, where a miss is merely disappointing. NOT a
+        # benchmark result — telemetry replay, and reasoning quality is not
+        # measured here at all (see the script's docstring).
+        run: python scripts/benchphase2.py --strict
+      - name: assert packages/core has no AWS or model-SDK imports
+        # Two rules, one gate. The Platform ADR: the domain model stays
+        # cloud-free and laptop-runnable. CLAUDE.md rule 5: model access goes
+        # through the AI Gateway abstraction, so the vendor SDK lives behind a
+        # provider in services/api and core never learns which one is in use.
         run: |
           if grep -rnE '^\s*(import|from)\s+(boto3|botocore|aiobotocore)' packages/core/pashupatastra; then
             echo "::error::packages/core must contain zero AWS imports (the Platform ADR)"
+            exit 1
+          fi
+          if grep -rnE '^\s*(import|from)\s+(anthropic|openai)' packages/core/pashupatastra; then
+            echo "::error::packages/core must not import a model SDK — go through the AI Gateway (rule 5)"
+            exit 1
+          fi
+
+      - name: assert engines reach models only through the gateway
+        # The providers package is the sole permitted importer of a model SDK.
+        # Without this, rule 5 holds only until someone adds one convenient call.
+        run: |
+          if grep -rnE '^\s*(import|from)\s+anthropic' services/api/app \
+             --exclude-dir=providers; then
+            echo "::error::only app/engines/providers/ may import a model SDK (rule 5)"
             exit 1
           fi
 
@@ -92,6 +122,33 @@ jobs:
       - run: npm ci || npm install
       - run: npm run typecheck
       - run: npm run build
+
+  dependencies:
+    name: dependency audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci || npm install
+      - name: no high or critical advisories
+        # Threshold is `high`: moderate findings are reported but do not fail the
+        # build, because a gate that fires constantly gets bypassed and then the
+        # critical one lands unnoticed — the same argument the detection layer
+        # makes about false alarms.
+        #
+        # This job exists because the pin sat a year stale at next@15.1.6 and
+        # nobody found out until someone happened to read install output. A
+        # security platform learning about its own CVEs by accident is the
+        # problem this prevents.
+        run: npm audit --audit-level=high
+      - name: report everything else
+        if: always()
+        run: npm audit || true
 
   secrets:
     name: secret scan
