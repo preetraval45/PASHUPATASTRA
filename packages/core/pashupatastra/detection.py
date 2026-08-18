@@ -185,10 +185,18 @@ class Detector:
         Surfaced because an unwarmed detector's silence must not be mistaken for
         an all-clear — the same reason a failed connector is reported rather
         than passed over.
+
+        `unmodelled` reports the second way a detector misleads. A cold baseline
+        is silent and admits it by returning `UNKNOWN`; a mis-specified one
+        speaks with full confidence about a metric whose shape it cannot model,
+        which is a more convincing kind of wrong. Both belong in the same place,
+        because an operator reading this is asking one question — how much of
+        this is real coverage.
         """
         return {
             "baselines": len(self.baselines),
             "warm": self.baselines.warm,
+            "unmodelled": self.baselines.unmodelled,
             "upstream_rules": len(self.upstream.claims()),
         }
 

@@ -39,6 +39,15 @@ first few readings."""
 
 DEFAULT_WINDOW = 200
 
+STRUCTURE_LIMIT = 1.5
+"""Structure ratio past which a baseline is reported mis-specified — see
+`Baseline.unmodelled`.
+
+Set from the measured separation rather than picked: across the benchmark
+workloads, series this baseline handles well score 0.73–0.96, and every series it
+handles badly scores 1.93 or higher. 1.5 sits in the empty space between, so the
+cut is not balanced on the edge of either group."""
+
 
 class Band(StrEnum):
     UNKNOWN = "unknown"
@@ -108,6 +117,84 @@ class Baseline:
         median = statistics.median(self._samples)
         deviations = [abs(x - median) for x in self._samples]
         return statistics.median(deviations) / _MAD_TO_SIGMA
+
+    @property
+    def volatility(self) -> float | None:
+        """Median absolute change between consecutive samples.
+
+        How far the metric actually moves from one reading to the next, which is
+        a different question from how far it ranges overall — and the difference
+        between the two is diagnostic.
+        """
+        if len(self._samples) < MIN_SAMPLES:
+            return None
+        ordered = list(self._samples)
+        return statistics.median(
+            [abs(ordered[i] - ordered[i - 1]) for i in range(1, len(ordered))]
+        )
+
+    @property
+    def structure(self) -> float | None:
+        """Spread divided by volatility. Near 1 for noise; large when the series
+        has a *shape*.
+
+        This baseline assumes samples scatter independently around a stable
+        median. Seasonality, trend and drift all violate that, and this ratio is
+        how the violation shows up: a series with shape barely moves between
+        consecutive samples while ranging widely overall, so its spread is large
+        and its volatility small. Measured (`scripts/benchdetect.py`): white
+        noise scores 0.7–1.0, a daily sine 10.1, a trend 2.6, a random walk 2.5.
+        """
+        volatility = self.volatility
+        if volatility is None or volatility == 0:
+            return None
+        median = statistics.median(self._samples)
+        spread = statistics.median([abs(x - median) for x in self._samples])
+        return round(spread / volatility, 3)
+
+    @property
+    def headroom(self) -> float | None:
+        """How far past its historical maximum this baseline would still say
+        "normal", in multiples of the range it has seen.
+
+        Says which *direction* a mis-specified baseline fails in. Large and
+        positive: the band is wider than the data and nothing can fire.
+        Negative: the band is narrower than the shape and everything fires.
+        """
+        if len(self._samples) < MIN_SAMPLES:
+            return None
+        observed = max(self._samples) - min(self._samples)
+        if observed == 0:
+            return None
+        upper = statistics.median(self._samples) + self.threshold * (self.mad or 0.0)
+        return round((upper - max(self._samples)) / observed, 3)
+
+    @property
+    def unmodelled(self) -> bool:
+        """True when this metric has shape the baseline is treating as noise.
+
+        The benchmark found two failure modes on seasonal data, and the useful
+        insight is that they are one cause wearing two faces:
+
+          * A **smooth** daily curve inflates MAD until the band is wider than
+            the data — measured, a series spanning 38–102 got a band of -26 to
+            157. It reports zero false alarms and looks perfectly healthy while
+            being unable to flag anything below ~180.
+          * A **stepped** daily pattern does the opposite and floods, at ~900
+            false alarms per 1000.
+
+        Silence and noise, from the same broken assumption. The second is merely
+        irritating; the first is dangerous, because a too-wide band returns
+        NORMAL and that reads as a statement about the metric when it is really a
+        statement about the detector.
+
+        So this is surfaced beside `warm`, for the same reason: a detector that
+        cannot judge must not be counted as one that has nothing to report. The
+        fix for a flagged metric is a strategy that models the shape — see
+        `SeasonalRobustZ` — applied where the period is actually known.
+        """
+        structure = self.structure
+        return structure is not None and structure > STRUCTURE_LIMIT
 
     def evaluate(self, value: float) -> Reading:
         """Judge a value **without** learning it. Observation is a separate,
@@ -187,3 +274,19 @@ class BaselineStore:
         has been up for five minutes knows nothing yet, and its silence should
         not be read as an all-clear."""
         return sum(1 for b in self._baselines.values() if len(b) >= MIN_SAMPLES)
+
+    @property
+    def unmodelled(self) -> int:
+        """How many baselines are watching a metric whose shape they cannot model.
+
+        The counterpart to `warm`, and the less obvious of the two. A cold
+        baseline is silent and admits it by reporting `UNKNOWN`. A mis-specified
+        one reports `NORMAL` — or floods — with equal confidence, which is a far
+        more convincing kind of wrong. See `Baseline.unmodelled`.
+        """
+        return sum(1 for b in self._baselines.values() if b.unmodelled)
+
+    def unmodelled_keys(self) -> list[str]:
+        """Which ones, so the fix is actionable rather than a number on a
+        dashboard. These are the candidates for a seasonal strategy."""
+        return sorted(key for key, b in self._baselines.items() if b.unmodelled)

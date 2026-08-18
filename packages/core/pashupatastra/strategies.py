@@ -23,7 +23,14 @@ import statistics
 from collections import deque
 from typing import Protocol
 
-from .baselines import MIN_SAMPLES, Band, Baseline, Reading
+from .baselines import (
+    _MAD_TO_SIGMA,
+    DEFAULT_WINDOW,
+    MIN_SAMPLES,
+    Band,
+    Baseline,
+    Reading,
+)
 
 
 class DetectionStrategy(Protocol):
@@ -166,8 +173,122 @@ class SeasonalNaive:
         return len(self._history)
 
 
+class SeasonalRobustZ:
+    """Robust statistics applied to the *residual* after the daily shape is
+    removed. The default.
+
+    Measurement drove this, and it corrected the assumption behind it. The
+    roadmap recorded robust-z scoring ~859 false alarms per 1000 on a
+    daily-shaped series and read that as "robust-z cannot handle seasonality".
+    Re-running it across several shapes (`scripts/benchdetect.py`) says something
+    narrower and more useful:
+
+      * On a **square** wave — an instantaneous step up and down — robust-z does
+        score ~900/1000. But real traffic ramps; it does not teleport.
+      * On a **sine** wave, the realistic shape, robust-z scores **zero** false
+        alarms. Not because it handles seasonality, but because the seasonal
+        spread inflates its MAD until the band is wider than the data. On a
+        series spanning 38–102 it will accept anything from -26 to 157.
+
+    So the real cost of seasonality was never noise. It is **blindness**, and
+    blindness is the more dangerous failure: a false alarm is visible and
+    irritating, while a band three times too wide reports NORMAL and looks
+    exactly like an all-clear. Measured, robust-z needs a spike near 200 before
+    it reacts on a series that peaks at 100 — every smaller genuine incident
+    passes as normal.
+
+    The fix follows from that. Estimate what this point in the cycle usually
+    looks like, subtract it, and judge what is left. The band then reflects the
+    residual noise the metric actually has rather than the daily range it is
+    supposed to have.
+
+    **Per-phase median, not the previous cycle.** `SeasonalNaive` compares
+    against the same point one cycle back, which has a defect the benchmark
+    makes obvious: an incident becomes the *expectation* one period later, so
+    every incident is followed by a guaranteed phantom exactly one cycle after
+    it — its precision is pinned at 0.50 for this reason alone. A median across
+    several cycles has no such echo, because one contaminated cycle cannot move
+    a median of five.
+
+    The cost is warm-up, and it is real: three full cycles before it will say
+    anything. That is expensive and it is honest — `UNKNOWN` until it genuinely
+    knows, per the rule in `baselines.py`.
+    """
+
+    name = "seasonal-robust-z"
+
+    MIN_CYCLES = 3
+    """Cycles of history per phase before judging. Three is the smallest number
+    whose median survives one contaminated cycle."""
+
+    def __init__(
+        self,
+        period: int = 288,
+        cycles: int = 5,
+        threshold: float = 3.0,
+        window: int = DEFAULT_WINDOW,
+    ) -> None:
+        self.period = period
+        self.cycles = cycles
+        self.threshold = threshold
+        self._phases: list[deque[float]] = [deque(maxlen=cycles) for _ in range(period)]
+        self._residuals: deque[float] = deque(maxlen=window)
+        self._n = 0
+
+    def evaluate_and_observe(self, value: float) -> Reading:
+        reading = self.evaluate(value)
+        self.observe(value)
+        return reading
+
+    def _expected(self) -> float | None:
+        history = self._phases[self._n % self.period]
+        if len(history) < self.MIN_CYCLES:
+            return None
+        return statistics.median(history)
+
+    def evaluate(self, value: float) -> Reading:
+        expected = self._expected()
+        if expected is None or len(self._residuals) < MIN_SAMPLES:
+            return Reading(Band.UNKNOWN, value, expected, 0.0, self._n)
+
+        residual = value - expected
+        centre = statistics.median(self._residuals)
+        spread = (
+            statistics.median([abs(r - centre) for r in self._residuals]) / _MAD_TO_SIGMA
+        )
+
+        if spread == 0:
+            if residual == centre:
+                return Reading(Band.NORMAL, value, expected, 0.0, self._n)
+            band = Band.HIGH if residual > centre else Band.LOW
+            return Reading(band, value, expected, self.threshold, self._n)
+
+        deviation = (residual - centre) / spread
+        if abs(deviation) < self.threshold:
+            band = Band.NORMAL
+        else:
+            band = Band.HIGH if deviation > 0 else Band.LOW
+        return Reading(band, value, expected, round(deviation, 3), self._n)
+
+    def observe(self, value: float) -> None:
+        expected = self._expected()
+        if expected is not None:
+            # Residuals are recorded even when the value was anomalous. The
+            # spread is a median absolute deviation, so a minority of extreme
+            # residuals cannot inflate it — the same argument that makes the
+            # non-seasonal baseline robust, and filtering them explicitly would
+            # mean the detector deciding what counts as evidence about itself.
+            self._residuals.append(value - expected)
+        self._phases[self._n % self.period].append(value)
+        self._n += 1
+
+    def __len__(self) -> int:
+        return self._n
+
+
 STRATEGIES: dict[str, type] = {
     RobustZScore.name: RobustZScore,
     Ewma.name: Ewma,
     SeasonalNaive.name: SeasonalNaive,
+    SeasonalRobustZ.name: SeasonalRobustZ,
 }
