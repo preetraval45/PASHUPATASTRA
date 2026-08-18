@@ -4,6 +4,32 @@
 **before** the logic that resolves them — this ordering is the benchmark's main
 defense against self-flattery.
 
+> ## What exists today is not PIB
+>
+> `incidents/` currently holds **8 telemetry-replay scenarios** used to measure
+> the Phase 2 loop (`python scripts/benchphase2.py`). They are a development
+> instrument, not a benchmark, and they differ from PIB in three ways that
+> matter:
+>
+> | | Phase 2 corpus (today) | PIB (Phase 5) |
+> |---|---|---|
+> | Telemetry | Replayed from YAML | Injected into a running stack |
+> | Scored | Detection, correlation, recall | The full loop, four arms, ablations |
+> | Authored | **After** the logic it scores | **Before** |
+>
+> The third row is the important one. The ordering that protects PIB from
+> self-flattery does not protect this corpus: one person wrote both the code and
+> the answer key. Three things reduce that — negative cases, adversarial cases
+> written to catch known weaknesses, and failures reported before passes — and
+> none of them eliminate it.
+>
+> **Reasoning quality is not measured at all.** Top-1 root-cause accuracy, the
+> Phase 2 exit criterion, needs a real model; scoring it against the
+> deterministic stub would measure a fixture this repository wrote. It is absent
+> rather than reported.
+>
+> Do not quote results from `benchphase2.py` as benchmark numbers.
+
 ## Purpose
 
 Turn architectural claims into numbers. 100–500 controlled incidents, each with

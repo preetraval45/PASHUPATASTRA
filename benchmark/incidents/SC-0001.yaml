@@ -1,0 +1,14 @@
+﻿id: SC-0001
+name: Connection pool exhaustion after a bad deploy
+category: database
+difficulty: medium
+expectation: incident
+root_cause: connection pool saturation following deployment v4.21
+expected_incidents: 1
+notes: The canonical case. If this fails, nothing else is worth reading.
+baselines:
+  - {entity: "service:checkout-api", name: connection_pool_saturation, value: 0.42, samples: 30}
+signals:
+  - {at_seconds: 600,  entity: "service:checkout-api", kind: deployment, version: v4.21}
+  - {at_seconds: 1860, entity: "service:checkout-api", name: connection_pool_saturation, value: 0.97, anomalous: true}
+  - {at_seconds: 1920, entity: "service:checkout-api", name: connection_pool_saturation, value: 0.99, anomalous: true}

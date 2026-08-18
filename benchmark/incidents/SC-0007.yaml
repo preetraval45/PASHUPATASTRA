@@ -1,0 +1,12 @@
+﻿id: SC-0007
+name: Steady metric with no degradation at all
+category: negative
+difficulty: medium
+expectation: nothing
+expected_incidents: 0
+notes: >
+  Negative case. Nothing happens. A system that opens an incident here generates
+  work rather than saving it.
+baselines:
+  - {entity: "service:search-api", name: latency_p95_ms, value: 120.0, samples: 35, jitter: 5.0}
+signals: []

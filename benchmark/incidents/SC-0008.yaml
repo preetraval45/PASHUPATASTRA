@@ -1,0 +1,16 @@
+﻿id: SC-0008
+name: Ambiguous degradation requiring handoff
+category: escalation
+difficulty: hard
+expectation: escalate
+root_cause: unclear — degradation with no shared cause visible in telemetry
+expected_incidents: 1
+notes: >
+  Escalation is a success outcome. Without scenarios like this the corpus
+  rewards guessing over handing off, which is the behaviour the policy layer
+  exists to prevent.
+baselines:
+  - {entity: "service:checkout-api", name: error_rate, value: 0.01, samples: 30}
+signals:
+  - {at_seconds: 1860, entity: "service:checkout-api", name: error_rate, value: 0.31, anomalous: true}
+  - {at_seconds: 1920, entity: "service:checkout-api", name: error_rate, value: 0.33, anomalous: true}

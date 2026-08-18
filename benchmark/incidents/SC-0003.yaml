@@ -1,0 +1,15 @@
+﻿id: SC-0003
+name: Routine morning traffic ramp
+category: negative
+difficulty: hard
+expectation: nothing
+expected_incidents: 0
+notes: >
+  Negative case, and a genuine ramp rather than a flat run with a step at the
+  end — a step is not a ramp, and is legitimately anomalous. Traffic climbs
+  steadily from 100 to roughly 280 across the window, which is what a morning
+  looks like. This is the shape ADR Seasonality found robust-z handles badly, so
+  a failure here is expected and is reported rather than tuned away.
+baselines:
+  - {entity: "service:checkout-api", name: request_rate, value: 100.0, samples: 36, jitter: 6.0, drift: 5.0}
+signals: []

@@ -1,0 +1,23 @@
+﻿id: SC-0005
+name: Recurrence of a previously misdiagnosed incident
+category: memory
+difficulty: hard
+expectation: incident
+root_cause: connection pool saturation on checkout-api
+expected_incidents: 1
+expected_precedent: INC-PRIOR-42
+prior_incident:
+  id: INC-PRIOR-42
+  text: connection pool exhausted on checkout-api after a deploy
+  entities: ["service:checkout-api"]
+  signals: ["connection_pool_saturation"]
+  resolved: true
+  diagnosis_correct: false
+  action_taken: restarted pods
+notes: >
+  The precedent must surface AND carry the warning that its diagnosis was wrong.
+  Recalling it silently would lend the authority of history to a mistake.
+baselines:
+  - {entity: "service:checkout-api", name: connection_pool_saturation, value: 0.40, samples: 30}
+signals:
+  - {at_seconds: 1860, entity: "service:checkout-api", name: connection_pool_saturation, value: 0.96, anomalous: true}

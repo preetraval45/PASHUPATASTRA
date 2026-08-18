@@ -1,0 +1,20 @@
+﻿id: SC-0002
+name: Two unrelated services degrade in the same minute
+category: correlation
+difficulty: hard
+expectation: incident
+root_cause: two independent failures that must not be merged
+expected_incidents: 2
+notes: >
+  Adversarial. Time proximity alone would merge these into one incident with a
+  fabricated causal chain spanning services that have never spoken, and an
+  inflated blast radius. The graph does not connect them, so the answer is two.
+true_incident_of:
+  "service:checkout-api": A
+  "service:reporting-worker": B
+baselines:
+  - {entity: "service:checkout-api",     name: error_rate,  value: 0.01,  samples: 30}
+  - {entity: "service:reporting-worker", name: queue_depth, value: 10.0, samples: 30, jitter: 1.0}
+signals:
+  - {at_seconds: 1860, entity: "service:checkout-api",     name: error_rate,  value: 0.55, anomalous: true}
+  - {at_seconds: 1870, entity: "service:reporting-worker", name: queue_depth, value: 9000, anomalous: true}

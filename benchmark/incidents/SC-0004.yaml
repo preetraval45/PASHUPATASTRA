@@ -1,0 +1,17 @@
+﻿id: SC-0004
+name: A deploy that is a red herring
+category: deployment
+difficulty: hard
+expectation: incident
+root_cause: upstream payment provider latency, unrelated to the deployment
+expected_incidents: 1
+notes: >
+  Adversarial. A deploy lands shortly before the degradation but did not cause
+  it. Change correlation must offer the deploy as evidence and must not conclude
+  from it — the failure this catches is a confident wrong answer, not a miss.
+baselines:
+  - {entity: "service:payments-gateway", name: upstream_latency_ms, value: 90.0, samples: 30, jitter: 6.0}
+signals:
+  - {at_seconds: 1500, entity: "service:checkout-api", kind: deployment, version: v4.22}
+  - {at_seconds: 1860, entity: "service:payments-gateway", name: upstream_latency_ms, value: 4200, anomalous: true}
+  - {at_seconds: 1920, entity: "service:payments-gateway", name: upstream_latency_ms, value: 4400, anomalous: true}

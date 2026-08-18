@@ -1,0 +1,25 @@
+﻿id: SC-0006
+name: Similar wording, unrelated service
+category: memory
+difficulty: hard
+expectation: incident
+root_cause: connection pool saturation on billing-api
+expected_incidents: 1
+expected_precedent: null
+prior_incident:
+  id: INC-PRIOR-77
+  text: connection pool exhausted on checkout-api after a deploy
+  entities: ["service:checkout-api"]
+  signals: ["connection_pool_saturation_checkout"]
+  resolved: true
+  diagnosis_correct: true
+  action_taken: rolled back
+notes: >
+  Adversarial for retrieval. The prior incident reads almost identically but
+  shares neither entity nor signal. Pure vector search would call it a precedent;
+  it is a coincidence of vocabulary, and presenting it as history would send an
+  operator to the wrong service.
+baselines:
+  - {entity: "service:billing-api", name: billing_pool_usage, value: 0.40, samples: 30}
+signals:
+  - {at_seconds: 1860, entity: "service:billing-api", name: billing_pool_usage, value: 0.98, anomalous: true}
