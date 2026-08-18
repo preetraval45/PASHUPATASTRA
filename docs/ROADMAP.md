@@ -566,10 +566,12 @@ injected faults, including deliberately wrong remediations.
 
 ### 5.3 Arms
 
-- [ ] Human operator with standard dashboards
-- [ ] Traditional runbook automation
-- [ ] Naive LLM agent — tools, no policy layer, no verification
-- [ ] Pashupatastra, full architecture
+- [x] **Arms never receive the scenario.** They get a `Brief` — live stack state, permitted actions, risk ceiling — because the scenario carries `expected.action` and an arm holding the answer key would score perfectly while measuring nothing. This was a real flaw in the 5.2 harness; redaction is now structural and `testarms.py` fails if a field carrying the answer is added back
+- [x] **Traditional runbook automation** — fires on a threshold, no policy evaluation, no verification, structurally cannot escalate
+- [x] **Pashupatastra, full architecture** — same proposal as the runbook arm, then Dharma decides and the result is verified. Holding the proposal constant is what isolates the architecture as the variable
+- [~] **Naive LLM agent** — implemented as a code path that **refuses to run without a configured model**. Driving it with the deterministic stub would produce a second runbook wearing a different label, and reporting that as an LLM baseline would be the one purely fabricated result in the benchmark
+- [ ] **Human operator with standard dashboards** — not implementable. Blocked on recruiting operators; protocol and recording format are in `benchmark/results/human/`. A simulated human is this repository writing the number it wants the baseline to produce, in the one place nobody would check
+- [x] Diagnosis quality is deliberately **not** what separates the arms. It needs a real model, and scoring the stub would measure a fixture this repo wrote — so the shared proposer is identical across arms and only the architecture around it differs
 
 ### 5.4 Ablations
 

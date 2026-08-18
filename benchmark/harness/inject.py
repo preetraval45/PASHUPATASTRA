@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pashupatastra.pib import PibScenario
+from pashupatastra.pib import Outcome, PibScenario
 
 from .stack import OBSERVABLE, SERVICES, EphemeralStack, kubectl
 
@@ -39,6 +39,24 @@ UNSUPPORTED: dict[str, str] = {
         "orchestration state only"
     ),
 }
+
+
+def _recreate(service: str, ns: str, stack: EphemeralStack) -> None:
+    """Force the Recreate strategy before damaging a deployment.
+
+    Under the default RollingUpdate the old ReplicaSet keeps serving until the
+    new pods are ready, so a broken image, a broken entrypoint and an
+    unschedulable pod spec all leave availability at 100% — the fault exists in
+    the spec and never reaches the state anything can observe. Every damaging
+    injector was silently a no-op because of this, and the arms were being
+    graded for missing faults that had not happened yet.
+    """
+    kubectl(
+        "patch", f"deployment/{service}", "-n", ns, "--type=json",
+        "-p", '[{"op":"replace","path":"/spec/strategy",'
+              '"value":{"type":"Recreate"}}]',
+        context=stack.context,
+    )
 
 
 @dataclass(frozen=True)
@@ -82,7 +100,23 @@ def inject(scenario: PibScenario, stack: EphemeralStack) -> Injection:
     ns = stack.namespace
     kind = scenario.fault.type
 
+    if scenario.outcome is Outcome.NOTHING:
+        # A negative scenario is benign activity by definition, whatever category
+        # its fault type names. Dispatching on the type alone genuinely broke the
+        # stack for a case whose answer key says do nothing, which made those
+        # scenarios unwinnable — the arm saw real damage and was graded wrong for
+        # responding to it. The whole point of a negative is that it *looks* like
+        # something and is not.
+        kubectl(
+            "scale", f"deployment/{service}", "--replicas=3",
+            "-n", ns, context=stack.context,
+        )
+        return Injection(
+            f"benign {kind} activity on {service} (visible, expected, not a fault)", service
+        )
+
     if kind == "deployment":
+        _recreate(service, ns, stack)
         # A tag that cannot be pulled: real ImagePullBackOff, real unavailable
         # replicas, and a real rollback target in the revision history.
         kubectl(
@@ -92,11 +126,19 @@ def inject(scenario: PibScenario, stack: EphemeralStack) -> Injection:
         return Injection(f"set {service} to an unpullable image", service)
 
     if kind == "config":
+        _recreate(service, ns, stack)
+        # Overriding the entrypoint with something that does not exist. Setting
+        # an env var was the obvious choice and was a no-op — a pause container
+        # ignores it, the rollout succeeded, and the stack stayed healthy while
+        # the harness recorded the arm as having missed a fault that was never
+        # actually injected.
         kubectl(
-            "set", "env", f"deployment/{service}", "PIB_FAULT=config-regression",
-            "-n", ns, context=stack.context,
+            "patch", f"deployment/{service}", "-n", ns, "--type=json",
+            "-p", '[{"op":"add","path":"/spec/template/spec/containers/0/command",'
+                  '"value":["/pib-config-regression"]}]',
+            context=stack.context,
         )
-        return Injection(f"applied a config regression to {service}", service)
+        return Injection(f"applied a config regression to {service} (bad entrypoint)", service)
 
     if kind == "scaling":
         kubectl(
@@ -114,16 +156,23 @@ def inject(scenario: PibScenario, stack: EphemeralStack) -> Injection:
         return Injection(f"took {service}'s dependency {upstream} offline", upstream)
 
     if kind == "infrastructure":
+        _recreate(service, ns, stack)
+        # Pinned to a node that does not exist, so the pods stay Pending.
+        # Deleting them instead was self-healing: the deployment replaced them
+        # within seconds and the stack was back to full health before anything
+        # sampled it.
         kubectl(
-            "delete", "pods", "-l", f"app={service}", "-n", ns,
-            "--grace-period=0", "--force", context=stack.context,
+            "patch", f"deployment/{service}", "-n", ns, "--type=json",
+            "-p", '[{"op":"add","path":"/spec/template/spec/nodeSelector",'
+                  '"value":{"pib/unschedulable":"true"}}]',
+            context=stack.context,
         )
-        return Injection(f"force-deleted {service} pods", service)
+        return Injection(f"made {service} pods unschedulable", service)
 
     if kind in ("scheduled", "diurnal"):
-        # A negative case. The stack is disturbed in a way that is visible and
-        # benign — the correct answer is still to do nothing, and a harness that
-        # injected nothing at all would be testing an idle cluster instead.
+        # Reached only by a non-negative scenario of this type. Benign either
+        # way, but the stack is still disturbed rather than left idle — a
+        # harness that injected nothing would be testing an idle cluster.
         kubectl(
             "scale", f"deployment/{service}", "--replicas=3",
             "-n", ns, context=stack.context,

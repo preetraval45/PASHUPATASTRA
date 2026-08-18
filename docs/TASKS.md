@@ -528,8 +528,16 @@ Contracts and grading exist. Live observation does not.
   - d. `[x]` One-command reproducibility — `python -m benchmark.harness.run`
   - e. `[ ]` Load generator, instrumented reference app, and a stateful database —
     without them no application metric is gradeable, which is most of the corpus
-- `[ ]` **T-5.3 — Arms and ablations** · L — human, runbook automation, naive LLM
-  agent, full system; then remove one component at a time
+- `[~]` **T-5.3 — Arms and ablations** · L
+  - a. `[x]` Arms receive a redacted `Brief`, never the scenario — an arm holding
+    `expected.action` would score perfectly while measuring nothing
+  - b. `[x]` Runbook automation — threshold-triggered, no policy, no verification
+  - c. `[x]` Pashupatastra — identical proposal, then Dharma and verification
+  - d. `[~]` Naive LLM agent — code path gated on a configured model; refuses to
+    run against the stub rather than approximating an LLM baseline
+  - e. `[!]` Human operator — **blocked on recruiting operators**, not on code.
+    Protocol and recording format in `benchmark/results/human/`
+  - f. `[ ]` Ablations — remove one component at a time (5.4)
 - `[ ]` **T-5.4 — Reporting** · M
   - a. Metrics from the audit log alone, per [research/METRICS.md](research/METRICS.md)
   - b. **False remediation rate before autonomous resolution rate**

@@ -1,12 +1,15 @@
 """Run the PIB corpus against a live cluster. One command.
 
-    python -m benchmark.harness.run --runs 3 --arm none
+    python -m benchmark.harness.run --runs 3 --arm pashupatastra
 
-Arms here are the two trivial baselines: `none` never acts, `always-act` always
-restarts something. The real arms are 5.3. These two exist because a harness
-that has never distinguished anything is not known to work — `none` should ace
-every negative case and fail every remediation, `always-act` the reverse, and if
-both score alike the rig is broken rather than the systems being equal.
+Arms never receive the scenario. They receive a `Brief` — live stack state, the
+actions they may take, and the ceiling they work under — because the scenario
+carries `expected.action`, and an arm holding the answer key would score
+perfectly while measuring nothing.
+
+`none` and `always-act` are kept as rig checks rather than results: a harness
+that has never distinguished anything is not known to work, so the two of them
+should score exactly opposite on the same scenarios.
 """
 
 from __future__ import annotations
@@ -14,13 +17,19 @@ from __future__ import annotations
 import argparse
 import sys
 import time
-from collections.abc import Callable
 
 sys.path.insert(0, "packages/core")
 sys.path.insert(0, ".")
 
+from benchmark.harness.arms import (  # noqa: E402
+    GATED,
+    ArmUnavailable,
+    PashupatastraArm,
+    RunbookArm,
+)
 from benchmark.harness.inject import excluded_reason, inject  # noqa: E402
 from benchmark.harness.stack import EphemeralStack, StackError  # noqa: E402
+from pashupatastra.arms import Brief, Decision, brief_for  # noqa: E402
 from pashupatastra.harness import (  # noqa: E402
     Arm,
     Exclusion,
@@ -31,26 +40,50 @@ from pashupatastra.harness import (  # noqa: E402
 )
 from pashupatastra.pib import Outcome, PibScenario, load_corpus  # noqa: E402
 
-# An arm decides what to do, given the scenario and the live stack. It returns
-# (action_taken, escalated) — never both, and either may be empty.
-ArmFn = Callable[[PibScenario, EphemeralStack], tuple[str | None, bool]]
+
+class NoneArm:
+    """Rig check: never acts. Should ace every negative and fail every remediation."""
+
+    name = "none"
+
+    def decide(self, brief: Brief) -> Decision:
+        return Decision(rationale="rig check: does nothing")
 
 
-def arm_none(scenario: PibScenario, stack: EphemeralStack) -> tuple[str | None, bool]:
-    return None, False
+class AlwaysActArm:
+    """Rig check: always acts. Should be the exact inverse of `none`."""
+
+    name = "always-act"
+
+    def decide(self, brief: Brief) -> Decision:
+        return Decision(action="restart_service", rationale="rig check: always acts")
 
 
-def arm_always_act(scenario: PibScenario, stack: EphemeralStack) -> tuple[str | None, bool]:
-    return "restart_service", False
+def build_arm(name: str, stack: EphemeralStack | None):
+    if name == "none":
+        return NoneArm()
+    if name == "always-act":
+        return AlwaysActArm()
+    if name == "runbook":
+        return RunbookArm()
+    if name == "pashupatastra":
+        return PashupatastraArm(stack=stack)
+    return GATED[name]()
 
 
-ARMS: dict[str, ArmFn] = {"none": arm_none, "always-act": arm_always_act}
+ARM_NAMES = ("none", "always-act", "runbook", "pashupatastra", "naive-llm", "human")
+ARM_KIND = {
+    "runbook": Arm.RUNBOOK,
+    "pashupatastra": Arm.PASHUPATASTRA,
+    "naive-llm": Arm.NAIVE_LLM,
+    "human": Arm.HUMAN,
+}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs", type=int, default=1, help="repetitions per scenario")
-    parser.add_argument("--arm", choices=sorted(ARMS), default="none")
+    parser.add_argument("--arm", choices=ARM_NAMES, default="pashupatastra")
     parser.add_argument("--context", default=None, help="kubeconfig context")
     parser.add_argument("--corpus", default="benchmark/incidents/pib")
     parser.add_argument("--limit", type=int, default=0, help="cap scenarios (smoke runs)")
@@ -80,14 +113,23 @@ def main() -> int:
     if args.plan:
         return 0
 
-    arm_fn = ARMS[args.arm]
-    arm = Arm.PASHUPATASTRA if args.arm not in ARMS else Arm.RUNBOOK
+    if args.arm in GATED:
+        try:
+            build_arm(args.arm, None).decide(
+                Brief(scenario_id="probe", stack="", allowed_actions=(),
+                      forbidden_actions=(), risk_ceiling=0)
+            )
+        except ArmUnavailable as error:
+            print(f"\nARM UNAVAILABLE — {args.arm}\n  {error}")
+            return 2
+
+    arm = ARM_KIND.get(args.arm, Arm.RUNBOOK)
     results: list[RunResult] = []
 
     print(f"\nrunning {len(runnable)} scenarios x {args.runs} against arm '{args.arm}'\n")
     for index, scenario in enumerate(runnable, 1):
         for run_index in range(args.runs):
-            result = run_once(scenario, arm, run_index, arm_fn, args.context)
+            result = run_once(scenario, arm, run_index, args.arm, args.context)
             results.append(result)
             flag = "" if result.verdict.is_correct else f"  <- {result.verdict.value}"
             print(
@@ -104,26 +146,32 @@ def run_once(
     scenario: PibScenario,
     arm: Arm,
     run_index: int,
-    arm_fn: ArmFn,
+    arm_name: str,
     context: str | None,
 ) -> RunResult:
     """One scenario, one repetition, in its own namespace."""
-    run_id = f"{scenario.id.lower()}-{run_index}"
+    # The arm is part of the namespace, or two arms run against the same cluster
+    # collide on identical names and each tears down the other's stack.
+    run_id = f"{arm_name}-{scenario.id.lower()}-{run_index}"
     started = time.monotonic()
     try:
         with EphemeralStack(run_id, context=context) as stack:
             injection = inject(scenario, stack)
-            action, escalated = arm_fn(scenario, stack)
-            verdict = grade(scenario, action, escalated)
+            # Settle before reading: sampling mid-rollout reports the rollout
+            # rather than the fault, and the arm would be deciding on noise.
+            time.sleep(8)
+            brief = brief_for(scenario, stack.observe())
+            decision = build_arm(arm_name, stack).decide(brief)
+            verdict = grade(scenario, decision.action, decision.escalated)
             return RunResult(
                 scenario_id=scenario.id,
                 arm=arm,
                 run_index=run_index,
                 verdict=verdict,
-                action_taken=action,
-                escalated=escalated,
+                action_taken=decision.action,
+                escalated=decision.escalated,
                 duration_seconds=round(time.monotonic() - started, 2),
-                detail=injection.describe,
+                detail=f"{injection.describe} | {decision.rationale}",
             )
     except (StackError, ValueError, OSError) as error:
         # Graded as a harness error, which is excluded from the failure rate. A

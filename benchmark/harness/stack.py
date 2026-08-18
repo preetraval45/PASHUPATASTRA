@@ -12,6 +12,7 @@ import time
 
 NAMESPACE_PREFIX = "pib"
 IMAGE = "registry.k8s.io/pause:3.10"
+REPLICAS = 2
 
 # Five services with a dependency order, matching `reference-5svc` in the
 # scenarios. Names are what the injectors and the action parameters refer to.
@@ -54,7 +55,7 @@ metadata:
   namespace: {namespace}
   labels: {{app: {service}, stack: reference-5svc}}
 spec:
-  replicas: 2
+  replicas: {REPLICAS}
   selector:
     matchLabels: {{app: {service}}}
   template:
@@ -181,6 +182,15 @@ class EphemeralStack:
         )
         return sum(int(v) for v in value.split() if v.isdigit())
 
+    def unhealthy_services(self) -> list[str]:
+        """Services below their baseline replica count.
+
+        Discovered from the cluster rather than told to the arm — which service
+        is broken is an observation, and handing it over would be part of the
+        answer key.
+        """
+        return [s for s in SERVICES if self.ready(s) < REPLICAS]
+
     def observe(self) -> dict[str, float]:
         """The state this stack can actually report.
 
@@ -191,13 +201,19 @@ class EphemeralStack:
         nobody chose.
         """
         ready = sum(self.ready(s) for s in SERVICES)
-        desired = sum(self.desired(s) for s in SERVICES)
+        # Measured against the baseline the stack was built with, not against
+        # the current spec. ready/desired is blind to the fault that matters
+        # most here: scaling a service to zero drops both halves of the ratio
+        # and reports 100% availability for a service that is entirely gone.
         return {
             "ready_replicas": float(ready),
             "restarts": float(sum(self.restarts(s) for s in SERVICES)),
-            "availability": round(100.0 * ready / desired, 2) if desired else 0.0,
+            "availability": round(min(100.0, 100.0 * ready / BASELINE_READY), 2),
         }
 
+
+BASELINE_READY = len(SERVICES) * REPLICAS
+"""What a healthy stack reports. Availability is relative to this."""
 
 OBSERVABLE = ("ready_replicas", "restarts", "availability")
 """Recovery-state keys this stack can grade. See `EphemeralStack.observe`."""
