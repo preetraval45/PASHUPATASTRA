@@ -728,6 +728,169 @@
         "title": "PlanStep",
         "type": "object"
       },
+      "RemediateRequest": {
+        "properties": {
+          "action_id": {
+            "title": "Action Id",
+            "type": "string"
+          },
+          "actor": {
+            "default": "agent:orchestrator",
+            "title": "Actor",
+            "type": "string"
+          },
+          "entities": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Entities",
+            "type": "array"
+          },
+          "incident_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident Ref"
+          },
+          "observed_entities": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Entities"
+          },
+          "observed_users": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Users"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Params",
+            "type": "object"
+          },
+          "predicted_entities": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Entities"
+          },
+          "predicted_users": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Users"
+          },
+          "signals": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Signals",
+            "type": "array"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "tenant": {
+            "default": "default",
+            "title": "Tenant",
+            "type": "string"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          }
+        },
+        "required": [
+          "action_id",
+          "verdict"
+        ],
+        "title": "RemediateRequest",
+        "type": "object"
+      },
+      "RemediateResponse": {
+        "properties": {
+          "action_id": {
+            "title": "Action Id",
+            "type": "string"
+          },
+          "checks": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/VerificationCheck"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "disposition": {
+            "title": "Disposition",
+            "type": "string"
+          },
+          "learned": {
+            "title": "Learned",
+            "type": "boolean"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "rollback_ran": {
+            "title": "Rollback Ran",
+            "type": "boolean"
+          },
+          "verified": {
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action_id",
+          "disposition",
+          "reason",
+          "verified",
+          "rollback_ran",
+          "learned"
+        ],
+        "title": "RemediateResponse",
+        "type": "object"
+      },
       "RiskAdjustment": {
         "properties": {
           "delta": {
@@ -1145,6 +1308,45 @@
           }
         },
         "summary": "Execute Action"
+      }
+    },
+    "/api/v1/actions/remediate": {
+      "post": {
+        "description": "The closed loop: act, verify over a window, roll back, learn.\n\nDistinct from `/actions/execute`, which runs one action and stops. This one\nowns the consequences \u2014 and because a rollback is itself an execution, it is\nauthorised by its own Dharma verdict rather than the one supplied here.",
+        "operationId": "remediate_action_api_v1_actions_remediate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemediateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemediateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remediate Action"
       }
     },
     "/api/v1/audit": {

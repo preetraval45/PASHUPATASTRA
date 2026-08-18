@@ -482,8 +482,9 @@ lacks is the ability to act, and a way to know whether approval means anything.
 Contracts and grading exist. Live observation does not.
 
 - `[~]` **T-4.1 — Post-action observation** · L
-  - a. `[ ]` Observation window against real telemetry — built and wired into the
-    kubectl router, but not yet re-run against a live cluster
+  - a. `[~]` Observation window against real telemetry — reachable from
+    `POST /actions/remediate` and wired to the kubectl router, but not yet re-run
+    against a live cluster
   - b. `[x]` Per-action tuning — a restart settles faster than a rollback
   - c. `[x]` Missing observation grades as **failure**, never success. Already true; keep it true
 - `[x]` **T-4.2 — Automatic rollback** · L
@@ -491,6 +492,8 @@ Contracts and grading exist. Live observation does not.
     metric that merely bounces no longer closes the incident
   - b. `[x]` Escalate when rollback itself fails
   - c. `[x]` Never loop — one attempt, one undo, then a human
+  - d. `[x]` The undo carries its own Dharma verdict, and a mismatched verdict is
+    refused before the loop starts rather than inside the runner
 - `[x]` **T-4.3 — Learning** · M
   - a. `[x]` Outcomes to Smriti, **successes and failures with equal prominence** —
     one write path, no success-only branch, same kind and retention either way

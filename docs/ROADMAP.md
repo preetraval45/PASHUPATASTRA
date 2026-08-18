@@ -519,7 +519,11 @@ default, per-environment opt-in, blast-radius escalation regardless of score.
 - [x] Novelty penalty fed by execution history — familiarity is per environment, because succeeding in dev says nothing about prod, and expires at a horizon since an action last run against infrastructure that has since been rebuilt is closer to novel than familiar
 - [x] Tried-and-failed distinguished from never-tried, and it raises risk. Repeated failure pushes an action out of `AUTONOMOUS`, so the loop stops quietly retrying something that keeps not working
 - [x] Estimation error tracked — predicted vs. actual blast radius, signed rather than absolute. Under-estimating is the direction that lets an action run autonomously when it should have gone to a human, and a mean absolute error reports it identically to the harmless direction
-- [ ] The loop is wired into a live execution path. `Remediator` is still constructed only in tests — 4.2 and 4.3 are core capability, not yet a running service
+- [x] The loop is wired into a live execution path — `POST /actions/remediate` runs act → observe over a window → roll back → learn, behind the same dry-run gates as every other write
+- [x] A rollback is authorised by its own Dharma verdict. `require_verdict` binds a verdict to one action ID, so the one issued for the original action cannot authorise its undo — reusing it would be a policy bypass wearing the shape of a convenience
+- [x] A mismatched verdict is refused **before** the loop starts. `Remediator` treats any runner exception as "the execution failed" and responds by rolling back, so a `PolicyViolation` swallowed there would turn an unauthorised request into a real rollback undoing something that never ran
+- [x] Prior state captured before acting — replicas before a scale, image before a redeploy — so an undo restores rather than repeats
+- [x] Dry-run returns unobserved immediately instead of opening a window. Nothing changed, so there is nothing to wait for, and unobserved still never counts as success
 
 ### 4.4 Timeline UI
 

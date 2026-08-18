@@ -139,6 +139,41 @@ class KubernetesExecutor:
             case _:
                 raise ExecutorError(f"{self.name} executor cannot perform {action.id!r}")
 
+    # -- capture --------------------------------------------------------------
+
+    def capture(self, action: ActionSpec, params: dict[str, str]) -> dict[str, str]:
+        """Snapshot what a rollback would need to restore, before acting.
+
+        Raises rather than returning empty when the state should be readable and
+        is not: the loop treats a capture failure as a reason to refuse to act,
+        which is the right trade when the alternative is an unrecoverable change.
+        """
+        match action.id:
+            case "scale_service":
+                namespace, deployment = _require(params, "namespace", "deployment")
+                replicas = self._kubectl(
+                    "get", f"deployment/{deployment}", "-n", namespace,
+                    "-o", "jsonpath={.spec.replicas}",
+                )
+                return {"replicas": replicas or "1"}
+
+            case "redeploy_version":
+                namespace, deployment = _require(params, "namespace", "deployment")
+                container = params.get("container", deployment)
+                image = self._kubectl(
+                    "get", f"deployment/{deployment}", "-n", namespace,
+                    "-o",
+                    "jsonpath={.spec.template.spec.containers[?(@.name=='"
+                    + container
+                    + "')].image}",
+                )
+                return {"image": image, "container": container} if image else {}
+
+            # rollout undo and pause carry their own prior state in the cluster's
+            # revision history, so there is nothing for us to snapshot.
+            case _:
+                return {}
+
     # -- observation ----------------------------------------------------------
 
     def observe(self, action: ActionSpec, params: dict[str, str]) -> list[VerificationCheck]:
@@ -300,6 +335,11 @@ class Router:
 
     def observe(self, action: ActionSpec, params: dict[str, str]) -> list[VerificationCheck]:
         return self.owner(action.id).observe(action, params)
+
+    def capture(self, action: ActionSpec, params: dict[str, str]) -> dict[str, str]:
+        owner = self.owner(action.id)
+        snapshot = getattr(owner, "capture", None)
+        return snapshot(action, params) if snapshot is not None else {}
 
     def covers(self, action_id: str) -> bool:
         return action_id in self._owners

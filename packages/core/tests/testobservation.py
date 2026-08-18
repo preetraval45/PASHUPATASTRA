@@ -316,3 +316,25 @@ def test_a_last_sample_that_passes_cannot_smuggle_a_failed_window_through() -> N
     assert not result.verified
     assert not all(c.passed for c in checks)
 
+
+
+def test_the_default_observer_actually_sleeps_between_samples() -> None:
+    """A no-op sleep with a real clock turns the sample loop into a busy-spin for
+    the whole timeout — it reads as a hang and fills the result with millions of
+    samples. Found by a service test that never returned."""
+    slept: list[float] = []
+    clock = Clock()
+
+    WindowObserver(clock=clock, sleep=lambda s: (slept.append(s), clock.sleep(s))[1]).watch(
+        "restart_service",
+        failing,
+        Window(settle=timedelta(0), timeout=timedelta(seconds=20), interval=timedelta(seconds=5)),
+    )
+    assert slept, "the observer never slept"
+    assert all(s > 0 for s in slept)
+
+
+def test_an_observer_constructed_with_no_arguments_has_a_real_sleep() -> None:
+    import time
+
+    assert WindowObserver()._sleep is time.sleep

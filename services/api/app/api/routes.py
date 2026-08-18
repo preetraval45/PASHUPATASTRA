@@ -13,14 +13,16 @@ from pashupatastra import (
     RiskContext,
     Verdict,
     Verification,
+    VerificationCheck,
     evaluate,
 )
 from pashupatastra.approvals import ApprovalLog, Decision
+from pashupatastra.learning import Prediction
 from pashupatastra.registry import all_actions, get as get_action
 from pydantic import BaseModel
 
 from ..config import get_settings
-from ..engines import astra, verification as verify_engine
+from ..engines import astra, loop as loop_engine, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
 from ..db import PostgresStore
 from ..engines.buddhi import model_health
@@ -149,6 +151,80 @@ def execute_action(request: ExecuteRequest) -> astra.ExecutionResult:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+class RemediateRequest(BaseModel):
+    action_id: str
+    verdict: Verdict
+    params: dict[str, str] = {}
+    incident_ref: str | None = None
+    actor: str = "agent:orchestrator"
+    tenant: str = "default"
+    summary: str | None = None
+    predicted_entities: int | None = None
+    predicted_users: int | None = None
+    observed_entities: int | None = None
+    observed_users: int | None = None
+    entities: list[str] = []
+    signals: list[str] = []
+
+
+class RemediateResponse(BaseModel):
+    action_id: str
+    disposition: str
+    reason: str
+    verified: bool
+    rollback_ran: bool
+    learned: bool
+    checks: list[VerificationCheck] = []
+
+
+@router.post("/actions/remediate", response_model=RemediateResponse)
+def remediate_action(request: RemediateRequest) -> RemediateResponse:
+    """The closed loop: act, verify over a window, roll back, learn.
+
+    Distinct from `/actions/execute`, which runs one action and stops. This one
+    owns the consequences — and because a rollback is itself an execution, it is
+    authorised by its own Dharma verdict rather than the one supplied here.
+    """
+    predicted = observed = None
+    if request.predicted_entities is not None:
+        predicted = Prediction(
+            entities=request.predicted_entities, users=request.predicted_users or 0
+        )
+    if request.observed_entities is not None:
+        observed = Prediction(
+            entities=request.observed_entities, users=request.observed_users or 0
+        )
+
+    try:
+        result, learned = loop_engine.remediate(
+            request.action_id,
+            request.verdict,
+            params=request.params,
+            incident_ref=request.incident_ref,
+            actor=request.actor,
+            tenant=request.tenant,
+            summary=request.summary,
+            predicted=predicted,
+            observed=observed,
+            entities=request.entities,
+            signals=request.signals,
+        )
+    except PolicyViolation as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return RemediateResponse(
+        action_id=result.action_id,
+        disposition=result.disposition.value,
+        reason=result.reason,
+        verified=result.attempt.verified if result.attempt else False,
+        rollback_ran=result.rollback is not None,
+        learned=learned,
+        checks=result.attempt.checks if result.attempt else [],
+    )
 
 
 class ApproveRequest(BaseModel):

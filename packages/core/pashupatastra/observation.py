@@ -8,6 +8,7 @@ consecutive samples.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -170,7 +171,10 @@ class WindowObserver:
         sleep: Callable[[float], None] | None = None,
     ) -> None:
         self._now = clock or (lambda: datetime.now().astimezone())
-        self._sleep = sleep or (lambda _seconds: None)
+        # Must actually sleep by default. A no-op here with a real clock turns
+        # the sample loop into a busy-spin for the whole timeout, which reads as
+        # a hang and fills the result with millions of samples.
+        self._sleep = sleep or time.sleep
 
     def watch(self, action_id: str, sampler: Sampler, window: Window | None = None) -> WindowResult:
         window = window or window_for(action_id)
