@@ -151,3 +151,47 @@ def test_isolating_a_host_needs_senior_approval() -> None:
 def test_incident_ids_are_unique() -> None:
     ids = [s.incident.id for s in SCENARIOS]
     assert len(ids) == len(set(ids))
+
+
+# --- citations resolve through the API (R6) -----------------------------------
+
+
+def test_every_citation_resolves_through_the_api() -> None:
+    """The property R6 exists to guarantee, checked end to end rather than
+    inside the fixtures.
+
+    A test that only compares two Python structures would pass while the route
+    that serves them 404s, and the citation would still be dead everywhere a
+    reader could actually click it.
+    """
+    import os
+
+    os.environ.setdefault("PASHU_DATABASE_URL", "")
+    from fastapi.testclient import TestClient
+
+    from app.graph import GraphStore, entitystore
+    from app.seed import seed_security
+    from app.main import app
+    from app.store import STORE
+
+    seed_security(GraphStore(), entitystore(), STORE, now=NOW)
+    client = TestClient(app)
+
+    for scenario in SCENARIOS:
+        for ref in cited(scenario):
+            response = client.get(f"/api/v1/events/{ref}")
+            assert response.status_code == 200, f"{scenario.incident.id} cites dead {ref}"
+            assert response.json()["id"] == ref
+
+
+def test_an_unknown_citation_is_a_404_not_a_silent_empty() -> None:
+    """A missing citation must be distinguishable from a reachable-but-empty
+    one, or the dashboard cannot tell the difference either."""
+    import os
+
+    os.environ.setdefault("PASHU_DATABASE_URL", "")
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    assert TestClient(app).get("/api/v1/events/SEC-9999-z").status_code == 404

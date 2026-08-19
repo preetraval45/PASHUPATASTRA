@@ -5,6 +5,8 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from pashupatastra.dharma import ActionDomain
+
 from .api.routes import router
 from .config import get_settings
 
@@ -34,8 +36,13 @@ if settings.demo_seed:
     from .seed import seed, seed_security
     from .store import STORE
 
-    seed(GraphStore(), entitystore())
-    seed_security(entitystore(), STORE)
+    graph, store = GraphStore(), entitystore()
+    if settings.action_domain is not ActionDomain.SECURITY:
+        # The labelled corpus is infrastructure telemetry. On a security console
+        # it would put `checkout-api` on the map beside a compromised account —
+        # the same theme-over-something-else problem as the demo incident.
+        seed(graph, store)
+    seed_security(graph, store, STORE)
 
 
 @app.get("/")

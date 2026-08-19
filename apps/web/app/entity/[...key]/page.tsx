@@ -13,7 +13,7 @@ import {
   Panel,
   statusForSeverity,
 } from "@/components/ui";
-import { getEntity, type EntityEvent } from "@/lib/api";
+import { apiIsReachable, getEntity, type EntityEvent } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,13 @@ export default async function EntityPage({ params }: { params: Promise<{ key: st
   const key = segments.map(decodeURIComponent).join("/");
   const detail = await getEntity(key);
 
-  if (detail === null) return <Offline />;
+  if (detail === null) {
+    // `null` covers both "no such entity" and "the API is unreachable". Without
+    // asking a second question, following a causal-chain link to an entity that
+    // is simply not in the graph reported that the whole system was down.
+    if (!(await apiIsReachable())) return <Offline />;
+    notFound();
+  }
   if (!detail.entity) notFound();
 
   const { entity, blast_radius: blast, events } = detail;

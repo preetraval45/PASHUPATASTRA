@@ -339,7 +339,7 @@ them genuinely deleted instead.
   security domain is served — a connection-pool outage beside a credential
   stuffing incident reads as a theme applied over something else.
 
-- [ ] **R6 — Make evidence resolve.** Needs: **R5**.
+- [x] **R6 — Make evidence resolve.** Needs: **R5**.
   *This is a live defect, not a new feature.* The current incident cites
   `evt-deploy-421`; no such event exists in the store, so the citation is
   unfollowable text. Seed the events each incident cites, add
@@ -347,8 +347,17 @@ them genuinely deleted instead.
   Also fix: a causal-chain link to an entity not in the graph currently renders
   **"API unreachable"**, telling the visitor the whole system is down when the
   API is fine.
-  **Done when:** every evidence id on every incident resolves to an event with
-  its provenance; a missing entity renders "not found", not "unreachable".
+  *Evidence: clicked through in a browser — a citation on the incident page
+  navigates to `/evidence/<id>`, which shows the observation, its source
+  system, and the scenario that produced it; `/entity/service:does-not-exist`
+  now renders "Not found". A test walks every citation on all three
+  incidents through the live route, so a dead reference fails the build
+  rather than the reader. 789 tests pass.*
+  Also fixed here: the graph still held the infrastructure corpus, so a
+  security console listed `checkout-api` on its map. The corpus is no longer
+  seeded when the security domain is served, and the scenarios' own entities
+  are — with no edges, because they declare a sequence of events and not a
+  dependency graph.
 
 - [ ] **R6b — Fix the hydration mismatch on Infrastructure.** Needs: nothing.
   Found by `scripts/verifyui.py` while verifying R1: `/infrastructure` throws

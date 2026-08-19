@@ -164,13 +164,31 @@ class MemoryGraph:
             "last_seen": last.isoformat() if last else None,
         }
 
+    def event(self, event_id: str) -> dict | None:
+        """One event by id, so a citation can be followed to what it cites."""
+        for entity_key, events in self._events.items():
+            for event in events:
+                if event["id"] == event_id:
+                    # `entity_key` is implicit in the mapping here and explicit
+                    # in the Postgres row. The two must return the same shape or
+                    # a view breaks when a database appears.
+                    return {**_isoformat(event), "entity_key": entity_key}
+        return None
+
     def entity_events(self, entity_key: str, limit: int = 50) -> list[dict]:
         events = sorted(
             self._events.get(entity_key, ()),
             key=lambda e: (e["occurred_at"], e["id"]),
             reverse=True,
         )[:limit]
-        return [
-            {**e, "occurred_at": e["occurred_at"].isoformat(), "observed_at": e["observed_at"].isoformat()}
-            for e in events
-        ]
+        return [_isoformat(e) for e in events]
+
+
+def _isoformat(event: dict) -> dict:
+    """Timestamps as strings, matching what the Postgres store returns. The two
+    have to be interchangeable or a view breaks when a database appears."""
+    return {
+        **event,
+        "occurred_at": event["occurred_at"].isoformat(),
+        "observed_at": event["observed_at"].isoformat(),
+    }

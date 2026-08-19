@@ -7,6 +7,7 @@
  * incident that reading cost is paid at the worst possible moment.
  */
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import type { AttackTechnique } from "@/lib/api";
@@ -228,11 +229,30 @@ export function Ident({ children }: { children: ReactNode }) {
   return <span className="mono text-[rgb(var(--astra))]">{children}</span>;
 }
 
+/**
+ * Evidence citations, as links.
+ *
+ * They used to be plain text. An id a reader cannot follow is decoration: it
+ * looks checkable, so it gets taken on trust, and a fabricated reference reads
+ * exactly like a real one. Following it is the only thing that makes the
+ * grounding rule mean anything from outside the code.
+ */
 export function Evidence({ refs }: { refs: string[] }) {
   if (!refs.length) return null;
   return (
     <p className="mono mt-1 text-[11px] text-[rgb(var(--faint))]">
-      evidence: {refs.join(", ")}
+      evidence:{" "}
+      {refs.map((ref, index) => (
+        <span key={ref}>
+          {index > 0 && ", "}
+          <Link
+            href={`/evidence/${encodeURIComponent(ref)}`}
+            className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+          >
+            {ref}
+          </Link>
+        </span>
+      ))}
     </p>
   );
 }

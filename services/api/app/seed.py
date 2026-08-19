@@ -86,22 +86,45 @@ def _origin(scenario: Scenario, now: datetime) -> datetime:
     return now - LATEST_SIGNAL_AGO - timedelta(seconds=span)
 
 
-def seed_security(store, incidents, now: datetime | None = None) -> dict[str, int]:
-    """Load the written blue-team scenarios and the telemetry they cite.
+def seed_security(graph, store, incidents, now: datetime | None = None) -> dict[str, int]:
+    """Load the written blue-team scenarios, their entities and their telemetry.
 
-    The events go in first. An incident whose citations are stored after it can
-    be rendered in the gap, and a citation that resolves to nothing for even one
-    request is the defect this ordering exists to prevent.
+    Order matters. Entities, then events, then incidents: an incident rendered
+    before its citations exist shows references that resolve to nothing, and a
+    citation that dangles for even one request is the defect this ordering
+    exists to prevent.
+
+    Entities come from the scenarios themselves — every entity an incident names
+    in its causal chain, its affected list, or an event. Nothing is invented to
+    make the map look busier, and no edges are added at all: the scenarios
+    declare a sequence of events, not a dependency graph, and a plausible
+    topology drawn from co-occurrence would put fabricated structure behind
+    blast radius.
     """
     now = now or datetime.now().astimezone()
     scenarios = security_scenarios(now)
+
+    entities: dict[str, EntityRef] = {}
+    for scenario in scenarios:
+        for ref in scenario.incident.affected_entities:
+            entities[ref.key()] = ref
+        for link in scenario.incident.causal_chain:
+            entities[link.entity.key()] = link.entity
+        for signal in scenario.signals:
+            entities[signal.entity.key()] = signal.entity
+
+    graph.upsert_nodes([Node(ref=ref, owner=None, estimated_users=0) for ref in entities.values()])
 
     events = [event for scenario in scenarios for event in scenario.events(now)]
     store.save_events(events)
     for scenario in scenarios:
         incidents.save(scenario.incident)
 
-    return {"incidents": len(scenarios), "events": len(events)}
+    return {
+        "incidents": len(scenarios),
+        "entities": len(entities),
+        "events": len(events),
+    }
 
 
 def seed(graph, store, corpus: Path | str | None = None, now: datetime | None = None) -> dict[str, int]:

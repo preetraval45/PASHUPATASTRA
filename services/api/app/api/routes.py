@@ -441,6 +441,20 @@ def entity_detail(entity_key: str, events: int = 50) -> dict[str, object]:
     }
 
 
+@router.get("/events/{event_id}")
+def event(event_id: str) -> dict[str, object]:
+    """One event, so a citation can be followed to the thing it cites.
+
+    Every hypothesis and every causal step names evidence by id. Without this
+    the id is decoration: it looks checkable, a reader takes it on trust, and an
+    invented reference is indistinguishable from a real one.
+    """
+    record = entitystore().event(event_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"unknown event {event_id}")
+    return record
+
+
 # --- audit -------------------------------------------------------------------
 
 

@@ -1521,6 +1521,48 @@
         "summary": "Entity Detail"
       }
     },
+    "/api/v1/events/{event_id}": {
+      "get": {
+        "description": "One event, so a citation can be followed to the thing it cites.\n\nEvery hypothesis and every causal step names evidence by id. Without this\nthe id is decoration: it looks checkable, a reader takes it on trust, and an\ninvented reference is indistinguishable from a real one.",
+        "operationId": "event_api_v1_events__event_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Event Api V1 Events  Event Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Event"
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_api_v1_health_get",

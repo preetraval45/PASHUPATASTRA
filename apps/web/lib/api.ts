@@ -233,6 +233,22 @@ export async function evaluatePolicy(body: {
 export const getEntity = (key: string) =>
   get<EntityDetail>(`/entities/${encodeURIComponent(key)}`);
 
+/** One event by id. This is what makes an evidence citation checkable rather
+ *  than decorative — without it the id is a string a reader takes on trust. */
+export const getEvent = (id: string) =>
+  get<EntityEvent & { entity_key: string }>(`/events/${encodeURIComponent(id)}`);
+
+/** Whether the API is reachable at all.
+ *
+ *  `get` returns null for a 404 and for an unreachable API alike, so a detail
+ *  page cannot tell "this does not exist" from "nothing is answering" — and it
+ *  told visitors the whole system was down when they clicked a link to an
+ *  entity that simply was not in the graph. Asking a second, cheap question
+ *  separates them. */
+export async function apiIsReachable(): Promise<boolean> {
+  return (await getHealth()) !== null;
+}
+
 /** Namespaces belonging to the platform rather than the customer's workload. */
 const SYSTEM_NAMESPACES = new Set([
   "kube-system",

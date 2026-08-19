@@ -220,6 +220,32 @@ class PostgresStore:
             for r in rows
         ]
 
+    def event(self, event_id: str) -> dict | None:
+        """One event by id, so a citation can be followed to what it cites."""
+        with connect(self.database_url) as conn:
+            row = conn.execute(
+                """
+                SELECT id, event_class, source, occurred_at, observed_at,
+                       severity, payload, provenance, labels, entity_key
+                FROM event WHERE id = %s
+                """,
+                (event_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "id": row["id"],
+            "event_class": row["event_class"],
+            "source": row["source"],
+            "occurred_at": row["occurred_at"].isoformat(),
+            "observed_at": row["observed_at"].isoformat(),
+            "severity": row["severity"],
+            "payload": row["payload"],
+            "provenance": row["provenance"],
+            "labels": row["labels"],
+            "entity_key": row["entity_key"],
+        }
+
     def entity(self, entity_key: str) -> dict | None:
         with connect(self.database_url) as conn:
             row = conn.execute(
