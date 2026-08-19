@@ -66,6 +66,18 @@ class ActionSpec(BaseModel):
     def has_tested_rollback(self) -> bool:
         return self.rollback_action_id is not None and not self.irreversible
 
+    @property
+    def changes_nothing(self) -> bool:
+        """Whether performing this action alters no state.
+
+        Zero risk *and* no expected post-state. Both halves are load-bearing:
+        risk 0 alone would exempt an action somebody scored optimistically, and
+        an empty post-state alone would exempt one that changes something its
+        author simply failed to declare. Requiring the pair means an action
+        escapes the rollback rule only by admitting it has nothing to verify.
+        """
+        return self.base_risk == 0 and not self.expected_post_state and not self.irreversible
+
 
 class RiskContext(BaseModel):
     """Everything that can raise an action's risk above its declared base."""
@@ -199,7 +211,12 @@ def evaluate(
     # Hard overrides — applied regardless of the computed score.
     if action.irreversible:
         tier, denial = Tier.DENIED, "irreversible actions are never autonomous"
-    elif not action.has_tested_rollback:
+    elif not action.has_tested_rollback and not action.changes_nothing:
+        # "No tested rollback cannot be autonomous" is a rule about actions that
+        # change something. Reading a log changes nothing, so there is nothing
+        # to undo and nothing to verify, and demanding an undo it cannot have
+        # made the whole 0-30 band unreachable for every read-only action —
+        # which is to say, made diagnosis itself require an approval.
         tier = _escalate(tier)
         if tier is Tier.AUTONOMOUS:
             tier = Tier.APPROVAL

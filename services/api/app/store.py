@@ -22,7 +22,10 @@ from pashupatastra import (
     Verdict,
     incident_id,
 )
+from pashupatastra.dharma import ActionDomain
 from pashupatastra.registry import get as get_action
+
+from .config import get_settings as _get_settings
 
 
 def _ref(kind: EntityKind, name: str) -> EntityRef:
@@ -171,4 +174,11 @@ class Store:
 
 
 STORE = Store()
-STORE.seed_demo()
+
+# The infrastructure demo incident is seeded only where infrastructure is the
+# domain on offer. A security console listing a connection-pool outage next to a
+# credential-stuffing incident reads as a theme applied over something else,
+# which is worse than not re-theming at all — and the actions it proposes are
+# not even in the registry that deployment serves.
+if _get_settings().action_domain is not ActionDomain.SECURITY:
+    STORE.seed_demo()

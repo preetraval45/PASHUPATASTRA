@@ -31,9 +31,11 @@ app.include_router(router, prefix="/api/v1")
 
 if settings.demo_seed:
     from .graph import GraphStore, entitystore
-    from .seed import seed
+    from .seed import seed, seed_security
+    from .store import STORE
 
     seed(GraphStore(), entitystore())
+    seed_security(entitystore(), STORE)
 
 
 @app.get("/")

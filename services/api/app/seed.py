@@ -31,6 +31,8 @@ from pathlib import Path
 from pashupatastra import Edge, EntityKind, EntityRef, Node
 from pashupatastra.scenarios import Scenario, load_scenarios
 
+from .demoincidents import scenarios as security_scenarios
+
 def _corpus() -> Path:
     """Locate `benchmark/incidents/` by walking up from this module.
 
@@ -82,6 +84,24 @@ def _origin(scenario: Scenario, now: datetime) -> datetime:
     """
     span = max((s.at_seconds for s in scenario.signals), default=0.0)
     return now - LATEST_SIGNAL_AGO - timedelta(seconds=span)
+
+
+def seed_security(store, incidents, now: datetime | None = None) -> dict[str, int]:
+    """Load the written blue-team scenarios and the telemetry they cite.
+
+    The events go in first. An incident whose citations are stored after it can
+    be rendered in the gap, and a citation that resolves to nothing for even one
+    request is the defect this ordering exists to prevent.
+    """
+    now = now or datetime.now().astimezone()
+    scenarios = security_scenarios(now)
+
+    events = [event for scenario in scenarios for event in scenario.events(now)]
+    store.save_events(events)
+    for scenario in scenarios:
+        incidents.save(scenario.incident)
+
+    return {"incidents": len(scenarios), "events": len(events)}
 
 
 def seed(graph, store, corpus: Path | str | None = None, now: datetime | None = None) -> dict[str, int]:

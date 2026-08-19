@@ -57,7 +57,13 @@ action cannot argue its way into a lower tier.
 
 - Blast radius above the configured threshold escalates one tier
 - Destructive/irreversible actions cap at "never autonomous"
-- An action with no tested rollback cannot be autonomous
+- An action with no tested rollback cannot be autonomous, **unless it changes
+  nothing** — risk 0 and no declared post-state. The rule exists for actions
+  that alter state: reading a log has nothing to undo and nothing to verify, and
+  applied literally the rule made the 0–30 band unreachable for every read-only
+  action, which meant an approval was required before anything could be
+  diagnosed. Both halves of the exemption are required, so an action escapes the
+  rule only by admitting it has no post-state to check (`ActionSpec.changes_nothing`)
 - Dry-run is the default; live execution is opt-in per environment
 - An agent may never exceed its own configured `risk_limit`
 

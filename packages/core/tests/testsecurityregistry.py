@@ -76,22 +76,50 @@ def test_read_only_actions_are_never_denied() -> None:
         assert verdict.tier is not Tier.DENIED, action_id
 
 
-def test_read_only_actions_are_not_yet_autonomous() -> None:
-    """Asserts what the engine currently does, which is not what the registry
-    implies it should.
+@pytest.mark.parametrize("environment", list(Environment))
+def test_read_only_actions_are_autonomous(environment: Environment) -> None:
+    """Reading has nothing to roll back, so the rollback rule does not reach it.
 
-    A risk-0 action with no post-state changes nothing, so it has nothing to
-    roll back — but `evaluate` escalates every action lacking a rollback, and
-    the 0-30 autonomous band is therefore unreachable for all four read-only
-    actions in every environment. Registering them at risk 0 buys nothing today.
-
-    Left asserting reality rather than the intent, because relaxing the rule is
-    a change to the safety core and belongs to whoever owns that decision. See
-    R4b in docs/REBUILD.md — R19's read-only agent tools depend on the answer.
+    Applied literally it did, and the 0-30 band was unreachable for every
+    read-only action in every environment — an approval required before anything
+    could be diagnosed. R4b, and `docs/specs/Policy Model.md` carries the rule.
     """
     for action_id in ("read_logs", "query_threat_intel", "notify_analyst", "create_case"):
-        verdict = evaluate(get(action_id), context())
-        assert verdict.tier is Tier.APPROVAL, action_id
+        verdict = evaluate(get(action_id), context(environment=environment))
+        assert verdict.tier is Tier.AUTONOMOUS, action_id
+
+
+def test_the_exemption_needs_both_halves() -> None:
+    """Risk 0 alone would exempt an action somebody scored optimistically, and an
+    empty post-state alone would exempt one that changes something its author
+    forgot to declare. Either half on its own is a hole."""
+    from pashupatastra.dharma import ActionSpec
+
+    optimistic = ActionSpec(
+        id="scored-zero-but-acts", description="", base_risk=0,
+        expected_post_state={"account": "inactive"},
+    )
+    undeclared = ActionSpec(
+        id="acts-but-undeclared", description="", base_risk=45,
+        expected_post_state={},
+    )
+    assert not optimistic.changes_nothing
+    assert not undeclared.changes_nothing
+    assert evaluate(optimistic, context()).tier is not Tier.AUTONOMOUS
+    assert evaluate(undeclared, context()).tier is not Tier.AUTONOMOUS
+
+
+def test_the_exemption_never_reaches_an_irreversible_action() -> None:
+    """A belt-and-braces check: irreversible is denied before the exemption is
+    consulted, but nothing should rely on statement order for that."""
+    from pashupatastra.dharma import ActionSpec
+
+    catastrophic = ActionSpec(
+        id="zero-risk-irreversible", description="", base_risk=0,
+        expected_post_state={}, irreversible=True,
+    )
+    assert not catastrophic.changes_nothing
+    assert evaluate(catastrophic, context()).tier is Tier.DENIED
 
 
 # --- the registry's own consistency -------------------------------------------

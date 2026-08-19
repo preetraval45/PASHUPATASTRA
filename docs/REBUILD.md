@@ -300,7 +300,7 @@ them genuinely deleted instead.
   post-state requires EDR to stay reachable — a host nobody can inspect
   cannot be cleared.
 
-- [ ] **R4b — Decide whether a read-only action can be autonomous.**
+- [x] **R4b — Decide whether a read-only action can be autonomous.**
   Needs: nothing. **This is a policy decision, not a bug fix, which is why it
   is not already done.**
   Found while writing R4's tests: all four risk-0 read-only actions come back
@@ -314,18 +314,30 @@ them genuinely deleted instead.
   nothing changed, so nothing to undo and nothing to verify.
   **R19 depends on this.** The chat agent is specified to call read-only
   tier-0 tools; if reading logs needs an approval, it cannot read anything.
-  **Done when:** the rule is decided, `docs/specs/Policy Model.md` says which,
-  and `test_read_only_actions_are_not_yet_autonomous` is updated or deleted.
+  **Decided: yes, when it changes nothing.** `ActionSpec.changes_nothing` is
+  risk 0 *and* no declared post-state. Both halves are required — risk 0 alone
+  would exempt an action somebody scored optimistically, an empty post-state
+  alone would exempt one whose author forgot to declare it. An action escapes
+  the rollback rule only by admitting it has nothing to verify.
+  *Evidence: the four read-only actions are autonomous in every environment;
+  `wipe_host` still denied, `block_ip` still approval. Two tests assert the
+  exemption cannot be widened. `docs/specs/Policy Model.md` carries the rule.*
 
-- [ ] **R5 — Three scripted incidents.** Needs: **R2, R3, R4**.
+- [x] **R5 — Three scripted incidents.** Needs: **R2, R3, R4**.
   Credential stuffing, phishing → token theft, lateral movement / beaconing.
   Each with a causal chain carrying evidence ids and ATT&CK techniques, a
   diagnosis, at least one alternative hypothesis *contradicted by named
   evidence*, and a risk-gated plan.
   The phishing one must propose `revoke_session` + `quarantine_email` and **not**
   `force_password_reset` — that distinction is the scenario's whole point.
-  **Done when:** all three load through the API and render end-to-end, and a
-  test asserts each one's contradicted hypothesis cites real evidence ids.
+  *Evidence: all three served by the deployed API — 0901 credential stuffing,
+  0902 token theft, 0903 beaconing — each with ATT&CK-mapped causal steps and
+  a plan drawn from the security registry. 32 tests.*
+  Each scenario declares its telemetry **and** its incident, so every evidence
+  id cites an event that exists; a test asserts nothing dangles and nothing is
+  set dressing. The infrastructure demo incident is no longer seeded when the
+  security domain is served — a connection-pool outage beside a credential
+  stuffing incident reads as a theme applied over something else.
 
 - [ ] **R6 — Make evidence resolve.** Needs: **R5**.
   *This is a live defect, not a new feature.* The current incident cites
