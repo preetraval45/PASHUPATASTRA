@@ -74,6 +74,10 @@ def environment(cors: list[str]) -> str:
                 # of spending the connect timeout on every request.
                 "PASHU_DATABASE_URL": "",
                 "PASHU_DEMO_SEED": "true",
+                # The site is a blue-team console, so it is offered blue-team
+                # actions. A filter on the view, not a second registry — every
+                # action stays resolvable so a plan's rollback cannot vanish.
+                "PASHU_ACTION_DOMAIN": "security",
                 "PASHU_MODEL_PROVIDER": "echo",
                 "PASHU_CORS_ORIGINS": json.dumps(cors),
             }

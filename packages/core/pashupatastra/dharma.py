@@ -33,6 +33,19 @@ class Tier(StrEnum):
     DENIED = "denied"
 
 
+class ActionDomain(StrEnum):
+    """What kind of system an action operates on.
+
+    A deployment serves one domain. The registry holds both because some actions
+    belong to both — reading an entity's logs is the same act whichever question
+    prompted it — and because deleting the infrastructure set to present a
+    security console would throw away executors verified against a live cluster.
+    """
+
+    INFRASTRUCTURE = "infrastructure"
+    SECURITY = "security"
+
+
 class ActionSpec(BaseModel):
     """A registered action. Actions come from this closed registry, never from
     parsed model text (the Grounding ADR)."""
@@ -43,6 +56,11 @@ class ActionSpec(BaseModel):
     expected_post_state: dict[str, str]
     rollback_action_id: str | None = None
     irreversible: bool = False
+
+    domains: frozenset[ActionDomain] = frozenset({ActionDomain.INFRASTRUCTURE})
+    """Which domains this action belongs to. A set rather than one value: a few
+    actions are genuinely shared, and duplicating them under two ids would give
+    the policy engine two risk scores for one act."""
 
     @property
     def has_tested_rollback(self) -> bool:

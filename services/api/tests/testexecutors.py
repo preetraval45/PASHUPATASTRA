@@ -15,6 +15,7 @@ import subprocess
 from typing import Any
 
 import pytest
+from pashupatastra.dharma import ActionDomain
 from pashupatastra.registry import all_actions, get
 
 from app.engines.executors import (
@@ -235,10 +236,16 @@ def test_the_router_covers_every_action_it_claims() -> None:
 def test_which_registered_actions_have_no_executor_yet() -> None:
     """Documents the gap rather than hiding it.
 
-    Cache and database actions are registered — the policy layer can reason about
-    them and deny them — but nothing can perform them yet. That is a deliberate,
-    visible state: an action that is declarable but not performable fails loudly
-    at execution rather than appearing to succeed.
+    Some actions are registered — the policy layer can reason about them and deny
+    them — but nothing can perform them. That is a deliberate, visible state: an
+    action that is declarable but not performable fails loudly at execution
+    rather than appearing to succeed.
+
+    **Every security action is in this set.** There is no EDR, no identity
+    provider and no firewall behind them; the blue-team registry currently exists
+    so incidents can be reasoned about and authorised, not carried out. Asserted
+    as a whole domain rather than a list of names so that adding an action cannot
+    quietly imply an executor that was never written.
     """
     router = a_router()
     unperformable = {
@@ -246,8 +253,14 @@ def test_which_registered_actions_have_no_executor_yet() -> None:
         for action in all_actions()
         if not router.covers(action.id) and action.base_risk > 0
     }
-    assert unperformable == {"clear_cache", "warm_cache", "modify_db_config",
-                             "delete_infrastructure"}
+    infrastructure_gap = {"clear_cache", "warm_cache", "modify_db_config",
+                          "delete_infrastructure"}
+    security_gap = {
+        action.id
+        for action in all_actions(ActionDomain.SECURITY)
+        if action.base_risk > 0
+    }
+    assert unperformable == infrastructure_gap | security_gap
 
 
 def test_every_executable_action_can_also_execute_its_rollback() -> None:

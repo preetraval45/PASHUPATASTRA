@@ -1,6 +1,15 @@
 {
   "components": {
     "schemas": {
+      "ActionDomain": {
+        "description": "What kind of system an action operates on.\n\nA deployment serves one domain. The registry holds both because some actions\nbelong to both \u2014 reading an entity's logs is the same act whichever question\nprompted it \u2014 and because deleting the infrastructure set to present a\nsecurity console would throw away executors verified against a live cluster.",
+        "enum": [
+          "infrastructure",
+          "security"
+        ],
+        "title": "ActionDomain",
+        "type": "string"
+      },
       "ActionSpec": {
         "description": "A registered action. Actions come from this closed registry, never from\nparsed model text (the Grounding ADR).",
         "properties": {
@@ -13,6 +22,17 @@
           "description": {
             "title": "Description",
             "type": "string"
+          },
+          "domains": {
+            "default": [
+              "infrastructure"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ActionDomain"
+            },
+            "title": "Domains",
+            "type": "array",
+            "uniqueItems": true
           },
           "expected_post_state": {
             "additionalProperties": {
@@ -1291,7 +1311,7 @@
     },
     "/api/v1/actions": {
       "get": {
-        "description": "The closed registry. Actions not listed here cannot be executed.",
+        "description": "The closed registry. Actions not listed here cannot be executed.\n\nFiltered to the deployment's domain when one is configured. Filtering the\nlist does not narrow what `get` resolves \u2014 an action still registered but\nnot listed remains executable if a plan names it, because a plan that\nreferenced a rollback which quietly stopped resolving would fail at the\nmoment the rollback was needed.",
         "operationId": "list_actions_api_v1_actions_get",
         "responses": {
           "200": {

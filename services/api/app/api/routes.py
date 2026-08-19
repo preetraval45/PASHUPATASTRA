@@ -79,8 +79,15 @@ def get_incident(incident_id: str) -> Incident:
 
 @router.get("/actions", response_model=list[ActionSpec])
 def list_actions() -> list[ActionSpec]:
-    """The closed registry. Actions not listed here cannot be executed."""
-    return all_actions()
+    """The closed registry. Actions not listed here cannot be executed.
+
+    Filtered to the deployment's domain when one is configured. Filtering the
+    list does not narrow what `get` resolves — an action still registered but
+    not listed remains executable if a plan names it, because a plan that
+    referenced a rollback which quietly stopped resolving would fail at the
+    moment the rollback was needed.
+    """
+    return all_actions(get_settings().action_domain)
 
 
 class EvaluateRequest(BaseModel):

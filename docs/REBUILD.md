@@ -143,15 +143,38 @@ them genuinely deleted instead.
   `attack.mitre.org/techniques/T1110/004/`. 694 tests pass; `openapi.json`
   regenerated.*
 
-- [ ] **R4 — Security action registry.** Needs: nothing.
-  Register the 14 actions from the prompt's table with their risk scores,
-  rollbacks and post-states. Tag every action with a domain
-  (`infrastructure` | `security`) and serve one domain per deployment.
-  `wipe_host` at risk 100 registers as irreversible so Dharma can deny it
-  explicitly — the same way `delete_infrastructure` already does.
-  **Done when:** `GET /api/v1/actions` returns the 14 security actions and no
-  infrastructure ones; a test asserts `wipe_host` is never granted autonomously
-  at any confidence.
+- [x] **R4 — Security action registry.** Needs: nothing.
+  21 actions, not 14: the table's 14 plus the 7 undos it names. A rollback id
+  that resolves to nothing fails at the moment the rollback is needed, so
+  `release_email`, `rejoin_network` and the rest are registered too.
+  `ActionSpec.domains` is a set, because `read_logs` is the same act in both
+  domains and a second id would give the policy engine two scores for one
+  thing. `PASHU_ACTION_DOMAIN` filters the *view*; `get` still resolves
+  everything.
+  *Evidence: the deployed `GET /api/v1/actions` returns 21 security actions
+  and no infrastructure ones; 57 new tests, 751 pass overall.*
+  Two properties worth naming: undos are never discounted (returning an
+  isolated host to the network is scored at the risk of isolating it, unlike
+  `warm_cache` which is cheaper than `clear_cache`), and `isolate_host`'s
+  post-state requires EDR to stay reachable — a host nobody can inspect
+  cannot be cleared.
+
+- [ ] **R4b — Decide whether a read-only action can be autonomous.**
+  Needs: nothing. **This is a policy decision, not a bug fix, which is why it
+  is not already done.**
+  Found while writing R4's tests: all four risk-0 read-only actions come back
+  `approval` in *every* environment, because `evaluate` escalates any action
+  without a tested rollback and a read-only action has nothing to roll back.
+  The 0–30 autonomous band is therefore unreachable for them, and registering
+  them at risk 0 buys nothing.
+  The documented rule — "an action with no tested rollback cannot be
+  autonomous" — reads as being about actions that *change* something.
+  A candidate carve-out is `base_risk == 0 and not expected_post_state`:
+  nothing changed, so nothing to undo and nothing to verify.
+  **R19 depends on this.** The chat agent is specified to call read-only
+  tier-0 tools; if reading logs needs an approval, it cannot read anything.
+  **Done when:** the rule is decided, `docs/specs/Policy Model.md` says which,
+  and `test_read_only_actions_are_not_yet_autonomous` is updated or deleted.
 
 - [ ] **R5 — Three scripted incidents.** Needs: **R2, R3, R4**.
   Credential stuffing, phishing → token theft, lateral movement / beaconing.

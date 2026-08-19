@@ -9,6 +9,7 @@ from __future__ import annotations
 from functools import lru_cache
 
 from pashupatastra import Environment
+from pashupatastra.dharma import ActionDomain
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -67,6 +68,15 @@ class Settings(BaseSettings):
     """Per-incident token ceiling enforced by the gateway before each call.
     Mirrors the agent budget default in `packages/core/pashupatastra/agents.py`;
     `None` disables it."""
+
+    action_domain: ActionDomain | None = None
+    """Which action domain this deployment presents. `None` serves the whole
+    registry.
+
+    A view, never a second registry: `get` still resolves any registered id, so
+    a plan written against one domain stays executable. What this changes is
+    what an operator is offered, and offering a security console `restart_service`
+    is how a domain re-theme ends up looking like a skin."""
 
     cors_origins: list[str] = ["http://localhost:3000"]
 
