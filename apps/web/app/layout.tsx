@@ -115,19 +115,20 @@ function ModeIndicator({
  * name and the text a crawler sees both come from `alt`, which is the one place
  * this name should live now.
  *
- * `logo.webp` is `logo.png` trimmed to its artwork and re-encoded: the source
- * is a 1172px square whose content occupies a 3:1 band across the middle, so
- * most of that file is transparent margin, and 516 KB of header on every page
- * load is a real cost. Regenerate it from the PNG rather than editing it.
+ * `logo.webp` is a derivative — `scripts/buildbrand.py` builds it from
+ * `logo.png` by removing the baked-in white outline and the transparent
+ * margin. The outline is drawn for a light page and reads as a sticker edge
+ * on this one; the margin was 400 KB of nothing on every page load. Edit the
+ * PNG and re-run the script — never edit the WebP.
  */
 function Sigil() {
   return (
     <img
       src="/logo.webp"
       alt="Pashupatastra"
-      width={1120}
-      height={375}
-      className="h-7 w-auto sm:h-8"
+      width={1101}
+      height={363}
+      className="h-8 w-auto sm:h-10"
     />
   );
 }
