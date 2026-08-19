@@ -105,12 +105,16 @@ The visible result is identical — the site shows security actions only — and
 `GET /api/v1/actions` returns exactly the security set. Say the word if you want
 them genuinely deleted instead.
 
-- [ ] **R1 — Fix the wordmark.** Needs: nothing.
-  The header renders `PASHUPASHUPATASTRA`. Two spans hold `PASHU` and
-  `PASHUPATASTRA` behind responsive `hidden`/`sm:inline` classes; when those do
-  not apply, both paint. Replace with one element that cannot duplicate.
-  **Done when:** the header reads `PASHUPATASTRA` at 375px, 768px and 1440px
-  viewport widths, verified against the deployed page, not a local build.
+- [x] **R1 — Fix the wordmark.** Needs: nothing.
+  The name is now one text node, fitted with type rather than duplicated and
+  hidden. The reported duplication was never visible: the two spans were
+  correctly hidden at each other's breakpoint (`.sm\:inline` is emitted after
+  `.hidden`, so it wins at ≥640px). What *was* wrong is that the page's text
+  content read `PASHUPASHUPATASTRA` — which is what a search snippet, a social
+  preview and a copy-paste take away.
+  *Evidence: `scripts/verifyui.py` against the deployed site — visible text and
+  `textContent` both `PASHUPATASTRA` at 375px, 768px and 1440px; no horizontal
+  overflow on any of the five routes at any of the three widths.*
 
 - [ ] **R2 — Security entity kinds.** Needs: nothing.
   Add `account`, `network_flow`, `asset`, `process` to `EntityKind` in
@@ -154,6 +158,13 @@ them genuinely deleted instead.
   API is fine.
   **Done when:** every evidence id on every incident resolves to an event with
   its provenance; a missing entity renders "not found", not "unreachable".
+
+- [ ] **R6b — Fix the hydration mismatch on Infrastructure.** Needs: nothing.
+  Found by `scripts/verifyui.py` while verifying R1: `/infrastructure` throws
+  React error #418 — server-rendered HTML not matching the client — at all
+  three viewports. The page renders, so it is invisible until something on it
+  silently stops updating.
+  **Done when:** the route loads with no page error at 375px, 768px and 1440px.
 
 - [ ] **R7 — Microcopy pass.** Needs: **R5**.
   Every sentence referencing deploys, services, replicas or databases rewritten

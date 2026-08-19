@@ -127,9 +127,14 @@ function ModeIndicator({
 function Sigil() {
   return (
     <span className="flex flex-col items-center gap-1">
-      <span className="text-sm font-semibold leading-none tracking-[0.18em]">
-        <span className="sm:hidden">PASHU</span>
-        <span className="hidden sm:inline">PASHUPATASTRA</span>
+      {/* One text node. The name used to be two spans — a short one for narrow
+          viewports and a full one for wide — each hidden at the other's size.
+          It renders correctly, but the *text* of the page is then
+          "PASHUPASHUPATASTRA", which is what a search snippet, a social
+          preview, and a copy-paste all take away. The name is set once and
+          fitted with type, not duplicated and hidden. */}
+      <span className="text-[13px] font-semibold leading-none tracking-[0.1em] sm:text-sm sm:tracking-[0.18em]">
+        PASHUPATASTRA
       </span>
       <img
         src="/mark.webp"
