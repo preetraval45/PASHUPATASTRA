@@ -22,6 +22,18 @@ function statusOf(node: GraphNode) {
   return STATUS[node.severity ?? "unknown"];
 }
 
+/** The whole node as one sentence, for anyone reading the map without seeing it.
+ *  Built as a single string rather than as sibling text nodes: the latter is
+ *  what React splits with comment markers, and it is what made this element
+ *  disagree with itself between server and client. */
+function describe(node: GraphNode, status: string): string {
+  const parts = [node.key];
+  if (node.namespace) parts.push(node.namespace);
+  parts.push(status);
+  if (node.estimated_users) parts.push(`~${node.estimated_users} users`);
+  return parts.join(" · ");
+}
+
 export default async function InfrastructurePage({
   searchParams,
 }: {
@@ -150,12 +162,19 @@ export default async function InfrastructurePage({
             const status = statusOf(node);
             return (
               <g key={node.key} transform={`translate(${node.x}, ${node.y})`}>
-                <a href={`/entity/${node.key}`} className="focusable">
-                <title>
-                  {node.key}
-                  {node.namespace ? ` · ${node.namespace}` : ""} · {status.label}
-                  {node.estimated_users ? ` · ~${node.estimated_users} users` : ""}
-                </title>
+                {/* The description is an `aria-label`, not an SVG <title>.
+                    React 19 treats <title> as hoistable document metadata and
+                    deduplicates it against the page title, so the server sent
+                    `<title></title>` and the client filled it in — a hydration
+                    mismatch that discarded and re-rendered this whole subtree
+                    on every load, silently, because the map still looked right.
+                    `aria-label` reaches a screen reader, which <title> here was
+                    failing to do anyway. */}
+                <a
+                  href={`/entity/${node.key.split("/").map(encodeURIComponent).join("/")}`}
+                  className="focusable"
+                  aria-label={describe(node, status.label)}
+                >
                 <rect
                   width={NODE_WIDTH}
                   height={NODE_HEIGHT}

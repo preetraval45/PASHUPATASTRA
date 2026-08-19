@@ -359,12 +359,22 @@ them genuinely deleted instead.
   are — with no edges, because they declare a sequence of events and not a
   dependency graph.
 
-- [ ] **R6b — Fix the hydration mismatch on Infrastructure.** Needs: nothing.
+- [x] **R6b — Fix the hydration mismatch on Infrastructure.** Needs: nothing.
   Found by `scripts/verifyui.py` while verifying R1: `/infrastructure` throws
   React error #418 — server-rendered HTML not matching the client — at all
   three viewports. The page renders, so it is invisible until something on it
   silently stops updating.
-  **Done when:** the route loads with no page error at 375px, 768px and 1440px.
+  **Cause: React 19 treats `<title>` as hoistable document metadata.** The
+  service map used an SVG `<title>` for each node's tooltip; React deduped it
+  against the page title, so the server sent `<title></title>` and the client
+  filled it in. React then discarded and re-rendered the whole map subtree on
+  every load — invisibly, because it still looked right.
+  Replaced with `aria-label`, built as one string rather than sibling text
+  nodes. It reaches a screen reader, which the `<title>` was failing to do.
+  *Evidence: reproduced with 18 nodes and 2 edges (the security seed has no
+  edges, which is why it stopped appearing rather than being fixed), then
+  clean at all three viewports on the same data. `scripts/verifyui.py` passes
+  15/15.*
 
 - [ ] **R7 — Microcopy pass.** Needs: **R5**.
   Every sentence referencing deploys, services, replicas or databases rewritten

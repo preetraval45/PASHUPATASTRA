@@ -38,13 +38,19 @@ def check(page, url: str, route: str, label: str, width: int) -> list[str]:
 
     page.goto(url + route, wait_until="networkidle")
 
-    header = page.locator("header").first
-    wordmark = header.inner_text().split("\n")[0].strip() if header.count() else ""
     if route == "/":
-        if "PASHUPASHU" in wordmark.replace(" ", ""):
-            failures.append(f"{label}: wordmark duplicated — {wordmark!r}")
-        elif "PASHUPATASTRA" not in wordmark.replace(" ", ""):
-            failures.append(f"{label}: wordmark missing — {wordmark!r}")
+        # The name lives in the logo artwork now, so it reaches a reader through
+        # `alt` rather than as text. Both halves are checked: the accessible name
+        # must be right, and the header must not *also* carry the name as text —
+        # that pairing is what produced `PASHUPASHUPATASTRA`.
+        home = page.locator('header a[href="/"]').first
+        artwork = home.locator("img").first
+        name = artwork.get_attribute("alt") if artwork.count() else ""
+        if "pashupatastra" not in (name or "").lower():
+            failures.append(f"{label}: header logo has no accessible name — {name!r}")
+        text = home.evaluate("e => e.textContent.trim()")
+        if "PASHUPASHU" in (text or "").replace(" ", "").upper():
+            failures.append(f"{label}: wordmark duplicated — {text!r}")
 
     # Compared against the viewport rather than a fixed number: an element wider
     # than the window is the failure, whatever the window happens to be.
