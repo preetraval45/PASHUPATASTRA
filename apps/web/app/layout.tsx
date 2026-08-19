@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { Live } from "@/components/live";
 import { Nav } from "@/components/nav";
+import { Search } from "@/components/search";
 import { ThemeToggle, themeScript } from "@/components/theme";
 import { getHealth } from "@/lib/api";
 import "./globals.css";
@@ -43,6 +45,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
             <Nav />
             <div className="flex w-full items-center gap-3 sm:ml-auto sm:w-auto">
+              <Suspense fallback={null}>
+                <Search />
+              </Suspense>
               <ModeIndicator health={health} />
               <Live />
               <ThemeToggle />
@@ -107,25 +112,26 @@ function ModeIndicator({
 }
 
 /**
- * The mark: the Pashupatastra spear.
+ * The mark.
  *
  * An <img> rather than inline geometry, so it cannot inherit theme colour — the
- * artwork carries its own palette in both themes. Two consequences worth
- * knowing before changing this:
+ * artwork carries its own palette in both themes. Two things to know before
+ * changing it:
  *
- *   - The source is a 176px square whose subject is a thin diagonal with wide
- *     empty margins, so the drawn spear is a fraction of the box. It is set at
- *     32px, not the 24px the geometric mark used, or it reads as a smudge.
+ *   - It must read at 32px. `logo.webp` is the full spear drawn corner to
+ *     corner on a square canvas: 5% of its pixels are ink, spread along a
+ *     diagonal, so at this size it is a hairline. `mark.webp` is the head
+ *     alone, which survives the size. Swap that one file to change the mark.
  *   - Its crimson sits close to --crit, which in this interface means live
  *     execution and critical severity. The mark is therefore kept out of the
  *     status region of the chrome and never placed beside a severity badge.
  *
- * Canonical source: public/logo.webp. See docs/BRAND.md.
+ * Canonical artwork: public/logo.webp. See docs/BRAND.md.
  */
 function Sigil() {
   return (
     <img
-      src="/logo.webp"
+      src="/mark.webp"
       alt=""
       width={32}
       height={32}

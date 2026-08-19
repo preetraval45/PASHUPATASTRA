@@ -165,9 +165,11 @@ export function Offline({ what = "API" }: { what?: string }) {
       </p>
       <p className="mt-2 text-xs text-[rgb(var(--muted))]">
         This page shows nothing rather than stale data — during an incident, a number that
-        silently stopped updating is worse than no number. Start it with{" "}
-        <code className="mono">uvicorn app.main:app --reload</code> in{" "}
-        <code className="mono">services/api</code>.
+        silently stopped updating is worse than no number.
+      </p>
+      <p className="mt-2 text-xs text-[rgb(var(--faint))]">
+        Running locally? Start the API with <code className="mono">uvicorn app.main:app --reload</code>{" "}
+        in <code className="mono">services/api</code>.
       </p>
     </div>
   );
