@@ -8,7 +8,7 @@ type Theme = "dark" | "light";
  * Theme toggle.
  *
  * Dark is the default rather than "follow the system", because this is an
- * operations console: it is usually opened at night, and the service map reads
+ * operations console: it is usually opened at night, and the map reads
  * better on a dark ground. Someone who wants light asks for it, and the choice
  * persists.
  */

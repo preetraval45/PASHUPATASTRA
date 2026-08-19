@@ -376,12 +376,25 @@ them genuinely deleted instead.
   clean at all three viewports on the same data. `scripts/verifyui.py` passes
   15/15.*
 
-- [ ] **R7 — Microcopy pass.** Needs: **R5**.
+- [x] **R7 — Microcopy pass.** Needs: **R5**.
   Every sentence referencing deploys, services, replicas or databases rewritten
   for the security domain, keeping the existing voice. Includes the "reading
   this map" text, the Infrastructure page framing, and the offline notice.
-  **Done when:** a grep for the SRE vocabulary across `apps/web` returns only
-  intentional hits, listed in the task summary.
+  The map's framing changed rather than its nouns: it was "what depends on
+  what, callers on the left" and is now "what can reach what — so an intrusion
+  spreads left-to-right". Impact reads *accounts affected* and *affected
+  assets*; the empty overview says "Quiet", and adds that quiet is not the
+  same as nothing happening.
+  *Remaining deliberate hits: `services/api` in the local-dev hint (a real
+  path), "this deployment" on the evidence page (the hosted instance), and
+  the `deployment`/`trace` cases in the event-payload switch (schema event
+  classes, not prose).*
+  Two defects found while verifying: every entity read "no data" beside three
+  open critical incidents, because the scenarios' signals sat outside the
+  fifteen-minute severity window — the map was contradicting the incidents. And
+  `MemoryGraph.snapshot` read the wall clock, so a fixture pinned to a
+  timestamp passed for fifteen minutes and failed for the rest of the day.
+  *Evidence: 789 tests, `verifyui.py` 18/18 across six routes.*
 
 - [ ] **R8 — Deploy Phase 1 and review.** Needs: **R1, R6, R7**.
   Build, deploy both halves, walk every page.

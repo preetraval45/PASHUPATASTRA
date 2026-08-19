@@ -49,6 +49,13 @@ from pashupatastra.events import SecurityPayload
 from pashupatastra.registry import get as get_action
 
 
+LATEST_SIGNAL_AGO = timedelta(minutes=3)
+"""How long ago each scenario's newest signal appears to have arrived.
+
+Inside the map's fifteen-minute severity window on purpose — see
+`Scenario.events`. Matches the convention `seed.py` uses for the corpus."""
+
+
 def _ref(kind: EntityKind, name: str) -> EntityRef:
     return EntityRef(kind=kind, id=name, name=name)
 
@@ -74,19 +81,28 @@ class Scenario:
     signals: list[Signal] = field(default_factory=list)
 
     def events(self, now: datetime) -> list[Event]:
-        """Materialise the telemetry, anchored so it reads as recent.
+        """Materialise the telemetry, anchored so the newest signal is recent.
 
-        Offsets are relative and negative — the newest signal sits closest to
-        `now`. A fixture stamped at a fixed date would show a dashboard of
-        month-old events and read as a system that had stopped.
+        Offsets are relative and negative, and the whole scenario is shifted so
+        its last signal lands `LATEST_SIGNAL_AGO` before now. Intervals between
+        signals are preserved, because the intervals are the argument — four
+        minutes between two sign-ins is what rules out the travelling user.
+
+        The shift matters for more than freshness. Severity on the map is the
+        worst reading in the last fifteen minutes, so a scenario whose signals
+        all sit outside that window renders every one of its entities as "no
+        data" while its incident is open and critical. The map would be
+        contradicting the incident beside it.
         """
+        newest = max(signal.at_offset_seconds for signal in self.signals)
+        shift = newest + LATEST_SIGNAL_AGO.total_seconds()
         return [
             Event(
                 id=signal.id,
                 event_class=EventClass.SECURITY,
                 source="demo",
-                occurred_at=now + timedelta(seconds=signal.at_offset_seconds),
-                observed_at=now + timedelta(seconds=signal.at_offset_seconds),
+                occurred_at=now + timedelta(seconds=signal.at_offset_seconds - shift),
+                observed_at=now + timedelta(seconds=signal.at_offset_seconds - shift),
                 entity_ref=signal.entity,
                 severity=signal.severity,
                 payload=SecurityPayload(

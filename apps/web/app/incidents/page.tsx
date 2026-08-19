@@ -18,7 +18,7 @@ export default async function IncidentsPage() {
       {incidents.length === 0 ? (
         <Empty title="No incidents.">
           They appear when Drishti correlates failures that are adjacent in the topology
-          graph and in time — two unrelated services degrading in the same minute stay two
+          graph and in time — two unrelated accounts alerting in the same minute stay two
           incidents.
         </Empty>
       ) : (

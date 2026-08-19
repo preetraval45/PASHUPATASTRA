@@ -67,7 +67,7 @@ export default async function OverviewPage() {
         <p className="mt-1 text-sm text-[rgb(var(--muted))]">
           {worst
             ? worst.hypotheses[0]?.statement ?? "Diagnosis in progress."
-            : `Watching ${topology?.nodes ?? 0} entities across ${topology?.edges ?? 0} dependencies.`}
+            : `Watching ${topology?.nodes ?? 0} entities and ${topology?.edges ?? 0} observed access paths.`}
         </p>
       </section>
 
@@ -79,7 +79,7 @@ export default async function OverviewPage() {
           hint={awaiting.length ? `${awaiting.length} need a decision` : "none awaiting approval"}
         />
         <Stat
-          label="Users affected"
+          label="Accounts affected"
           value={users}
           status={users ? "warning" : undefined}
           hint="estimated, from blast radius"
@@ -87,13 +87,13 @@ export default async function OverviewPage() {
         <Stat
           label="Entities watched"
           value={topology?.nodes ?? 0}
-          hint={`${topology?.edges ?? 0} known dependencies`}
+          hint={`${topology?.edges ?? 0} observed access paths`}
         />
         <Stat
           label="Execution mode"
           value={health.dry_run ? "Dry run" : "Live"}
           status={health.dry_run ? undefined : "critical"}
-          hint={health.dry_run ? "actions are simulated" : "actions change production"}
+          hint={health.dry_run ? "nothing is executed" : "actions change real systems"}
         />
       </section>
 
@@ -103,8 +103,9 @@ export default async function OverviewPage() {
           aside={open.length > 0 && <Link href="/incidents" className="focusable rounded hover:text-[rgb(var(--ink))]">all incidents →</Link>}
         >
           {open.length === 0 ? (
-            <Empty title="Nothing is on fire.">
-              Incidents appear here when Drishti correlates adjacent failures.
+            <Empty title="Quiet.">
+              Incidents appear here when Drishti correlates related detections. Quiet
+              means nothing was detected, which is not the same as nothing happening.
             </Empty>
           ) : (
             <ul className="divide-y divide-[rgb(var(--edge))]">
@@ -157,7 +158,7 @@ export default async function OverviewPage() {
           <Panel title="Perception" aside={<Ago at={audit?.[0]?.at} />}>
             <dl className="space-y-3 text-sm">
               <Row label="Entities" value={topology?.nodes ?? 0} />
-              <Row label="Dependencies" value={topology?.edges ?? 0} />
+              <Row label="Observed access paths" value={topology?.edges ?? 0} />
               <Row label="Audit records" value={health.audit_records} />
               <Row
                 label="Storage"

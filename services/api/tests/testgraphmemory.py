@@ -176,7 +176,9 @@ def test_seed_lands_signals_inside_the_severity_window() -> None:
     graph = MemoryGraph()
     seed(graph, graph, now=NOW)
 
-    snapshot = graph.snapshot()
+    # The same `now` the seed used. Reading the wall clock here made this pass
+    # for fifteen minutes after NOW and fail for the rest of the day.
+    snapshot = graph.snapshot(now=NOW)
     assert any(n["severity"] is not None for n in snapshot["nodes"])
 
 

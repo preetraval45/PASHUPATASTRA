@@ -76,9 +76,9 @@ export default async function EntityPage({ params }: { params: Promise<{ key: st
         aside={`${blast.entity_count} entities · ~${blast.estimated_users.toLocaleString()} users`}
       >
         {blast.entity_count === 0 ? (
-          <Empty title="Nothing depends on this.">
-            Either it is a leaf in the dependency graph, or nothing has yet revealed what
-            calls it — traces and platform ownership create edges, metrics alone do not.
+          <Empty title="Nothing observed reaching this.">
+            Either nothing can reach it, or nothing has yet shown what does — an observed
+            connection or session creates an edge; seeing the entity alone does not.
           </Empty>
         ) : (
           <>
@@ -108,8 +108,8 @@ export default async function EntityPage({ params }: { params: Promise<{ key: st
       <Panel title="Recent events" aside={`${events.length} newest`}>
         {events.length === 0 ? (
           <Empty title="No events recorded for this entity yet.">
-            It is in the graph because something referenced it — an owner reference or a
-            trace hop — but no connector has reported on it directly.
+            It is in the graph because something referenced it — an owner, or the other
+            end of a connection — but no collector has reported on it directly.
           </Empty>
         ) : (
           <ol className="divide-y divide-[rgb(var(--edge))]">
@@ -170,7 +170,7 @@ function summarize(event: EntityEvent): string {
   }
 }
 
-/** Worst, not latest — a service that went critical then reported info seconds
+/** Worst, not latest — an entity that went critical then reported info seconds
  *  later is flapping, and the newest reading would hide the incident. */
 function worstSeverity(events: EntityEvent[]): "critical" | "warning" | "info" | null {
   const recent = events.filter(

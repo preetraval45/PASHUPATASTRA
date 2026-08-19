@@ -48,15 +48,16 @@ export default async function InfrastructurePage({
   if (snapshot.nodes.length === 0) {
     return (
       <Page title="Infrastructure">
-        <Empty title="No topology yet.">
-          Run a Drishti poll to populate it from Prometheus, Kubernetes, or Docker.
+        <Empty title="Nothing observed yet.">
+          Nothing has been observed yet. Drishti populates this as collectors report
+          hosts, accounts, processes and the connections between them.
         </Empty>
       </Page>
     );
   }
 
-  // Cluster infrastructure — CoreDNS, kube-proxy, etcd — outnumbers the
-  // workload on any real cluster and would bury it. Hidden by default, but the
+  // Platform-owned entities outnumber the ones anyone is watching for and
+  // would bury them. Hidden by default, but the
   // count is always stated: a map that silently drops entities reads as
   // "this is everything", which is exactly the wrong impression during an
   // incident.
@@ -67,10 +68,11 @@ export default async function InfrastructurePage({
     (e) => visibleKeys.has(e.source) && visibleKeys.has(e.target),
   );
 
-  // Rank 0 means "nothing depends on this" — a caller, an entry point. A node
-  // with no edges at all means something different: we have not observed its
-  // dependencies yet. Drawing them in the same column would state the first
-  // when only the second is true, which is a claim the graph cannot support.
+  // Rank 0 means "nothing reaches this" — an entry point, which is where an
+  // intrusion starts. A node with no edges at all means something different:
+  // we have not observed what it can reach yet. Drawing them in the same
+  // column would state the first when only the second is true, which is a
+  // claim the graph cannot support.
   const connectedKeys = new Set(edges.flatMap((e) => [e.source, e.target]));
   const connected = visible.filter((n) => connectedKeys.has(n.key));
   const isolated = visible
@@ -86,7 +88,7 @@ export default async function InfrastructurePage({
   return (
     <Page
       title="Infrastructure"
-      description="What depends on what. Callers on the left, their dependencies to the right — so a failure propagates right-to-left across this map."
+      description="What can reach what. An account or host on the left, what it can touch to the right — so an intrusion spreads left-to-right across this map."
     >
 
       <section className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
@@ -100,7 +102,7 @@ export default async function InfrastructurePage({
         ))}
         <span className="ml-auto flex items-center gap-3 text-[rgb(var(--muted))]">
           <span>
-            {visible.length} entities · {edges.length} dependencies
+            {visible.length} entities · {edges.length} access paths
           </span>
           {hidden.length > 0 && (
             <Link
@@ -117,8 +119,8 @@ export default async function InfrastructurePage({
 
       {connected.length === 0 ? (
         <div className="panel p-6 text-sm text-[rgb(var(--muted))]">
-          No dependencies observed yet. Traces and Kubernetes ownership create edges;
-          metrics alone establish only that an entity exists.
+          No access observed yet. Connections, sessions and ownership create edges;
+          seeing an entity establishes only that it is there.
         </div>
       ) : (
       <div className="panel overflow-x-auto p-2">
@@ -127,7 +129,7 @@ export default async function InfrastructurePage({
           height={placed.height}
           viewBox={`0 0 ${placed.width} ${placed.height}`}
           role="img"
-          aria-label="Service dependency map"
+          aria-label="Map of what can reach what"
           className="min-w-full"
         >
           <defs>
@@ -202,12 +204,12 @@ export default async function InfrastructurePage({
       )}
 
       {isolated.length > 0 && (
-        <Panel title={`No observed dependencies yet · ${isolated.length}`}>
+        <Panel title={`Nothing observed reaching these yet · ${isolated.length}`}>
           <p className="text-xs text-[rgb(var(--muted))]">
-            These entities are known to exist but nothing has yet revealed what they depend
-            on. Metrics prove existence; only traces and platform ownership prove
-            dependency — so this list shrinks as coverage improves, and it is worth
-            watching for anything that ought to be connected.
+            These entities are known to exist but nothing has yet shown what they can
+            reach. Seeing an entity proves it is there; only an observed access proves it
+            can touch something — so this list shrinks as coverage improves, and it is
+            worth reading for anything that ought to be connected and is not.
           </p>
           <ul className="mt-4 grid gap-x-6 gap-y-2 text-xs sm:grid-cols-2 lg:grid-cols-3">
             {isolated.map((node) => {
@@ -233,7 +235,7 @@ export default async function InfrastructurePage({
 
       <details className="panel group">
         <summary className="focusable cursor-pointer list-none px-5 py-3 text-[11px] font-medium uppercase tracking-[0.14em] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]">
-          Dependency table
+          Access table
           <span className="ml-2 normal-case tracking-normal text-[rgb(var(--faint))]">
             — the same data as the map, for screen readers, search, and copy-paste
           </span>
@@ -241,20 +243,20 @@ export default async function InfrastructurePage({
         <div className="overflow-x-auto border-t border-[rgb(var(--edge))]">
           <table className="w-full min-w-[36rem] text-left text-sm">
             <caption className="sr-only">
-              Every mapped entity with its status and what it depends on
+              Every mapped entity with its status and what it can reach
             </caption>
             <thead>
               <tr className="border-b border-[rgb(var(--edge))] text-[rgb(var(--muted))]">
                 <th scope="col" className="px-5 py-2 font-medium">Entity</th>
                 <th scope="col" className="px-5 py-2 font-medium">Kind</th>
                 <th scope="col" className="px-5 py-2 font-medium">Status</th>
-                <th scope="col" className="px-5 py-2 font-medium">Depends on</th>
+                <th scope="col" className="px-5 py-2 font-medium">Can reach</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[rgb(var(--edge))]">
               {placed.nodes.map((node) => {
                 const status = statusOf(node);
-                const dependencies = edges
+                const reaches = edges
                   .filter((e) => e.source === node.key)
                   .map((e) => e.target);
                 return (
@@ -270,7 +272,7 @@ export default async function InfrastructurePage({
                       {status.label}
                     </td>
                     <td className="mono px-5 py-2 text-xs text-[rgb(var(--muted))]">
-                      {dependencies.join(", ") || "—"}
+                      {reaches.join(", ") || "—"}
                     </td>
                   </tr>
                 );
@@ -282,16 +284,16 @@ export default async function InfrastructurePage({
 
       <Panel title="Reading this map">
         <ul className="space-y-1 text-xs text-[rgb(var(--muted))]">
-          <li>Solid lines are observed dependencies — a trace recorded the call.</li>
-          <li>Dashed lines are ownership, declared by the platform.</li>
+          <li>Solid lines are observed access — something recorded one reaching the other.</li>
+          <li>Dashed lines are ownership — a host's processes, an account's sessions.</li>
           <li>
-            Position is deterministic: a node stays put until its dependencies change, so this
-            map is comparable with the one you saw ten minutes ago.
+            Position is deterministic: a node stays put until what it can reach changes,
+            so this map is comparable with the one you saw ten minutes ago.
           </li>
           <li>Severity is the worst reading in the last 15 minutes, not the most recent.</li>
           <li>
-            Cluster infrastructure is hidden by default and counted above — never dropped
-            silently.
+            Platform-owned entities are hidden by default and counted above — never
+            dropped silently.
           </li>
         </ul>
       </Panel>

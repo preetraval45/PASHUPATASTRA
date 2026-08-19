@@ -1,15 +1,14 @@
 /**
- * Deterministic layered layout for the service map.
+ * Deterministic layered layout for the reachability map.
  *
  * Deterministic matters more than pretty here. A force-directed graph settles
  * somewhere different on every render, so an operator comparing the map to what
  * they saw ten minutes ago has to re-find every node. During an incident that is
- * a real cost. Rank-based layout means a service sits in the same place until
- * its dependencies actually change.
+ * a real cost. Rank-based layout means an entity sits in the same place until
+ * what it can reach actually changes.
  *
- * Rank follows dependency direction: callers on the left, the things they depend
- * on to the right, so traffic reads left-to-right the way the architecture
- * diagram does.
+ * Rank follows reach: an entry point on the left, what it can touch to the
+ * right, so an intrusion reads left-to-right the way it would actually spread.
  */
 
 import type { GraphEdge, GraphNode } from "./api";

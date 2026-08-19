@@ -123,7 +123,11 @@ class MemoryGraph:
             worst = max(worst, _RANK.get(Severity(event["severity"]), 0))
         return next((s.value for s, r in _RANK.items() if r == worst), None)
 
-    def snapshot(self, limit: int = 400) -> dict:
+    def snapshot(self, limit: int = 400, now: datetime | None = None) -> dict:
+        """`now` is injectable so a test can assert what the map shows without
+        the answer depending on what time it is run. Without it the severity
+        rollup reads the wall clock, and a fixture pinned to a timestamp passes
+        for fifteen minutes and then fails for the rest of the day."""
         keys = sorted(self._nodes)[:limit]
         included = set(keys)
         return {
@@ -134,7 +138,7 @@ class MemoryGraph:
                     "name": self._nodes[key].ref.name,
                     "namespace": self._nodes[key].ref.namespace,
                     "estimated_users": self._nodes[key].estimated_users,
-                    "severity": self.severity(key),
+                    "severity": self.severity(key, now=now),
                     "last_seen": last.isoformat() if (last := self._last_seen.get(key)) else None,
                 }
                 for key in keys

@@ -113,7 +113,7 @@ export interface GraphNode {
   name: string;
   namespace: string | null;
   estimated_users: number;
-  /** Worst severity in the last 15 minutes, not the latest — a service that
+  /** Worst severity in the last 15 minutes, not the latest — an entity that
    *  went critical then reported info seconds later is flapping, not healthy. */
   severity: "critical" | "warning" | "info" | null;
   last_seen: string | null;

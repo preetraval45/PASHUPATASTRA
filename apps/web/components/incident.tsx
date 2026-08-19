@@ -52,10 +52,10 @@ export function IncidentView({
         </div>
 
         <dl className="mt-5 grid gap-5 sm:grid-cols-3">
-          <KeyValue label="Affected services">
+          <KeyValue label="Affected assets">
             {incident.impact.affected_services.join(", ") || "—"}
           </KeyValue>
-          <KeyValue label="Estimated users affected">
+          <KeyValue label="Accounts affected">
             <span className="tnum">
               {incident.impact.estimated_users_affected.toLocaleString()}
             </span>

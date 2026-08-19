@@ -32,9 +32,9 @@ export default async function SearchPage({
     : [];
 
   // Incidents match on their id or on any entity they affect: during an
-  // incident the name an operator has is usually a service, not an incident
-  // number, and requiring the number would make search useless exactly when it
-  // is needed.
+  // incident the name an analyst has is usually an account or a host, not an
+  // incident number, and demanding the number would make search useless at
+  // exactly the moment it is needed.
   const matched = query
     ? (incidents ?? []).filter(
         (incident) =>
@@ -58,7 +58,7 @@ export default async function SearchPage({
     >
       {!query && (
         <Empty title="Nothing searched yet">
-          Type a service, host, database, or incident id.
+          Type an account, host, asset, or incident id.
         </Empty>
       )}
 
