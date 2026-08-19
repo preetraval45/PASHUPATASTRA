@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
         <header className="sticky top-0 z-40 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/95 backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
-            <Link href="/" className="focusable shrink-0 rounded" aria-label="Pashupatastra — home">
+            <Link href="/" className="focusable shrink-0 rounded">
               <Sigil />
             </Link>
             <Nav />
@@ -108,42 +108,26 @@ function ModeIndicator({
 }
 
 /**
- * The lockup: the wordmark over the whole spear, laid flat.
+ * The lockup: the wordmark and the spear, as one piece of artwork.
  *
- * The artwork is drawn corner to corner on a square canvas, so a square crop of
- * it spends most of its area on empty margin and renders the weapon as a
- * hairline. Turned horizontal it is 8:1, which is the shape a header actually
- * has — the whole spear stays visible at a height the chrome can afford.
+ * The name is *in* the image, so it is not also set as text beside it — that is
+ * how the header ended up reading `PASHUPASHUPATASTRA` (R1). The accessible
+ * name and the text a crawler sees both come from `alt`, which is the one place
+ * this name should live now.
  *
- * An <img> rather than inline geometry, so it cannot inherit theme colour: the
- * artwork carries its own palette in both themes. Its crimson sits close to
- * --crit, which here means live execution and critical severity, so the lockup
- * is kept out of the status region of the chrome and never placed beside a
- * severity badge.
- *
- * Canonical artwork: public/logo.webp. `mark.webp` is that file laid flat —
- * regenerate it from the canonical one rather than editing it. See docs/BRAND.md.
+ * `logo.webp` is `logo.png` trimmed to its artwork and re-encoded: the source
+ * is a 1172px square whose content occupies a 3:1 band across the middle, so
+ * most of that file is transparent margin, and 516 KB of header on every page
+ * load is a real cost. Regenerate it from the PNG rather than editing it.
  */
 function Sigil() {
   return (
-    <span className="flex flex-col items-center gap-1">
-      {/* One text node. The name used to be two spans — a short one for narrow
-          viewports and a full one for wide — each hidden at the other's size.
-          It renders correctly, but the *text* of the page is then
-          "PASHUPASHUPATASTRA", which is what a search snippet, a social
-          preview, and a copy-paste all take away. The name is set once and
-          fitted with type, not duplicated and hidden. */}
-      <span className="text-[13px] font-semibold leading-none tracking-[0.1em] sm:text-sm sm:tracking-[0.18em]">
-        PASHUPATASTRA
-      </span>
-      <img
-        src="/mark.webp"
-        alt=""
-        width={1659}
-        height={208}
-        className="h-3 w-[7.5rem] object-contain sm:w-[11.5rem]"
-        aria-hidden="true"
-      />
-    </span>
+    <img
+      src="/logo.webp"
+      alt="Pashupatastra"
+      width={1120}
+      height={375}
+      className="h-7 w-auto sm:h-8"
+    />
   );
 }
