@@ -145,7 +145,7 @@ can violate it.
 - [x] Causal chain renders evidence citations per link
 - [x] Dashboard computes no risk itself — renders API answers only
 - [x] Typecheck and production build pass
-- [~] Deployed to Vercel at `pashupatastra.vercel.app`; the API is deployed to Lambda and verified working over a signed request. **Owed: a public route to it.** The account refuses anonymous invocation of the Function URL — 403 from AWS before the request reaches the function, while SigV4 to the same URL returns 200 — so `scripts/deployapigateway.py` is written and waiting on `apigateway` permissions
+- [x] Deployed to Vercel at `pashupatastra.vercel.app` with the API reachable — *evidence: the overview renders 1 open incident, 1,240 users, and 7 entities from the deployed API*. The account refuses anonymous invocation of Lambda Function URLs (403 before the request reaches the function, while SigV4 to the same URL returns 200), so an API Gateway HTTP API fronts it
 
 ### 0.8.1 Demo deployment
 
@@ -154,7 +154,8 @@ can violate it.
 - [x] `psycopg` imported lazily inside `db.connect`, so a database-free deployment does not carry the driver — a third of the archive
 - [x] Lambda packaging and deploy — `scripts/buildlambda.py`, `scripts/deploylambda.py`; dependencies derived from the pyprojects rather than hand-listed, since a hand-maintained copy fails at runtime on the first request
 - [x] Dashboard live on Vercel — *evidence: `https://pashupatastra.vercel.app` returns the app*
-- [~] API publicly reachable — deployed and verified over SigV4; **owed: a route anonymous callers can use** (see 0.8)
+- [x] API publicly reachable — API Gateway HTTP API at `265d0hsmwa.execute-api.us-east-1.amazonaws.com`, since the account refuses anonymous Function URL invocation — *evidence: `/api/v1/health` returns `degraded`, `/api/v1/topology` returns 7 nodes and 2 edges*
+- [x] Header search across the topology graph and incident list, resolved server-side
 
 ### 0.9 Infrastructure
 
@@ -199,7 +200,6 @@ only you can supply:
 | Remaining | Needs |
 |-----------|-------|
 | AWS accounts, CloudTrail, budget alarms, state backend, **RDS apply** | An authenticated AWS CLI profile. Tooling is installed and the RDS config validates; only credentials are missing |
-| A public route to the API | `AmazonAPIGatewayAdministrator` on the deploying IAM user. The dashboard is live and the Lambda works; anonymous Function URL invocation is refused by the account |
 | Threat model review | A second human reader |
 | Name clearance | A legal/commercial decision, not an engineering one |
 

@@ -36,12 +36,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
         <header className="sticky top-0 z-40 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/95 backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
-            <Link href="/" className="focusable flex items-center gap-3 rounded">
+            <Link href="/" className="focusable shrink-0 rounded" aria-label="Pashupatastra — home">
               <Sigil />
-              <span className="text-sm font-semibold tracking-[0.18em]">
-                <span className="sm:hidden">PASHU</span>
-                <span className="hidden sm:inline">PASHUPATASTRA</span>
-              </span>
             </Link>
             <Nav />
             <div className="flex w-full items-center gap-3 sm:ml-auto sm:w-auto">
@@ -112,31 +108,37 @@ function ModeIndicator({
 }
 
 /**
- * The mark.
+ * The lockup: the wordmark over the whole spear, laid flat.
  *
- * An <img> rather than inline geometry, so it cannot inherit theme colour — the
- * artwork carries its own palette in both themes. Two things to know before
- * changing it:
+ * The artwork is drawn corner to corner on a square canvas, so a square crop of
+ * it spends most of its area on empty margin and renders the weapon as a
+ * hairline. Turned horizontal it is 8:1, which is the shape a header actually
+ * has — the whole spear stays visible at a height the chrome can afford.
  *
- *   - It must read at 32px. `logo.webp` is the full spear drawn corner to
- *     corner on a square canvas: 5% of its pixels are ink, spread along a
- *     diagonal, so at this size it is a hairline. `mark.webp` is the head
- *     alone, which survives the size. Swap that one file to change the mark.
- *   - Its crimson sits close to --crit, which in this interface means live
- *     execution and critical severity. The mark is therefore kept out of the
- *     status region of the chrome and never placed beside a severity badge.
+ * An <img> rather than inline geometry, so it cannot inherit theme colour: the
+ * artwork carries its own palette in both themes. Its crimson sits close to
+ * --crit, which here means live execution and critical severity, so the lockup
+ * is kept out of the status region of the chrome and never placed beside a
+ * severity badge.
  *
- * Canonical artwork: public/logo.webp. See docs/BRAND.md.
+ * Canonical artwork: public/logo.webp. `mark.webp` is that file laid flat —
+ * regenerate it from the canonical one rather than editing it. See docs/BRAND.md.
  */
 function Sigil() {
   return (
-    <img
-      src="/mark.webp"
-      alt=""
-      width={32}
-      height={32}
-      className="h-8 w-8 shrink-0 object-contain"
-      aria-hidden="true"
-    />
+    <span className="flex flex-col items-center gap-1">
+      <span className="text-sm font-semibold leading-none tracking-[0.18em]">
+        <span className="sm:hidden">PASHU</span>
+        <span className="hidden sm:inline">PASHUPATASTRA</span>
+      </span>
+      <img
+        src="/mark.webp"
+        alt=""
+        width={1659}
+        height={208}
+        className="h-3 w-[7.5rem] object-contain sm:w-[11.5rem]"
+        aria-hidden="true"
+      />
+    </span>
   );
 }
