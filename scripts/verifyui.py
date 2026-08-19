@@ -19,7 +19,6 @@ Usage:  python scripts/verifyui.py [url] [--routes /,/incidents,...]
 from __future__ import annotations
 
 import argparse
-import sys
 
 DEFAULT_URL = "https://pashupatastra.vercel.app"
 

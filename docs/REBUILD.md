@@ -116,11 +116,18 @@ them genuinely deleted instead.
   `textContent` both `PASHUPATASTRA` at 375px, 768px and 1440px; no horizontal
   overflow on any of the five routes at any of the three widths.*
 
-- [ ] **R2 — Security entity kinds.** Needs: nothing.
-  Add `account`, `network_flow`, `asset`, `process` to `EntityKind` in
-  `packages/core/pashupatastra/events.py`. `host` already exists.
-  **Done when:** a round-trip test constructs an `EntityRef` of each new kind,
-  and `packages/core` tests pass.
+- [x] **R2 — Security entity kinds.** Needs: nothing.
+  `account`, `network_flow`, `asset`, `process` added; `host` already existed.
+  Each carries its key convention on the enum member, because keys are the
+  namespace events and the graph share: a flow is directional
+  (`src->dst:port`), a process is host-scoped (`host/pid`, since a bare pid is
+  reused within hours), and `ACCOUNT` is kept distinct from the existing
+  `USER` — an identity that can log in versus a human counted in an impact
+  estimate. `SecurityPayload` and `EventClass.SECURITY` already existed.
+  *Evidence: 11 new tests in `packages/core/tests/testcore.py` — round-trip,
+  carried on events, directionality, and blast-radius traversal; 685 pass
+  across all three packages, up from 674. `openapi.json` regenerated, since
+  new enum members change the public contract CI checks.*
 
 - [ ] **R3 — ATT&CK technique on causal steps.** Needs: nothing.
   Add an optional `attack_technique` to `CausalLink` carrying a technique id

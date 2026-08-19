@@ -21,7 +21,7 @@ from pashupatastra import (
     TopologyGraph,
     incident_id,
 )
-from pashupatastra.events import DeploymentPayload, MetricPayload
+from pashupatastra.events import DeploymentPayload, MetricPayload, SecurityPayload
 from pashupatastra.topology import Edge
 
 
@@ -128,3 +128,71 @@ def test_human_involvement_disqualifies_autonomous_resolution() -> None:
     incident.transition_to(IncidentState.CORRELATED, "agent:incident", "correlated")
     incident.transition_to(IncidentState.RESOLVED, "human:preet", "approved rollback")
     assert not incident.resolved_autonomously
+
+
+# --- security entity kinds ----------------------------------------------------
+
+SECURITY_KINDS = (
+    EntityKind.ACCOUNT,
+    EntityKind.NETWORK_FLOW,
+    EntityKind.ASSET,
+    EntityKind.PROCESS,
+    EntityKind.HOST,
+)
+
+
+@pytest.mark.parametrize("kind", SECURITY_KINDS)
+def test_security_entity_round_trips(kind: EntityKind) -> None:
+    ref = _ref(kind, "subject")
+    restored = EntityRef.model_validate_json(ref.model_dump_json())
+    assert restored == ref
+    assert restored.key() == f"{kind.value}:subject"
+
+
+@pytest.mark.parametrize("kind", SECURITY_KINDS)
+def test_security_entities_carry_events(kind: EntityKind) -> None:
+    """The graph and the event stream share one namespace, so a kind that cannot
+    appear on an event is a kind the topology can never learn about."""
+    now = datetime.now().astimezone()
+    event = Event(
+        event_class=EventClass.SECURITY,
+        source="edr",
+        occurred_at=now,
+        observed_at=now,
+        entity_ref=_ref(kind, "subject"),
+        payload=SecurityPayload(detection_type="suspicious_login", principal="subject", confidence=0.8),
+        provenance=Provenance(source_system="edr"),
+    )
+    assert Event.model_validate_json(event.model_dump_json()).entity_ref.kind is kind
+
+
+def test_an_account_is_not_a_user() -> None:
+    """`USER` is a human counted in an impact estimate; `ACCOUNT` is an identity
+    that can log in and be disabled. Collapsing them would make "1,200 users
+    affected" and "one account compromised" the same statement."""
+    assert EntityKind.ACCOUNT is not EntityKind.USER
+    assert _ref(EntityKind.ACCOUNT, "svc-billing").key() != _ref(EntityKind.USER, "svc-billing").key()
+
+
+def test_a_network_flow_is_directional() -> None:
+    """Beaconing is a claim about which way the connection opened, so the node
+    for A→B must not be the node for B→A."""
+    outbound = _ref(EntityKind.NETWORK_FLOW, "10.0.0.5->198.51.100.7:443")
+    inbound = _ref(EntityKind.NETWORK_FLOW, "198.51.100.7->10.0.0.5:443")
+    assert outbound.key() != inbound.key()
+
+
+def test_security_entities_participate_in_blast_radius() -> None:
+    """An entity kind the graph cannot traverse reports a blast radius of zero,
+    and a blast radius of zero silently lowers effective risk."""
+    graph = TopologyGraph()
+    host = _ref(EntityKind.HOST, "ws-014")
+    asset = _ref(EntityKind.ASSET, "customer-pii")
+    account = _ref(EntityKind.ACCOUNT, "svc-billing")
+    for ref in (host, asset, account):
+        graph.add_node(Node(ref=ref))
+    graph.add_edge(Edge(source=host.key(), target=account.key()))
+    graph.add_edge(Edge(source=asset.key(), target=host.key()))
+
+    radius = graph.blast_radius(account.key())
+    assert set(radius.affected) == {host.key(), asset.key()}

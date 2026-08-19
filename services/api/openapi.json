@@ -198,6 +198,7 @@
         "type": "object"
       },
       "EntityKind": {
+        "description": "What a topology node is.\n\nTwo domains share one namespace. The infrastructure kinds describe what a\ncluster runs; the security kinds describe what an intrusion moves through.\nThey coexist rather than replace each other \u2014 the Kubernetes and Prometheus\nconnectors observe services and pods because those are what is actually\nthere, and a host runs processes whichever domain is asking.",
         "enum": [
           "service",
           "host",
@@ -210,7 +211,11 @@
           "endpoint",
           "user",
           "deployment",
-          "cloud_resource"
+          "cloud_resource",
+          "account",
+          "network_flow",
+          "asset",
+          "process"
         ],
         "title": "EntityKind",
         "type": "string"

@@ -28,6 +28,16 @@ class EventClass(StrEnum):
 
 
 class EntityKind(StrEnum):
+    """What a topology node is.
+
+    Two domains share one namespace. The infrastructure kinds describe what a
+    cluster runs; the security kinds describe what an intrusion moves through.
+    They coexist rather than replace each other — the Kubernetes and Prometheus
+    connectors observe services and pods because those are what is actually
+    there, and a host runs processes whichever domain is asking.
+    """
+
+    # --- infrastructure ---
     SERVICE = "service"
     HOST = "host"
     CONTAINER = "container"
@@ -40,6 +50,38 @@ class EntityKind(StrEnum):
     USER = "user"
     DEPLOYMENT = "deployment"
     CLOUD_RESOURCE = "cloud_resource"
+
+    # --- security ---
+    ACCOUNT = "account"
+    """An identity that can authenticate — a person's or a service's.
+
+    Distinct from `USER`, which is a human the system counts when estimating who
+    an outage reached. An account is a thing that can log in, be disabled, and
+    have its credentials rotated; a user is a number in an impact estimate. One
+    is an actor and the other is a casualty, and conflating them would let
+    "1,200 users affected" and "one account compromised" mean the same thing.
+    """
+
+    NETWORK_FLOW = "network_flow"
+    """A connection between two endpoints.
+
+    Keyed `network_flow:<source>-><destination>:<port>` so the same conversation
+    resolves to the same node however it is observed. Directional on purpose: a
+    host that is dialled is not the host that dialled, and beaconing is a claim
+    about which way the connection opened.
+    """
+
+    ASSET = "asset"
+    """A resource whose compromise is the loss — a bucket, a mailbox, a dataset.
+
+    Deliberately not `DATABASE` or `CLOUD_RESOURCE`, which say what a thing *is*.
+    `ASSET` says it is worth protecting, which is what decides whether reaching
+    it is an incident.
+    """
+
+    PROCESS = "process"
+    """A process on a host. Keyed `process:<host>/<pid>` — a bare pid is reused
+    within hours and would silently merge two unrelated executions."""
 
 
 class Severity(StrEnum):
