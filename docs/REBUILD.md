@@ -62,6 +62,144 @@ API Gateway HTTP API `265d0hsmwa`, Vercel project `pashupatastra`.
 
 ---
 
+## The direction changed on 19 August 2026
+
+The site was going to be a demo about invented incidents. It is now two things
+that share a codebase, because the owner wants it to watch **the actual machine
+it runs on**, show real threats to it, and explain what it is doing — and
+because that goal and a public URL cannot be the same deployment.
+
+### Why they cannot be the same deployment
+
+`pashupatastra.vercel.app` and the API behind it are open to anyone; there is no
+login and the prompt's non-goals rule one out. Publishing this desktop's process
+list, internal addresses, usernames, open ports and missing patches to that URL
+would not be a dashboard, it would be a shopping list for attacking this exact
+machine — "firewall off, three unpatched CVEs, these ports listening" is more
+useful to an attacker than to anyone else.
+
+So:
+
+| | **Watch** — the real thing | **Demo** — the public site |
+|---|---|---|
+| Runs | on this desktop, localhost only | Vercel + Lambda |
+| Data | real telemetry from this machine | scripted scenarios |
+| Leaves the machine? | **never** | nothing personal exists to leave |
+| Audience | the owner | anyone with the link |
+
+One codebase, two deployments. `docs/DEPLOYMENT.md` already describes this shape
+for on-prem customers — "run the dashboard from the same container as the API" —
+so this is the architecture the project already had, used for its first real
+purpose rather than a hypothetical customer.
+
+### What the agent may do to the machine
+
+**Observe and explain. It does not act.** Chosen deliberately: this is a daily
+driver, not a fleet machine, and a false positive that cuts the network or locks
+the account has to be fixed locally — from the machine the website just broke.
+Every finding shows the action it *would* take, its risk score, its tier and its
+rollback, and then does not take it. `PASHU_DRY_RUN` stays true and the
+environment stays out of `PASHU_LIVE_ENVIRONMENTS`, so both gates in
+`docs/SECURITY.md` remain shut.
+
+That is not a weaker product. "Here is what I saw, here is what it means, here is
+what I would do and why, and here is why I am not doing it" *is* the teaching
+goal, and it is the only version that cannot break the machine it protects.
+
+### What it must never collect
+
+The owner's instruction, and the constraint that makes local-only worth having:
+**it watches for attacks, not for what the owner is doing.** Not file contents,
+not document or project paths, not source code, not browser history, not window
+titles, not the contents of anything typed. A collector that can see a file path
+can see the name of every project on the disk, so the rule is an allowlist of
+fields, enforced in code and tested — never a denylist of things to strip.
+
+---
+
+## Phase A — the agent that watches this machine
+
+Needs **R4**. Runs alongside Phase 1; the public demo and the real agent share
+the engines, the registry and the UI, so neither blocks the other.
+
+- [ ] **R30 — Local collector skeleton.** Needs: **R2**.
+  A `drishti` collector that runs on Windows, emits into the existing `Event`
+  schema with real `Provenance`, and posts to a *local* API. No new event model:
+  the whole point of the schema is that a new source is a new source, not a new
+  shape.
+  **Done when:** one real observation from this machine appears in the local
+  store, carrying the command that produced it as provenance.
+
+- [ ] **R31 — Privacy allowlist.** Needs: **R30**.
+  Every field a collector may emit, listed explicitly; anything unlisted is
+  dropped before it reaches the event, not redacted afterwards.
+  **Done when:** a test feeds a process with a document path, a window title and
+  a command line containing a file in the user's home, and asserts none of it
+  survives into the event.
+  *This is the task that makes the rest safe to run. It comes before the
+  collectors that would otherwise have already gathered the data.*
+
+- [ ] **R32 — Processes and parentage.** Needs: **R31**.
+  Running processes, signing status, and what spawned what. The richest source
+  of real detections — Office spawning a shell, encoded commands, unsigned
+  binaries running from temporary directories.
+  **Done when:** the real process tree of this machine is visible in the graph,
+  with parent-child edges, and no path outside system directories is emitted.
+
+- [ ] **R33 — Network connections.** Needs: **R31**.
+  Active connections, listening ports, remote addresses, and the process that
+  owns each.
+  **Done when:** real connections appear as `network_flow` entities keyed
+  directionally, joined to the owning process.
+
+- [ ] **R34 — Logons and account activity.** Needs: **R31**.
+  Windows Security log: 4624, 4625, 4672, new accounts, RDP. Usernames are
+  local-only data and never leave the machine.
+  **Done when:** a deliberate failed logon on this machine shows up as an event
+  within the poll interval.
+
+- [ ] **R35 — Posture: Defender, firewall, patches.** Needs: **R31**.
+  Real-time protection state, firewall profiles, pending updates, and which
+  installed software matches a *real* CISA KEV entry.
+  **Done when:** the real posture of this machine is reported, and a KEV match
+  cites the advisory it came from.
+  *The most immediately useful task here: posture is what actually makes the
+  machine safer, and unlike intrusion detection it is never a false positive.*
+
+- [ ] **R36 — `pashupatastra watch`.** Needs: **R32, R33**.
+  One command that starts the API and the dashboard bound to localhost, with the
+  collectors running. Bound to `127.0.0.1` explicitly — a security tool that
+  listens on every interface has added an attack surface to the machine it is
+  protecting.
+  **Done when:** one command brings up the real dashboard, and the port is
+  unreachable from another machine on the same network.
+
+- [ ] **R37 — Detections over real telemetry.** Needs: **R32, R33, R34**.
+  Deterministic rules, each citing the events that fired it. No model in this
+  path — a detection that cannot name its evidence is a guess.
+  **Done when:** a benign action taken deliberately on this machine produces a
+  correct detection with resolving evidence, and an ordinary hour produces no
+  alert at all. *The second half is the harder half.*
+
+- [ ] **R38 — The explanation layer.** Needs: **R37**.
+  For every finding: what was observed, why it matters, what it maps to in
+  ATT&CK, what the agent *would* do, what tier that action sits in, and the
+  sentence saying it did not do it.
+  **Done when:** someone who does not know what `T1059.001` is can read a
+  finding and understand what happened to their machine.
+  *This is the task the whole thing exists for.*
+
+- [ ] **R39 — Real threat intelligence.** Needs: **R33, R35**.
+  CISA KEV and abuse.ch, fetched on a schedule, stored locally, used to enrich
+  real observations. Public feeds only, and never queried per-observation from
+  the browser — asking a third party about every address this machine talks to
+  tells that third party everything this machine talks to.
+  **Done when:** a real connection is enriched from a real feed entry, and the
+  verification state distinguishes reported from confirmed.
+
+
+---
+
 ## Dependency map
 
 ```
@@ -88,7 +226,10 @@ Phase 4 ─ observatory + game             needs R22
 
 ---
 
-## Phase 1 — Re-theme the domain
+## Phase 1 — Re-theme the domain *(the public demo)*
+
+These tasks now shape the **public site**, which shows scripted scenarios and
+no personal data. The real agent is Phase A above.
 
 The prompt is explicit that this is a data-model change, not a copy change. Half
 a re-theme reads worse than none: a "security" site whose action registry still
