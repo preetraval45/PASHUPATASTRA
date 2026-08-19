@@ -15,6 +15,9 @@ dependencies = [
 [project.optional-dependencies]
 # AWS lives here, never in packages/core (the Platform ADR).
 aws = ["boto3>=1.34"]
+# ASGI-to-Lambda adapter. Only the Lambda deployment needs it; uvicorn serves
+# the same app everywhere else.
+lambda = ["mangum>=0.17"]
 # Model SDKs live here for the same reason. Optional so a deployment installs
 # only the provider it uses, and so neither is importable from engine code by
 # accident — engines reach models through the gateway or not at all (rule 5).

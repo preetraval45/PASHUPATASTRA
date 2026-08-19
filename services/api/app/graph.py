@@ -16,16 +16,69 @@ from datetime import datetime, timedelta
 
 from pashupatastra import BlastRadius, Edge, Node
 
-from .db import connect
+from .db import connect, is_available
+from .graphmemory import MemoryGraph
+
+MIRROR = MemoryGraph()
+"""Process-wide, so every `GraphStore()` sees the same graph when there is no
+database. Per-instance state would give each request an empty map."""
+
+_resolved: bool | None = None
+
+
+def _durable(database_url: str | None = None) -> bool:
+    """Whether Postgres is backing the graph. Resolved once per process.
+
+    Re-checking per call would put a connection attempt in front of every read
+    on a deployment that has no database at all.
+    """
+    global _resolved
+    if _resolved is None:
+        _resolved = is_available(database_url)
+    return _resolved
+
+
+def entitystore(database_url: str | None = None):
+    """Whatever is currently holding events and entity rows.
+
+    `MemoryGraph` implements the same `save_events` / `entity` / `entity_events`
+    surface as `PostgresStore`, so callers do not need to know which answered —
+    only that reaching for `PostgresStore` directly would make an entity view
+    fail outright on a deployment that has no database.
+    """
+    if _durable(database_url):
+        from .db import PostgresStore
+
+        return PostgresStore(database_url)
+    return MIRROR
 
 
 class GraphStore:
+    """Postgres-backed when a database is reachable, in-memory otherwise.
+
+    The fallback exists for the same reason `Store`'s does: an empty graph
+    reports a blast radius of zero, and a blast radius of zero silently lowers
+    risk. A deployment without Postgres should show a map and report `degraded`,
+    not answer every topology question with nothing.
+    """
+
     def __init__(self, database_url: str | None = None) -> None:
         self.database_url = database_url
+
+    @property
+    def durable(self) -> bool:
+        return _durable(self.database_url)
+
+    @property
+    def _mirror(self) -> MemoryGraph | None:
+        return None if _durable(self.database_url) else MIRROR
 
     # --- reconciliation -----------------------------------------------------
 
     def upsert_nodes(self, nodes: list[Node]) -> int:
+        if (mirror := self._mirror) is not None:
+            return mirror.upsert_nodes(nodes)
+
         if not nodes:
             return 0
         with connect(self.database_url) as conn:
@@ -64,6 +117,9 @@ class GraphStore:
         return len(nodes)
 
     def upsert_edges(self, edges: list[Edge]) -> int:
+        if (mirror := self._mirror) is not None:
+            return mirror.upsert_edges(edges)
+
         if not edges:
             return 0
         with connect(self.database_url) as conn:
@@ -151,6 +207,9 @@ class GraphStore:
     # --- queries ------------------------------------------------------------
 
     def blast_radius(self, origin: str, max_depth: int = 10) -> BlastRadius:
+        if (mirror := self._mirror) is not None:
+            return mirror.blast_radius(origin, max_depth=max_depth)
+
         with connect(self.database_url) as conn:
             affected = [
                 row["affected_key"]
@@ -165,6 +224,9 @@ class GraphStore:
 
     def adjacent(self, a: str, b: str, max_depth: int = 3) -> bool:
         """Correlation gate: are these two entities connected at all?"""
+        if (mirror := self._mirror) is not None:
+            return mirror.adjacent(a, b, max_depth=max_depth)
+
         if a == b:
             return True
         return b in self.blast_radius(a, max_depth).affected or (
@@ -179,6 +241,9 @@ class GraphStore:
         seconds later is not healthy, it is flapping, and showing the newest
         reading would hide the incident behind its own recovery.
         """
+        if (mirror := self._mirror) is not None:
+            return mirror.snapshot(limit=limit)
+
         with connect(self.database_url) as conn:
             nodes = conn.execute(
                 """
@@ -234,6 +299,9 @@ class GraphStore:
         }
 
     def counts(self) -> tuple[int, int]:
+        if (mirror := self._mirror) is not None:
+            return mirror.counts()
+
         with connect(self.database_url) as conn:
             nodes = conn.execute("SELECT count(*) AS n FROM topology_node").fetchone()["n"]
             edges = conn.execute("SELECT count(*) AS n FROM topology_edge").fetchone()["n"]

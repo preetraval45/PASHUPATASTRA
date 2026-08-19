@@ -11,9 +11,8 @@ from __future__ import annotations
 import json
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
-import psycopg
 from pashupatastra import (
     CausalLink,
     Hypothesis,
@@ -24,10 +23,12 @@ from pashupatastra import (
     Verdict,
 )
 from pashupatastra.incidents import Transition
-from psycopg.rows import dict_row
 
 from .config import get_settings
 from .engines.audit import AuditKind, AuditRecord
+
+if TYPE_CHECKING:
+    import psycopg
 
 
 CONNECT_TIMEOUT_SECONDS = 3
@@ -36,9 +37,29 @@ fall back and report `degraded`, rather than stalling every request behind a TCP
 timeout."""
 
 
+class NotConfigured(RuntimeError):
+    """No database URL is set.
+
+    A deployment may legitimately run without Postgres — the stores fall back to
+    memory and health reports `degraded`. Distinguished from an unreachable
+    database so the fallback is immediate: dialling a host nobody configured
+    still costs `CONNECT_TIMEOUT_SECONDS` on every request that tries.
+    """
+
+
 @contextmanager
-def connect(database_url: str | None = None) -> Iterator[psycopg.Connection]:
+def connect(database_url: str | None = None) -> Iterator["psycopg.Connection"]:
     url = database_url or get_settings().database_url
+    if not url:
+        raise NotConfigured("no database configured (PASHU_DATABASE_URL is empty)")
+
+    # Imported here, not at module scope. `packages/core` must run on a laptop
+    # and a database-free deployment should not have to ship a Postgres driver
+    # it will never call — importing it eagerly makes the dependency mandatory
+    # for everyone to satisfy one code path nobody took.
+    import psycopg
+    from psycopg.rows import dict_row
+
     with psycopg.connect(
         url, row_factory=dict_row, connect_timeout=CONNECT_TIMEOUT_SECONDS
     ) as conn:

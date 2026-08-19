@@ -89,6 +89,56 @@ Every AWS choice has a working self-hosted counterpart. That is the constraint
 that keeps the on-prem wedge open — a managed feature with no equivalent gets
 rejected unless the on-prem path is explicitly given up for that capability.
 
+## The demo tier
+
+A third target, and the only one currently running: a public dashboard with no
+data layer at all. It exists so the interface can be looked at, not so anything
+can be operated.
+
+```
+   Anyone ──► Vercel (apps/web)
+                  │  HTTPS, NEXT_PUBLIC_API_URL
+                  ▼
+              AWS Lambda (services/api, zip archive)
+                  │
+                  └─ in-memory stores; no RDS, no VPC, no ECR
+```
+
+Built by `scripts/buildlambda.py` and deployed by `scripts/deploylambda.py`.
+What it deliberately omits is the point: no VPC and therefore no NAT gateway, no
+container registry, and no database. That keeps it inside the always-free
+allowance rather than the twelve-month one, and it is why it must never be
+pointed at anything real.
+
+What that costs in honesty, stated where the deployment can be seen rather than
+only here:
+
+- `/health` reports `status: degraded` and `audit_storage: memory`, because an
+  audit trail that does not survive a restart is not an audit trail. The
+  dashboard renders that verdict rather than hiding it.
+- **All state is lost on a cold start.** Incidents, approvals, and the audit log
+  live in the process.
+- Both execution gates are shut — `PASHU_DRY_RUN=true`, and the environment is
+  absent from `PASHU_LIVE_ENVIRONMENTS`. A misconfiguration fails closed into
+  dry-run rather than open (SECURITY.md, control 1).
+- The model provider is `echo`, the deterministic stub. Reasoning output is not
+  a model's, and `/health` says `configured: false` so nobody has to infer that
+  from suspiciously empty text.
+
+The topology and event history come from `app/seed.py`, which replays the
+labelled corpus in `benchmark/incidents/`. Every seeded event keeps
+`source_system="scenario"` in its provenance; the seed invents no dependencies
+beyond the two the demo incident already asserts, and no user counts at all. A
+blast radius of zero users is visibly wrong to a reader, which is the point — an
+invented one would not be.
+
+> **Function URLs may be blocked.** Some accounts refuse anonymous invocation of
+> a Lambda Function URL: the resource policy is correct, `AuthType` is `NONE`,
+> and AWS still answers 403 before the request reaches the function. A signed
+> SigV4 request to the same URL succeeds, which is how to tell this apart from a
+> broken deployment. `scripts/deployapigateway.py` puts an HTTP API in front as
+> the way around it.
+
 ## Two deployment targets
 
 1. **`infra/terraform/`** — AWS managed. Production, staging, and the benchmark

@@ -58,3 +58,6 @@ logs/
 .terraform.lock.hcl
 *.backend.hcl
 !*.backend.hcl.example
+
+# Vercel project link — machine-local, not shared.
+.vercel/

@@ -70,6 +70,14 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    demo_seed: bool = False
+    """Replay `benchmark/incidents/` into the graph at startup.
+
+    Off by default. A deployment with real connectors must never mix replayed
+    corpus telemetry into its own topology — the events carry `source_system=
+    "scenario"` provenance, but a graph is read as current state long before
+    anyone opens an event's provenance."""
+
     @property
     def live_execution_enabled(self) -> bool:
         """Both gates, and the environment must be named explicitly.

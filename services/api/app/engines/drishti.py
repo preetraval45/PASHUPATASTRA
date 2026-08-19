@@ -17,7 +17,7 @@ from drishti.topology import TopologyBuilder
 from pashupatastra import Correlator, Detector, Finding
 
 from ..db import PostgresStore
-from ..graph import GraphStore
+from ..graph import GraphStore, entitystore
 from .audit import AUDIT, AuditKind, AuditRecord
 from .buffer import BufferedIngestion
 
@@ -52,7 +52,7 @@ class Drishti:
         correlator: Correlator | None = None,
     ) -> None:
         self.connectors = connectors
-        self.store = store or PostgresStore()
+        self.store = store or entitystore()
         self.graph = graph or GraphStore()
         self.builder = builder or TopologyBuilder()
         # Events go through a bounded buffer so a telemetry spike cannot block

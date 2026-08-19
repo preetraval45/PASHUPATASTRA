@@ -24,9 +24,8 @@ from pydantic import BaseModel
 from ..config import get_settings
 from ..engines import astra, loop as loop_engine, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
-from ..db import PostgresStore
 from ..engines.buddhi import model_health
-from ..graph import GraphStore
+from ..graph import GraphStore, entitystore
 from ..store import STORE
 
 GRAPH = GraphStore()
@@ -418,7 +417,7 @@ def entity_detail(entity_key: str, events: int = 50) -> dict[str, object]:
     question anyone asks about an entity, and making it a second request invites
     a view that renders without it.
     """
-    store = PostgresStore()
+    store = entitystore()
     node = store.entity(entity_key)
     if node is None:
         raise HTTPException(status_code=404, detail=f"unknown entity {entity_key}")

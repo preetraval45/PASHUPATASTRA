@@ -29,6 +29,12 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api/v1")
 
+if settings.demo_seed:
+    from .graph import GraphStore, entitystore
+    from .seed import seed
+
+    seed(GraphStore(), entitystore())
+
 
 @app.get("/")
 def root() -> dict[str, str]:

@@ -145,7 +145,16 @@ can violate it.
 - [x] Causal chain renders evidence citations per link
 - [x] Dashboard computes no risk itself — renders API answers only
 - [x] Typecheck and production build pass
-- [ ] Deployed to Vercel with the API reachable — **blocked: needs a Vercel account connected**
+- [~] Deployed to Vercel at `pashupatastra.vercel.app`; the API is deployed to Lambda and verified working over a signed request. **Owed: a public route to it.** The account refuses anonymous invocation of the Function URL — 403 from AWS before the request reaches the function, while SigV4 to the same URL returns 200 — so `scripts/deployapigateway.py` is written and waiting on `apigateway` permissions
+
+### 0.8.1 Demo deployment
+
+- [x] In-memory fallback for the topology graph and event store, so the API serves without Postgres — *evidence: `services/api/tests/testgraphmemory.py`, 16 tests, including agreement with the reference `TopologyGraph` on blast radius*
+- [x] Corpus seed — `benchmark/incidents/` replayed into the graph at startup, inventing no dependencies beyond the two the demo incident asserts and no user counts at all
+- [x] `psycopg` imported lazily inside `db.connect`, so a database-free deployment does not carry the driver — a third of the archive
+- [x] Lambda packaging and deploy — `scripts/buildlambda.py`, `scripts/deploylambda.py`; dependencies derived from the pyprojects rather than hand-listed, since a hand-maintained copy fails at runtime on the first request
+- [x] Dashboard live on Vercel — *evidence: `https://pashupatastra.vercel.app` returns the app*
+- [~] API publicly reachable — deployed and verified over SigV4; **owed: a route anonymous callers can use** (see 0.8)
 
 ### 0.9 Infrastructure
 
@@ -190,7 +199,7 @@ only you can supply:
 | Remaining | Needs |
 |-----------|-------|
 | AWS accounts, CloudTrail, budget alarms, state backend, **RDS apply** | An authenticated AWS CLI profile. Tooling is installed and the RDS config validates; only credentials are missing |
-| Vercel deployment | A connected Vercel account, plus the API reachable at a public URL |
+| A public route to the API | `AmazonAPIGatewayAdministrator` on the deploying IAM user. The dashboard is live and the Lambda works; anonymous Function URL invocation is refused by the account |
 | Threat model review | A second human reader |
 | Name clearance | A legal/commercial decision, not an engineering one |
 
