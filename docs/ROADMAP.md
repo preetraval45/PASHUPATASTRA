@@ -7,6 +7,11 @@ written; it is done when the criterion is demonstrably met. Phases 1–4 build t
 loop in the order the loop runs, so every phase ends with something demonstrable
 rather than a half-wired layer.
 
+> **The public demo site is being rebuilt** as a cybersecurity incident-response
+> agent demo. That work is sequenced in [REBUILD.md](REBUILD.md) — tasks `R1`–`R29`,
+> with dependencies and free-tier constraints. This file still tracks the platform
+> underneath it, and nothing here is superseded.
+
 ## How this document is maintained
 
 **This file is the live status of the project, not a historical plan.** Every
