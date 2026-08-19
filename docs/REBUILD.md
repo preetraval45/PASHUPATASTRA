@@ -129,11 +129,19 @@ them genuinely deleted instead.
   across all three packages, up from 674. `openapi.json` regenerated, since
   new enum members change the public contract CI checks.*
 
-- [ ] **R3 — ATT&CK technique on causal steps.** Needs: nothing.
-  Add an optional `attack_technique` to `CausalLink` carrying a technique id
-  (`T1110.004`) and tactic name. Optional so existing incidents stay valid.
-  **Done when:** a causal step renders its technique the same understated way
-  `evidence:` renders now, and a step without one renders unchanged.
+- [x] **R3 — ATT&CK technique on causal steps.** Needs: nothing.
+  `AttackTechnique` carries id, name and tactic; `CausalLink.attack_technique`
+  is optional, so an infrastructure step stays valid rather than being given
+  an invented mapping. The id format is enforced and its catalogue URL is
+  *derived* rather than stored — a stored URL is one more thing that can
+  disagree with the id it points at, and a malformed id would produce a
+  citation that looks authoritative and leads nowhere.
+  *Evidence: 9 new tests; verified in a headless browser against a running
+  API with one step mapped and two bare — the mapped step renders
+  `technique: T1110.004 Credential Stuffing · Credential Access` beneath its
+  evidence line, the bare steps render unchanged, and the link resolves to
+  `attack.mitre.org/techniques/T1110/004/`. 694 tests pass; `openapi.json`
+  regenerated.*
 
 - [ ] **R4 — Security action registry.** Needs: nothing.
   Register the 14 actions from the prompt's table with their risk scores,

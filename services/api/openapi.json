@@ -80,6 +80,31 @@
         "title": "ApproveRequest",
         "type": "object"
       },
+      "AttackTechnique": {
+        "description": "A MITRE ATT&CK mapping for one step of a causal chain.\n\nShared vocabulary, not decoration: \"the account was brute-forced\" is a\nsentence one analyst wrote, and `T1110.004` is a thing a second analyst,\na detection rule, and a report can all agree refers to the same technique.\n\nThe id format is enforced. An id is rendered as a link to the ATT&CK\ncatalogue, so a malformed one produces a citation that looks authoritative\nand leads nowhere \u2014 the same failure the evidence references already have,\nand not one worth reproducing deliberately.",
+        "properties": {
+          "id": {
+            "pattern": "^T\\d{4}(\\.\\d{3})?$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "tactic": {
+            "title": "Tactic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "tactic"
+        ],
+        "title": "AttackTechnique",
+        "type": "object"
+      },
       "AuditKind": {
         "enum": [
           "observation",
@@ -139,6 +164,16 @@
       },
       "CausalLink": {
         "properties": {
+          "attack_technique": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttackTechnique"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "entity": {
             "$ref": "#/components/schemas/EntityRef"
           },

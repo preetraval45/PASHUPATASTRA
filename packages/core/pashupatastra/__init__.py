@@ -32,6 +32,7 @@ from .events import (
     Severity,
 )
 from .incidents import (
+    AttackTechnique,
     CausalLink,
     Hypothesis,
     Impact,
@@ -58,6 +59,7 @@ __all__ = [
     "BlastRadius",
     "Budget",
     "BudgetLedger",
+    "AttackTechnique",
     "CausalLink",
     "Cluster",
     "CorrelationResult",

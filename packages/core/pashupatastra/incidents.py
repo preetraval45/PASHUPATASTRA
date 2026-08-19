@@ -68,10 +68,47 @@ class Hypothesis(BaseModel):
         return v
 
 
+class AttackTechnique(BaseModel):
+    """A MITRE ATT&CK mapping for one step of a causal chain.
+
+    Shared vocabulary, not decoration: "the account was brute-forced" is a
+    sentence one analyst wrote, and `T1110.004` is a thing a second analyst,
+    a detection rule, and a report can all agree refers to the same technique.
+
+    The id format is enforced. An id is rendered as a link to the ATT&CK
+    catalogue, so a malformed one produces a citation that looks authoritative
+    and leads nowhere — the same failure the evidence references already have,
+    and not one worth reproducing deliberately.
+    """
+
+    id: str = Field(pattern=r"^T\d{4}(\.\d{3})?$")
+    """Technique or sub-technique — `T1110`, or `T1110.004` for a sub-technique."""
+
+    name: str
+    """The catalogue's name for it, e.g. `Credential Stuffing`."""
+
+    tactic: str
+    """The tactic it serves, e.g. `Credential Access`. A technique without its
+    tactic says how, never why, and the why is what orders a causal chain."""
+
+    @property
+    def url(self) -> str:
+        """Derived, never stored. A stored URL is one more thing that can
+        disagree with the id it is supposed to point at."""
+        technique, _, sub = self.id.partition(".")
+        path = f"{technique}/{sub}" if sub else technique
+        return f"https://attack.mitre.org/techniques/{path}/"
+
+
 class CausalLink(BaseModel):
     entity: EntityRef
     transition: str
     evidence: list[str] = Field(min_length=1)
+
+    attack_technique: AttackTechnique | None = None
+    """Optional. Absent where a step is not adversary behaviour at all — the
+    infrastructure domain has no ATT&CK mapping, and inventing one to fill the
+    field would be worse than leaving it empty."""
 
 
 class Impact(BaseModel):

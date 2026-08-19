@@ -9,6 +9,8 @@
 
 import type { ReactNode } from "react";
 
+import type { AttackTechnique } from "@/lib/api";
+
 /* ------------------------------------------------------------------ status */
 
 export type Status = "critical" | "high" | "warning" | "ok" | "neutral";
@@ -231,6 +233,34 @@ export function Evidence({ refs }: { refs: string[] }) {
   return (
     <p className="mono mt-1 text-[11px] text-[rgb(var(--faint))]">
       evidence: {refs.join(", ")}
+    </p>
+  );
+}
+
+/**
+ * The ATT&CK mapping for a causal step, set as quietly as the evidence line
+ * beneath it: this is a citation, not a finding, and giving it the weight of a
+ * finding would make every step look like a conclusion.
+ *
+ * The id links to the catalogue. A reader who does not recognise `T1110.004`
+ * can go and read what it is, which is the entire reason for using a shared
+ * vocabulary instead of a sentence someone wrote.
+ */
+export function Technique({ technique }: { technique: AttackTechnique | null }) {
+  if (!technique) return null;
+  const [id, sub] = technique.id.split(".");
+  return (
+    <p className="mt-1 text-[11px] text-[rgb(var(--faint))]">
+      <span className="mono">technique: </span>
+      <a
+        href={`https://attack.mitre.org/techniques/${sub ? `${id}/${sub}` : id}/`}
+        target="_blank"
+        rel="noreferrer"
+        className="focusable mono rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+      >
+        {technique.id}
+      </a>{" "}
+      {technique.name} · {technique.tactic}
     </p>
   );
 }

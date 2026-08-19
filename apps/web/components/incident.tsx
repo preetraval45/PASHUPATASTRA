@@ -9,6 +9,7 @@ import {
   Panel,
   statusForRisk,
   statusForSeverity,
+  Technique,
 } from "@/components/ui";
 import type { Hypothesis, Incident } from "@/lib/api";
 
@@ -82,6 +83,7 @@ export function IncidentView({
                 <p className="text-sm">{link.transition}</p>
                 {/* A chain without citations is a story, not a diagnosis. */}
                 <Evidence refs={link.evidence} />
+                <Technique technique={link.attack_technique} />
               </div>
             </li>
           ))}

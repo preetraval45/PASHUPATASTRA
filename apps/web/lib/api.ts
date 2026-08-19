@@ -38,10 +38,21 @@ export interface Hypothesis {
   mechanism: string[];
 }
 
+/** A MITRE ATT&CK mapping. `url` is derived from `id` by the API's model, not
+ *  stored, so nothing here recomputes it. */
+export interface AttackTechnique {
+  id: string;
+  name: string;
+  tactic: string;
+}
+
 export interface CausalLink {
   entity: EntityRef;
   transition: string;
   evidence: string[];
+  /** Absent where a step is not adversary behaviour — an infrastructure
+   *  incident has no ATT&CK mapping and must not be given an invented one. */
+  attack_technique: AttackTechnique | null;
 }
 
 export interface PlanStep {

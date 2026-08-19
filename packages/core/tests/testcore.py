@@ -8,6 +8,8 @@ import pytest
 from pydantic import ValidationError
 
 from pashupatastra import (
+    AttackTechnique,
+    CausalLink,
     EntityKind,
     EntityRef,
     Event,
@@ -196,3 +198,51 @@ def test_security_entities_participate_in_blast_radius() -> None:
 
     radius = graph.blast_radius(account.key())
     assert set(radius.affected) == {host.key(), asset.key()}
+
+
+# --- ATT&CK mapping on causal steps -------------------------------------------
+
+
+def test_technique_url_is_derived_from_the_id() -> None:
+    """Derived rather than stored, so a URL cannot disagree with the id it is
+    supposed to point at."""
+    sub = AttackTechnique(id="T1110.004", name="Credential Stuffing", tactic="Credential Access")
+    assert sub.url == "https://attack.mitre.org/techniques/T1110/004/"
+
+    parent = AttackTechnique(id="T1566", name="Phishing", tactic="Initial Access")
+    assert parent.url == "https://attack.mitre.org/techniques/T1566/"
+
+
+@pytest.mark.parametrize("bad", ["T111", "1110.004", "T1110.4", "T11100", "TA0006", ""])
+def test_malformed_technique_ids_are_rejected(bad: str) -> None:
+    """An id renders as a link to the catalogue. A malformed one is a citation
+    that looks authoritative and leads nowhere."""
+    with pytest.raises(ValidationError):
+        AttackTechnique(id=bad, name="x", tactic="y")
+
+
+def test_a_causal_step_without_a_technique_is_still_valid() -> None:
+    """The infrastructure domain has no ATT&CK mapping, and inventing one to
+    fill the field would be worse than leaving it empty."""
+    link = CausalLink(
+        entity=_ref(EntityKind.SERVICE, "checkout-api"),
+        transition="5xx rate 0.2% -> 14%",
+        evidence=["evt-api-5xx"],
+    )
+    assert link.attack_technique is None
+    assert CausalLink.model_validate_json(link.model_dump_json()) == link
+
+
+def test_a_causal_step_round_trips_its_technique() -> None:
+    link = CausalLink(
+        entity=_ref(EntityKind.ACCOUNT, "j.rivera"),
+        transition="42 failed logins, then one success",
+        evidence=["evt-auth-fail-burst"],
+        attack_technique=AttackTechnique(
+            id="T1110.004", name="Credential Stuffing", tactic="Credential Access"
+        ),
+    )
+    restored = CausalLink.model_validate_json(link.model_dump_json())
+    assert restored == link
+    assert restored.attack_technique is not None
+    assert restored.attack_technique.tactic == "Credential Access"
