@@ -66,7 +66,9 @@ export function Live() {
         }
         aria-live="polite"
       >
-        {paused ? "updates paused" : seconds < 5 ? "updated just now" : `updated ${seconds}s ago`}
+        {/* Same rule: one base string, an optional prefix. */}
+        <span className="hidden xl:inline">{paused ? "updates " : "updated "}</span>
+        {paused ? "paused" : seconds < 5 ? "just now" : `${seconds}s ago`}
       </span>
       <button
         type="button"

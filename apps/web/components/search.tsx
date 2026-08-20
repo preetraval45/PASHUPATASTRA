@@ -40,7 +40,7 @@ export function Search() {
   return (
     <form
       role="search"
-      className="relative w-full sm:w-64"
+      className="relative w-full sm:w-52 lg:w-64 xl:min-w-0 xl:flex-1 xl:max-w-xs"
       onSubmit={(event) => {
         event.preventDefault();
         const query = value.trim();

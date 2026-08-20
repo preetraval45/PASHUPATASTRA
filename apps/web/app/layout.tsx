@@ -44,6 +44,27 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Pashupatastra",
   description: "Autonomous intelligence for complex systems. Observe. Reason. Act. Verify.",
+  /* Every icon, listed. Declaring `icons` at all replaces Next's file-convention
+     detection rather than adding to it, so a partial list silently dropped the
+     512px icon and the apple-touch link — both were being generated and neither
+     was referenced. `sizes: "any"` on the .ico because it carries 16, 32 and 48
+     and naming one of them tells a browser the others are not there. */
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+};
+
+/** Painted by the browser around the page — the address bar on Android, the
+ *  window chrome of an installed app. Left as the dark ground because that is
+ *  what this console opens as. */
+export const viewport = {
+  themeColor: "#0b0d11",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -67,12 +88,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
 
         <header className="sticky top-0 z-40 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/95 backdrop-blur">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
+          {/* The chrome is wider than the content it sits above. `max-w-7xl`
+              capped this at 1280px on every screen, so the status group — 804px
+              of it — always wrapped to a second row and the header stood 111px
+              tall on a 1920px display with most of that width unused.
+
+              One row from `xl` up, where everything genuinely fits, and two
+              rows below it. Forcing one row earlier starved the nav: the search
+              and the status chips held their width while the nav collapsed to
+              nothing, and between 640 and 1280 not one tab was fully visible.
+              Navigation is the last thing a header should give up, so the nav
+              never shrinks and the status group wraps instead. */}
+          <div className="mx-auto flex max-w-[100rem] flex-wrap items-center gap-x-4 gap-y-2.5 px-4 py-2.5 sm:px-6 sm:py-3 xl:flex-nowrap">
             <Link href="/" className="focusable shrink-0 rounded">
               <Sigil />
             </Link>
             <Nav />
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:ml-auto sm:w-auto">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:ml-auto sm:w-auto xl:shrink-0 xl:flex-nowrap">
               <Suspense fallback={null}>
                 <Search />
               </Suspense>
@@ -135,7 +167,12 @@ function ModeIndicator({
             : "rounded border border-[rgb(var(--edge))] px-2 py-0.5 text-[rgb(var(--muted))]"
         }
       >
-        {live ? "LIVE EXECUTION" : "dry run · nothing executes"}
+        {/* The base text is one node and the qualifier is a separate optional
+            one — never two copies of the same words behind breakpoints, which
+            is how the wordmark came to read PASHUPASHUPATASTRA. Below xl the
+            row has no space for the qualifier and the title still carries it. */}
+        {live ? "LIVE EXECUTION" : "dry run"}
+        {!live && <span className="hidden xl:inline"> · nothing executes</span>}
       </span>
     </div>
   );

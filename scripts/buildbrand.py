@@ -47,6 +47,18 @@ SPEAR_SOURCE = WEB / "public" / "Pashupatastra icon 1.webp"
 LOCKUP_OUT = WEB / "public" / "logo.webp"
 ICON_OUT = WEB / "app" / "icon.png"
 APPLE_ICON_OUT = WEB / "app" / "apple-icon.png"
+FAVICON_ICO = WEB / "public" / "favicon.ico"
+"""In `public/`, not `app/`. Next emits its own `<link>` for `app/favicon.ico`
+*in addition to* anything `metadata.icons` declares, and its version claims
+`sizes="16x16"` for a file that also holds 32 and 48 — telling a browser the
+larger bitmaps are not there. Serving it as a static file leaves one accurate
+declaration."""
+FAVICON_48 = WEB / "public" / "favicon-48x48.png"
+FAVICON_96 = WEB / "public" / "favicon-96x96.png"
+
+ICO_SIZES = [(16, 16), (32, 32), (48, 48)]
+"""A .ico carries several bitmaps. Browsers that ignore the PNG link still find
+this one, and 48 is what Google Search asks for as a minimum."""
 
 ICON_SIZE = 512
 APPLE_ICON_SIZE = 180
@@ -123,6 +135,20 @@ def main() -> int:
     )
     print(f"{ICON_OUT.name:18} {ICON_SIZE}x{ICON_SIZE}")
     print(f"{APPLE_ICON_OUT.name:18} {APPLE_ICON_SIZE}x{APPLE_ICON_SIZE}")
+
+    # Google Search reads a square favicon of at least 48px from a stable URL.
+    # These are the sizes it and older browsers actually look for.
+    spear.resize((48, 48), Image.LANCZOS).save(FAVICON_48, "PNG", optimize=True)
+    spear.resize((96, 96), Image.LANCZOS).save(FAVICON_96, "PNG", optimize=True)
+    spear.resize((256, 256), Image.LANCZOS).save(FAVICON_ICO, "ICO", sizes=ICO_SIZES)
+    print(f"{FAVICON_48.name:18} 48x48")
+    print(f"{FAVICON_96.name:18} 96x96")
+    print(f"{FAVICON_ICO.name:18} {', '.join(f'{w}x{h}' for w, h in ICO_SIZES)}")
+
+    # No favicon.svg. The artwork is raster, and wrapping a PNG in an <svg>
+    # gives none of the reasons to prefer one — it does not scale, it is not
+    # smaller, and it is not editable. A real one needs the vector redraw
+    # docs/ROADMAP.md already records as owed.
     return 0
 
 
