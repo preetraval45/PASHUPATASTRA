@@ -568,6 +568,49 @@ Needs **R8**. Read the frontend design skill before touching a component.
 
 ---
 
+## Phase 2A — Make it look like a console, not a document
+
+Chosen by the owner on 20 August 2026 after Phase 2 closed, because the result
+still read as flat. The diagnosis, independent of taste: **everything sits at
+the same visual weight** — bordered rectangle, small label, small text, repeated
+down every page. Correct, and flat. No depth, no scale contrast, almost no use
+of the brand colours, and no data visualisation beyond one sparse map.
+
+Direction: **rich SOC console.** Keep the calm, precise register the prompt asks
+for — an air-traffic display, not a movie-hacker terminal — and add the depth
+and the graphics it is missing.
+
+- [ ] **R40 — Surfaces with depth.** Needs: **R17**.
+  Elevation, gradient panels, and a glow on critical state. Every surface is
+  currently one flat fill with a 1px border.
+  **Done when:** a critical incident is visibly different in weight from a
+  resolved one before reading a word, and contrast still passes in both themes.
+
+- [ ] **R41 — A type scale with real contrast.** Needs: **R40**.
+  Headline numbers much larger, labels smaller and quieter, so a page has an
+  order to read it in.
+  **Done when:** the overview's numbers read at a glance from across a desk.
+
+- [ ] **R42 — Charts and sparklines.** Needs: **R41**.
+  Severity over time, risk distribution across the registry, entity status
+  breakdown. **Every series comes from data the API already returns** — a chart
+  of invented numbers on a page about not inventing things would be absurd.
+  **Done when:** the overview and the action registry each carry a chart drawn
+  from real values, and no series is synthesised.
+
+- [ ] **R43 — The attack chain as a flow.** Needs: **R40**.
+  The causal chain drawn as connected entities with the technique on each edge,
+  instead of a numbered list. Keeps the list underneath for screen readers.
+  **Done when:** the chain reads as a picture at a glance and loses nothing for
+  a reader who cannot see it.
+
+- [ ] **R44 — Motion.** Needs: **R41**.
+  Page transitions, numbers counting up, staggered reveals, depth on hover.
+  **Done when:** every animation is disabled under `prefers-reduced-motion`, and
+  nothing load-bearing depends on motion to be understood.
+
+- [ ] **R45 — Deploy and review.** Needs: **R40–R44**.
+
 ## Phase 3 — The agent
 
 Needs **R17**. The biggest engineering lift; budget the most time here.
