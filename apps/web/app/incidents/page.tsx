@@ -3,6 +3,14 @@ import { Scenarios } from "@/components/scenarios";
 import { Empty, Offline, Page } from "@/components/ui";
 import { getActions, getIncidents } from "@/lib/api";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Incidents",
+  description:
+    "Open security incidents, each with the evidence behind its diagnosis and the alternative reading it ruled out.",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function IncidentsPage() {

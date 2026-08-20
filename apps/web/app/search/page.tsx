@@ -3,6 +3,14 @@ import Link from "next/link";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, statusForSeverity } from "@/components/ui";
 import { getHealth, getIncidents, getTopology, isInfrastructure } from "@/lib/api";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Search",
+  description:
+    "Find an account, host, asset or incident by name.",
+};
+
 export const dynamic = "force-dynamic";
 
 const LIMIT = 25;

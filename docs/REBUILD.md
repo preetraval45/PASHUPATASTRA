@@ -222,6 +222,11 @@ Phase 3 ─ the agent                      needs R16
 Phase 4 ─ observatory + game             needs R22
   R23 ──► R24 ──► R25
   R23, R11 ─────► R26 ──► R27 ──► R28 (final deploy)
+
+Phase 5 ─ the visitor's path            needs R17
+  R40 ──► R41 ──► R42
+  R43 ──► R44
+  R41, R42, R43, R44 ──────────► R45 (deploy + review)
 ```
 
 ---
@@ -530,11 +535,24 @@ Needs **R8**. Read the frontend design skill before touching a component.
   that also holds 32 and 48, so it lives in `public/` instead.
   *Evidence: seven head tags, six files, all 200 on the deployed site.*
 
-- [ ] **R16 — SEO and social metadata.** Needs: **R15**.
-  Per-page `<title>` and description, `og:*` with a real 1200×630 card,
-  `robots.txt`, `sitemap.xml`.
-  **Done when:** every route has its own title and description, and the OG card
-  renders correctly in a validator.
+- [x] **R16 — SEO and social metadata.** Needs: **R15**.
+  All nine routes carry their own title and description, including the dynamic
+  ones — an incident's description is *its diagnosis*, so a shared link says
+  what happened rather than repeating the site's pitch.
+  The 1200×630 card is built by `buildbrand.py` from the lockup, so the name
+  on it is the same artwork as the name in the header rather than re-typeset.
+  `sitemap.xml` lists incidents from the API, so a scenario added later
+  appears without anyone remembering to add it; entity and evidence pages are
+  left out deliberately — each is a fragment of an argument, not a page that
+  stands alone. `/search` is disallowed in `robots.txt`: it mints a URL for
+  every query anyone types, and letting a crawler walk them buries the pages
+  that matter.
+  *Evidence: nine routes checked for title and description; OG tags carry an
+  absolute image URL with width, height and alt; `robots.txt` and
+  `sitemap.xml` both serve correctly.*
+  One trap: a page that appends the site name itself now double-appends it,
+  because the root `title.template` already does — the incident page read
+  `INC-2026-0901 · Pashupatastra · Pashupatastra` until it stopped.
   **Note:** Search Console submission and reindexing are yours to do and take
   days to weeks. Nothing in code makes Google show a favicon on any timeline.
 
@@ -636,6 +654,93 @@ Needs **R23**. Additive, and benefits from the patterns above being solid.
   decision, not a feature decision.
 
 - [ ] **R29 — Final deploy and pass.** Needs: **R25, R26, R28**.
+
+---
+
+## Phase 5 — The visitor's path
+
+Needs **R17**. Phases 1–4 build the console and the agent. This phase answers a
+different question, and it is the one the site currently fails: a stranger opens
+the URL knowing nothing, and gives it about thirty seconds.
+
+The diagnosis is that the top-level navigation is one tab per subsystem —
+Overview, Incidents, Infrastructure, Actions, Audit. That is the architecture,
+not the visitor's question. Nobody arrives wanting to look at a dependency map;
+they arrive wanting to know what the thing does. A console is the right shape
+for someone who already bought the product and the wrong shape for everyone
+who has not.
+
+The rule this phase applies: **a top-level tab is for something a visitor would
+go looking for. Everything else appears where it is needed and nowhere else.**
+
+- [ ] **R40 — Access paths in the scenarios.** Needs: **R17**.
+  R6 seeded the scenarios' entities with **no edges**, deliberately — they
+  declared a sequence of events, not a graph. That is why the map is a list of
+  boxes, and it blocks everything below: a blast radius over a graph with no
+  edges is an empty panel.
+  Each scenario declares the access paths its own evidence establishes — the
+  account that reached the host, the host that opened the flow — and nothing it
+  does not. An invented edge is worse than a missing one, because the map is
+  the thing that is supposed to be checkable.
+  **Done when:** all three scenarios render a connected access graph, every edge
+  traces to a cited event, and a test fails on any edge no evidence supports.
+
+- [ ] **R41 — Blast radius inside the incident.** Needs: **R40**.
+  The map is built and correct; it is in the wrong place. Rendered beside the
+  failure it belongs to — these entities, what they can reach, what is already
+  compromised — it is the screen that proves the system has a model of the
+  estate rather than an LLM narrating log lines. Standing alone and all green,
+  it is a screensaver.
+  Show the sub-graph the incident's own evidence names, with the full map one
+  click away.
+  **Done when:** an incident page shows its affected entities and their access
+  paths inline, and `/infrastructure` is reachable from it.
+
+- [ ] **R42 — Nav that follows the visitor, not the architecture.** Needs: **R41**.
+  Drop **Infrastructure** and **Audit** from `components/nav.tsx`. Both routes
+  stay — they are built, tested, and right — but they stop being front doors.
+  Infrastructure is reached from the incident (R41) and from entity pages, which
+  already link into it. Audit is reached from the incident whose actions it
+  records.
+  The reasoning is the same for both, and it is not that the pages are weak:
+  the access map means nothing without a failure attached, and an append-only
+  audit log is a trust artefact that matters enormously during a buyer's
+  security review and not at all to a first-time visitor. Neither is something
+  anyone arrives *looking for*.
+  Leaves Overview → Incidents → Actions: one story, in the order it happens.
+  **Done when:** the primary nav is three items, and both delisted routes are
+  still reachable in two clicks from the overview — verified by clicking, not by
+  reading the code.
+
+- [ ] **R43 — A landing page that is not the console.** Needs: nothing.
+  `/` is currently Overview, an operator's dashboard, shown to people who have
+  no idea what they are looking at. Split them: `/` becomes the page that
+  explains the product, and the console moves to its own route.
+  It has to carry four things and stop: the loop in one line, the before/after
+  of an incident, the bounded-autonomy claim, and a way into the live demo. The
+  buyer's arithmetic belongs here too — this is sold against the cost of an
+  incident lasting forty minutes instead of twelve, and the site currently never
+  says so.
+  **No pricing.** Out of scope names billing and multi-tenancy, and a price on a
+  product with no auth invites a question the site cannot answer.
+  **Done when:** someone who has never heard of the project can say what it does
+  after reading only `/`, and reaches a real incident in one click.
+
+- [ ] **R44 — How it works.** Needs: **R43**.
+  One page for the visitor who got interested and now wants to know whether to
+  believe it: the seven stages, the risk tiers and who may authorise each, the
+  two gates that keep this deployment in dry run, and the audit trail — with a
+  link to the real one rather than a description of it.
+  This is where the delisted Audit page earns its keep. The argument it makes is
+  "you can check every claim", which is an argument, not a dashboard.
+  **Done when:** every claim on `/` has a page here that substantiates it, and
+  the risk table matches the registry rather than restating it from memory.
+
+- [ ] **R45 — Deploy Phase 5 and review.** Needs: **R41, R42, R43, R44**.
+  **Done when:** the deployed site opens on something a stranger understands,
+  the console is still one click away, no route was deleted, and `verifyui.py`
+  and `verifycontrast.py` both pass on the new pages.
+  **Stop here for review.**
 
 ---
 

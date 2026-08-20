@@ -4,6 +4,14 @@ import { Empty, Offline, Page, Panel } from "@/components/ui";
 import { getTopology, isInfrastructure, type GraphNode } from "@/lib/api";
 import { layout, NODE_HEIGHT, NODE_WIDTH, severityWeight } from "@/lib/layout";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Attack surface",
+  description:
+    "What can reach what: accounts, hosts, processes and the connections observed between them, with the worst recent severity on each.",
+};
+
 export const dynamic = "force-dynamic";
 
 /**

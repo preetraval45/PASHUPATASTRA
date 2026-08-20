@@ -8,6 +8,7 @@ import { Nav } from "@/components/nav";
 import { Search } from "@/components/search";
 import { ThemeToggle, themeScript } from "@/components/theme";
 import { getHealth } from "@/lib/api";
+import { SITE } from "@/lib/site";
 import "./globals.css";
 
 /**
@@ -41,9 +42,37 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
+const DESCRIPTION =
+  "A security incident-response console: detections become diagnoses, diagnoses are " +
+  "challenged by evidence, and every response is scored and tiered before anyone acts.";
+
 export const metadata: Metadata = {
-  title: "Pashupatastra",
-  description: "Autonomous intelligence for complex systems. Observe. Reason. Act. Verify.",
+  /* Relative URLs in Open Graph tags are not fetched, and a sitemap of relative
+     paths is rejected outright. `metadataBase` is what makes the rest of this
+     file able to use paths. */
+  metadataBase: new URL(SITE),
+  title: {
+    default: "Pashupatastra",
+    /* Every page appends this, so a browser full of tabs during an incident
+       stays navigable and a search result says which page it is. */
+    template: "%s · Pashupatastra",
+  },
+  description: DESCRIPTION,
+  applicationName: "Pashupatastra",
+  openGraph: {
+    type: "website",
+    siteName: "Pashupatastra",
+    title: "Pashupatastra",
+    description: DESCRIPTION,
+    url: SITE,
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Pashupatastra" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pashupatastra",
+    description: DESCRIPTION,
+    images: ["/og.png"],
+  },
   /* Every icon, listed. Declaring `icons` at all replaces Next's file-convention
      detection rather than adding to it, so a partial list silently dropped the
      512px icon and the apple-touch link — both were being generated and neither

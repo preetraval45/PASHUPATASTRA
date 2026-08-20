@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 WEB = Path(__file__).resolve().parents[1] / "apps" / "web"
 
@@ -55,6 +55,27 @@ larger bitmaps are not there. Serving it as a static file leaves one accurate
 declaration."""
 FAVICON_48 = WEB / "public" / "favicon-48x48.png"
 FAVICON_96 = WEB / "public" / "favicon-96x96.png"
+
+OG_OUT = WEB / "public" / "og.png"
+OG_SIZE = (1200, 630)
+"""What every link preview crops to. Smaller and it is upscaled; a different
+ratio and the sides are cut."""
+
+GROUND = (11, 13, 17)
+"""`--ground` in the dark palette — the card should look like the page it opens."""
+
+TAGLINE = "Observe. Reason. Act. Verify."
+
+FONT_CANDIDATES = (
+    "Inter-Regular.ttf",
+    "C:/Windows/Fonts/segoeui.ttf",
+    "/System/Library/Fonts/Helvetica.ttc",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+)
+"""The card is a committed artifact, so a font only has to exist on the machine
+that regenerates it. The wordmark itself comes from the artwork rather than
+from type, so a substitution here changes one line of small text and nothing
+that carries the brand."""
 
 ICO_SIZES = [(16, 16), (32, 32), (48, 48)]
 """A .ico carries several bitmaps. Browsers that ignore the PNG link still find
@@ -121,6 +142,53 @@ def square(image: Image.Image) -> Image.Image:
     return canvas
 
 
+def load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    for candidate in FONT_CANDIDATES:
+        try:
+            return ImageFont.truetype(candidate, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
+
+
+def social_card(lockup: Image.Image) -> Image.Image:
+    """The 1200x630 image a link preview shows.
+
+    Built from the lockup rather than re-typeset, so the name on the card is the
+    same artwork as the name in the header.
+    """
+    card = Image.new("RGB", OG_SIZE, GROUND)
+    draw = ImageDraw.Draw(card)
+
+    # Every position below is derived from the artwork's own height. Hardcoding
+    # them put the tagline through the middle of the spear.
+    width = 720
+    height = round(width * lockup.size[1] / lockup.size[0])
+    art = lockup.resize((width, height), Image.LANCZOS)
+
+    block = height + 34 + 30 + 30 + 3          # art, gap, text, gap, rule
+    top = (OG_SIZE[1] - block) // 2
+    card.paste(art, ((OG_SIZE[0] - width) // 2, top), art)
+
+    font = load_font(30)
+    box = draw.textbbox((0, 0), TAGLINE, font=font)
+    text_y = top + height + 34
+    draw.text(
+        ((OG_SIZE[0] - (box[2] - box[0])) // 2, text_y),
+        TAGLINE,
+        font=font,
+        fill=(141, 151, 166),          # --muted
+    )
+
+    # One rule, in the teal that means perception everywhere else in the UI.
+    rule_y = text_y + 30 + 30
+    draw.rectangle(
+        [(OG_SIZE[0] // 2 - 44, rule_y), (OG_SIZE[0] // 2 + 44, rule_y + 2)],
+        fill=(47, 163, 160),
+    )
+    return card
+
+
 def main() -> int:
     lockup = dehalo(Image.open(LOCKUP_SOURCE))
     lockup.save(LOCKUP_OUT, "WEBP", quality=92, method=6, exact=True)
@@ -144,6 +212,10 @@ def main() -> int:
     print(f"{FAVICON_48.name:18} 48x48")
     print(f"{FAVICON_96.name:18} 96x96")
     print(f"{FAVICON_ICO.name:18} {', '.join(f'{w}x{h}' for w, h in ICO_SIZES)}")
+
+    card = social_card(lockup)
+    card.save(OG_OUT, "PNG", optimize=True)
+    print(f"{OG_OUT.name:18} {OG_SIZE[0]}x{OG_SIZE[1]}  {OG_OUT.stat().st_size // 1024} KB")
 
     # No favicon.svg. The artwork is raster, and wrapping a PNG in an <svg>
     # gives none of the reasons to prefer one — it does not scale, it is not

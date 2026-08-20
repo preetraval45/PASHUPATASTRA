@@ -25,8 +25,16 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  return { title: `${decodeURIComponent(id)} · Pashupatastra` };
+  const id = decodeURIComponent((await params).id);
+  const incident = await getIncident(id);
+  // No suffix here — the root layout's title template appends the site name,
+  // and adding it again produced "INC-2026-0901 · Pashupatastra · Pashupatastra".
+  return {
+    title: id,
+    // The diagnosis, so a search result or a shared link says what happened
+    // rather than repeating the site's own pitch.
+    description: incident?.hypotheses[0]?.statement ?? `Incident ${id}.`,
+  };
 }
 
 const KIND: Record<string, { label: string; status: Status }> = {

@@ -1,6 +1,14 @@
 import { Badge, Ident, Offline, Page, Panel, statusForRisk } from "@/components/ui";
 import { getActions } from "@/lib/api";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Action registry",
+  description:
+    "Every response this system can take, with its risk score, the approval tier it falls into, and whether it can be undone.",
+};
+
 export const dynamic = "force-dynamic";
 
 const TIERS = [

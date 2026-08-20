@@ -1,6 +1,14 @@
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
 import { getAudit, type AuditRecord } from "@/lib/api";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Audit",
+  description:
+    "Append-only record of what was observed, reasoned, authorised and executed — written before an action runs, never after.",
+};
+
 export const dynamic = "force-dynamic";
 
 /**

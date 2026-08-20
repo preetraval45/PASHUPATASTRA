@@ -1,10 +1,22 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Ago, Badge, Ident, KeyValue, Offline, Page, Panel, statusForSeverity } from "@/components/ui";
 import { apiIsReachable, getEvent } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+/** The evidence id. These are the URLs a citation links to, so the tab should
+ *  say which observation is open. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const id = decodeURIComponent((await params).id);
+  return { title: id, description: `The observation ${id}, and where it came from.` };
+}
 
 /**
  * One piece of evidence.

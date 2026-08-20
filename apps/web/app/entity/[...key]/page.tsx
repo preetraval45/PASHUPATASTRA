@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import {
@@ -16,6 +17,20 @@ import {
 import { apiIsReachable, getEntity, type EntityEvent } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+/** The entity key, so a tab and a search result both name the thing they show
+ *  rather than all reading "Pashupatastra". */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ key: string[] }>;
+}): Promise<Metadata> {
+  const key = (await params).key.map(decodeURIComponent).join("/");
+  return {
+    title: key,
+    description: `What ${key} can reach, and what it has been observed doing.`,
+  };
+}
 
 /**
  * Entity keys are `kind:name` and Kubernetes names carry a `/`, so the route is
