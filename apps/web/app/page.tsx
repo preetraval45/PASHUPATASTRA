@@ -97,7 +97,11 @@ export default async function OverviewPage() {
         />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      {/* `[&>*]:min-w-0` because a grid item defaults to `min-width: auto`,
+          which refuses to shrink below its content's minimum contribution. One
+          long line in an incident summary therefore widened the panel to 834px
+          inside a 343px column and took the whole page sideways with it. */}
+      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] [&>*]:min-w-0">
         <Panel
           title="Open incidents"
           aside={open.length > 0 && <Link href="/incidents" className="focusable rounded hover:text-[rgb(var(--ink))]">all incidents →</Link>}

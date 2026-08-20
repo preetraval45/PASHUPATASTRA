@@ -475,12 +475,14 @@ Needs **R8**. Read the frontend design skill before touching a component.
   responsive. `Skeleton` already exists in `components/ui.tsx` and is unused.
   **Done when:** switching scenarios shows a skeleton, never a blank frame.
 
-- [~] **R14 — Mobile pass.** Needs: **R9, R10**. *Two overflows already fixed
-  during R10: the nav needed `min-w-0` to scroll instead of widening the
-  header, and audit summaries ran off a 375px screen because browsers do not
-  break at the underscores in an action id. `verifyui.py` is clean at 375,
-  768 and 1440 — what remains is reading the pages rather than measuring
-  them.*
+- [~] **R14 — Mobile pass.** Needs: **R9, R10**. *Four overflows already fixed
+  during R10 and R11, all the same mistake: a flex or grid item defaults to a
+  minimum size of its content and will not shrink below it. The nav widened the
+  header instead of scrolling, `truncate` could not truncate, a grid panel grew
+  to 834px inside a 343px column, and audit summaries ran off the screen because
+  no browser breaks at the underscores in an action id. `min-w-0` in three
+  places and `break-words` in one. `verifyui.py` is clean at 375, 768 and 1440 —
+  what remains is a person reading the pages rather than a tool measuring them.*
   The dependency table and causal chain at 375px; tables break first.
   **Done when:** no horizontal page scroll at 375px on any route, verified on
   the deployed site.
