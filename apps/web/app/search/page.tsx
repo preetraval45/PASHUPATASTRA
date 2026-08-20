@@ -57,13 +57,13 @@ export default async function SearchPage({
       }
     >
       {!query && (
-        <Empty title="Nothing searched yet">
+        <Empty art="search" title="Nothing searched yet" action={{ href: "/incidents", label: "Open a scenario →" }}>
           Type an account, host, asset, or incident id.
         </Empty>
       )}
 
       {query && total === 0 && (
-        <Empty title={`No entity or incident matches "${query}"`}>
+        <Empty art="search" title={`No entity or incident matches "${query}"`} action={{ href: "/infrastructure", label: "Open the map →" }}>
           Search covers the topology graph and the incident list as the API reports them. An
           entity the platform has never observed will not appear.
         </Empty>

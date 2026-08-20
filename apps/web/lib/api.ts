@@ -179,6 +179,18 @@ export interface Health {
   dry_run: boolean;
   incidents: number;
   audit_records: number;
+  /** Which model is wired up and what it has spent. `configured: false` means
+   *  the deterministic stub is answering — the correct default for a fresh
+   *  checkout, and something a reader should be told rather than have to infer
+   *  from suspiciously tidy reasoning. The API has always returned this; the
+   *  type simply never described it. */
+  model: {
+    provider: string;
+    model: string;
+    configured: boolean;
+    calls: number;
+    total_tokens: number;
+  };
 }
 
 async function post<T>(path: string, body: unknown): Promise<T | null> {

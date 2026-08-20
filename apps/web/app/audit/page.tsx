@@ -37,7 +37,11 @@ export default async function AuditPage() {
         aside={`newest ${records.length}${records.length === LIMIT ? ` of more` : ""}, most recent first`}
       >
         {records.length === 0 ? (
-          <Empty title="Nothing recorded yet.">
+          <Empty
+          art="ledger"
+          title="Nothing recorded yet."
+          action={{ href: "/incidents", label: "Open a scenario →" }}
+        >
             Records appear as Drishti polls, Dharma evaluates, and Astra executes.
           </Empty>
         ) : (

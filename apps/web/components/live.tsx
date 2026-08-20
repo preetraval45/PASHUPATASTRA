@@ -66,7 +66,7 @@ export function Live() {
         }
         aria-live="polite"
       >
-        {paused ? "paused" : seconds < 5 ? "just now" : `${seconds}s ago`}
+        {paused ? "updates paused" : seconds < 5 ? "updated just now" : `updated ${seconds}s ago`}
       </span>
       <button
         type="button"

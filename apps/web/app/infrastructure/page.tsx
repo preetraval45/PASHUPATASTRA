@@ -65,7 +65,7 @@ export default async function InfrastructurePage({
   if (snapshot.nodes.length === 0) {
     return (
       <Page title="Infrastructure">
-        <Empty title="Nothing observed yet.">
+        <Empty art="map" title="Nothing observed yet." action={{ href: "/incidents", label: "Open a scenario →" }}>
           Nothing has been observed yet. Drishti populates this as collectors report
           hosts, accounts, processes and the connections between them.
         </Empty>

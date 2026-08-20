@@ -76,7 +76,7 @@ export default async function EntityPage({ params }: { params: Promise<{ key: st
         aside={`${blast.entity_count} entities · ~${blast.estimated_users.toLocaleString()} users`}
       >
         {blast.entity_count === 0 ? (
-          <Empty title="Nothing observed reaching this.">
+          <Empty art="reach" title="Nothing observed reaching this." action={{ href: "/infrastructure", label: "Open the map →" }}>
             Either nothing can reach it, or nothing has yet shown what does — an observed
             connection or session creates an edge; seeing the entity alone does not.
           </Empty>
@@ -107,7 +107,11 @@ export default async function EntityPage({ params }: { params: Promise<{ key: st
 
       <Panel title="Recent events" aside={`${events.length} newest`}>
         {events.length === 0 ? (
-          <Empty title="No events recorded for this entity yet.">
+          <Empty
+            art="signal"
+            title="No events recorded for this entity yet."
+            action={{ href: "/incidents", label: "Open a scenario →" }}
+          >
             It is in the graph because something referenced it — an owner, or the other
             end of a connection — but no collector has reported on it directly.
           </Empty>

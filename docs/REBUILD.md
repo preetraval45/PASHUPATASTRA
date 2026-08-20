@@ -464,11 +464,17 @@ Needs **R8**. Read the frontend design skill before touching a component.
   entities, 4/5/5 cited events and 10/11/11 audit records, and only the
   beaconing scenario carries an `escalation`.*
 
-- [ ] **R12 — Real empty states.** Needs: **R11**.
-  Audit's "Nothing recorded yet" and Overview's "No activity recorded yet" are
-  one flat sentence each. Keep the sentence — it is good — and give it an icon
-  and a next action, which after R11 is "run a scenario".
-  **Done when:** every empty state on every page offers a next action.
+- [x] **R12 — Real empty states.** Needs: **R11**.
+  All ten of them, with line art, the sentence, and somewhere to go.
+  **The action says "open a scenario", never "run" one.** R11 settled that
+  scenarios are links rather than triggers on this deployment, so a button
+  offering to run one would not work — and an empty state whose next action
+  does nothing is worse than one with no action at all.
+  The overview's activity panel had a bare sentence and no explanation; it now
+  says the thing worth knowing, which is that records are written *before* an
+  action runs, so an empty log means nothing was attempted rather than that
+  something was attempted and lost.
+  *Evidence: `verifyui.py` 18/18, contrast unchanged.*
 
 - [ ] **R13 — Loading and transition states.** Needs: **R9, R10, R11**.
   Skeletons for incident and infrastructure so switching scenarios feels

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { WhatThisIs } from "@/components/whatthisis";
 import {
   Ago,
   Badge,
@@ -38,6 +39,8 @@ export default async function OverviewPage() {
       title="Overview"
       description="System state, open incidents, and the autonomy posture currently in force."
     >
+      <WhatThisIs health={health} />
+
       {/* The headline is a sentence, not a number. An operator arriving cold
           needs the verdict first and the metrics second. */}
       <section
@@ -107,7 +110,7 @@ export default async function OverviewPage() {
           aside={open.length > 0 && <Link href="/incidents" className="focusable rounded hover:text-[rgb(var(--ink))]">all incidents →</Link>}
         >
           {open.length === 0 ? (
-            <Empty title="Quiet.">
+            <Empty art="quiet" title="Quiet." action={{ href: "/incidents", label: "Open a scenario →" }}>
               Incidents appear here when Drishti correlates related detections. Quiet
               means nothing was detected, which is not the same as nothing happening.
             </Empty>
@@ -177,7 +180,11 @@ export default async function OverviewPage() {
             aside={<Link href="/audit" className="focusable rounded hover:text-[rgb(var(--ink))]">audit →</Link>}
           >
             {!audit?.length ? (
-              <Empty title="No activity recorded yet." />
+              <Empty art="ledger" title="No activity recorded yet." action={{ href: "/incidents", label: "Open a scenario →" }}>
+                Records are written before an action runs, never after, so an empty log
+                means nothing has been attempted — not that something was attempted and
+                lost.
+              </Empty>
             ) : (
               <ul className="space-y-3 text-xs">
                 {audit.slice(0, 6).map((record, index) => (

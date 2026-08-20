@@ -72,7 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Sigil />
             </Link>
             <Nav />
-            <div className="flex w-full items-center gap-3 sm:ml-auto sm:w-auto">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:ml-auto sm:w-auto">
               <Suspense fallback={null}>
                 <Search />
               </Suspense>
@@ -116,16 +116,18 @@ function ModeIndicator({
 
   const live = !health.dry_run;
   return (
-    <div className="flex items-center gap-3 text-xs sm:gap-4">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:gap-x-4">
       {health.status !== "ok" && (
         <span
           className="text-[rgb(var(--warn))]"
-          title="The audit trail or incident store is not durable — it will not survive a restart."
+          title="Nothing is written to a database. Incidents, approvals and the audit log live in the server process and are lost when it restarts."
         >
-          <span aria-hidden="true">◆</span> degraded
+          <span aria-hidden="true">◆</span> memory only
         </span>
       )}
-      <span className="text-[rgb(var(--faint))]">{health.environment}</span>
+      <span className="text-[rgb(var(--faint))]" title="Which environment this deployment reports itself as.">
+        env {health.environment}
+      </span>
       <span
         className={
           live
@@ -133,7 +135,7 @@ function ModeIndicator({
             : "rounded border border-[rgb(var(--edge))] px-2 py-0.5 text-[rgb(var(--muted))]"
         }
       >
-        {live ? "LIVE EXECUTION" : "dry run"}
+        {live ? "LIVE EXECUTION" : "dry run · nothing executes"}
       </span>
     </div>
   );

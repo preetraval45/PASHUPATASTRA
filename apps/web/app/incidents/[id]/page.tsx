@@ -116,7 +116,7 @@ export default async function IncidentDetailPage({
 
       <Panel title="Audit trail" aside={`${audit?.length ?? 0} records`}>
         {!audit?.length ? (
-          <Empty title="No audit records for this incident yet.">
+          <Empty art="ledger" title="No audit records for this incident yet.">
             Records appear as policy evaluates, actions execute, and verification runs.
           </Empty>
         ) : (

@@ -146,15 +146,72 @@ export function Stat({
 }
 
 /**
+ * Line art for empty states.
+ *
+ * Drawn rather than pulled from an icon set, because there are six of them and
+ * they only need to say which *kind* of nothing this is — a quiet system, an
+ * unwritten ledger, a map with no edges. `currentColor` so they inherit the
+ * theme instead of carrying their own.
+ */
+const EMPTY_ART = {
+  quiet: <><path d="M2 15h7l2.5-5 3 9 2.5-4h7" /></>,
+  ledger: <><rect x="4" y="3" width="18" height="20" rx="2" /><path d="M9 9h8M9 13h8M9 17h5" /></>,
+  map: <><circle cx="5" cy="13" r="2.5" /><circle cx="21" cy="6" r="2.5" /><circle cx="21" cy="20" r="2.5" /><path d="M7.4 12 18.6 6.9M7.4 14l11.2 5.1" /></>,
+  reach: <><circle cx="5" cy="13" r="2.5" /><circle cx="21" cy="13" r="2.5" /><path d="M8 13h10" strokeDasharray="2 3" /></>,
+  search: <><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5 22 22" /></>,
+  signal: <><path d="M3 20V10M9 20V5M15 20v-8M21 20v-4" /></>,
+} as const;
+
+export type EmptyArt = keyof typeof EMPTY_ART;
+
+/**
  * An empty state says what would fill it and how to make that happen. "No data"
  * alone leaves an operator unsure whether the system is quiet or broken — and
  * those need opposite responses.
+ *
+ * Every one of these offers somewhere to go. A dead end that explains itself is
+ * still a dead end, and on a demo the visitor who reaches one has usually just
+ * arrived.
  */
-export function Empty({ title, children }: { title: string; children?: ReactNode }) {
+export function Empty({
+  art,
+  title,
+  children,
+  action,
+}: {
+  art?: EmptyArt;
+  title: string;
+  children?: ReactNode;
+  action?: { href: string; label: string };
+}) {
   return (
-    <div className="panel p-8 text-center">
+    <div className="panel flex flex-col items-center p-8 text-center">
+      {art && (
+        <svg
+          viewBox="0 0 24 24"
+          className="mb-4 h-7 w-7 text-[rgb(var(--edge-strong))]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          {EMPTY_ART[art]}
+        </svg>
+      )}
       <p className="text-sm text-[rgb(var(--ink))]">{title}</p>
-      {children && <div className="mt-2 text-xs text-[rgb(var(--muted))]">{children}</div>}
+      {children && (
+        <div className="mt-2 max-w-md text-xs text-[rgb(var(--muted))]">{children}</div>
+      )}
+      {action && (
+        <Link
+          href={action.href}
+          className="focusable mt-4 rounded border border-[rgb(var(--edge-strong))] px-3 py-1.5 text-xs hover:bg-[rgb(var(--raised))]"
+        >
+          {action.label}
+        </Link>
+      )}
     </div>
   );
 }

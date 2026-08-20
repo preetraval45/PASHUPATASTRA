@@ -17,7 +17,7 @@ export default async function IncidentsPage() {
       description="One incident per failure, not one per alert. Every diagnosis cites the telemetry that supports it."
     >
       {incidents.length === 0 ? (
-        <Empty title="No incidents.">
+        <Empty art="quiet" title="No incidents.">
           They appear when Drishti correlates failures that are adjacent in the topology
           graph and in time — two unrelated accounts alerting in the same minute stay two
           incidents.
