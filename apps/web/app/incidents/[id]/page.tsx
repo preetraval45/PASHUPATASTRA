@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { VerdictPanel } from "@/components/approval";
 import { IncidentView } from "@/components/incident";
+import { Scenarios } from "@/components/scenarios";
 import { Timeline } from "@/components/timeline";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
 import {
@@ -11,6 +12,7 @@ import {
   getActions,
   getIncident,
   getIncidentAudit,
+  getIncidents,
   type AuditRecord,
 } from "@/lib/api";
 
@@ -46,10 +48,11 @@ export default async function IncidentDetailPage({
   const { id: raw } = await params;
   const id = decodeURIComponent(raw);
 
-  const [incident, actions, audit] = await Promise.all([
+  const [incident, actions, audit, all] = await Promise.all([
     getIncident(id),
     getActions(),
     getIncidentAudit(id),
+    getIncidents(),
   ]);
 
   // `null` means the API could not be reached; a 404 is handled by the client
@@ -124,6 +127,11 @@ export default async function IncidentDetailPage({
           </ol>
         )}
       </Panel>
+
+      {/* Switching without going back to the list. The alternative is a visitor
+          reading one incident and leaving, which is what happened before this
+          existed. */}
+      <Scenarios incidents={all ?? []} currentId={incident.id} />
     </Page>
   );
 }

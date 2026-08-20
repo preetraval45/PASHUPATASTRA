@@ -28,10 +28,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from pashupatastra import Edge, EntityKind, EntityRef, Node
+from pashupatastra import Edge, EntityKind, EntityRef, IncidentState, Node
 from pashupatastra.scenarios import Scenario, load_scenarios
 
 from .demoincidents import scenarios as security_scenarios
+from .engines.audit import AUDIT, AuditKind, AuditRecord
 
 def _corpus() -> Path:
     """Locate `benchmark/incidents/` by walking up from this module.
@@ -119,12 +120,74 @@ def seed_security(graph, store, incidents, now: datetime | None = None) -> dict[
     store.save_events(events)
     for scenario in scenarios:
         incidents.save(scenario.incident)
+        _audit(scenario, now)
 
     return {
         "incidents": len(scenarios),
         "entities": len(entities),
         "events": len(events),
+        "audit_records": len(AUDIT),
     }
+
+
+def _audit(scenario, now: datetime) -> None:
+    """Write the trail the scenario implies, derived from the scenario itself.
+
+    Each incident already carries transitions — detected, correlated, diagnosed,
+    awaiting a decision — and each transition names an actor and a justification.
+    Writing audit records from those rather than composing a second story keeps
+    the timeline and the audit page from disagreeing about what happened.
+
+    Every record says which scenario produced it, so nothing here can be read as
+    something the system observed.
+    """
+    incident = scenario.incident
+
+    for signal in scenario.signals:
+        AUDIT.append(
+            AuditRecord(
+                at=now + timedelta(seconds=signal.at_offset_seconds),
+                kind=AuditKind.OBSERVATION,
+                actor="drishti",
+                incident_ref=incident.id,
+                summary=signal.message,
+                detail={"event_id": signal.id, "scenario": incident.id},
+            )
+        )
+
+    for hypothesis in incident.hypotheses:
+        # The alternatives are recorded too. A trail that keeps only the answer
+        # cannot show that anything else was considered, and "what else did it
+        # think" is the first question anyone asks of a diagnosis.
+        ruled_out = " · ruled out by " + ", ".join(hypothesis.contradicted_by) if hypothesis.contradicted_by else ""
+        AUDIT.append(
+            AuditRecord(
+                at=incident.opened_at,
+                kind=AuditKind.HYPOTHESIS,
+                actor="buddhi",
+                incident_ref=incident.id,
+                summary=f"{hypothesis.statement} ({hypothesis.confidence:.0%}){ruled_out}",
+                detail={"evidence": hypothesis.evidence, "scenario": incident.id},
+            )
+        )
+
+    for transition in incident.transitions:
+        AUDIT.append(
+            AuditRecord(
+                at=transition.at,
+                kind=(
+                    AuditKind.ESCALATION
+                    if transition.to_state is IncidentState.ESCALATED
+                    else AuditKind.POLICY_EVALUATION
+                    if transition.actor == "dharma"
+                    else AuditKind.OBSERVATION
+                ),
+                actor=transition.actor,
+                incident_ref=incident.id,
+                summary=f"{transition.to_state.value.replace('_', ' ')} — {transition.justification}",
+                detail={"from": transition.from_state, "scenario": incident.id},
+            )
+        )
 
 
 def seed(graph, store, corpus: Path | str | None = None, now: datetime | None = None) -> dict[str, int]:

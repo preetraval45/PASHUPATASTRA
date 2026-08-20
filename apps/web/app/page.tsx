@@ -181,7 +181,11 @@ export default async function OverviewPage() {
                     <span className="shrink-0 text-[rgb(var(--faint))]">
                       <Ago at={record.at} />
                     </span>
-                    <span className="truncate" title={record.summary}>
+                    {/* `min-w-0` is what lets `truncate` truncate. A flex item
+                        will not shrink below its content width, so `nowrap`
+                        pushed the row out instead of clipping it — 239px past
+                        the edge of a 375px screen. */}
+                    <span className="min-w-0 truncate" title={record.summary}>
                       {record.summary}
                     </span>
                   </li>

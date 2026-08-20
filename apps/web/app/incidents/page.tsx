@@ -1,4 +1,5 @@
 import { IncidentView } from "@/components/incident";
+import { Scenarios } from "@/components/scenarios";
 import { Empty, Offline, Page } from "@/components/ui";
 import { getActions, getIncidents } from "@/lib/api";
 
@@ -22,9 +23,12 @@ export default async function IncidentsPage() {
           incidents.
         </Empty>
       ) : (
-        incidents.map((incident) => (
-          <IncidentView key={incident.id} incident={incident} risk={risk} linkToDetail />
-        ))
+        <>
+          <Scenarios incidents={incidents} />
+          {incidents.map((incident) => (
+            <IncidentView key={incident.id} incident={incident} risk={risk} linkToDetail />
+          ))}
+        </>
       )}
     </Page>
   );

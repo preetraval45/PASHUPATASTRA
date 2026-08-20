@@ -446,12 +446,23 @@ Needs **R8**. Read the frontend design skill before touching a component.
   alone was the effective-risk number, which now reads `60 · medium · base
   45` using the `riskBand` label that already existed and was unused.
 
-- [ ] **R11 — Scenario picker.** Needs: **R5, R8**.
-  The prompt calls this the single highest-value UI change, and it is: today one
-  incident exists, forever. A control that spins up any scenario on demand turns
-  a screenshot into something a visitor clicks through.
-  **Done when:** a visitor can switch between all three incidents from the UI,
-  and each lands with its own entities, events and audit trail.
+- [x] **R11 — Scenario picker.** Needs: **R5, R8**.
+  A card per scenario, on the incident list and on each incident, saying what
+  its scenario is *about* — the reading that looked right and was wrong — all
+  derived from the incident the API returned, so nothing is described twice.
+  **Links, not a "simulate" button, and that is a deliberate limit.** Running a
+  scenario on demand means writing state, and state lives in the process: on
+  Lambda a write lands in one container and the next read may reach another.
+  Tested — a POST's audit record did survive six reads, so it would work most
+  of the time and fail unpredictably, which is worse than a design that cannot
+  fail. Triggering one for real belongs after **R18** makes state durable.
+  The audit trail was missing entirely (`/audit` returned `[]`), so each
+  scenario now seeds one derived from its own signals, hypotheses and
+  transitions rather than composed separately — the timeline and the audit
+  page cannot disagree about what happened.
+  *Evidence: switching verified by clicking; 0901/0902/0903 land with 3/3/5
+  entities, 4/5/5 cited events and 10/11/11 audit records, and only the
+  beaconing scenario carries an `escalation`.*
 
 - [ ] **R12 — Real empty states.** Needs: **R11**.
   Audit's "Nothing recorded yet" and Overview's "No activity recorded yet" are

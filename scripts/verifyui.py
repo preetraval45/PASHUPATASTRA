@@ -37,6 +37,11 @@ def check(page, url: str, route: str, label: str, width: int) -> list[str]:
     page.on("pageerror", lambda e: errors.append(str(e)))
 
     page.goto(url + route, wait_until="networkidle")
+    # Wait for the webfonts. `display: swap` paints a fallback first, and the
+    # fallback is wider — measuring before the real face arrives reports an
+    # overflow that exists for a few hundred milliseconds and then does not.
+    page.evaluate("() => document.fonts && document.fonts.ready")
+    page.wait_for_timeout(120)
 
     if route == "/":
         # The name lives in the logo artwork now, so it reaches a reader through
