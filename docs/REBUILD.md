@@ -556,9 +556,15 @@ Needs **R8**. Read the frontend design skill before touching a component.
   **Note:** Search Console submission and reindexing are yours to do and take
   days to weeks. Nothing in code makes Google show a favicon on any timeline.
 
-- [ ] **R17 — Deploy Phase 2 and review.** Needs: **R9–R16**.
-  **Done when:** the live site looks finished without the chat existing.
-  **Stop here for review.**
+- [x] **R17 — Deploy Phase 2 and review.** Needs: **R9–R16**.
+  *Evidence, against the deployed site: 18/18 layout checks at 375, 768 and
+  1440; every colour pairing meets WCAG AA in both themes; nine routes with
+  their own title and description; six icon files and a manifest all 200;
+  `robots.txt`, `sitemap.xml` (8 URLs, 3 incidents from the API) and a
+  1200×630 card. Read in both themes at desktop and at 375px.*
+  **Phase 2 is closed.** Phase 3 builds the chat agent on this demo and needs
+  the Anthropic API, which has no free tier. **Phase A is the agent that
+  watches a real machine, and is what the owner asked for.**
 
 ---
 
