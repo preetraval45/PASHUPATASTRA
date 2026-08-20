@@ -396,10 +396,16 @@ them genuinely deleted instead.
   timestamp passed for fifteen minutes and failed for the rest of the day.
   *Evidence: 789 tests, `verifyui.py` 18/18 across six routes.*
 
-- [ ] **R8 — Deploy Phase 1 and review.** Needs: **R1, R6, R7**.
-  Build, deploy both halves, walk every page.
-  **Done when:** the live site shows three security incidents, security actions
-  only, resolving evidence, and no SRE language. **Stop here for review.**
+- [x] **R8 — Deploy Phase 1 and review.** Needs: **R1, R6, R7**.
+  *Evidence, against the deployed site and API: three security incidents; 21
+  security actions with no infrastructure action leaking; 14 citations checked
+  and none dead; every causal step ATT&CK-mapped; 11 entities and 0 invented
+  access paths; 11 routes walked at 1440px with no page errors and no SRE
+  vocabulary except the deliberate hits listed in R7; citation, entity and
+  ATT&CK links all followed by click. Health reports `degraded`, `dry run`,
+  and `echo` — the deployment states what it is.*
+  **Phase 1 is closed. Phase 2 polishes the demo; Phase A is the agent that
+  watches a real machine, and is what the owner actually asked for.**
 
 ---
 
