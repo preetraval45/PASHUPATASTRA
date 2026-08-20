@@ -342,11 +342,60 @@ export function Technique({ technique }: { technique: AttackTechnique | null }) 
   );
 }
 
+/**
+ * Placeholders shaped like the page that is arriving.
+ *
+ * The shape is the whole point. A generic skeleton is a flash of something the
+ * page never becomes, and the eye has to re-find everything when the real
+ * content lands — which is worse than a brief blank, not better. So each route
+ * gets a skeleton that matches its own layout.
+ *
+ * `animate-pulse` says the wait is progressing rather than stuck. The
+ * reduced-motion rule in globals.css flattens it to nothing for anyone who has
+ * asked for that.
+ */
+export function SkeletonBar({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded bg-[rgb(var(--raised))] ${className}`} />;
+}
+
+export function SkeletonPanel({
+  lines = 3,
+  className = "",
+}: {
+  lines?: number;
+  className?: string;
+}) {
+  return (
+    <div className={`panel animate-pulse p-4 sm:p-5 ${className}`}>
+      <div className="h-3 w-28 rounded bg-[rgb(var(--raised))]" />
+      <div className="mt-4 space-y-2.5">
+        {Array.from({ length: lines }).map((_, i) => (
+          <div
+            key={i}
+            className="h-3 rounded bg-[rgb(var(--raised))]"
+            style={{ width: `${92 - i * 13}%` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** The page heading and its description, which every route has. */
+export function SkeletonHeader() {
+  return (
+    <div className="space-y-3">
+      <SkeletonBar className="h-7 w-52" />
+      <SkeletonBar className="h-3 w-full max-w-xl" />
+    </div>
+  );
+}
+
 export function Skeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div className="space-y-3" aria-hidden="true">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-14 rounded-lg border border-[rgb(var(--edge))] bg-[rgb(var(--panel))]" />
+        <div key={i} className="h-14 animate-pulse rounded-lg border border-[rgb(var(--edge))] bg-[rgb(var(--panel))]" />
       ))}
     </div>
   );

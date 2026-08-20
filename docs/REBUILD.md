@@ -476,10 +476,19 @@ Needs **R8**. Read the frontend design skill before touching a component.
   something was attempted and lost.
   *Evidence: `verifyui.py` 18/18, contrast unchanged.*
 
-- [ ] **R13 — Loading and transition states.** Needs: **R9, R10, R11**.
-  Skeletons for incident and infrastructure so switching scenarios feels
-  responsive. `Skeleton` already exists in `components/ui.tsx` and is unused.
-  **Done when:** switching scenarios shows a skeleton, never a blank frame.
+- [x] **R13 — Loading and transition states.** Needs: **R9, R10, R11**.
+  *(The note that `Skeleton` was unused was wrong — `app/loading.tsx` already
+  used it. The real problem was that one Overview-shaped skeleton served every
+  route, so loading an incident flashed the shape of a different page.)*
+  Eight route-level loading states now, each shaped like the page it precedes:
+  the map gets a tally strip and a map-sized block, incidents gets the
+  scenario-card grid. A generic skeleton is a flash of something the page
+  never becomes, and the eye has to re-find everything when the real content
+  lands.
+  *Evidence: with the RSC payload delayed, switching scenarios shows the
+  loading region with 7 pulsing placeholders and the previous incident gone —
+  no blank frame and no stale content. Each route's skeleton verified to carry
+  its own layout rather than the Overview's.*
 
 - [~] **R14 — Mobile pass.** Needs: **R9, R10**. *Four overflows already fixed
   during R10 and R11, all the same mistake: a flex or grid item defaults to a

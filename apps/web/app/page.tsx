@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { WhatThisIs } from "@/components/whatthisis";
 import {
   Ago,
   Badge,
@@ -39,8 +38,6 @@ export default async function OverviewPage() {
       title="Overview"
       description="System state, open incidents, and the autonomy posture currently in force."
     >
-      <WhatThisIs health={health} />
-
       {/* The headline is a sentence, not a number. An operator arriving cold
           needs the verdict first and the metrics second. */}
       <section
