@@ -17,10 +17,13 @@
   --edge: 33 39 48;
   --edge-strong: 51 60 72;
 
-  /* Ink. */
+  /* Ink. Three steps, and the gap between the quietest two is narrower than a
+     designer would choose: `--faint` carries real text — evidence ids, counts,
+     timestamps — so it has to clear 4.5:1 like anything else. Meeting the
+     contrast floor compresses the ramp, and the floor wins. */
   --ink: 233 237 243;
   --muted: 141 151 166;
-  --faint: 100 110 124;
+  --faint: 126 136 149;
 
   /* Brand: teal is perception, gold is action. Nothing is gold until it can
      act — which is also the product's argument. */
@@ -53,13 +56,13 @@
 
   --ink: 24 27 32;
   --muted: 92 100 112;
-  --faint: 128 136 148;
+  --faint: 100 108 120;
 
   --astra: 17 116 114;
   --gold: 146 113 12;
 
   --ok: 4 120 87;
-  --warn: 161 98 7;
+  --warn: 145 86 5;
   --high: 154 52 18;
   --crit: 190 18 60;
 }

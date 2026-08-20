@@ -1,5 +1,5 @@
 import { Badge, Ident, Panel, statusForRisk, type Status } from "@/components/ui";
-import type { Verdict } from "@/lib/api";
+import { riskBand, type Verdict } from "@/lib/api";
 
 const TIER_LABEL: Record<string, { label: string; status: Status; explain: string }> = {
   autonomous: {
@@ -85,8 +85,12 @@ export function VerdictPanel({
           >
             {verdict.effective_risk}
           </div>
-          <div className="mt-1 text-xs text-[rgb(var(--faint))]">
-            base {verdict.base_risk}
+          {/* The band in words, not only in colour. A number tinted amber says
+              "medium" to someone who can see the tint and says nothing to
+              anyone else — and this is the number that decides whether a human
+              has to approve. */}
+          <div className="mt-1 text-xs text-[rgb(var(--muted))]">
+            {riskBand(verdict.effective_risk).label} · base {verdict.base_risk}
           </div>
         </div>
 

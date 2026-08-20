@@ -11,11 +11,28 @@ export const dynamic = "force-dynamic";
  * degraded, the state in words. An operator with a colour-vision deficiency,
  * or a screenshot pasted into a monochrome ticket, must read the same thing.
  */
+// Tokens, not literals. These were `text-rose-400` and `#fb7185` — the dark
+// palette, hardcoded — so the map kept dark-theme status colours on a white
+// page and the glyphs measured 1.6:1 to 2.7:1 in light mode. The classes are
+// written out rather than composed from a token name because Tailwind reads
+// source text, and a class assembled at runtime is a class it never generates.
 const STATUS = {
-  critical: { glyph: "▲", label: "critical", className: "text-rose-400", stroke: "#fb7185" },
-  warning: { glyph: "◆", label: "degraded", className: "text-amber-400", stroke: "#fbbf24" },
-  info: { glyph: "●", label: "healthy", className: "text-emerald-400", stroke: "#34d399" },
-  unknown: { glyph: "○", label: "no data", className: "text-[rgb(var(--muted))]", stroke: "#4b5563" },
+  critical: {
+    glyph: "▲", label: "critical",
+    className: "text-[rgb(var(--crit))]", stroke: "rgb(var(--crit))",
+  },
+  warning: {
+    glyph: "◆", label: "degraded",
+    className: "text-[rgb(var(--warn))]", stroke: "rgb(var(--warn))",
+  },
+  info: {
+    glyph: "●", label: "healthy",
+    className: "text-[rgb(var(--ok))]", stroke: "rgb(var(--ok))",
+  },
+  unknown: {
+    glyph: "○", label: "no data",
+    className: "text-[rgb(var(--muted))]", stroke: "rgb(var(--edge-strong))",
+  },
 } as const;
 
 function statusOf(node: GraphNode) {

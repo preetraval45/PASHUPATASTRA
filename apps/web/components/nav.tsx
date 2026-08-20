@@ -15,7 +15,7 @@ export function Nav() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Primary" className="-mx-1 flex gap-1 overflow-x-auto text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Primary" className="-mx-1 flex min-w-0 gap-1 overflow-x-auto text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {NAV.map((item) => {
         // Exact match for the root, prefix match elsewhere, so a detail page
         // still shows its section as current.

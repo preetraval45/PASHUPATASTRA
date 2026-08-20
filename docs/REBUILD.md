@@ -427,11 +427,24 @@ Needs **R8**. Read the frontend design skill before touching a component.
   or JetBrains Mono — zero fallbacks — and zero requests to google/gstatic.
   `verifyui.py` 18/18.*
 
-- [ ] **R10 — Status and contrast pass.** Needs: **R8**.
-  Keep the ▲ ◆ ● ○ system — it already encodes status by shape as well as
-  colour. Verify every status token against both themes.
-  **Done when:** every status pairing meets WCAG AA (4.5:1 for text, 3:1 for
-  the glyph) in light and dark, with the measured ratios reported.
+- [x] **R10 — Status and contrast pass.** Needs: **R8**.
+  `scripts/verifycontrast.py` measures in a real browser rather than reading
+  the palette — a badge tints its background with `--crit` at 10% over a
+  panel, so the colour behind the text exists only after compositing and the
+  palette file cannot tell you what it is.
+  **18 failing pairings found, worst 1.56:1.** The map's status colours were
+  hardcoded to the dark theme (`text-rose-400`, `#fb7185`), so its glyphs kept
+  dark values on a white page. `--faint` failed in *both* themes while
+  carrying real text, and light `--warn` failed marginally.
+  *Evidence: 1113 text elements across 5 routes × 2 themes, every pairing at
+  or above its threshold, worst now 4.65:1. SVG confirmed resolving tokens
+  per theme — `rgb(145, 86, 5)` light, `rgb(251, 191, 36)` dark.*
+  The ramp is compressed as a result: `--faint` carries evidence ids and
+  counts, so it has to clear 4.5:1 like anything else, which pushes it close
+  to `--muted`. The floor wins over the hierarchy.
+  Shape-redundancy re-checked too: the one place status was carried by colour
+  alone was the effective-risk number, which now reads `60 · medium · base
+  45` using the `riskBand` label that already existed and was unused.
 
 - [ ] **R11 — Scenario picker.** Needs: **R5, R8**.
   The prompt calls this the single highest-value UI change, and it is: today one
@@ -451,7 +464,12 @@ Needs **R8**. Read the frontend design skill before touching a component.
   responsive. `Skeleton` already exists in `components/ui.tsx` and is unused.
   **Done when:** switching scenarios shows a skeleton, never a blank frame.
 
-- [ ] **R14 — Mobile pass.** Needs: **R9, R10**.
+- [~] **R14 — Mobile pass.** Needs: **R9, R10**. *Two overflows already fixed
+  during R10: the nav needed `min-w-0` to scroll instead of widening the
+  header, and audit summaries ran off a 375px screen because browsers do not
+  break at the underscores in an action id. `verifyui.py` is clean at 375,
+  768 and 1440 — what remains is reading the pages rather than measuring
+  them.*
   The dependency table and causal chain at 375px; tables break first.
   **Done when:** no horizontal page scroll at 375px on any route, verified on
   the deployed site.
