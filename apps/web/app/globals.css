@@ -65,6 +65,11 @@
 }
 
 body {
+  /* Inter's character variants, which is why the face is Inter: cv02/03/04
+     disambiguate glyphs that matter in a console, and `tnum` keeps digits from
+     shifting between refreshes. They were declared long before the font was
+     loaded and did nothing until now. */
+  font-family: theme("fontFamily.sans");
   background-color: rgb(var(--ground));
   color: rgb(var(--ink));
   font-feature-settings: "cv02", "cv03", "cv04", "tnum";
@@ -78,7 +83,7 @@ body {
 }
 
 .mono {
-  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  font-family: theme("fontFamily.mono");
   font-variant-numeric: tabular-nums;
 }
 

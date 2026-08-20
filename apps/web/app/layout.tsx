@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -9,6 +10,37 @@ import { ThemeToggle, themeScript } from "@/components/theme";
 import { getHealth } from "@/lib/api";
 import "./globals.css";
 
+/**
+ * The pairing: Inter for prose, JetBrains Mono for anything an operator might
+ * retype or paste.
+ *
+ * Inter because this is a dense data interface and it was already assumed —
+ * `globals.css` has been asking for `cv02`/`cv03`/`cv04` since it was written,
+ * and those are Inter character variants, so they have been inert on a system
+ * font this whole time.
+ *
+ * JetBrains Mono for a functional reason rather than taste: the monospace here
+ * carries event ids, IP addresses and technique codes, and it has a slashed
+ * zero and unambiguous `1`/`l`/`I`. Misreading `SEC-0001-l` costs an operator
+ * more than a typeface preference is worth.
+ *
+ * Loaded through `next/font`, which self-hosts them at build time. A visitor's
+ * browser makes no request to Google — a security console that reports every
+ * page view to a third party is a poor advertisement for itself, and `display:
+ * swap` means text is readable before the face arrives rather than invisible.
+ */
+const sans = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-mono",
+});
+
 export const metadata: Metadata = {
   title: "Pashupatastra",
   description: "Autonomous intelligence for complex systems. Observe. Reason. Act. Verify.",
@@ -18,7 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const health = await getHealth();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
         {/* Before first paint: a flash of the wrong theme on every navigation
             makes a tool feel unreliable. */}

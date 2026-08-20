@@ -413,12 +413,19 @@ them genuinely deleted instead.
 
 Needs **R8**. Read the frontend design skill before touching a component.
 
-- [ ] **R9 — Typography.** Needs: **R8**.
-  One deliberate pairing: a technical monospace for ids, evidence tags, risk
-  scores and timestamps; a clean sans for prose. Self-hosted or Google Fonts,
-  with a real fallback stack.
-  **Done when:** applied consistently across all pages, and no element still
-  falls back to the browser default sans.
+- [x] **R9 — Typography.** Needs: **R8**.
+  **Inter for prose, JetBrains Mono for anything retyped or pasted.**
+  Inter because it was already assumed — `globals.css` had been asking for
+  `cv02`/`cv03`/`cv04` since it was written, and those are Inter character
+  variants, inert on a system font all this time. JetBrains Mono for a
+  functional reason rather than taste: the monospace carries event ids, IPs
+  and technique codes, and it has a slashed zero and unambiguous `1`/`l`/`I`.
+  Loaded via `next/font`, which self-hosts at build time — **a visitor's
+  browser makes no request to Google.** A security console that reports every
+  page view to a third party argues against itself.
+  *Evidence: across five routes, every text-bearing element computes to Inter
+  or JetBrains Mono — zero fallbacks — and zero requests to google/gstatic.
+  `verifyui.py` 18/18.*
 
 - [ ] **R10 — Status and contrast pass.** Needs: **R8**.
   Keep the ▲ ◆ ● ○ system — it already encodes status by shape as well as
