@@ -31,7 +31,7 @@ export function ThemeToggle() {
       onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
       title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-      className="focusable rounded border border-[rgb(var(--edge))] px-2 py-0.5 text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"
+      className="focusable inline-flex min-h-6 min-w-6 items-center justify-center rounded border border-[rgb(var(--edge))] px-2 text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"
     >
       <span aria-hidden="true">{theme === "dark" ? "☾" : "☀"}</span>
     </button>

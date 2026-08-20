@@ -104,7 +104,7 @@ export default async function OverviewPage() {
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] [&>*]:min-w-0">
         <Panel
           title="Open incidents"
-          aside={open.length > 0 && <Link href="/incidents" className="focusable rounded hover:text-[rgb(var(--ink))]">all incidents →</Link>}
+          aside={open.length > 0 && <Link href="/incidents" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">all incidents →</Link>}
         >
           {open.length === 0 ? (
             <Empty art="quiet" title="Quiet." action={{ href: "/incidents", label: "Open a scenario →" }}>
@@ -174,7 +174,7 @@ export default async function OverviewPage() {
 
           <Panel
             title="Recent activity"
-            aside={<Link href="/audit" className="focusable rounded hover:text-[rgb(var(--ink))]">audit →</Link>}
+            aside={<Link href="/audit" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">audit →</Link>}
           >
             {!audit?.length ? (
               <Empty art="ledger" title="No activity recorded yet." action={{ href: "/incidents", label: "Open a scenario →" }}>

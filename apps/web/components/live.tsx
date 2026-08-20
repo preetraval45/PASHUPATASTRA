@@ -78,7 +78,7 @@ export function Live() {
           setPaused((p) => !p);
         }}
         aria-pressed={paused}
-        className="focusable rounded border border-[rgb(var(--edge))] px-2 py-0.5 text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"
+        className="focusable inline-flex min-h-6 items-center rounded border border-[rgb(var(--edge))] px-2 text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"
       >
         {paused ? "resume" : "pause"}
       </button>

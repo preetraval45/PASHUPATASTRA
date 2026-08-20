@@ -235,7 +235,7 @@ export default async function InfrastructurePage({
                 <li key={node.key}>
                   <Link
                     href={`/entity/${node.key}`}
-                    className="focusable flex items-center gap-2 rounded hover:text-[rgb(var(--ink))]"
+                    className="focusable flex min-h-6 items-center gap-2 rounded py-0.5 hover:text-[rgb(var(--ink))]"
                   >
                     <span className={status.className} aria-hidden="true">
                       {status.glyph}
@@ -258,7 +258,7 @@ export default async function InfrastructurePage({
           </span>
         </summary>
         <div className="overflow-x-auto border-t border-[rgb(var(--edge))]">
-          <table className="w-full min-w-[36rem] text-left text-sm">
+          <table className="stacked w-full min-w-[36rem] text-left text-sm">
             <caption className="sr-only">
               Every mapped entity with its status and what it can reach
             </caption>
@@ -283,12 +283,12 @@ export default async function InfrastructurePage({
                         {node.name}
                       </Link>
                     </th>
-                    <td className="px-5 py-2 text-xs text-[rgb(var(--muted))]">{node.kind}</td>
-                    <td className={`px-5 py-2 text-xs ${status.className}`}>
+                    <td data-label="Kind" className="px-5 py-2 text-xs text-[rgb(var(--muted))]">{node.kind}</td>
+                    <td data-label="Status" className={`px-5 py-2 text-xs ${status.className}`}>
                       <span aria-hidden="true">{status.glyph} </span>
                       {status.label}
                     </td>
-                    <td className="mono px-5 py-2 text-xs text-[rgb(var(--muted))]">
+                    <td data-label="Can reach" className="mono px-5 py-2 text-xs text-[rgb(var(--muted))]">
                       {reaches.join(", ") || "—"}
                     </td>
                   </tr>

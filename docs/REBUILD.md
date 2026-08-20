@@ -490,14 +490,25 @@ Needs **R8**. Read the frontend design skill before touching a component.
   no blank frame and no stale content. Each route's skeleton verified to carry
   its own layout rather than the Overview's.*
 
-- [~] **R14 — Mobile pass.** Needs: **R9, R10**. *Four overflows already fixed
-  during R10 and R11, all the same mistake: a flex or grid item defaults to a
-  minimum size of its content and will not shrink below it. The nav widened the
-  header instead of scrolling, `truncate` could not truncate, a grid panel grew
-  to 834px inside a 343px column, and audit summaries ran off the screen because
-  no browser breaks at the underscores in an action id. `min-w-0` in three
-  places and `break-words` in one. `verifyui.py` is clean at 375, 768 and 1440 —
-  what remains is a person reading the pages rather than a tool measuring them.*
+- [x] **R14 — Mobile pass.** Needs: **R9, R10**.
+  Six overflows fixed across R10–R14, all one mistake: a flex or grid item
+  defaults to the size of its content and will not shrink below it. The nav
+  widened the header instead of scrolling, `truncate` could not truncate, a grid
+  panel grew to 834px inside a 343px column, and the header chips outgrew the
+  screen once they were relabelled. `min-w-0` in four places, `break-words` in
+  one, `flex-wrap` in one.
+  **Tables stop being tables when there is no room to be one.** The action
+  registry scrolled sideways at 375px, so *rollback* — the column that says
+  whether an action can be undone — was off-screen with nothing to say it
+  existed. Below `sm` each row is now a block and each cell carries its column
+  name from `data-label`. The markup stays a real table with real headers, so a
+  screen reader and a wide viewport both still get one.
+  Touch targets audited against WCAG 2.5.8: the persistent chrome — pause, the
+  theme toggle, panel aside links — was 22px and is now 24. Inline citations
+  inside prose are left alone, which is the exception the guideline names.
+  *Evidence: `verifyui.py` 18/18 on the deployed site; `/actions` at 375px
+  measures 349px of table in a 349px wrapper — no sideways scroll — with column
+  labels rendering. Pages read at 375px, checked by looking at them.*
   The dependency table and causal chain at 375px; tables break first.
   **Done when:** no horizontal page scroll at 375px on any route, verified on
   the deployed site.

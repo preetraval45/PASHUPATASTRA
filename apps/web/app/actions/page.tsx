@@ -21,7 +21,7 @@ export default async function ActionsPage() {
     >
       <Panel title="Registered actions" aside={`${actions.length} actions`}>
         <div className="-mx-5 overflow-x-auto">
-          <table className="w-full min-w-[42rem] text-left text-sm">
+          <table className="stacked w-full min-w-[42rem] text-left text-sm">
             <caption className="sr-only">
               Registered actions with base risk, rollback, and expected post-state
             </caption>
@@ -42,17 +42,17 @@ export default async function ActionsPage() {
                       {action.description}
                     </div>
                   </td>
-                  <td className="px-5 py-3 align-top">
+                  <td data-label="Base risk" className="px-5 py-3 align-top">
                     <Badge status={statusForRisk(action.base_risk)}>{action.base_risk}</Badge>
                   </td>
-                  <td className="px-5 py-3 align-top text-xs">
+                  <td data-label="Rollback" className="px-5 py-3 align-top text-xs">
                     {action.irreversible ? (
                       <span className="text-[rgb(var(--crit))]">irreversible</span>
                     ) : (
                       <span className="mono">{action.rollback_action_id ?? "—"}</span>
                     )}
                   </td>
-                  <td className="mono px-5 py-3 align-top text-xs text-[rgb(var(--muted))]">
+                  <td data-label="Post-state" className="mono px-5 py-3 align-top text-xs text-[rgb(var(--muted))]">
                     {Object.entries(action.expected_post_state)
                       .map(([k, v]) => `${k} ${v}`)
                       .join(", ") || "—"}

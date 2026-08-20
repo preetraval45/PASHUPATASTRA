@@ -107,6 +107,69 @@ body {
   }
 }
 
+/* Tables that stop being tables when there is no room to be one.
+   
+   A table narrower than its content scrolls sideways, and sideways scrolling
+   inside a page hides whole columns with nothing to say they exist — on the
+   action registry that meant the rollback column simply was not there, which
+   is the column that says whether an action can be undone.
+
+   Below `sm` each row becomes a block and each cell carries its column name
+   from `data-label`. The markup stays a real table with real headers, so a
+   screen reader and a wide screen both still get one; only the presentation
+   changes. */
+@media (max-width: 639px) {
+  .stacked {
+    min-width: 0 !important;
+  }
+
+  .stacked thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .stacked tr {
+    display: block;
+    padding: 0.75rem 0;
+  }
+
+  .stacked td {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 0.75rem;
+    align-items: baseline;
+    /* Without this a badge stretches to fill the value column and stops
+       looking like a badge. */
+    justify-items: start;
+    padding: 0.2rem 1.25rem;
+  }
+
+  .stacked td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(var(--faint));
+  }
+
+  /* The first cell is the row's subject, so it reads as a heading rather than
+     as one more labelled field. */
+  .stacked td:first-child,
+  .stacked th[scope="row"] {
+    display: block;
+    padding: 0 1.25rem 0.4rem;
+  }
+
+  .stacked td:first-child::before,
+  .stacked th[scope="row"]::before {
+    content: none;
+  }
+}
+
 /* Respect reduced-motion. Nothing here is load-bearing animation. */
 @media (prefers-reduced-motion: reduce) {
   *,
