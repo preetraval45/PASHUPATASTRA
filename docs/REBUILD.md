@@ -988,17 +988,28 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
 
 Needs **R23**. Additive, and benefits from the patterns above being solid.
 
-- [~] **R24 — Threat feed ingestion.** Needs: **R18**.
+- [x] **R24 — Threat feed ingestion.** Needs: **R18**.
   **Done when:** real entries land in the store on a schedule, each carrying its
-  source URL as provenance. — **ingestion met, the schedule is not.** Invoking
-  the function with `{"task": "ingest_feeds"}` stored 24 real entries: CISA KEV
+  source URL as provenance. — **met.** 24 real entries stored: CISA KEV
   advisories added the day before, and live URLhaus submissions, each with a
-  working link to the original. A forced cold start then re-ran it and stored
-  **0**, because the cursor is in DynamoDB.
-  **Remaining:** the deploying IAM user has neither `scheduler:CreateSchedule`
-  nor `events:PutRule`, so nothing fires hourly yet. The role is created and
-  scoped, and `scripts/schedulefeeds.py` prints both the policy to grant and the
-  five console fields to enter.
+  working link to the original. A forced cold start re-ran it and stored **0**,
+  because the cursor is in DynamoDB. `pashupatastra-feeds` is `ENABLED` at
+  `rate(1 hour)`.
+
+  *The schedule was proved by watching it fire, not by reading its
+  configuration. Tightened to `rate(5 minutes)` with the flexible window off, it
+  invoked the function at 17:21:13Z on its own — the log line is there and
+  nobody ran it — and it was restored to hourly afterwards. "Created" and
+  "fires" are different claims, and only the second one is the task.*
+
+  **A permission was granted to finish this**, and it is worth naming: the
+  deploying user could not create schedules. `PashupatastraPlatform` gained two
+  statements — `scheduler:*` on `schedule/default/pashupatastra-*`, and
+  `iam:PassRole` on the scheduler role alone, conditioned on
+  `iam:PassedToService = scheduler.amazonaws.com`. Both are narrower than the
+  wildcards already in that policy. The condition matters: a `PassRole` without
+  it lets the role be handed to any service that will take it, which is how a
+  scoped `PassRole` turns out not to be scoped.
 
   **ThreatFox is deliberately absent.** abuse.ch now requires an API key for it.
   A key nobody has is a dependency that fails in production and passes in every
