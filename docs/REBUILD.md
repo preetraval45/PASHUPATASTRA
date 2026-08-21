@@ -630,7 +630,7 @@ The claim being defended: the policy engine, risk model, entity data and causal
 reasoning are deterministic code you own. The model reads your structured data
 and talks about it. Your risk tiers never ask an LLM whether something is safe.
 
-- [~] **R18 — Persistence that survives a cold start.** Needs: **R17**.
+- [x] **R18 — Persistence that survives a cold start.** Needs: **R17**.
   DynamoDB, single-table, behind the `Store`/`AUDIT` seams that already exist —
   chosen over RDS because its free tier does not expire. Provisioned 25R/25W,
   the always-free allowance; on-demand has no perpetual free tier.
@@ -644,8 +644,10 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
   that keeps what it is given; and `backend.durable()` is the single place the
   question is answered, where incidents, the audit trail and the graph each used
   to decide separately and could disagree.
-  **Remaining:** one row, `prod#INCIDENT / INC-2026-0810`, has to be deleted
-  before the redeploy — see the note below.
+  Re-verified on clean data after the namespace landed: the table was emptied,
+  the console re-seeded itself to exactly 3 incidents, a written record survived
+  a second forced replacement, and the count stayed at 3 rather than doubling —
+  which is the seed marker doing its job.
 
   Durability changed what a mistake costs, and it collected on that twice before
   the phase was over. A local run seeded the *infrastructure* incident into the

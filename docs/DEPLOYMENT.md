@@ -91,8 +91,8 @@ rejected unless the on-prem path is explicitly given up for that capability.
 
 ## The demo tier
 
-A third target, and the only one currently running: a public dashboard with no
-data layer at all. It exists so the interface can be looked at, not so anything
+A third target, and the only one currently running: a public dashboard carrying
+scripted scenarios. It exists so the interface can be looked at, not so anything
 can be operated.
 
 ```
@@ -101,7 +101,7 @@ can be operated.
                   ▼
               AWS Lambda (services/api, zip archive)
                   │
-                  └─ in-memory stores; no RDS, no VPC, no ECR
+                  └─ DynamoDB, one table; no RDS, no VPC, no ECR
 ```
 
 Built by `scripts/buildlambda.py` and deployed by `scripts/deploylambda.py`.
@@ -113,11 +113,12 @@ pointed at anything real.
 What that costs in honesty, stated where the deployment can be seen rather than
 only here:
 
-- `/health` reports `status: degraded` and `audit_storage: memory`, because an
-  audit trail that does not survive a restart is not an audit trail. The
-  dashboard renders that verdict rather than hiding it.
-- **All state is lost on a cold start.** Incidents, approvals, and the audit log
-  live in the process.
+- `/health` reports whichever store actually answered. `audit_storage: memory`
+  forces `status: degraded`, because an audit trail that does not survive a
+  restart is not an audit trail, and the dashboard renders that verdict rather
+  than hiding it. With the table configured it reads `ok · dynamodb`.
+- The scenarios are scripted. Durable state makes the console consistent between
+  cold starts; it does not make anything on it real.
 - Both execution gates are shut — `PASHU_DRY_RUN=true`, and the environment is
   absent from `PASHU_LIVE_ENVIRONMENTS`. A misconfiguration fails closed into
   dry-run rather than open (SECURITY.md, control 1).
@@ -131,6 +132,25 @@ labelled corpus in `benchmark/incidents/`. Every seeded event keeps
 beyond the two the demo incident already asserts, and no user counts at all. A
 blast radius of zero users is visibly wrong to a reader, which is the point — an
 invented one would not be.
+
+### One table, several namespaces
+
+DynamoDB's always-free allowance is 25 capacity units per **account**, not per
+table, so a second table for local work would take capacity away from the
+deployed console rather than add any. `PASHU_DYNAMO_NAMESPACE` prefixes every
+partition key instead, and one table holds `prod` and `test` without either
+seeing the other.
+
+Set it to something other than `prod` for anything that is not the deployment.
+The default is `prod` deliberately — a deployment that forgets to set it still
+finds its own data, where a machine-specific default would hand the Lambda an
+empty console after a redeploy.
+
+This is not housekeeping. Before the namespace existed, a local run seeded the
+*infrastructure* demo incident into the security console, and a test run put
+four fixture hosts on the live service map. In memory both would have gone at
+the next restart; in a table they stayed until they were deleted by hand.
+`scripts/cleardynamo.py` is that hand — it deletes nothing without `--yes`.
 
 > **Function URLs may be blocked.** Some accounts refuse anonymous invocation of
 > a Lambda Function URL: the resource policy is correct, `AuthType` is `NONE`,

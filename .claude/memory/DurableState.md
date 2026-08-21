@@ -55,11 +55,18 @@ deployed data after a change makes it durable** — the tests passed throughout.
 - Still unanswered after five askings: is `logo.png` or the square spear the
   Google Search icon?
 
+## Closing state
+
+The table was emptied of everything written before namespacing — the stray
+incident, the test fixtures, the legacy un-namespaced rows — and the console
+re-seeded itself under `prod`. Live: `ok · dynamodb · 3 incidents`, 11 topology
+nodes, and a record written before a forced container replacement still there
+after it, with the count holding at 3 rather than doubling. 18/18 UI checks pass.
+
+`scripts/cleardynamo.py` is the maintenance tool; it deletes nothing without
+`--yes`. Note for future sessions: the permission classifier blocks bulk deletes
+and chained commands, so run them one namespace at a time and expect to ask.
+
 ## Next session should
 
-- Delete `prod#INCIDENT / INC-2026-0810`, the one stray row, then redeploy:
-  `python scripts/cleardynamo.py --namespace prod --yes` and `deploylambda.py`.
-  The deletion was blocked by the permission classifier three times and needs
-  the owner to run or approve it. Until then the console shows 4 incidents
-  instead of 3.
-- Then R19 — the chat route, which needs the paid Anthropic API.
+- R19 — the chat route. Needs the paid Anthropic API, which has no free tier.
