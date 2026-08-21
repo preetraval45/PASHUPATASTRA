@@ -117,28 +117,41 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
 
         <header className="sticky top-0 z-40 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/95 backdrop-blur">
-          {/* The chrome is wider than the content it sits above. `max-w-7xl`
-              capped this at 1280px on every screen, so the status group — 804px
-              of it — always wrapped to a second row and the header stood 111px
-              tall on a 1920px display with most of that width unused.
+          {/* One row at every width. The previous version wrapped below `xl`
+              and gave the nav an `overflow-x-auto` strip with the scrollbar
+              hidden — which put five links behind a gesture nobody could see,
+              and left a mouse user at 768px unable to reach Incidents at all.
 
-              One row from `xl` up, where everything genuinely fits, and two
-              rows below it. Forcing one row earlier starved the nav: the search
-              and the status chips held their width while the nav collapsed to
-              nothing, and between 640 and 1280 not one tab was fully visible.
-              Navigation is the last thing a header should give up, so the nav
-              never shrinks and the status group wraps instead. */}
-          <div className="mx-auto flex max-w-[100rem] flex-wrap items-center gap-x-4 gap-y-2.5 px-4 py-2.5 sm:px-6 sm:py-3 xl:flex-nowrap">
+              Now the row never wraps and each group has a width where it steps
+              aside instead: the links become a menu below `lg`, the search
+              becomes an icon below `sm`, and the freshness clock drops at `xl`.
+              Navigation and execution mode are the two things that never
+              disappear — they move into the menu, which is a place, rather than
+              into an overflow, which is not. */}
+          <div className="relative mx-auto flex max-w-[100rem] items-center gap-x-3 px-4 py-2.5 sm:gap-x-4 sm:px-6 sm:py-3">
             <Link href="/" className="focusable shrink-0 rounded">
               <Sigil />
             </Link>
-            <Nav />
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:ml-auto sm:w-auto xl:shrink-0 xl:flex-nowrap">
+
+            <Nav status={<ModeIndicator health={health} />} />
+
+            {/* `ml-auto` here and on the menu button, so exactly one of them
+                claims the gap depending on which is showing. */}
+            <div className="ml-auto flex min-w-0 items-center gap-x-3">
               <Suspense fallback={null}>
                 <Search />
               </Suspense>
-              <ModeIndicator health={health} />
-              <Live />
+              <div className="hidden lg:flex lg:items-center lg:gap-x-3">
+                <ModeIndicator health={health} />
+              </div>
+              {/* The freshness clock is the least load-bearing thing here —
+                  the page says when it was updated, and this repeats it. It is
+                  the first to go, and it goes at `2xl` rather than `xl`,
+                  because at exactly 1280 it and the mode qualifier together
+                  pushed the status group onto a second line. */}
+              <div className="hidden 2xl:flex">
+                <Live />
+              </div>
               <ThemeToggle />
             </div>
           </div>
@@ -177,7 +190,7 @@ function ModeIndicator({
 
   const live = !health.dry_run;
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:gap-x-4">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 whitespace-nowrap text-xs sm:gap-x-4">
       {health.status !== "ok" && (
         <span
           className="text-[rgb(var(--warn))]"
@@ -201,7 +214,7 @@ function ModeIndicator({
             is how the wordmark came to read PASHUPASHUPATASTRA. Below xl the
             row has no space for the qualifier and the title still carries it. */}
         {live ? "LIVE EXECUTION" : "dry run"}
-        {!live && <span className="hidden xl:inline"> · nothing executes</span>}
+        {!live && <span className="hidden 2xl:inline"> · nothing executes</span>}
       </span>
     </div>
   );

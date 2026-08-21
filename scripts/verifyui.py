@@ -43,6 +43,41 @@ def check(page, url: str, route: str, label: str, width: int) -> list[str]:
     page.evaluate("() => document.fonts && document.fonts.ready")
     page.wait_for_timeout(120)
 
+    # Every section reachable, at every width.
+    #
+    # This check exists because its absence let a real regression ship. The nav
+    # was an `overflow-x-auto` strip with the scrollbar hidden, so at 768px only
+    # "Overview" was on screen — no scrollbar, no fade, nothing to indicate the
+    # other four existed. Every element was in the DOM and nothing overflowed
+    # its container, so all eighteen layout checks passed while the site could
+    # not be navigated.
+    #
+    # Hence: count what a person can actually see and click, not what exists.
+    sections = {"Overview", "Incidents", "Infrastructure", "Actions", "Audit"}
+    visible = {
+        link.inner_text().strip()
+        for link in page.locator("header nav[aria-label='Primary'] a").all()
+        if link.is_visible()
+    }
+    if not sections <= visible:
+        menu = page.get_by_role("button", name="Open menu")
+        if menu.count() and menu.first.is_visible():
+            menu.first.click()
+            page.wait_for_timeout(250)
+            visible |= {
+                link.inner_text().strip()
+                for link in page.locator("#primary-menu a").all()
+                if link.is_visible()
+            }
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(150)
+        missing = sections - visible
+        if missing:
+            failures.append(
+                f"{label} {route}: cannot reach {', '.join(sorted(missing))} "
+                "— not visible in the header and not in a menu"
+            )
+
     if route == "/":
         # The name lives in the logo artwork now, so it reaches a reader through
         # `alt` rather than as text. Both halves are checked: the accessible name

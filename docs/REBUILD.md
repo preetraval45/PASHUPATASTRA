@@ -790,6 +790,29 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
   pending approval and no execution, and that `isolate_host` is not reachable
   from the chat route's tool set at all.
 
+- [x] **R21b — A navbar that survives being narrow.** Needs: **R21**.
+  Five links, a search box and a status group do not fit on one line below a
+  laptop. The previous answer was an `overflow-x-auto` strip with the scrollbar
+  hidden, which is why every layout check passed: nothing was missing from the
+  DOM and nothing overflowed its container. But at 768px only *Overview* was on
+  screen — no scrollbar, no fade, no affordance — and a visitor with a mouse
+  could not reach Incidents at all.
+  **Done when:** every section is reachable at 375, 768, 1024 and 1280, and the
+  header is one row at each. — **met, on the deployed site.** Links become a
+  menu below `lg`, the search becomes an icon below `sm`, and the freshness
+  clock drops at `2xl`. Header height went from 129px to 57px on a phone. 18/18
+  layout checks pass.
+
+  Navigation and execution mode never disappear — they move into the menu,
+  which is a place, rather than into an overflow, which is not. Someone reading
+  on a phone has the same right to know whether an approval would change
+  production.
+
+  **`verifyui.py` now counts what a person can see and click**, not what exists
+  in the DOM. The old check could not have caught this, and did not: eighteen
+  green ticks while the site could not be navigated. A checker that passes while
+  the thing it checks is broken is worse than no checker, because it is trusted.
+
 - [x] **R21 — Chat panel UI.** Needs: **R19**.
   Collapsible panel on the incident page, seeded with that incident, with
   starter chips and every citation rendered as a link.

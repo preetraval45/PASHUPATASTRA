@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -38,9 +40,26 @@ export function Search() {
   }, []);
 
   return (
+    <>
+      {/* Below `sm` there is no room for a field beside a logo, a mode
+          indicator and a menu button. A link to the search page rather than a
+          field that expands over the header: the page it leads to is the same
+          one submitting the field leads to, so nothing is lost but a keystroke,
+          and nothing covers the page underneath. */}
+      <Link
+        href="/search"
+        aria-label="Search entities and incidents"
+        className="focusable inline-flex h-9 w-9 shrink-0 items-center justify-center rounded border border-[rgb(var(--edge))] text-[rgb(var(--faint))] hover:text-[rgb(var(--ink))] sm:hidden"
+      >
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="4.5" stroke="currentColor" />
+          <path d="M10.5 10.5 L14 14" stroke="currentColor" strokeLinecap="round" />
+        </svg>
+      </Link>
+
     <form
       role="search"
-      className="relative w-full sm:w-52 lg:w-64 xl:min-w-0 xl:flex-1 xl:max-w-xs"
+      className="relative hidden min-w-0 sm:block sm:w-44 md:w-52 lg:w-56 xl:w-64"
       onSubmit={(event) => {
         event.preventDefault();
         const query = value.trim();
@@ -76,5 +95,6 @@ export function Search() {
         /
       </kbd>
     </form>
+    </>
   );
 }
