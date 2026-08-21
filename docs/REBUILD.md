@@ -741,14 +741,41 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
   be the provider's own body, which carries the organisation id and a billing
   upgrade link — on a public endpoint.
 
-- [~] **R20 — Guardrails in code.** Needs: **R19**.
+- [x] **R20 — Guardrails in code.** Needs: **R19**.
   The chat route cannot invoke a non-zero-risk action — enforced by the route's
   tool list, not by prompt instruction. Most of this landed with R19 and is
   tested: a tool the model was not offered is never dispatched, the trace
   records the attempt as a refusal, and the offered list is *derived* from
-  `ActionSpec.read_only` rather than written by hand. **Remaining:** the test
-  that asking the agent to isolate a host produces a pending approval — today it
-  produces an explanation and no approval record.
+  `ActionSpec.read_only` rather than written by hand.
+  **Done when:** a test asserts asking the agent to isolate a host produces a
+  pending approval and no execution, and that `isolate_host` is not reachable
+  from the chat route's tool set at all. — **met, and confirmed live.** Asking
+  the deployed console to isolate the host returns `proposed_action_id:
+  isolate_host`, a Dharma verdict of `senior` at risk 67 requiring a
+  `senior_operator`, an approval id, and an audit line reading *proposed
+  isolate_host: risk 67 → senior, awaiting a human*. Nothing executed.
+
+  The agent names an action; it never holds one. Two locks decide what it can
+  touch and both must agree — `ActionSpec.read_only` says a thing is a read,
+  and `AgentSpec.may_use` says this agent was given it — so marking something
+  read-only by mistake does not reach a public text box on its own. A proposed
+  id is checked against the registry before it goes anywhere, the same
+  discipline citations get: a model naming `quarantine_host` (plausible, not an
+  action here) would otherwise queue an approval for something that cannot be
+  executed, reviewed or rolled back. Proposals are never served from cache,
+  because a cached copy would answer "queued for approval" without queueing
+  anything.
+
+  **A correction worth recording.** The first version passed
+  `agent_risk_limit=0`, reading as the cautious choice. It forces `DENIED`, and
+  `/policy/approve` refuses a denied verdict — so every proposal dead-ended
+  exactly where this task wants it to reach a human. The flag answers "may this
+  agent act alone", which is always no here; using it to answer "may a human
+  approve this" conflates the two. Proposals are now scored exactly as a
+  person's request is, which is also the plainest reading of *no weaker path
+  for AI-initiated actions than for human ones*: it is the same path. What stops
+  the agent acting is structural — the route has no execute path, and no
+  risk-bearing action is in its tool set.
 
   R19 found the predicate in this task was wrong. `changes_nothing` is true of
   `notify_analyst`, which pages a human being, and of `create_case`, which

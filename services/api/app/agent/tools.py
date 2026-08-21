@@ -48,11 +48,21 @@ class ToolBox:
     time. The incident's own entities are the boundary.
     """
 
-    def __init__(self, incident, store, graph, domain: ActionDomain | None = None) -> None:
+    def __init__(
+        self,
+        incident,
+        store,
+        graph,
+        domain: ActionDomain | None = None,
+        spec=None,
+    ) -> None:
+        from .roles import ANALYST
+
         self.incident = incident
         self.store = store
         self.graph = graph
         self.domain = domain
+        self.spec = spec or ANALYST
         self._scope = {e.key() for e in incident.affected_entities}
         self._scope |= {link.entity.key() for link in incident.causal_chain}
 
@@ -100,7 +110,11 @@ class ToolBox:
                     parameters=_entity_key_schema("Entity key to read events for."),
                 )
             )
-        return offered
+        # The declaration is the second lock. `read_only` says an action is a
+        # read; `may_use` says this agent was given it. Both have to agree, so
+        # adding a read-only action to the registry does not silently widen what
+        # a public text box can reach.
+        return [tool for tool in offered if self.spec.may_use(tool.name)]
 
     # --- dispatch -----------------------------------------------------------
 
@@ -110,6 +124,13 @@ class ToolBox:
             "blast_radius": self._blast_radius,
             "read_logs": self._read_logs,
         }
+        if not self.spec.may_use(call.name):
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content=f"{call.name!r} is not available to this agent.",
+                refused="not declared",
+            )
         handler = handlers.get(call.name)
         if handler is None:
             # The gateway refuses unoffered names before reaching here; this is

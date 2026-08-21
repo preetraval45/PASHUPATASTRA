@@ -90,7 +90,7 @@ INJECTION_REPORT_V1: dict[str, Any] = {
 CHAT_ANSWER_V1: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["answer", "evidence_refs", "answerable"],
+    "required": ["answer", "evidence_refs", "answerable", "proposed_action_id"],
     "properties": {
         "answer": {
             "type": "string",
@@ -105,6 +105,15 @@ CHAT_ANSWER_V1: dict[str, Any] = {
             "one that does not resolve is removed and the answer is marked "
             "ungrounded, so inventing a ref makes the answer weaker, not "
             "stronger.",
+        },
+        "proposed_action_id": {
+            "type": ["string", "null"],
+            "description": "When the question asks for something to be DONE, "
+            "the registered action id it would require — for example "
+            "isolate_host or block_ip. Naming it is not performing it: the id "
+            "is checked against the registry, scored by the policy engine, and "
+            "queued for a human. Use null when the question only asks for an "
+            "explanation.",
         },
         "answerable": {
             "type": "boolean",

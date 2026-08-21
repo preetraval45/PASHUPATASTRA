@@ -47,8 +47,11 @@ reading you cannot check the guess.
 are verified against what was actually retrieved. An invented ref is removed \
 and marks the whole answer ungrounded, so guessing one makes your answer weaker.
 3. You cannot act. You cannot isolate a host, block an address, disable an \
-account or page anyone. If asked to, explain that the action has to go through \
-policy evaluation and human approval, and say which action it would be.
+account or page anyone. If the question asks for something to be DONE, set \
+proposed_action_id to the registered action it would require and explain that \
+it has been queued for a human to approve. Naming an action is not performing \
+it — the id is checked against the registry, scored by the policy engine, and \
+put in an approval queue. Never claim to have done anything.
 4. Be brief and concrete. An analyst is reading you mid-incident.
 """
 
@@ -64,6 +67,20 @@ class ChatAnswer(BaseModel):
     grounded: bool = True
     """False when nothing the answer cited could be resolved. A reader should
     weigh the two differently, so they are two fields rather than one."""
+
+    proposed_action_id: str | None = None
+    """The action the question would require, if it asked for one. Validated
+    against the registry — a name the model invented is discarded the same way
+    an invented citation is, because a proposal nobody can look up is not a
+    proposal."""
+
+    verdict: dict | None = None
+    """Dharma's scoring of that proposal, filled in by the route. The chat
+    engine deliberately does not evaluate it: policy is Dharma's to decide, and
+    an engine that scored its own proposals would be marking its own work."""
+
+    approval_id: str | None = None
+    """Set when the proposal was queued for a human."""
 
     dropped_refs: list[str] = Field(default_factory=list)
     """Refs the model returned that matched nothing retrieved. Surfaced rather
@@ -90,6 +107,25 @@ def _verify(refs: list[str], available: set[str]) -> tuple[list[str], list[str]]
     for ref in refs:
         (kept if ref in available else dropped).append(ref)
     return kept, dropped
+
+
+def _known_action(action_id) -> str | None:
+    """Keep a proposed action id only if the registry has it.
+
+    The same discipline as citations, for the same reason. A model naming
+    `quarantine_host` — plausible, and not an action here — would otherwise
+    produce an approval request for something that cannot be executed, reviewed
+    or rolled back.
+    """
+    if not action_id or not isinstance(action_id, str):
+        return None
+    from pashupatastra.registry import get as get_action
+
+    try:
+        get_action(action_id)
+    except KeyError:
+        return None
+    return action_id
 
 
 def answer(
@@ -138,7 +174,10 @@ def answer(
     )
     cache = answer_cache.shared(getattr(store, "_durable", lambda: None)())
     hit = cache.get(digest)
-    if hit is not None:
+    # A turn that proposed an action is never served from cache: the proposal
+    # has to reach the approval queue every time somebody asks for it, and a
+    # cached copy would answer "queued for approval" without queueing anything.
+    if hit is not None and not hit.get("proposed_action_id"):
         # Costs nothing and hits no rate limit. On a public console most
         # questions are the same question, so this is the difference between a
         # demo that survives a burst of visitors and one that starts refusing.
@@ -152,6 +191,7 @@ def answer(
 
     result = ChatAnswer(
         answer=str(output.get("answer") or "").strip(),
+        proposed_action_id=_known_action(output.get("proposed_action_id")),
         evidence_refs=kept,
         answerable=answerable,
         # An answer that claims to be unanswerable is not ungrounded for having
@@ -168,7 +208,7 @@ def answer(
     # Only answers worth repeating. A truncated or ungrounded turn is a bad
     # answer, and caching it would serve that bad answer to everyone who asks
     # the same thing rather than giving the next visitor a fresh attempt.
-    if result.grounded and not result.truncated:
+    if result.grounded and not result.truncated and result.proposed_action_id is None:
         cache.put(digest, result.model_dump(mode="json"))
     return result
 

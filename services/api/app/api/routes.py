@@ -549,4 +549,66 @@ def agent_chat(request: ChatRequest) -> dict[str, object]:
             ),
         )
     )
+
+    if result.proposed_action_id:
+        _queue_proposal(result, incident)
+
     return result.model_dump(mode="json")
+
+
+def _queue_proposal(result, incident) -> None:
+    """Route a proposal through Dharma and into the approval queue.
+
+    The same `evaluate` every other caller uses, and the same `ApprovalLog` a
+    human's request lands in. There is no second path for AI-initiated actions
+    — that is the whole of R20, and building a parallel one "for the agent"
+    would be the exact shortcut the rule exists to forbid.
+
+    Scored exactly as a person's request would be, and deliberately so.
+    `agent_risk_limit` is *not* passed, which looks like the cautious choice
+    until you follow it: it forces `DENIED`, and `/policy/approve` refuses a
+    denied verdict. Every proposal would dead-end where R20 asks for it to
+    reach a human. The flag answers "may this agent act alone" — always no
+    here — and using it to answer "may a human approve this" conflates the two.
+
+    What keeps the agent from acting is structural rather than a risk number:
+    this route has no execute path, and no risk-bearing action is in its tool
+    set. A verdict is queued; a visitor is anonymous, and an anonymous approval
+    is not an approval.
+    """
+    from ..agent.roles import ANALYST
+
+    settings = get_settings()
+    action = get_action(result.proposed_action_id)
+    verdict = evaluate(
+        action,
+        RiskContext(
+            environment=settings.environment,
+            blast_radius_entities=incident.impact.blast_radius_entities,
+            blast_radius_users=incident.impact.estimated_users_affected,
+            diagnostic_confidence=(
+                incident.top_hypothesis.confidence if incident.top_hypothesis else 0.0
+            ),
+            dry_run=settings.dry_run,
+        ),
+        incident_ref=incident.id,
+    )
+    result.verdict = verdict.model_dump(mode="json")
+
+    now = datetime.now().astimezone()
+    request = APPROVALS.present(verdict, at=now)
+    result.approval_id = f"{verdict.action_id}:{now.isoformat()}"
+
+    AUDIT.append(
+        AuditRecord(
+            at=now,
+            kind=AuditKind.POLICY_EVALUATION,
+            actor=ANALYST.principal,
+            incident_ref=incident.id,
+            summary=(
+                f"proposed {action.id}: risk {verdict.effective_risk} → "
+                f"{verdict.tier}, awaiting a human"
+            ),
+            detail={"verdict": result.verdict, "pending": request.pending},
+        )
+    )

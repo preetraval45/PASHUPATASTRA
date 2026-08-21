@@ -349,3 +349,133 @@ def test_a_provider_error_never_reaches_the_visitor(monkeypatch) -> None:
     body = response.json()["detail"]
     assert "org_01SECRET" not in body
     assert "Upgrade" not in body
+
+
+# --- R20: the agent proposes, Dharma authorises -------------------------------
+
+
+def test_isolate_host_is_not_in_the_chat_tool_set_at_all() -> None:
+    """Not filtered out at call time — never offered. R20's first guarantee.
+
+    Asserted over the whole registry rather than the one action named in the
+    task, so an action added later with risk cannot appear here quietly.
+    """
+    from app.agent.tools import ToolBox
+    from app.agent.roles import ANALYST
+    from pashupatastra.registry import all_actions
+
+    class FakeIncident:
+        affected_entities: list = []
+        causal_chain: list = []
+
+    offered = {t.name for t in ToolBox(FakeIncident(), None, None).specs()}
+    assert "isolate_host" not in offered
+
+    by_id = {a.id: a for a in all_actions()}
+    for name in offered:
+        action = by_id.get(name)
+        if action is not None:
+            assert action.read_only, name
+    assert not ANALYST.may_use("isolate_host")
+
+
+def test_a_risky_action_is_unreachable_even_if_declared_read_only() -> None:
+    """Both locks must agree. Marking something read-only by mistake does not
+    reach a public text box unless the agent was also given it."""
+    from app.agent.roles import ANALYST
+
+    assert ANALYST.may_use("read_logs")
+    assert not ANALYST.may_use("wipe_host")
+    assert not ANALYST.may_use("notify_analyst")
+
+
+def test_an_invented_action_id_is_discarded() -> None:
+    """A model naming `quarantine_host` — plausible, and not an action here —
+    would otherwise queue an approval for something that cannot be executed,
+    reviewed or rolled back."""
+    from app.agent.chat import _known_action
+
+    assert _known_action("isolate_host") == "isolate_host"
+    assert _known_action("quarantine_host") is None
+    assert _known_action("") is None
+    assert _known_action(None) is None
+
+
+def test_the_analyst_may_authorise_nothing_on_its_own() -> None:
+    """`agent_risk_limit=0` is what sends every risk-bearing action back to a
+    human, regardless of what the environment would otherwise permit."""
+    from app.agent.roles import ANALYST
+
+    assert ANALYST.risk_limit == 0
+
+
+def test_asking_the_agent_to_act_queues_an_approval_and_executes_nothing(monkeypatch) -> None:
+    """R20's done-when. The agent may name `isolate_host`; what happens next is
+    a policy verdict and a pending approval, never an execution."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.api import routes
+    from app.engines import buddhi
+    from app.agent import chat as chat_engine
+
+    incident = routes.STORE.get("INC-2026-0903")
+    if incident is None:
+        pytest.skip("demo incidents are not seeded in this configuration")
+
+    executed: list = []
+    monkeypatch.setattr(
+        routes.astra, "execute", lambda *a, **k: executed.append(a) or None
+    )
+
+    class Proposing:
+        provider = type("P", (), {"name": "scripted", "model": "m", "available": lambda self: True})()
+
+        def converse(self, request, dispatch):
+            from pashupatastra.gateway import ConversationResponse
+
+            return ConversationResponse(
+                output={
+                    "answer": "That needs approval.",
+                    "evidence_refs": [request.incident_id],
+                    "answerable": True,
+                    "proposed_action_id": "isolate_host",
+                },
+                usage=Usage(),
+                model="m",
+                provider="scripted",
+                purpose="chat",
+            )
+
+    monkeypatch.setattr(buddhi, "gateway", lambda: Proposing())
+    monkeypatch.setattr(chat_engine, "_verify", lambda refs, available: (refs, []))
+
+    before = len(routes.APPROVALS)
+    response = TestClient(app).post(
+        "/api/v1/agent/chat",
+        json={"incident_id": "INC-2026-0903", "message": "Isolate the host now."},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["proposed_action_id"] == "isolate_host"
+    assert body["verdict"] is not None
+    assert body["verdict"]["tier"] != "autonomous"
+    # And not `denied` either. Denied verdicts cannot be approved, so a
+    # proposal scored that way dead-ends instead of reaching the human R20
+    # exists to put it in front of.
+    assert body["verdict"]["tier"] != "denied"
+    assert body["verdict"]["required_approvers"]
+    assert body["approval_id"]
+    assert len(routes.APPROVALS) == before + 1
+    assert executed == [], "the chat route must never execute"
+
+
+def test_a_proposal_is_never_served_from_cache() -> None:
+    """A cached copy would answer "queued for approval" without queueing
+    anything, which is a lie the second visitor cannot detect."""
+    import inspect
+
+    from app.agent import chat as chat_engine
+
+    source = inspect.getsource(chat_engine.answer)
+    assert 'hit.get("proposed_action_id")' in source
