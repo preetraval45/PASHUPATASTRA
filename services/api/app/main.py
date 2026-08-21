@@ -31,18 +31,43 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api/v1")
 
-if settings.demo_seed:
+
+def _seed_demo() -> None:
+    """Load the scripted scenarios, once.
+
+    **Idempotent against a durable store.** In memory, re-seeding on every start
+    was harmless — the process began with nothing. Against a table that survives
+    a restart, every cold start would append the same audit trail again until
+    the page was a wall of duplicates, and Lambda cold-starts often.
+
+    The marker carries a version, so a deployment whose scenarios have changed
+    shape re-seeds rather than serving half of each.
+    """
     from .graph import GraphStore, entitystore
     from .seed import seed, seed_security
     from .store import STORE
 
     graph, store = GraphStore(), entitystore()
+
+    seeded = getattr(store, "seeded", None)
+    if seeded is not None and seeded():
+        return
+
     if settings.action_domain is not ActionDomain.SECURITY:
         # The labelled corpus is infrastructure telemetry. On a security console
         # it would put `checkout-api` on the map beside a compromised account —
         # the same theme-over-something-else problem as the demo incident.
         seed(graph, store)
-    seed_security(graph, store, STORE)
+
+    written = seed_security(graph, store, STORE)
+
+    mark = getattr(store, "mark_seeded", None)
+    if mark is not None:
+        mark(detail=written)
+
+
+if settings.demo_seed:
+    _seed_demo()
 
 
 @app.get("/")

@@ -47,12 +47,12 @@ class Store:
         self._resolved = False
 
     def _durable(self):
-        if not self._resolved:
-            from .db import PostgresStore, is_available
+        # One decision for the whole process — see `backend.py`. Deciding here
+        # as well is how the audit trail and the incident store came to be able
+        # to disagree about whether this deployment was durable.
+        from .backend import durable
 
-            self._backend = PostgresStore() if is_available() else None
-            self._resolved = True
-        return self._backend
+        return durable()
 
     @property
     def durable(self) -> bool:

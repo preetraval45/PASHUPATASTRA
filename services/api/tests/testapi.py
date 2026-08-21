@@ -26,9 +26,15 @@ def test_health_reports_dry_run_default() -> None:
 
 
 def test_health_flags_a_non_durable_audit_trail() -> None:
-    """An in-memory audit trail must never report itself as healthy."""
+    """An in-memory audit trail must never report itself as healthy.
+
+    Named against `memory` rather than a specific backend. Asserting
+    `== "postgres"` encoded the bug it was meant to catch: it passed while a
+    DynamoDB deployment reported the wrong store, and failed once the store
+    started naming itself honestly.
+    """
     body = client.get("/api/v1/health").json()
-    assert (body["audit_storage"] == "postgres") == (body["status"] == "ok")
+    assert (body["audit_storage"] == "memory") == (body["status"] == "degraded")
 
 
 def test_action_registry_is_exposed() -> None:

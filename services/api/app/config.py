@@ -42,6 +42,27 @@ class Settings(BaseSettings):
     opensearch_url: str = "http://localhost:9200"
     prometheus_url: str = "http://localhost:9090"
 
+    dynamo_table: str | None = None
+    """DynamoDB table to persist to. Empty means "no DynamoDB", and the stores
+    fall back to Postgres or to memory.
+
+    Chosen over RDS for the demo because DynamoDB's free allowance does not
+    expire — see docs/REBUILD.md. A deployment with a real database should set
+    `database_url` and leave this unset."""
+
+    dynamo_namespace: str = "prod"
+    """Which slice of the table this deployment owns.
+
+    One table, several environments. DynamoDB's always-free allowance is 25
+    capacity units per *account*, so a separate test table would take capacity
+    away from the deployed one rather than add any — the namespace buys the same
+    isolation for nothing.
+
+    Set it to something other than `prod` for local work and tests. The default
+    is deliberately the shared one: a deployment that forgets to set it still
+    finds its own data, where a machine-specific default would silently give the
+    Lambda an empty console after a redeploy."""
+
     aws_region: str = "us-east-1"
     artifacts_bucket: str | None = None
 

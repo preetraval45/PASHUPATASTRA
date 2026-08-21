@@ -52,12 +52,9 @@ class AuditLog:
         self._resolved = False
 
     def _store(self):
-        if not self._resolved:
-            from ..db import PostgresStore, is_available
+        from ..backend import durable
 
-            self._backend = PostgresStore() if is_available() else None
-            self._resolved = True
-        return self._backend
+        return durable()
 
     @property
     def durable(self) -> bool:

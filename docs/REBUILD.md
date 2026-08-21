@@ -630,13 +630,34 @@ The claim being defended: the policy engine, risk model, entity data and causal
 reasoning are deterministic code you own. The model reads your structured data
 and talks about it. Your risk tiers never ask an LLM whether something is safe.
 
-- [ ] **R18 — Persistence that survives a cold start.** Needs: **R17**.
-  Today every store is in-process; health reports `degraded` and state vanishes
-  on a cold start. A chat with no memory between turns is not a chat.
+- [~] **R18 — Persistence that survives a cold start.** Needs: **R17**.
   DynamoDB, single-table, behind the `Store`/`AUDIT` seams that already exist —
-  chosen over RDS because its free tier does not expire.
+  chosen over RDS because its free tier does not expire. Provisioned 25R/25W,
+  the always-free allowance; on-demand has no perpetual free tier.
   **Done when:** `/api/v1/health` reports `ok`, and an incident approved before
-  a forced cold start is still there afterwards.
+  a forced cold start is still there afterwards. — **met.** A verdict written
+  live took the trail 30 → 31, every container was then forcibly replaced, and
+  the new one answered `ok · dynamodb · 3 incidents · 31 audit records`. Three
+  things had to be right for that: the audit sort key carries a sequence, so two
+  records in one millisecond do not overwrite each other; `_seed_demo` is
+  idempotent against a version marker, so cold starts stop re-seeding a store
+  that keeps what it is given; and `backend.durable()` is the single place the
+  question is answered, where incidents, the audit trail and the graph each used
+  to decide separately and could disagree.
+  **Remaining:** one row, `prod#INCIDENT / INC-2026-0810`, has to be deleted
+  before the redeploy — see the note below.
+
+  Durability changed what a mistake costs, and it collected on that twice before
+  the phase was over. A local run seeded the *infrastructure* incident into the
+  security console, and the tests written for this task put four fixture hosts
+  on the live service map. In memory both would have been erased by the next
+  restart; in a table they simply stayed. The fix is `dynamo_namespace`, a
+  prefix on every partition key, so one table holds `prod` and `test` without
+  either seeing the other — a second table was not an option, because the free
+  allowance is per account and would have been split rather than doubled. The
+  structural half is `services/api/tests/conftest.py`: importing `app.main` runs
+  the seed as a side effect of import, so the guard has to be set before any
+  test module loads, not asserted inside each test.
 
 - [ ] **R19 — Chat route with read-only tools.** Needs: **R4, R18**.
   `POST /api/agent/chat`. Loads incident, causal chain, entities and audit as

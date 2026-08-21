@@ -79,6 +79,8 @@ def is_available(database_url: str | None = None) -> bool:
 class PostgresStore:
     """Durable store. Mirrors the in-memory `Store` interface."""
 
+    name = "postgres"
+
     def __init__(self, database_url: str | None = None) -> None:
         self.database_url = database_url or get_settings().database_url
 

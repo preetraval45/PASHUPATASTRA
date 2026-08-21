@@ -47,7 +47,10 @@ def health() -> dict[str, object]:
         "status": "ok" if durable and STORE.durable else "degraded",
         "environment": settings.environment,
         "dry_run": settings.dry_run,
-        "audit_storage": "postgres" if durable else "memory",
+        # The backend names itself. This used to be hardcoded to "postgres",
+        # which meant a DynamoDB deployment reported the wrong store — and the
+        # whole point of this field is that a reader can trust what it says.
+        "audit_storage": getattr(AUDIT._store(), "name", "memory") if durable else "memory",
         "incidents": len(STORE.all()),
         "audit_records": len(AUDIT),
         # Which model is wired up, and what it has spent. `configured: false`

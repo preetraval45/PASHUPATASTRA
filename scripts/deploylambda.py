@@ -9,13 +9,14 @@ always-free allowance rather than the twelve-month one:
 * **No API Gateway.** A Function URL is HTTPS on its own and is not billed
   separately.
 * **No ECR.** A zip archive, not a container image, so no registry storage.
-* **No RDS.** `PASHU_DATABASE_URL` is empty, the stores fall back to memory, and
-  health reports `degraded` rather than pretending otherwise.
+* **No RDS.** State lives in DynamoDB instead, whose free allowance does not
+  expire — RDS's dies after twelve months, at which point the deployment either
+  starts costing money or starts claiming a durability it no longer has.
 
-Consequently this deployment **loses all state on a cold start**, and it must
-not be pointed at anything real. `PASHU_DRY_RUN` stays true, and the environment
-is not listed in `PASHU_LIVE_ENVIRONMENTS`, so both execution gates are shut —
-see docs/SECURITY.md, control 1.
+State now survives a cold start, so health reports `ok` rather than `degraded`.
+It still must not be pointed at anything real: `PASHU_DRY_RUN` stays true and
+the environment is not listed in `PASHU_LIVE_ENVIRONMENTS`, so both execution
+gates are shut — see docs/SECURITY.md, control 1.
 
 Usage:  python scripts/deploylambda.py --role <arn> [--cors https://example.com]
 """
@@ -73,6 +74,17 @@ def environment(cors: list[str]) -> str:
                 # "no database configured" and falls back immediately, instead
                 # of spending the connect timeout on every request.
                 "PASHU_DATABASE_URL": "",
+                # The durable store. With this set, `backend.durable()` chooses
+                # DynamoDB and never dials Postgres at all.
+                "PASHU_DYNAMO_TABLE": "pashupatastra",
+                # Which slice of that table is the deployed console's. One table
+                # holds every environment because DynamoDB's free allowance is
+                # per account, so a second table would take capacity from this
+                # one rather than add any. Stated explicitly here even though it
+                # matches the default: this is the value that keeps a local run
+                # out of the deployed data, and it should be readable at the
+                # place the deployment is configured.
+                "PASHU_DYNAMO_NAMESPACE": "prod",
                 "PASHU_DEMO_SEED": "true",
                 # The site is a blue-team console, so it is offered blue-team
                 # actions. A filter on the view, not a second registry — every

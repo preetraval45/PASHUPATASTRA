@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 
 from pashupatastra import BlastRadius, Edge, Node
 
-from .db import connect, is_available
+from .db import connect
 from .graphmemory import MemoryGraph
 
 MIRROR = MemoryGraph()
@@ -27,15 +27,11 @@ _resolved: bool | None = None
 
 
 def _durable(database_url: str | None = None) -> bool:
-    """Whether Postgres is backing the graph. Resolved once per process.
+    """Whether anything durable is backing the graph — see `backend.py`, which
+    makes this decision once for every store rather than three times."""
+    from .backend import durable
 
-    Re-checking per call would put a connection attempt in front of every read
-    on a deployment that has no database at all.
-    """
-    global _resolved
-    if _resolved is None:
-        _resolved = is_available(database_url)
-    return _resolved
+    return durable() is not None
 
 
 def entitystore(database_url: str | None = None):
@@ -46,11 +42,9 @@ def entitystore(database_url: str | None = None):
     only that reaching for `PostgresStore` directly would make an entity view
     fail outright on a deployment that has no database.
     """
-    if _durable(database_url):
-        from .db import PostgresStore
+    from .backend import durable
 
-        return PostgresStore(database_url)
-    return MIRROR
+    return durable() or MIRROR
 
 
 class GraphStore:
@@ -70,13 +64,27 @@ class GraphStore:
         return _durable(self.database_url)
 
     @property
-    def _mirror(self) -> MemoryGraph | None:
-        return None if _durable(self.database_url) else MIRROR
+    def _delegate(self):
+        """Whoever answers graph questions, or `None` for the Postgres path.
+
+        `MemoryGraph` and `DynamoStore` both implement the graph surface and say
+        so with `answers_graph`. Postgres does not: its topology lives in the
+        SQL further down this file, where it has always been. Asking
+        `_durable()` alone was enough while Postgres was the only durable store
+        and became wrong the moment a second one existed — DynamoDB would have
+        been routed into `connect()` and tried to open a Postgres connection.
+        """
+        from .backend import durable
+
+        store = durable()
+        if store is None:
+            return MIRROR
+        return store if getattr(store, "answers_graph", False) else None
 
     # --- reconciliation -----------------------------------------------------
 
     def upsert_nodes(self, nodes: list[Node]) -> int:
-        if (mirror := self._mirror) is not None:
+        if (mirror := self._delegate) is not None:
             return mirror.upsert_nodes(nodes)
 
         if not nodes:
@@ -117,7 +125,7 @@ class GraphStore:
         return len(nodes)
 
     def upsert_edges(self, edges: list[Edge]) -> int:
-        if (mirror := self._mirror) is not None:
+        if (mirror := self._delegate) is not None:
             return mirror.upsert_edges(edges)
 
         if not edges:
@@ -207,7 +215,7 @@ class GraphStore:
     # --- queries ------------------------------------------------------------
 
     def blast_radius(self, origin: str, max_depth: int = 10) -> BlastRadius:
-        if (mirror := self._mirror) is not None:
+        if (mirror := self._delegate) is not None:
             return mirror.blast_radius(origin, max_depth=max_depth)
 
         with connect(self.database_url) as conn:
@@ -224,7 +232,7 @@ class GraphStore:
 
     def adjacent(self, a: str, b: str, max_depth: int = 3) -> bool:
         """Correlation gate: are these two entities connected at all?"""
-        if (mirror := self._mirror) is not None:
+        if (mirror := self._delegate) is not None:
             return mirror.adjacent(a, b, max_depth=max_depth)
 
         if a == b:
@@ -241,7 +249,7 @@ class GraphStore:
         seconds later is not healthy, it is flapping, and showing the newest
         reading would hide the incident behind its own recovery.
         """
-        if (mirror := self._mirror) is not None:
+        if (mirror := self._delegate) is not None:
             return mirror.snapshot(limit=limit)
 
         with connect(self.database_url) as conn:
@@ -299,7 +307,7 @@ class GraphStore:
         }
 
     def counts(self) -> tuple[int, int]:
-        if (mirror := self._mirror) is not None:
+        if (mirror := self._delegate) is not None:
             return mirror.counts()
 
         with connect(self.database_url) as conn:

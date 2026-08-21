@@ -26,6 +26,9 @@ _RANK = {Severity.CRITICAL: 3, Severity.WARNING: 2, Severity.INFO: 1}
 
 
 class MemoryGraph:
+    answers_graph = True
+    """Implements the topology surface — see `GraphStore._delegate`."""
+
     def __init__(self) -> None:
         from pashupatastra.topology import TopologyGraph
 
