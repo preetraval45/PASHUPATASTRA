@@ -294,3 +294,56 @@ export function riskBand(risk: number): {
     return { label: "high", className: "text-orange-400 border-orange-500/30 bg-orange-500/10" };
   return { label: "prohibited", className: "text-rose-400 border-rose-500/30 bg-rose-500/10" };
 }
+
+/** One answer from Sati, plus everything needed to judge how far to trust it. */
+export type ChatAnswer = {
+  answer: string;
+  evidence_refs: string[];
+  dropped_refs: string[];
+  answerable: boolean;
+  grounded: boolean;
+  proposed_action_id: string | null;
+  verdict: Verdict | null;
+  approval_id: string | null;
+  trace: { hop: number; kind: string; name?: string }[];
+  tokens: number;
+  model: string;
+  provider: string;
+  truncated: boolean;
+  cached: boolean;
+};
+
+/**
+ * Ask Sati about one incident.
+ *
+ * Unlike every other call here, this one reports *why* it failed. The shared
+ * helpers collapse any non-2xx to `null`, which is right for a panel that can
+ * fall back to "unavailable" — but a visitor who hit the per-minute allowance
+ * needs to be told to wait rather than shown a dead assistant, and those two
+ * are the same `null`.
+ */
+export async function askAgent(
+  incidentId: string,
+  message: string,
+): Promise<{ answer: ChatAnswer } | { error: string; retryable: boolean }> {
+  try {
+    const response = await fetch(`${API_BASE}/agent/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ incident_id: incidentId, message }),
+      cache: "no-store",
+    });
+    if (response.ok) return { answer: (await response.json()) as ChatAnswer };
+
+    const detail = await response
+      .json()
+      .then((body: { detail?: string }) => body.detail)
+      .catch(() => null);
+    return {
+      error: detail ?? "The assistant is unavailable right now.",
+      retryable: response.status === 429 || response.status >= 500,
+    };
+  } catch {
+    return { error: "Could not reach the API.", retryable: true };
+  }
+}

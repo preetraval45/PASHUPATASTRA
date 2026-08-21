@@ -80,7 +80,15 @@ export function IncidentView({
           {incident.causal_chain.map((link, index) => {
             const last = index === incident.causal_chain.length - 1;
             return (
-              <li key={`${link.entity.id}-${index}`} className="relative flex gap-4 pb-6 last:pb-0">
+              // The id is what a chat citation lands on. Without it a linked
+              // ref could only reach the page, leaving the reader to find the
+              // step themselves — which is most of the way back to an id you
+              // cannot follow.
+              <li
+                key={`${link.entity.id}-${index}`}
+                id={`chain-${index}`}
+                className="relative flex scroll-mt-24 gap-4 pb-6 target:bg-[rgb(var(--raised))] last:pb-0"
+              >
                 {/* The rail. Drawn behind the node and stopped at the final
                     step, because a line continuing past the end would promise
                     another one. */}
@@ -116,7 +124,7 @@ export function IncidentView({
       </Panel>
 
       {top && (
-        <Panel title="Diagnosis">
+        <Panel title="Diagnosis" id="diagnosis">
           <p className="text-sm">{top.statement}</p>
           <Evidence refs={top.evidence} />
 
@@ -144,7 +152,8 @@ export function IncidentView({
             return (
               <li
                 key={step.order}
-                className="flex flex-wrap items-baseline gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0"
+                id={`plan-${step.order}`}
+                className="flex scroll-mt-24 flex-wrap items-baseline gap-x-4 gap-y-2 py-3 target:bg-[rgb(var(--raised))] first:pt-0 last:pb-0"
               >
                 <span className="mono w-6 shrink-0 text-xs text-[rgb(var(--faint))]">
                   {String(step.order).padStart(2, "0")}

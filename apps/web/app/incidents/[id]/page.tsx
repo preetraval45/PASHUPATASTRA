@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { VerdictPanel } from "@/components/approval";
+import { ChatPanel } from "@/components/chat";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
 import { Timeline } from "@/components/timeline";
@@ -105,6 +106,12 @@ export default async function IncidentDetailPage({
     >
       <IncidentView incident={incident} risk={risk} />
 
+      {/* Directly under the incident, above the loop. A visitor has just read
+          what happened and the next thing they want is to ask about it; at the
+          bottom of the page it would be found only by people who had already
+          finished reading. */}
+      <ChatPanel incident={incident} />
+
       <Panel
         title="The loop"
         aside="every stage, including the ones that did not run"
@@ -152,8 +159,14 @@ function AuditRow({ record, index }: { record: AuditRecord; index: number }) {
     // exact record it claims as evidence rather than at the trail in general.
     <li
       id={`audit-${index}`}
-      className="flex scroll-mt-24 flex-wrap items-baseline gap-x-3 gap-y-1 py-3 target:bg-[rgb(var(--raised))] first:pt-0 last:pb-0"
+      className="relative flex scroll-mt-24 flex-wrap items-baseline gap-x-3 gap-y-1 py-3 target:bg-[rgb(var(--raised))] first:pt-0 last:pb-0"
     >
+      {/* A second anchor, keyed by timestamp rather than position. The
+          timeline points at rows by index; a chat citation cannot, because
+          answering a question appends a record and shifts every index below
+          it. Two ids for two questions, rather than one that is wrong for one
+          of them. */}
+      <span id={`audit:${record.at}`} aria-hidden="true" className="absolute -top-24" />
       <span className="w-16 shrink-0 text-xs text-[rgb(var(--faint))]">
         <Ago at={record.at} />
       </span>

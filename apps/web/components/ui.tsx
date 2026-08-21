@@ -104,14 +104,19 @@ export function Panel({
   aside,
   children,
   className = "",
+  id,
 }: {
   title?: string;
   aside?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Anchor target, so a citation can land on this panel rather than the page.
+   *  `scroll-mt` goes with it — without the offset the sticky header covers
+   *  exactly the heading the reader was sent to see. */
+  id?: string;
 }) {
   return (
-    <section className={`panel ${className}`}>
+    <section id={id} className={`panel scroll-mt-24 ${className}`}>
       {(title || aside) && (
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-[rgb(var(--edge))] px-4 py-3 sm:px-5">
           {title && <h2 className="label">{title}</h2>}

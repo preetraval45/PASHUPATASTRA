@@ -282,3 +282,101 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The thinking indicator: an arrow loosed, as motion rather than as a picture.
+ *
+ * The brand rule keeps illustrated weaponry to the logo, so nothing here draws
+ * a bow. What is drawn is an arc that tensions and a streak that leaves it —
+ * the gesture, not the object. It also happens to be the right call visually:
+ * a literal bow in a console reads as clip art, where a line under tension
+ * reads as something being readied. */
+.loose {
+  position: relative;
+  display: inline-block;
+  width: 3.5rem;
+  height: 0.75rem;
+  vertical-align: middle;
+}
+
+/* The arc. A quarter of a circle's border, so it curves without an asset. */
+.loose::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0.5rem;
+  height: 0.75rem;
+  border-left: 1px solid rgb(var(--astra));
+  border-radius: 50%;
+  opacity: 0.55;
+  animation: loose-draw 1.4s ease-in-out infinite;
+}
+
+/* The streak. Drawn back against the arc, held, then away — the hold is what
+ * makes it read as aim rather than as something merely sliding past. */
+.loose::after {
+  content: "";
+  position: absolute;
+  left: 0.5rem;
+  top: 0.3125rem;
+  width: 1.25rem;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(var(--astra)) 60%,
+    rgb(var(--gold))
+  );
+  animation: loose-fly 1.4s cubic-bezier(0.7, 0, 0.2, 1) infinite;
+}
+
+@keyframes loose-draw {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  /* Tensioning, and released at the same instant the streak leaves. */
+  30% {
+    transform: scaleX(1.6);
+  }
+  45% {
+    transform: scaleX(0.9);
+  }
+}
+
+@keyframes loose-fly {
+  0% {
+    transform: translateX(0) scaleX(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translateX(-0.25rem) scaleX(0.7);
+    opacity: 0.9;
+  }
+  /* The hold. Without it the streak simply travels, and the whole thing looks
+   * like a progress bar. */
+  40% {
+    transform: translateX(-0.25rem) scaleX(0.7);
+    opacity: 1;
+  }
+  75% {
+    transform: translateX(2rem) scaleX(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(2.4rem) scaleX(0.6);
+    opacity: 0;
+  }
+}
+
+/* Motion is decoration here — the text beside it already says what is
+ * happening — so it is removed entirely rather than slowed down. */
+@media (prefers-reduced-motion: reduce) {
+  .loose::before,
+  .loose::after {
+    animation: none;
+  }
+  .loose::after {
+    opacity: 0.8;
+  }
+}

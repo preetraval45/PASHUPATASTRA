@@ -15,3 +15,4 @@ Protocol: before every push, write a topic-named file from
 - 2026-08-21 · [Durable state on DynamoDB](DurableState.md) — R18: DynamoDB behind the store seams, and what durability cost when a local run wrote to prod
 - 2026-08-21 · [The chat agent, on free model providers](ChatAgent.md) — R19: Groq + Ollama on Oracle, deterministic retrieval, verified citations
 - 2026-08-21 · [Sati proposes, Dharma authorises](AgentGuardrails.md) — R20: proposals reach a human; why agent_risk_limit=0 dead-ended them
+- 2026-08-21 · [The chat panel, and a verification that lied twice](ChatPanel.md) — R21: Sati on the incident page; how a green check can test nothing

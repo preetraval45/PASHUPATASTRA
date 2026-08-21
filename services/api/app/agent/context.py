@@ -142,10 +142,16 @@ def audit_evidence(records, limit: int = MAX_AUDIT) -> list[Evidence]:
     that is, and it earns it by never containing text from outside.
     """
     blocks: list[Evidence] = []
-    for index, record in enumerate(records[:limit]):
+    for record in records[:limit]:
         blocks.append(
             Evidence(
-                ref=f"audit#{index}",
+                # Keyed by *when*, not by position. `audit#2` was positional,
+                # and the trail moves: answering a question appends an audit
+                # record of its own, so by the time the page rendered, index 0
+                # was the chat turn that produced the citation. A ref that
+                # silently points at a different record than the one it was
+                # taken from is worse than no ref at all.
+                ref=f"audit:{record.at.isoformat()}",
                 source="audit",
                 trusted=True,
                 content=(

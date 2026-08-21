@@ -790,12 +790,41 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
   pending approval and no execution, and that `isolate_host` is not reachable
   from the chat route's tool set at all.
 
-- [ ] **R21 — Chat panel UI.** Needs: **R19**.
-  Collapsible right-side panel on the incident page, seeded with that incident.
-  Starter chips. Every reference to a causal step or evidence id links to it,
-  using R6's resolution.
+- [x] **R21 — Chat panel UI.** Needs: **R19**.
+  Collapsible panel on the incident page, seeded with that incident, with
+  starter chips and every citation rendered as a link.
   **Done when:** a visitor can ask all four starter questions and get grounded,
-  linked answers.
+  linked answers. — **met.** `scripts/verifychat.py` drives the panel in a real
+  browser against the deployed API: four *distinct* answers carrying 4, 13, 1
+  and 9 citations, every one resolving, none dropped, all grounded. 18/18 layout
+  checks still pass with the panel in place.
+
+  Placed under the incident rather than beside it. A right-hand rail is the
+  conventional shape and the wrong one here: at 375px it becomes a bottom sheet
+  covering the thing being asked about, and the questions are *about* what the
+  reader just read. Collapsed by default, because an assistant that opens itself
+  is something to dismiss before reading the incident.
+
+  **Citations needed a resolver, not the existing one.** `Evidence` sends every
+  ref to `/evidence/`, which is right only for event ids; a causal step or an
+  audit record sent there 404s. A citation that leads to "not found" is worse
+  than one plainly unlinked — it looks checkable, and checking it fails. So
+  `hrefFor` routes each kind to a real target, and the chain, plan and diagnosis
+  gained anchors to land on.
+
+  **Audit refs had to stop being positional.** They were `audit#2`, an index
+  into a newest-first list — and answering a question appends an audit record,
+  so by the time the page rendered, index 0 was the chat turn that produced the
+  citation. Refs are now keyed by timestamp, with a second anchor on each row.
+
+  **The verification lied twice before it worked**, which is the part worth
+  keeping. First it located turns by counting `<p>` elements and read the
+  visitor's own question back as the reply — four green ticks, nothing tested.
+  Then, fixed, it fired the questions back to back, hit the per-minute token
+  allowance, and reported one answer four times. It now finds turns by data
+  attribute, paces itself under the allowance, and **fails on identical
+  answers**, because four questions returning one answer would satisfy every
+  other check while proving nothing.
 
 - [ ] **R22 — Audit the agent.** Needs: **R18, R19**.
   Model id, prompt version and full tool-call trace written to the audit table

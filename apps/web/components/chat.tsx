@@ -1,0 +1,354 @@
+"use client";
+
+/**
+ * Sati, on the incident page.
+ *
+ * The panel exists to make one property visible from outside the code: every
+ * sentence is traceable to something stored. So the citations are links, the
+ * dropped ones are shown rather than hidden, and an answer the API marked
+ * ungrounded says so on its face. A chat that renders prose and nothing else
+ * would look identical whether or not any of that were true.
+ *
+ * Collapsed by default. An assistant that opens itself on arrival is a thing to
+ * dismiss before reading the incident, and the incident is why anyone is here.
+ */
+
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { askAgent, tierLabel, type ChatAnswer, type Incident } from "@/lib/api";
+import { Badge, Ident } from "@/components/ui";
+
+/**
+ * Four openings, in the order an analyst actually asks them: what happened,
+ * how do we know, how bad is it, what now. They are also the reason the answer
+ * cache earns its keep — everyone clicks the same four, so almost every visitor
+ * after the first is served without spending a token.
+ */
+const STARTERS = [
+  "What happened?",
+  "How do we know — what is the evidence?",
+  "What is the blast radius?",
+  "What should we do first?",
+] as const;
+
+type Turn =
+  | { role: "you"; text: string }
+  | { role: "sati"; answer: ChatAnswer }
+  | { role: "error"; text: string; retryable: boolean };
+
+export function ChatPanel({ incident }: { incident: Incident }) {
+  const [open, setOpen] = useState(false);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const log = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+
+  // Follow the conversation as it grows, but only the log — scrolling the page
+  // would yank an incident out from under someone who is reading it.
+  useEffect(() => {
+    log.current?.scrollTo({ top: log.current.scrollHeight, behavior: "smooth" });
+  }, [turns, busy]);
+
+  useEffect(() => {
+    if (open) input.current?.focus();
+  }, [open]);
+
+  const ask = useCallback(
+    async (question: string) => {
+      const text = question.trim();
+      if (!text || busy) return;
+
+      setTurns((prior) => [...prior, { role: "you", text }]);
+      setDraft("");
+      setBusy(true);
+
+      const result = await askAgent(incident.id, text);
+      setTurns((prior) => [
+        ...prior,
+        "answer" in result
+          ? { role: "sati", answer: result.answer }
+          : { role: "error", text: result.error, retryable: result.retryable },
+      ]);
+      setBusy(false);
+    },
+    [busy, incident.id],
+  );
+
+  if (!open) {
+    return (
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="focusable flex w-full items-center gap-3 rounded-lg border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-4 py-3 text-left transition hover:bg-[rgb(var(--raised))]"
+        >
+          <span aria-hidden="true" className="text-[rgb(var(--astra))]">
+            ◈
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">Ask about this incident</span>
+            <span className="block text-xs text-[rgb(var(--faint))]">
+              Answers cite stored evidence, and cannot act on anything
+            </span>
+          </span>
+          <span aria-hidden="true" className="text-[rgb(var(--faint))]">
+            +
+          </span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <section
+      aria-label="Ask about this incident"
+      className="mt-6 overflow-hidden rounded-lg border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))]"
+    >
+      <header className="flex items-center gap-3 border-b border-[rgb(var(--edge))] px-4 py-3">
+        <span aria-hidden="true" className="text-[rgb(var(--astra))]">
+          ◈
+        </span>
+        <h2 className="min-w-0 flex-1 text-sm font-medium">
+          Ask about {incident.id}
+        </h2>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="focusable rounded px-2 py-1 text-xs text-[rgb(var(--faint))] hover:text-[rgb(var(--ink))]"
+        >
+          Close
+        </button>
+      </header>
+
+      <div
+        ref={log}
+        aria-live="polite"
+        className="max-h-[28rem] space-y-4 overflow-y-auto px-4 py-4"
+      >
+        {turns.length === 0 && (
+          <p className="text-sm text-[rgb(var(--faint))]">
+            Sati reads this incident&rsquo;s evidence and answers from it. It can
+            name an action, but it cannot run one &mdash; anything it proposes
+            goes to a human for approval.
+          </p>
+        )}
+
+        {turns.map((turn, index) => (
+          <TurnView key={index} turn={turn} incident={incident} />
+        ))}
+
+        {busy && (
+          <p className="flex items-center gap-3 text-sm text-[rgb(var(--faint))]">
+            {/* The animation is decorative and hidden from assistive tech; the
+                sentence beside it is what actually reports the state, and
+                `aria-live` on the log announces it. */}
+            <span className="loose" aria-hidden="true" />
+            Reading the evidence…
+          </p>
+        )}
+      </div>
+
+      {turns.length === 0 && (
+        <div className="flex flex-wrap gap-2 border-t border-[rgb(var(--edge))] px-4 py-3">
+          {STARTERS.map((starter) => (
+            <button
+              key={starter}
+              type="button"
+              disabled={busy}
+              onClick={() => ask(starter)}
+              className="focusable rounded-full border border-[rgb(var(--edge-strong))] px-3 py-1.5 text-xs transition hover:bg-[rgb(var(--raised))] disabled:opacity-50"
+            >
+              {starter}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          ask(draft);
+        }}
+        className="flex items-end gap-2 border-t border-[rgb(var(--edge))] px-4 py-3"
+      >
+        <label htmlFor="sati-question" className="sr-only">
+          Your question about {incident.id}
+        </label>
+        <textarea
+          id="sati-question"
+          ref={input}
+          rows={1}
+          value={draft}
+          disabled={busy}
+          onChange={(event) => setDraft(event.target.value)}
+          // Enter sends, Shift+Enter breaks the line. The reverse traps anyone
+          // who types the way every other chat box has taught them to.
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              ask(draft);
+            }
+          }}
+          placeholder="Ask about this incident…"
+          className="focusable min-h-[2.5rem] flex-1 resize-none rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--bg))] px-3 py-2 text-sm placeholder:text-[rgb(var(--faint))]"
+        />
+        <button
+          type="submit"
+          disabled={busy || !draft.trim()}
+          className="focusable rounded border border-[rgb(var(--edge-strong))] px-3 py-2 text-sm transition hover:bg-[rgb(var(--raised))] disabled:opacity-40"
+        >
+          Ask
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function TurnView({ turn, incident }: { turn: Turn; incident: Incident }) {
+  if (turn.role === "you") {
+    return (
+      <p
+        data-turn="you"
+        className="ml-auto max-w-[85%] rounded-lg rounded-br-sm bg-[rgb(var(--raised))] px-3 py-2 text-sm"
+      >
+        {turn.text}
+      </p>
+    );
+  }
+
+  if (turn.role === "error") {
+    return (
+      <p
+        data-turn="error"
+        className="rounded-lg border border-[rgb(var(--edge))] px-3 py-2 text-sm text-[rgb(var(--faint))]"
+      >
+        {turn.text}
+        {turn.retryable && " You can ask again in a moment."}
+      </p>
+    );
+  }
+
+  const { answer } = turn;
+  return (
+    // The data attributes are how `scripts/verifychat.py` finds an answer.
+    // It used to locate turns by position and read the visitor's own question
+    // back as though it were the reply — a check that passed while testing
+    // nothing.
+    <div data-turn="sati" className="max-w-[95%] space-y-2">
+      <p data-answer className="whitespace-pre-wrap text-sm leading-relaxed">
+        {answer.answer}
+      </p>
+
+      {answer.evidence_refs.length > 0 && (
+        <p data-evidence className="mono text-[11px] text-[rgb(var(--faint))]">
+          evidence:{" "}
+          {answer.evidence_refs.map((ref, index) => (
+            <span key={ref}>
+              {index > 0 && ", "}
+              <Link
+                href={hrefFor(ref, incident.id)}
+                className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+              >
+                {label(ref, incident.id)}
+              </Link>
+            </span>
+          ))}
+        </p>
+      )}
+
+      {answer.proposed_action_id && answer.verdict && (
+        <Proposal answer={answer} />
+      )}
+
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[rgb(var(--faint))]">
+        {/* Not decoration. An answer nobody can trace is the failure mode this
+            whole design is arranged against, so when it happens it is stated
+            rather than left for the reader to infer from a missing line. */}
+        {!answer.grounded && (
+          <Badge status="warning">not grounded</Badge>
+        )}
+        {!answer.answerable && <Badge status="neutral">not in the evidence</Badge>}
+        {answer.truncated && <Badge status="neutral">cut short</Badge>}
+        <span>{answer.cached ? "from cache" : `${answer.tokens} tokens`}</span>
+        <span className="mono">{answer.model}</span>
+        {answer.dropped_refs.length > 0 && (
+          <span title="Cited by the model, but matching nothing that was retrieved">
+            {answer.dropped_refs.length} unresolved citation
+            {answer.dropped_refs.length > 1 && "s"} dropped
+          </span>
+        )}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * A proposed action, and what policy said about it.
+ *
+ * Shown in full rather than summarised, because "the assistant suggested
+ * isolating a host" and "the assistant suggested it, policy scored it 67, and
+ * it needs a senior operator" are different statements, and only the second one
+ * tells a reader what happens next.
+ */
+function Proposal({ answer }: { answer: ChatAnswer }) {
+  const verdict = answer.verdict!;
+  return (
+    <div className="rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--raised))] px-3 py-2 text-xs">
+      <p className="flex flex-wrap items-center gap-2">
+        <span className="text-[rgb(var(--faint))]">proposed</span>
+        <Ident>{answer.proposed_action_id}</Ident>
+        <Badge status={verdict.tier === "denied" ? "high" : "warning"}>
+          {tierLabel(verdict.tier)}
+        </Badge>
+        <span className="text-[rgb(var(--faint))]">risk {verdict.effective_risk}</span>
+      </p>
+      <p className="mt-1 text-[rgb(var(--faint))]">
+        Queued for a human. Nothing has run &mdash; the assistant has no way to
+        execute anything.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Where a citation goes.
+ *
+ * Chat refs are not all one kind, and the existing `Evidence` component sends
+ * everything to `/evidence/`, which is right only for event ids. A causal step
+ * or an audit record sent there 404s, and a citation that leads to a "not
+ * found" is worse than one that is plainly unlinked: it looks checkable, and
+ * checking it fails.
+ */
+export function hrefFor(ref: string, incidentId: string): string {
+  if (ref.startsWith("audit:")) {
+    // Anchored by timestamp. The audit list is newest-first and grows as
+    // questions are asked, so a positional anchor points somewhere else by the
+    // time the page renders.
+    return `#${encodeURIComponent(ref)}`;
+  }
+  if (ref.startsWith(`${incidentId}#chain-`)) {
+    return `#chain-${ref.split("chain-")[1]}`;
+  }
+  if (ref.startsWith(`${incidentId}#plan-`)) {
+    return `#plan-${ref.split("plan-")[1]}`;
+  }
+  if (ref.startsWith(`${incidentId}#hypothesis`)) {
+    return "#diagnosis";
+  }
+  if (ref === incidentId) return `/incidents/${encodeURIComponent(ref)}`;
+  // An entity key — `host:ws-0148`. Distinguished from an event id by the
+  // colon, which event ids do not contain.
+  if (ref.includes(":")) return `/entity/${encodeURIComponent(ref)}`;
+  return `/evidence/${encodeURIComponent(ref)}`;
+}
+
+/** Shortened for reading. The full ref is the link target either way, and
+ *  `INC-2026-0901#chain-2` repeated four times is a wall of the same prefix. */
+function label(ref: string, incidentId: string): string {
+  if (ref.startsWith("audit:")) return "audit record";
+  if (ref.startsWith(`${incidentId}#`)) return ref.slice(incidentId.length + 1);
+  return ref;
+}
