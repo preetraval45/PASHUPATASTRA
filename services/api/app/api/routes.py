@@ -431,7 +431,51 @@ def topology_graph(limit: int = 400) -> dict:
     """Nodes and edges for the service map, each node carrying its worst recent
     severity rather than its latest — a service that went critical and then
     reported info seconds later is flapping, not healthy."""
-    return GRAPH.snapshot(limit=limit)
+    snapshot = GRAPH.snapshot(limit=limit)
+    _overlay_open_incidents(snapshot)
+    return snapshot
+
+
+# An open incident outranks a quiet telemetry window, but only a critical one
+# earns the map's top colour. The first version promoted `high` to critical too
+# and turned all eleven nodes red — which tells a reader as little as all eleven
+# grey did. A map is worth having only where it distinguishes.
+_INCIDENT_SEVERITY = {"critical": "critical", "high": "warning",
+                      "medium": "warning", "low": "info"}
+_RANK = {"critical": 3, "warning": 2, "info": 1}
+
+
+def _overlay_open_incidents(snapshot: dict) -> None:
+    """Colour a node by any open incident that touches it.
+
+    Telemetry severity is windowed — the worst thing seen in the last fifteen
+    minutes — which is right for a live system and wrong for an entity with an
+    open critical incident against it and no new events. The map read "no data"
+    for every host on the board while three incidents sat open, because the
+    scripted signals had aged out of the window. Nothing was broken; the map was
+    answering a narrower question than the one a reader asks of it.
+
+    So the two are combined, worst wins. An entity is shown as the most serious
+    thing currently true about it, not the most recent thing said about it.
+    """
+    touched: dict[str, str] = {}
+    for incident in STORE.all():
+        if incident.state in {"resolved", "closed"}:
+            continue
+        level = _INCIDENT_SEVERITY.get(str(incident.severity), "warning")
+        keys = {entity.key() for entity in incident.affected_entities}
+        keys |= {link.entity.key() for link in incident.causal_chain}
+        for key in keys:
+            if _RANK[level] > _RANK.get(touched.get(key, ""), 0):
+                touched[key] = level
+
+    for node in snapshot.get("nodes", []):
+        incident_level = touched.get(node["key"])
+        if incident_level is None:
+            continue
+        current = node.get("severity")
+        if _RANK[incident_level] > _RANK.get(current or "", 0):
+            node["severity"] = incident_level
 
 
 # --- entities ----------------------------------------------------------------

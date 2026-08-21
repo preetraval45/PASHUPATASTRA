@@ -194,10 +194,20 @@ export default async function OverviewPage() {
               <Row label="Entities" value={topology?.nodes ?? 0} />
               <Row label="Observed access paths" value={topology?.edges ?? 0} />
               <Row label="Audit records" value={health.audit_records} />
+              {/* The backend names itself. This read
+                  `audit_storage === "postgres" ? "durable" : "in memory"`, so a
+                  DynamoDB deployment was reported to every visitor as losing its
+                  data on restart — while /health said `ok` two panels away.
+
+                  The same hardcoded "postgres" was fixed in the API during R18
+                  and in its test after that; this was the third copy. A list of
+                  backends that count as durable has to be updated in step with
+                  the backends, and this one was not. Naming what answered
+                  cannot drift. */}
               <Row
                 label="Storage"
-                value={health.audit_storage === "postgres" ? "durable" : "in memory"}
-                warn={health.audit_storage !== "postgres"}
+                value={health.audit_storage === "memory" ? "in memory" : health.audit_storage}
+                warn={health.audit_storage === "memory"}
               />
             </dl>
           </Panel>

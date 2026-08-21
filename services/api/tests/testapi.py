@@ -170,3 +170,44 @@ def test_incident_detail_keeps_plan_and_causal_chain() -> None:
     assert incident["causal_chain"], "causal chain must survive the round trip"
     assert incident["transitions"], "timeline must survive the round trip"
     assert all(link["evidence"] for link in incident["causal_chain"])
+
+
+def test_an_open_incident_colours_the_map() -> None:
+    """Telemetry severity is windowed — the worst thing seen in fifteen minutes
+    — which is right for a live system and wrong for an entity with an open
+    critical incident and no new events. The map read "no data" for every host
+    on the board while three incidents sat open.
+    """
+    from app.api.routes import _overlay_open_incidents
+    from app.store import STORE
+
+    incidents = STORE.all()
+    if not incidents:
+        pytest.skip("no incidents seeded in this configuration")
+
+    keys = {e.key() for i in incidents for e in i.affected_entities}
+    if not keys:
+        pytest.skip("seeded incidents name no entities")
+
+    snapshot = {"nodes": [{"key": key, "severity": None} for key in keys], "edges": []}
+    _overlay_open_incidents(snapshot)
+
+    assert all(node["severity"] is not None for node in snapshot["nodes"])
+
+
+def test_the_overlay_never_downgrades_live_telemetry() -> None:
+    """An entity reporting critical right now must not be softened because the
+    incident against it is merely high."""
+    from app.api.routes import _overlay_open_incidents
+    from app.store import STORE
+
+    incidents = STORE.all()
+    if not incidents:
+        pytest.skip("no incidents seeded in this configuration")
+    key = next((e.key() for i in incidents for e in i.affected_entities), None)
+    if key is None:
+        pytest.skip("seeded incidents name no entities")
+
+    snapshot = {"nodes": [{"key": key, "severity": "critical"}], "edges": []}
+    _overlay_open_incidents(snapshot)
+    assert snapshot["nodes"][0]["severity"] == "critical"

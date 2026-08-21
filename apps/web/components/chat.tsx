@@ -25,14 +25,14 @@ import { Badge, Ident } from "@/components/ui";
  * cache earns its keep — everyone clicks the same four, so almost every visitor
  * after the first is served without spending a token.
  */
-const STARTERS = [
+export const STARTERS = [
   "What happened?",
   "How do we know — what is the evidence?",
   "What is the blast radius?",
   "What should we do first?",
 ] as const;
 
-type Turn =
+export type Turn =
   | { role: "you"; text: string }
   | { role: "sati"; answer: ChatAnswer }
   | { role: "error"; text: string; retryable: boolean };
@@ -207,7 +207,7 @@ export function ChatPanel({ incident }: { incident: Incident }) {
   );
 }
 
-function TurnView({ turn, incident }: { turn: Turn; incident: Incident }) {
+export function TurnView({ turn, incident }: { turn: Turn; incident: Incident }) {
   if (turn.role === "you") {
     return (
       <p
@@ -293,7 +293,7 @@ function TurnView({ turn, incident }: { turn: Turn; incident: Incident }) {
  * it needs a senior operator" are different statements, and only the second one
  * tells a reader what happens next.
  */
-function Proposal({ answer }: { answer: ChatAnswer }) {
+export function Proposal({ answer }: { answer: ChatAnswer }) {
   const verdict = answer.verdict!;
   return (
     <div className="rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--raised))] px-3 py-2 text-xs">

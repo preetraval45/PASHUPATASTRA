@@ -21,6 +21,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 const NAV = [
   { href: "/", label: "Overview" },
   { href: "/incidents", label: "Incidents" },
+  // Its own section. The incident-page panel is for a question that occurs
+  // while reading; this is for arriving with one. Sitting only inside an
+  // incident, it was 1,500px down a 10,000px page and nobody found it.
+  { href: "/ask", label: "Ask" },
   { href: "/infrastructure", label: "Infrastructure" },
   { href: "/actions", label: "Actions" },
   { href: "/audit", label: "Audit" },

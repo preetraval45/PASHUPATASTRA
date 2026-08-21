@@ -87,9 +87,15 @@ export function Page({
     <div className="space-y-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
+          {/* A step up in scale and a tighter track. The old size sat between
+              a heading and a label and read as neither — a page whose title is
+              barely larger than its body text looks like a fragment of some
+              other page. */}
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
           {description && (
-            <p className="mt-1 max-w-2xl text-sm text-[rgb(var(--muted))]">{description}</p>
+            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[rgb(var(--muted))] sm:text-[0.9375rem]">
+              {description}
+            </p>
           )}
         </div>
         {actions && <div className="flex items-center gap-2">{actions}</div>}

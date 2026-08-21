@@ -380,3 +380,42 @@ body {
     opacity: 0.8;
   }
 }
+
+/* Ambient depth.
+ *
+ * The page was a flat fill, which reads as unfinished next to anything built in
+ * the last few years — a modern console gets its depth from light, not from
+ * borders. Two very low-opacity pools in the brand's own colours, fixed behind
+ * everything, so scrolling moves content across a lit ground rather than a
+ * painted one.
+ *
+ * Deliberately faint. This sits under every panel and every piece of text on
+ * the site, and `scripts/verifycontrast.py` composites gradient stops when it
+ * measures — anything strong enough to be noticed as a colour is strong enough
+ * to start failing WCAG on the panels above it. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(55rem 28rem at 12% -8%, rgb(var(--crit) / 0.05), transparent 62%),
+    radial-gradient(48rem 26rem at 88% -4%, rgb(var(--astra) / 0.045), transparent 62%);
+}
+
+/* Light theme takes half of it. The same wash that reads as depth on a dark
+   ground reads as a stain on a white one. */
+:root[data-theme="light"] body::before {
+  background:
+    radial-gradient(55rem 28rem at 12% -8%, rgb(var(--crit) / 0.025), transparent 62%),
+    radial-gradient(48rem 26rem at 88% -4%, rgb(var(--astra) / 0.02), transparent 62%);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) body::before {
+    background:
+      radial-gradient(55rem 28rem at 12% -8%, rgb(var(--crit) / 0.025), transparent 62%),
+      radial-gradient(48rem 26rem at 88% -4%, rgb(var(--astra) / 0.02), transparent 62%);
+  }
+}

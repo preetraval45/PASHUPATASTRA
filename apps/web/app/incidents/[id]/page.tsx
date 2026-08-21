@@ -108,13 +108,18 @@ export default async function IncidentDetailPage({
         </Link>
       }
     >
-      <IncidentView incident={incident} risk={risk} />
+      {/* First on the page, not after the incident.
+          "Under the incident" sounded right and put it 1,500px down a
+          10,000px page, below the causal chain, the diagnosis and the plan —
+          reachable only by someone who had already read everything and then
+          kept scrolling. Nobody found it.
 
-      {/* Directly under the incident, above the loop. A visitor has just read
-          what happened and the next thing they want is to ask about it; at the
-          bottom of the page it would be found only by people who had already
-          finished reading. */}
+          Collapsed it is a single bar, so it costs the incident almost no
+          vertical space, and it is the first thing offered to a reader who
+          arrives not knowing what any of this means. */}
       <ChatPanel incident={incident} />
+
+      <IncidentView incident={incident} risk={risk} />
 
       <Panel
         title="The loop"

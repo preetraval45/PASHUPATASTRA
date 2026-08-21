@@ -28,7 +28,7 @@ VIEWPORTS = [
     ("desktop", 1440, 900),
 ]
 
-DEFAULT_ROUTES = ["/", "/incidents", "/infrastructure", "/actions", "/audit", "/search"]
+DEFAULT_ROUTES = ["/", "/incidents", "/ask", "/infrastructure", "/actions", "/audit", "/search"]
 
 
 def check(page, url: str, route: str, label: str, width: int) -> list[str]:
@@ -53,7 +53,7 @@ def check(page, url: str, route: str, label: str, width: int) -> list[str]:
     # not be navigated.
     #
     # Hence: count what a person can actually see and click, not what exists.
-    sections = {"Overview", "Incidents", "Infrastructure", "Actions", "Audit"}
+    sections = {"Overview", "Incidents", "Ask", "Infrastructure", "Actions", "Audit"}
     visible = {
         link.inner_text().strip()
         for link in page.locator("header nav[aria-label='Primary'] a").all()
