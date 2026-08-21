@@ -33,6 +33,19 @@ def gateway() -> Gateway:
         name=settings.model_provider,
         model=settings.model_id,
         region=settings.aws_region,
+        base_url=settings.model_base_url,
+        api_key_env=settings.model_api_key_env,
+        fallback=(
+            {
+                "base_url": settings.fallback_base_url,
+                "model": settings.fallback_model,
+                "api_key_env": settings.fallback_api_key_env,
+                "requires_key": settings.fallback_requires_key,
+                "timeout": settings.fallback_timeout,
+            }
+            if settings.fallback_base_url
+            else None
+        ),
     )
     return Gateway(
         provider=provider,

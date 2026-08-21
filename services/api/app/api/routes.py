@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
@@ -464,3 +466,87 @@ def event(event_id: str) -> dict[str, object]:
 @router.get("/audit", response_model=list[AuditRecord])
 def audit(incident_ref: str | None = None, limit: int = 100) -> list[AuditRecord]:
     return AUDIT.records(incident_ref=incident_ref, limit=limit)
+
+
+class ChatRequest(BaseModel):
+    incident_id: str
+    message: str
+
+
+@router.post("/agent/chat")
+def agent_chat(request: ChatRequest) -> dict[str, object]:
+    """Ask Sati about one incident.
+
+    Scoped to an incident on purpose. A general "ask the console anything" box
+    on a public site is an interface for enumerating the estate, and there is no
+    question worth answering here that is not about something already on screen.
+
+    The route can read and nothing else. It holds no execute path, and the tools
+    it offers are derived from `ActionSpec.read_only` rather than listed by hand
+    — see `app/agent/tools.py`.
+    """
+    from ..agent import chat as chat_engine
+    from ..engines.buddhi import gateway
+    from pashupatastra.gateway import GatewayError
+
+    message = request.message.strip()
+    if not message:
+        raise HTTPException(status_code=422, detail="message must not be empty")
+    if len(message) > 2000:
+        # A cap in characters, before any tokens are spent. The token ceiling
+        # bounds the conversation; this bounds what one POST can put into it.
+        raise HTTPException(status_code=422, detail="message is too long")
+
+    incident = STORE.get(request.incident_id)
+    if incident is None:
+        raise HTTPException(
+            status_code=404, detail=f"unknown incident {request.incident_id}"
+        )
+
+    provider = gateway().provider
+    if not getattr(provider, "available", lambda: True)():
+        # 503 rather than a fabricated reply. A chat panel that invents answers
+        # when unconfigured is worse than one that is visibly switched off.
+        raise HTTPException(
+            status_code=503,
+            detail="no model is configured; set the model API key to enable chat",
+        )
+
+    try:
+        result = chat_engine.answer(
+            incident=incident,
+            message=message,
+            store=STORE,
+            graph=entitystore(),
+            audit=AUDIT,
+            gateway=gateway(),
+        )
+    except GatewayError as error:
+        # Never the provider's own words. A rate-limit body from Groq carries
+        # the organisation id and a billing upgrade link, and this endpoint is
+        # public — so the detail is logged and a plain sentence is returned.
+        logging.getLogger(__name__).warning("chat unavailable: %s", error)
+        rate_limited = "429" in str(error) or "rate limit" in str(error).lower()
+        raise HTTPException(
+            status_code=429 if rate_limited else 503,
+            detail=(
+                "The assistant is busy right now — the free model allowance is "
+                "per minute. Try again shortly."
+                if rate_limited
+                else "The assistant is unavailable right now."
+            ),
+        ) from error
+
+    AUDIT.append(
+        AuditRecord(
+            at=datetime.now().astimezone(),
+            kind=AuditKind.OBSERVATION,
+            actor="sati.analyst",
+            incident_ref=incident.id,
+            summary=(
+                f"chat: {len(result.trace)} trace entries, {result.tokens} tokens, "
+                f"grounded={result.grounded}"
+            ),
+        )
+    )
+    return result.model_dump(mode="json")

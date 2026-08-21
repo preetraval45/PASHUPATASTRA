@@ -62,6 +62,21 @@ class ActionSpec(BaseModel):
     actions are genuinely shared, and duplicating them under two ids would give
     the policy engine two risk scores for one act."""
 
+    read_only: bool = False
+    """Whether this action only *reads*. Declared, never inferred.
+
+    `changes_nothing` is a different question and a weaker one. It asks whether
+    an act carries risk the policy engine should price, and by that measure
+    paging an analyst is free — nothing breaks, nothing needs rolling back. But
+    it wakes a person up, and `create_case` writes a record that outlives the
+    request. Neither is read-only.
+
+    The distinction exists because the two are used for opposite purposes.
+    `changes_nothing` widens what may run unattended; this narrows what may be
+    handed to a model. Deriving the second from the first would put "page the
+    on-call analyst" behind an unauthenticated text box.
+    """
+
     @property
     def has_tested_rollback(self) -> bool:
         return self.rollback_action_id is not None and not self.irreversible

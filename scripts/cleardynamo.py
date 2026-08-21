@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-PARTITIONS = ("INCIDENT", "AUDIT", "EVENT", "NODE", "EDGE", "META")
+PARTITIONS = ("INCIDENT", "AUDIT", "EVENT", "NODE", "EDGE", "META", "CHAT")
 
 
 def rows(table, pk: str) -> list[dict]:

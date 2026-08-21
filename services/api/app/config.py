@@ -67,7 +67,8 @@ class Settings(BaseSettings):
     artifacts_bucket: str | None = None
 
     model_provider: str = "echo"
-    """Which provider the AI Gateway uses: `bedrock`, `anthropic`, or `echo`.
+    """Which provider the AI Gateway uses: `openai-compat`, `bedrock`,
+    `anthropic`, or `echo`.
 
     Defaults to `echo` — the deterministic stub — so a fresh checkout runs with
     no credentials and cannot silently start spending money. Bedrock is the
@@ -77,6 +78,66 @@ class Settings(BaseSettings):
     model_id: str = "claude-opus-5"
     """Named without a provider prefix. Bedrock's `anthropic.` prefix is applied
     by that provider, so switching providers does not require editing this."""
+
+    model_base_url: str | None = None
+    """Endpoint for `openai-compat`. Groq, Ollama, vLLM and OpenRouter all speak
+    the same chat-completions shape, so which one answers is this value rather
+    than a code path. `None` takes the provider's default."""
+
+    model_api_key_env: str = "PASHU_MODEL_API_KEY"
+    """*Name* of the variable holding the key, not the key.
+
+    The indirection is the point: this value is safe to print in `/health`, log,
+    and commit, and the secret itself only ever exists in the environment. A
+    settings field holding the key would end up in a debug dump the first time
+    something went wrong.
+    """
+
+    chat_token_ceiling: int = 12_000
+    """Tokens one chat conversation may spend, across every turn and tool hop.
+
+    Separate from `model_token_ceiling`, which is per incident. A public text box
+    is a different exposure from an investigation: nobody has to be logged in to
+    type into it, so the cap has to bound a stranger's conversation rather than
+    an analyst's day.
+    """
+
+    fallback_base_url: str | None = None
+    """Second endpoint, tried when the first refuses. Intended for Ollama on an
+    always-free box: no quota, but slow enough that it should never be first.
+    `None` means there is no fallback and a rate limit is simply an error."""
+
+    fallback_model: str = "qwen2.5:7b"
+    fallback_api_key_env: str = "PASHU_FALLBACK_API_KEY"
+    fallback_requires_key: bool = False
+    fallback_timeout: float = 180.0
+    """Long on purpose. The fallback is a CPU box with no quota, and it is being
+    asked to do in a minute what the primary does in two seconds. Timing it out
+    at the primary's timeout would mean never once getting an answer from it.
+
+    Still bounded, because Lambda's own limit is finite and a request that
+    outlives it is a gateway timeout with nothing to show for the wait."""
+    """Ollama takes no key. Demanding one would leave the fallback switched off
+    in exactly the deployment that needs it."""
+
+    chat_answer_tokens: int = 800
+    """Output tokens one chat turn may produce.
+
+    The gateway's 16,000 default is sized for a reasoning call that writes out a
+    full hypothesis set. A chat reply is a paragraph. Providers count
+    `prompt + max_tokens` against a rate limit, so leaving the default in place
+    asked a free tier for 17,938 tokens to answer a question whose evidence was
+    640 — and was refused, in a way that reads like the context was too big when
+    it was the reservation that was.
+    """
+
+    chat_max_tool_hops: int = 4
+    """How many times one question may call a tool before the loop stops.
+
+    A model that keeps asking for another lookup is not converging, and without
+    a hard stop each hop is another paid call. The answer given when the budget
+    runs out says so rather than pretending the loop finished.
+    """
 
     tenant: str = "default"
     """Which organization this deployment serves.

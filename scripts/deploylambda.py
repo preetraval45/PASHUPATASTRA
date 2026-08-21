@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -90,11 +91,41 @@ def environment(cors: list[str]) -> str:
                 # actions. A filter on the view, not a second registry — every
                 # action stays resolvable so a plan's rollback cannot vanish.
                 "PASHU_ACTION_DOMAIN": "security",
-                "PASHU_MODEL_PROVIDER": "echo",
+                # The model, and the key that reaches it. Both come from this
+                # machine's environment and neither is written down here: a key
+                # in a tracked file is a key in the history, and history is
+                # forever even after the file is fixed.
+                **_model_env(),
                 "PASHU_CORS_ORIGINS": json.dumps(cors),
             }
         }
     )
+
+
+def _model_env() -> dict[str, str]:
+    """Model settings for the deployed function, read from this environment.
+
+    Defaults to the deterministic stub. A deploy that forgets the key ships a
+    console whose chat says it is not configured, which is the honest failure —
+    the alternative default would be a chat that invents answers.
+    """
+    key = os.environ.get("PASHU_MODEL_API_KEY", "")
+    if not key:
+        return {"PASHU_MODEL_PROVIDER": "echo"}
+
+    env = {
+        "PASHU_MODEL_PROVIDER": os.environ.get("PASHU_MODEL_PROVIDER", "openai-compat"),
+        "PASHU_MODEL_ID": os.environ.get("PASHU_MODEL_ID", "openai/gpt-oss-20b"),
+        "PASHU_MODEL_API_KEY": key,
+    }
+    # Set once Ollama is up on the always-free box. Until then there is one
+    # provider, and a rate limit is a rate limit rather than a slower answer.
+    fallback = os.environ.get("PASHU_FALLBACK_BASE_URL")
+    if fallback:
+        env["PASHU_MODEL_PROVIDER"] = "failover"
+        env["PASHU_FALLBACK_BASE_URL"] = fallback
+        env["PASHU_FALLBACK_MODEL"] = os.environ.get("PASHU_FALLBACK_MODEL", "qwen2.5:7b")
+    return env
 
 
 def main() -> int:

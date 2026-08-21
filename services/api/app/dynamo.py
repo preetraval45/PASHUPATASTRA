@@ -472,7 +472,9 @@ class DynamoStore:
             }
         )
 
-    def clear(self, partitions: Iterable[str] = ("INCIDENT", "AUDIT", "EVENT", "NODE", "EDGE", "META")) -> int:
+    def clear(self, partitions: Iterable[str] = (
+        "INCIDENT", "AUDIT", "EVENT", "NODE", "EDGE", "META", "CHAT",
+    )) -> int:
         """Empty the table. For re-seeding after the scenarios change shape."""
         removed = 0
         for partition in partitions:
@@ -482,3 +484,19 @@ class DynamoStore:
                     batch.delete_item(Key={"PK": row["PK"], "SK": row["SK"]})
                     removed += 1
         return removed
+
+    # --- chat answer cache ---------------------------------------------------
+
+    def get_cached_answer(self, digest: str) -> dict | None:
+        row = self.table.get_item(Key={"PK": self._pk("CHAT"), "SK": digest}).get("Item")
+        return _plain(row.get("answer")) if row else None
+
+    def put_cached_answer(self, digest: str, answer: dict) -> None:
+        self.table.put_item(
+            Item={
+                "PK": self._pk("CHAT"),
+                "SK": digest,
+                "answer": _numbers_to_decimal(answer),
+                "at": datetime.now().astimezone().isoformat(),
+            }
+        )

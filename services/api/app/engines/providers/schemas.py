@@ -87,10 +87,40 @@ INJECTION_REPORT_V1: dict[str, Any] = {
 }
 
 
+CHAT_ANSWER_V1: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["answer", "evidence_refs", "answerable"],
+    "properties": {
+        "answer": {
+            "type": "string",
+            "description": "The reply, in plain prose. Say only what the "
+            "evidence supports.",
+        },
+        "evidence_refs": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Refs from the evidence blocks that support the "
+            "answer. Every ref is resolved against what was actually retrieved; "
+            "one that does not resolve is removed and the answer is marked "
+            "ungrounded, so inventing a ref makes the answer weaker, not "
+            "stronger.",
+        },
+        "answerable": {
+            "type": "boolean",
+            "description": "False when the retrieved evidence does not contain "
+            "the answer. Saying so is a correct outcome, not a failure — the "
+            "alternative is a confident guess nobody can check.",
+        },
+    },
+}
+
+
 SCHEMAS: dict[str, dict[str, Any]] = {
     "hypothesis_v1": HYPOTHESIS_V1,
     "summary_v1": SUMMARY_V1,
     "injection_report_v1": INJECTION_REPORT_V1,
+    "chat_answer_v1": CHAT_ANSWER_V1,
 }
 
 

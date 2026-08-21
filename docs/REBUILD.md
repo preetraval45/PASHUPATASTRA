@@ -48,11 +48,22 @@ both are flagged where they appear rather than discovered later.
 | S3 | 5 GB | 12 months |
 | Vercel Hobby | 100 GB bandwidth, unlimited static | **Always free**, non-commercial |
 
-**Not free, and unavoidable for what the prompt asks:**
+**Free, but small — which changes the design rather than the budget:**
 
-- **Anthropic API** (R16–R19, the chat agent). Pay-per-token. There is no free
-  tier. Budget it deliberately — see R16, which puts a hard spend ceiling in
-  code before the first call rather than after the first bill.
+- **Groq** (R19, the chat agent). Free with no expiry, and capped at 8,000
+  tokens a minute and 1,000 requests a day. Small enough that answers are cached
+  durably and outputs are bounded at 800 tokens; see R19 for what each of those
+  is protecting against.
+- **Oracle Cloud Always Free** (R19, the fallback). 4 ARM CPUs and 24 GB, free
+  permanently, running Ollama for the requests Groq's per-minute allowance
+  refuses. The only piece of the platform not on AWS, because the AWS free tier
+  is a 1 GB instance and a usable model needs three to four.
+
+**Not free:**
+
+- Nothing, currently. The earlier plan assumed a pay-per-token Anthropic key for
+  the chat agent; the owner ruled that out on 21 August 2026 and the gateway
+  made it a configuration change.
 - **RDS Postgres** is *not* used. The platform supports it, but the demo runs on
   DynamoDB precisely because DynamoDB's free tier does not expire and RDS's
   does. See R15.
@@ -562,8 +573,8 @@ Needs **R8**. Read the frontend design skill before touching a component.
   their own title and description; six icon files and a manifest all 200;
   `robots.txt`, `sitemap.xml` (8 URLs, 3 incidents from the API) and a
   1200×630 card. Read in both themes at desktop and at 375px.*
-  **Phase 2 is closed.** Phase 3 builds the chat agent on this demo and needs
-  the Anthropic API, which has no free tier. **Phase A is the agent that
+  **Phase 2 is closed.** Phase 3 builds the chat agent on this demo, on free
+  model providers — Groq, with Ollama on Oracle behind it. **Phase A is the agent that
   watches a real machine, and is what the owner asked for.**
 
 ---
@@ -661,19 +672,91 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
   the seed as a side effect of import, so the guard has to be set before any
   test module loads, not asserted inside each test.
 
-- [ ] **R19 — Chat route with read-only tools.** Needs: **R4, R18**.
-  `POST /api/agent/chat`. Loads incident, causal chain, entities and audit as
-  context; exposes only risk-tier-0 read-only actions as tools.
-  The API key goes in a Lambda environment variable — Secrets Manager is
-  $0.40/secret/month and this is a demo.
+- [x] **R19 — Chat route with read-only tools.** Needs: **R4, R18**.
+  `POST /api/v1/agent/chat`. Loads incident, causal chain, events and audit as
+  context; offers only read-only tools.
   **Done when:** a question about an incident returns an answer grounded in
-  stored data, with the tool-call trace recorded.
-  **Cost:** Anthropic API, pay-per-token. Set `PASHU_MODEL_TOKEN_CEILING` and a
-  per-conversation cap **before** the first call.
+  stored data, with the tool-call trace recorded. — **met, live on the deployed
+  API.** "What happened, and which account was targeted?" against
+  `INC-2026-0901` returns the credential-stuffing account takeover, naming
+  `j.rivera` and the source address, citing four chain steps and two audit
+  entries, every ref resolvable through R6's evidence route.
 
-- [ ] **R20 — Guardrails in code.** Needs: **R19**.
+  **No Anthropic, and no pay-per-token anywhere.** Owner decision, 21 August
+  2026. The model is reached through the AI Gateway as rule 5 already required,
+  so this was configuration rather than a rewrite:
+
+  - **Groq free tier** is the primary — `openai/gpt-oss-20b`, roughly 2 seconds
+    a turn, 8,000 tokens per minute and 1,000 requests per day, free with no
+    expiry. `openai-compat` speaks plain chat-completions, which is also what
+    Ollama, vLLM, LM Studio and OpenRouter speak, so the provider is one class
+    and the vendor is a base URL.
+  - **Ollama on an Oracle Always Free ARM box** is the fallback — 4 CPUs and
+    24 GB, free permanently, no quota, and slow. The pair is chosen for how
+    their limits differ, not for redundancy: Groq fails under a burst, the box
+    is too slow to lead. `scripts/oracle-ollama.sh` provisions it, behind HTTPS
+    and a bearer token, because an unauthenticated LLM on a public address is
+    found by scanners within days.
+  - **AWS was considered and rejected for this one thing.** Ollama needs 3–4 GB
+    for a usable model; the AWS free tier is a 1 GB instance, and one that fits
+    is about $30/month. Oracle's free shape is 24 GB. The rest of the platform
+    stays on AWS.
+
+  Three things carry the grounding, and none of them is the prompt:
+
+  - **Retrieval is deterministic.** Context is assembled before the model is
+    asked anything; tools fetch *more*, never the basics. If grounding depended
+    on the model choosing to retrieve, the model choosing not to would produce
+    an ungrounded answer that looks exactly like a grounded one — and the
+    fallback box, whose small model has no tool support at all, would have
+    nothing to say.
+  - **Citations are verified, not trusted.** Every ref is matched against what
+    was actually retrieved this turn. Unmatched refs are dropped and reported in
+    `dropped_refs`, and an answer left with none is returned `grounded: false`.
+    Matching is exact, so `INC-2026-0901#chain-9` does not resolve against
+    `INC-2026-0901`.
+  - **The visitor's message is untrusted.** It is fenced and labelled like
+    evidence rather than placed in the instruction channel, and fence lookalikes
+    in it are neutralised. It reads like the trusted half — it is the reason the
+    call is happening — which is what makes interpolating it into instructions a
+    one-line mistake.
+
+  **Cost control, since a free tier is a small tier:**
+  - `chat_answer_tokens` caps output at 800. The gateway's 16,000 default is
+    sized for a reasoning call, and providers count `prompt + max_tokens`
+    against the rate limit — leaving it asked a free tier for 17,938 tokens to
+    answer a question whose evidence was 640, and was refused in a way that
+    reads like the context was too large when it was the reservation.
+  - `chat_token_ceiling` bounds a whole conversation, separately from the
+    per-incident ceiling. A public text box is a different exposure from an
+    analyst's investigation.
+  - **Answers are cached, durably.** Most questions on a public console are the
+    same question. A repeat costs nothing and hits no rate limit — verified live
+    at 0.01s across separate Lambda invocations, which works only because R18
+    made the store durable. The key covers the incident, question, model,
+    instructions and evidence, so a change to any of them retires the entry
+    rather than serving a stale answer.
+
+  A rate limit reaching a visitor is now a plain sentence and a 429. It used to
+  be the provider's own body, which carries the organisation id and a billing
+  upgrade link — on a public endpoint.
+
+- [~] **R20 — Guardrails in code.** Needs: **R19**.
   The chat route cannot invoke a non-zero-risk action — enforced by the route's
-  tool list, not by prompt instruction. Anything the agent proposes becomes a
+  tool list, not by prompt instruction. Most of this landed with R19 and is
+  tested: a tool the model was not offered is never dispatched, the trace
+  records the attempt as a refusal, and the offered list is *derived* from
+  `ActionSpec.read_only` rather than written by hand. **Remaining:** the test
+  that asking the agent to isolate a host produces a pending approval — today it
+  produces an explanation and no approval record.
+
+  R19 found the predicate in this task was wrong. `changes_nothing` is true of
+  `notify_analyst`, which pages a human being, and of `create_case`, which
+  writes a record — both risk 0. Read-only is now declared on the action rather
+  than inferred from its risk, because the two questions are opposites:
+  `changes_nothing` widens what may run unattended, `read_only` narrows what may
+  be handed to a model. Deriving the second from the first would have put "page
+  the on-call analyst" behind an unauthenticated text box. Anything the agent proposes becomes a
   pending approval through the *existing* Dharma flow. No weaker path for
   AI-initiated actions than for human ones.
   **Done when:** a test asserts asking the agent to isolate a host produces a

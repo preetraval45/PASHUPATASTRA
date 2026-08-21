@@ -13,3 +13,4 @@ Protocol: before every push, write a topic-named file from
 - 2026-08-20 · [Rebuild Phase 1 complete](RebuildPhase1Complete.md) — the demo is a blue-team console; R1–R8 done, Phase A unstarted.
 - 2026-08-20 · [Rebuild Phase 2 complete](RebuildPhase2Complete.md) — the demo looks finished; R9–R17 done.
 - 2026-08-21 · [Durable state on DynamoDB](DurableState.md) — R18: DynamoDB behind the store seams, and what durability cost when a local run wrote to prod
+- 2026-08-21 · [The chat agent, on free model providers](ChatAgent.md) — R19: Groq + Ollama on Oracle, deterministic retrieval, verified citations

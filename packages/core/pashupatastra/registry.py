@@ -50,6 +50,7 @@ def _bootstrap() -> None:
             description="Read logs for an entity",
             base_risk=0,
             expected_post_state={},
+            read_only=True,
             # The same act whichever question prompted it. A second id would
             # give the policy engine two risk scores for one thing.
             domains=BOTH,
@@ -189,6 +190,7 @@ def _bootstrap_security() -> None:
             description="Look up an indicator in threat intelligence",
             base_risk=0,
             expected_post_state={},
+            read_only=True,
             domains=SECURITY,
         )
     )

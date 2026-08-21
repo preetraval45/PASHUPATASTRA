@@ -192,3 +192,37 @@ def test_filtering_does_not_narrow_what_resolves() -> None:
     presents the other — including its rollbacks."""
     assert get("restart_service").id == "restart_service"
     assert get("isolate_host").id == "isolate_host"
+
+
+def test_read_only_is_declared_not_inferred() -> None:
+    """`read_only` and `changes_nothing` answer different questions, and the
+    gap between them is the point.
+
+    Paging an analyst costs the policy engine nothing to allow — nothing breaks,
+    nothing needs rolling back — so `notify_analyst` changes nothing. It still
+    wakes a person up, and `create_case` writes a record that outlives the
+    request. Inferring one from the other would hand both to whatever can call a
+    tool, which for the chat route means an unauthenticated text box.
+    """
+    from pashupatastra.registry import all_actions
+
+    by_id = {a.id: a for a in all_actions()}
+    assert by_id["notify_analyst"].changes_nothing
+    assert not by_id["notify_analyst"].read_only
+    assert not by_id["create_case"].read_only
+    assert by_id["read_logs"].read_only
+
+
+def test_nothing_read_only_carries_risk_or_a_post_state() -> None:
+    """A read that has a post-state is not a read. This is the invariant the
+    chat route's tool set rests on, so it is asserted over the whole registry
+    rather than the two actions that happen to be read-only today."""
+    from pashupatastra.registry import all_actions
+
+    for action in all_actions():
+        if not action.read_only:
+            continue
+        assert action.base_risk == 0, action.id
+        assert action.expected_post_state == {}, action.id
+        assert not action.irreversible, action.id
+        assert action.changes_nothing, action.id
