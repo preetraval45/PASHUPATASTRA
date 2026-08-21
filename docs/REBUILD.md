@@ -1089,12 +1089,53 @@ Needs **R23**. Additive, and benefits from the patterns above being solid.
   when it was updated, which is why that chip was the first thing dropped at
   every breakpoint.
 
-- [ ] **R26 — Curated knowledge base for the agent.** Needs: **R19, R24**.
-  Verified feed entries become retrievable context for the chat agent.
+- [x] **R26 — Curated knowledge base for the agent.** Needs: **R19, R24**.
   **Done when:** asking about an ingested CVE returns an answer citing your
-  stored entry and its source, not the model's recollection.
-  **Be precise in the copy:** this is retrieval over curated data. It is not
-  fine-tuning, and must not be described as the agent "learning".
+  stored entry and its source, not the model's recollection. — **met, and the
+  second half is the part that was actually tested.**
+
+  Asked about `CVE-2026-69836`, which the hourly poll had ingested, it answered
+  from the stored advisory — Microsoft Entra ID, deserialization, catalogued
+  2026-08-21, federal deadline 2026-08-24 — citing the stored event id, grounded,
+  nothing dropped.
+
+  Then asked about `CVE-2021-44228`, which is **not** in the store and which
+  every model of this generation knows by heart: *"I have no stored advisory for
+  CVE-2021-44228 in the evidence repository, so I cannot provide details about
+  it or its severity."* `answerable: false`, cited nothing, and not one of
+  Log4j, Log4Shell, JNDI or LDAP in the reply. That is the test that separates
+  retrieval from recollection — the first result alone would have proved only
+  that retrieval agreed with what the model already thought.
+
+  **Retrieved before the model is asked, not by the model choosing to look.** A
+  model asked about a CVE already has an opinion, and an opinion is what it
+  gives when nothing better is in front of it. Identifiers in the question are
+  resolved up front, so the grounded answer is the easy one rather than the
+  disciplined one. A `lookup_advisory` tool exists on top of that, for
+  identifiers the question did not name.
+
+  **An unknown identifier produces no evidence block at all.** The tempting
+  alternative — a block reading "nothing on file for CVE-X" — hands the model a
+  ref to cite for a claim about nothing, and produces an answer that looks
+  grounded while resting on an absence. The instructions cover the missing case
+  in words instead.
+
+  **The extraction pattern is deliberately narrow.** Only `CVE-\d{4}-\d{4,7}`,
+  word-bounded. A looser one — hostnames, addresses — would turn every question
+  into a lookup of whatever string it contained, and on a public console that is
+  an interface for asking which of *our* entities exist. A CVE id is a public
+  identifier for a public document, so resolving one gives away nothing. The
+  tool validates against the same pattern rather than passing its argument
+  through, because otherwise `account:j.rivera` is a valid argument.
+
+  Prompt version moved to **3**, which retires every answer cached under 2. The
+  version is written by hand and the digest goes with it, so an edit that
+  forgets the bump is still visible (R22).
+
+  **The copy says retrieval, and nowhere says learning.** No weights changed and
+  nothing was fine-tuned; a curated corpus is read at question time. Checked
+  across the site and the agent — the only "Learn" on the site is the platform's
+  own `Observe → … → Learn` loop, which is a different claim and predates this.
 
 - [ ] **R27 — Blue Team mode.** Needs: **R5, R11, R25**.
   Show only the first alert; let the player choose what to investigate and which

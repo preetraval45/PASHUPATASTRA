@@ -18,3 +18,4 @@ Protocol: before every push, write a topic-named file from
 - 2026-08-21 · [The chat panel, and a verification that lied twice](ChatPanel.md) — R21: Sati on the incident page; how a green check can test nothing
 - 2026-08-21 · [Auditing the agent, and a cache that never worked](AgentAudit.md) — R22: why-did-it-say-that provenance; a silent cache miss on every request
 - 2026-08-21 · [Real threat intelligence, on a schedule](ThreatFeeds.md) — R24: CISA KEV + URLhaus, cursors, and why intel is never a topology node
+- 2026-08-21 · [Retrieval beats recollection](CuratedIntel.md) — R26: the agent refuses to describe a CVE it has no advisory for

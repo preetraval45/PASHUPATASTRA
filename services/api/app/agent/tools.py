@@ -98,6 +98,29 @@ class ToolBox:
             ),
         ]
 
+        offered.append(
+            ToolSpec(
+                name="lookup_advisory",
+                description=(
+                    "Look up a stored advisory for a vulnerability identifier, "
+                    "such as CVE-2026-0001. Returns what was ingested from the "
+                    "published catalogue, or says there is no entry. Use this "
+                    "instead of recalling what you know about a CVE."
+                ),
+                parameters={
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["identifier"],
+                    "properties": {
+                        "identifier": {
+                            "type": "string",
+                            "description": "A CVE identifier, e.g. CVE-2026-0001.",
+                        }
+                    },
+                },
+            )
+        )
+
         available = set(self.read_only_action_ids())
         if "read_logs" in available:
             offered.append(
@@ -123,6 +146,7 @@ class ToolBox:
             "get_entity": self._get_entity,
             "blast_radius": self._blast_radius,
             "read_logs": self._read_logs,
+            "lookup_advisory": self._lookup_advisory,
         }
         if not self.spec.may_use(call.name):
             return ToolOutcome(
@@ -143,6 +167,57 @@ class ToolBox:
                 refused="no handler",
             )
         return handler(call)
+
+    def _lookup_advisory(self, call: ToolCall) -> ToolOutcome:
+        """One stored advisory, by identifier.
+
+        Not routed through `_scoped`, and that is the point of it being its own
+        handler. `_scoped` restricts lookups to this incident's entities because
+        an open-ended entity lookup on a public console is an interface for
+        asking which of *our* hosts and accounts exist. A CVE id is a public
+        identifier for a public document, so the same restriction would buy
+        nothing and would stop the agent answering the question R26 is about.
+
+        The identifier is validated against the CVE pattern rather than passed
+        through. Without that, the argument is an arbitrary string reaching
+        `entity_events`, and `account:j.rivera` is an arbitrary string.
+        """
+        from . import context
+
+        raw = str(call.arguments.get("identifier") or "").strip()
+        found = context.identifiers(raw)
+        if not found:
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content=(
+                    f"{raw!r} is not a vulnerability identifier. This tool takes "
+                    "a CVE id such as CVE-2026-0001 and nothing else."
+                ),
+                refused="not an identifier",
+            )
+
+        identifier = found[0]
+        rows = self.graph.entity_events(f"vulnerability:{identifier}", limit=1)
+        if not rows:
+            return ToolOutcome(
+                call=call,
+                ok=True,
+                content=(
+                    f"No stored advisory for {identifier}. Nothing has been "
+                    "ingested for it, so there is nothing here to answer from."
+                ),
+            )
+
+        row = rows[0]
+        return ToolOutcome(
+            call=call,
+            ok=True,
+            content="\n".join(context._advisory_lines(identifier, row)),
+            # The ref is what makes the answer citable. Without it the model can
+            # read the advisory and then have nothing that resolves to cite.
+            refs=[row["id"]],
+        )
 
     def _scoped(self, call: ToolCall) -> tuple[str | None, ToolOutcome | None]:
         key = str(call.arguments.get("entity_key") or "").strip()

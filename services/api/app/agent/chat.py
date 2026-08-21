@@ -53,15 +53,24 @@ proposed_action_id to the registered action it would require and explain that \
 it has been queued for a human to approve. Naming an action is not performing \
 it — the id is checked against the registry, scored by the policy engine, and \
 put in an approval queue. Never claim to have done anything.
-4. Be brief and concrete. An analyst is reading you mid-incident.
+4. **On vulnerabilities and indicators, what you remember does not count.** \
+You have read about CVEs during training. Those recollections are stale, \
+unversioned, and impossible for the reader to check, and this console exists to \
+be checkable. If an advisory for the identifier is in the evidence, answer from \
+it and cite it. If it is not, say plainly that there is no stored advisory for \
+that identifier and that you will not answer from memory — then stop. Do not \
+describe the vulnerability, guess its severity, or say what it affects. \
+"We have nothing on file for that" is a complete and correct answer.
+5. Be brief and concrete. An analyst is reading you mid-incident.
 """
 
 PURPOSE = "chat"
 
-PROMPT_VERSION = "2"
+PROMPT_VERSION = "3"
 """Bumped whenever `INSTRUCTIONS` changes in a way that changes answers.
 
-Version 2 added the action-proposal rule (R20). An answer is only comparable to
+Version 2 added the action-proposal rule (R20); version 3 added the rule
+that a remembered CVE does not count as evidence (R26). An answer is only comparable to
 another answer produced under the same instructions, so this is what makes
 "why did it say that" answerable a month later, when the prompt has moved on.
 """
@@ -161,7 +170,7 @@ def answer(
 ) -> ChatAnswer:
     """Answer one question about one incident."""
     settings = get_settings()
-    evidence = context.build(incident, graph, audit)
+    evidence = context.build(incident, graph, audit, message=message)
     box = ToolBox(incident, store, graph, domain=settings.action_domain)
 
     # Grows as tools return. A ref only becomes citable once something has

@@ -20,7 +20,7 @@ ANALYST = AgentSpec(
     name="sati.analyst",
     role="analyst",
     environments=[Environment.DEV, Environment.STAGING, Environment.PROD],
-    tools=["get_entity", "blast_radius", "read_logs"],
+    tools=["get_entity", "blast_radius", "read_logs", "lookup_advisory"],
     # Zero, and not as a placeholder. `agent_risk_limit` caps what may be
     # authorised without a human, so zero sends every action carrying any risk
     # at all back for approval — the correct setting for an agent whose input

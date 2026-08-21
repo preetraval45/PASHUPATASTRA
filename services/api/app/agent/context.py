@@ -18,10 +18,23 @@ nobody can retrieve is indistinguishable from evidence nobody has.
 
 from __future__ import annotations
 
+import re
+
 from pashupatastra.gateway import Evidence
 from pashupatastra.incidents import Incident
 
 MAX_EVENTS = 12
+MAX_INTEL = 4
+
+CVE = re.compile(r"\bCVE-\d{4}-\d{4,7}\b", re.IGNORECASE)
+"""The one identifier worth extracting from a question.
+
+Deliberately narrow. A looser pattern — hostnames, addresses — would turn every
+question into a lookup of whatever string it happened to contain, and on a
+public console that is an interface for asking which of *our* entities exist.
+A CVE id is a public identifier for a public document, so resolving one gives
+away nothing.
+"""
 
 
 def incident_evidence(incident: Incident) -> list[Evidence]:
@@ -134,6 +147,80 @@ def event_evidence(store, event_ids: list[str], limit: int = MAX_EVENTS) -> list
     return blocks
 
 
+def identifiers(message: str) -> list[str]:
+    """Vulnerability ids mentioned in a question, uppercased and deduplicated."""
+    seen: list[str] = []
+    for match in CVE.findall(message or ""):
+        upper = match.upper()
+        if upper not in seen:
+            seen.append(upper)
+    return seen[:MAX_INTEL]
+
+
+def _advisory_lines(identifier: str, row: dict) -> list[str]:
+    """One advisory, as lines. Built as a list rather than a chain of
+    conditional f-strings because half of these fields are absent on any given
+    entry — KEV has a remediation deadline, URLhaus has none — and the version
+    that concatenated optionals was unreadable before it was wrong."""
+    labels = row.get("labels") or {}
+    provenance = row.get("provenance") or {}
+
+    lines = [
+        f"{identifier} — {labels.get('title', '')}".strip(),
+        f"verification: {labels.get('verification', 'unknown')} "
+        f"(published by {provenance.get('source_system', 'unknown')})",
+        f"added to the catalogue: {provenance.get('offset', 'unknown')}",
+    ]
+    if labels.get("summary"):
+        lines.append(labels["summary"])
+    if labels.get("required_action"):
+        lines.append(f"required action: {labels['required_action']}")
+    if labels.get("due_date"):
+        lines.append(f"federal remediation due: {labels['due_date']}")
+    if labels.get("ransomware") == "known":
+        lines.append("known use in ransomware campaigns")
+    lines.append(f"advisory: {provenance.get('url', 'none recorded')}")
+    return lines
+
+
+def intel_evidence(graph, message: str, limit: int = MAX_INTEL) -> list[Evidence]:
+    """Stored advisories for identifiers the question mentions.
+
+    Retrieved **before** the model is asked, not by the model deciding to look.
+    That ordering is the whole of R26: a model asked about `CVE-2026-0001`
+    already has an opinion from training, and an opinion is what it gives if
+    nothing better is in front of it. Putting the stored entry in the prompt
+    makes the grounded answer the easy one rather than the disciplined one.
+
+    Untrusted, like all evidence. The text originates with CISA or abuse.ch —
+    reputable, and still not us.
+
+    An identifier with no stored entry produces **no block at all**. The
+    temptation is to emit "nothing on file for CVE-X", and that hands the model
+    a ref to cite for a claim about nothing — an answer that looks grounded
+    while resting on an absence. The instructions cover the missing case in
+    words instead.
+    """
+    blocks: list[Evidence] = []
+    for identifier in identifiers(message)[:limit]:
+        rows = (
+            graph.entity_events(f"vulnerability:{identifier}", limit=1)
+            if hasattr(graph, "entity_events")
+            else []
+        )
+        if not rows:
+            continue
+        row = rows[0]
+        blocks.append(
+            Evidence(
+                ref=row["id"],
+                source=row.get("source") or "intel",
+                content="\n".join(_advisory_lines(identifier, row)),
+            )
+        )
+    return blocks
+
+
 def cited_event_ids(incident: Incident) -> list[str]:
     """Every event id the incident points at, in the order it points at them.
 
@@ -150,7 +237,7 @@ def cited_event_ids(incident: Incident) -> list[str]:
     return seen
 
 
-def build(incident: Incident, store, audit=None) -> list[Evidence]:
+def build(incident: Incident, store, audit=None, message: str = "") -> list[Evidence]:
     """Everything known about one incident, ready to be fenced.
 
     **The audit trail is deliberately not here.** It was, and it caused three
@@ -176,4 +263,8 @@ def build(incident: Incident, store, audit=None) -> list[Evidence]:
     return [
         *incident_evidence(incident),
         *event_evidence(store, cited_event_ids(incident)),
+        # Advisories for anything the question names. Last, because they are
+        # context for the question rather than facts about the incident, and a
+        # reader scanning the prompt should meet the incident first.
+        *intel_evidence(store, message),
     ]

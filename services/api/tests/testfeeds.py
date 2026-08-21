@@ -263,3 +263,136 @@ def test_entries_are_retrievable_by_id_like_any_other_evidence(feeds) -> None:
     events = fetch_kev(limit=2)
     graph.save_events(events)
     assert graph.event(events[0].id) is not None
+
+
+# --- R26: the agent answers from the stored entry, not from memory ------------
+
+
+class Graph:
+    """Just enough store to resolve one advisory by entity key."""
+
+    def __init__(self, rows: dict[str, list[dict]] | None = None) -> None:
+        self.rows = rows or {}
+        self.asked: list[str] = []
+
+    def entity_events(self, key: str, limit: int = 50) -> list[dict]:
+        self.asked.append(key)
+        return self.rows.get(key, [])[:limit]
+
+
+ADVISORY = {
+    "id": "evt-advisory-1",
+    "source": "cisa-kev",
+    "labels": {
+        "verification": "confirmed",
+        "title": "Acme Gateway Command Injection",
+        "summary": "Acme Gateway contains a command injection flaw.",
+        "required_action": "Apply mitigations per vendor instructions.",
+        "due_date": "2026-09-10",
+        "ransomware": "known",
+    },
+    "provenance": {
+        "source_system": "cisa-kev",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-0001",
+        "offset": "2026-08-20",
+    },
+}
+
+
+def test_identifiers_are_extracted_case_insensitively_and_bounded() -> None:
+    """Narrow on purpose. A looser pattern would turn every question into a
+    lookup of whatever string it contained, which on a public console is an
+    interface for asking which of *our* entities exist."""
+    from app.agent.context import identifiers
+
+    assert identifiers("does cve-2026-0001 matter?") == ["CVE-2026-0001"]
+    assert identifiers("XCVE-2026-0001Y") == []
+    assert identifiers("CVE-2026-0001 and CVE-2026-0001") == ["CVE-2026-0001"]
+    assert len(identifiers(" ".join(f"CVE-2026-000{n}" for n in range(1, 9)))) == 4
+
+
+def test_a_mentioned_cve_is_retrieved_before_the_model_is_asked() -> None:
+    """The whole of R26. A model asked about a CVE already has an opinion from
+    training, and an opinion is what it gives if nothing better is in front of
+    it. Retrieval first makes the grounded answer the easy one."""
+    from app.agent.context import intel_evidence
+
+    graph = Graph({"vulnerability:CVE-2026-0001": [ADVISORY]})
+    blocks = intel_evidence(graph, "Is CVE-2026-0001 relevant here?")
+
+    assert len(blocks) == 1
+    assert blocks[0].ref == "evt-advisory-1"
+    assert "Acme Gateway Command Injection" in blocks[0].content
+    assert "confirmed" in blocks[0].content
+    assert "nvd.nist.gov" in blocks[0].content
+    # Reputable, and still not us.
+    assert blocks[0].trusted is False
+
+
+def test_an_unknown_cve_produces_no_block_at_all() -> None:
+    """The tempting alternative is a block saying "nothing on file", which
+    hands the model a ref to cite for a claim about nothing — an answer that
+    looks grounded while resting on an absence."""
+    from app.agent.context import intel_evidence
+
+    assert intel_evidence(Graph(), "What about CVE-1999-9999?") == []
+
+
+def test_a_question_naming_nothing_costs_no_lookups() -> None:
+    from app.agent.context import intel_evidence
+
+    graph = Graph()
+    intel_evidence(graph, "What happened on this host?")
+    assert graph.asked == []
+
+
+def test_the_advisory_tool_refuses_anything_that_is_not_an_identifier() -> None:
+    """Without validation the argument is an arbitrary string reaching
+    `entity_events`, and `account:j.rivera` is an arbitrary string."""
+    from pashupatastra.gateway import ToolCall
+    from app.agent.tools import ToolBox
+
+    class FakeIncident:
+        affected_entities: list = []
+        causal_chain: list = []
+
+    box = ToolBox(FakeIncident(), None, Graph({"vulnerability:CVE-2026-0001": [ADVISORY]}))
+
+    refused = box.dispatch(ToolCall(id="1", name="lookup_advisory",
+                                    arguments={"identifier": "account:j.rivera"}))
+    assert refused.ok is False
+    assert refused.refused == "not an identifier"
+
+    ok = box.dispatch(ToolCall(id="2", name="lookup_advisory",
+                               arguments={"identifier": "CVE-2026-0001"}))
+    assert ok.ok is True
+    assert ok.refs == ["evt-advisory-1"]
+    assert "Acme Gateway" in ok.content
+
+
+def test_the_advisory_tool_says_so_when_there_is_no_entry() -> None:
+    """Distinct from refusing: the identifier was valid and we simply have
+    nothing. The model needs to be able to tell those apart."""
+    from pashupatastra.gateway import ToolCall
+    from app.agent.tools import ToolBox
+
+    class FakeIncident:
+        affected_entities: list = []
+        causal_chain: list = []
+
+    outcome = ToolBox(FakeIncident(), None, Graph()).dispatch(
+        ToolCall(id="1", name="lookup_advisory", arguments={"identifier": "CVE-2026-0001"})
+    )
+    assert outcome.ok is True
+    assert outcome.refs == []
+    assert "No stored advisory" in outcome.content
+
+
+def test_the_prompt_forbids_answering_a_cve_from_memory() -> None:
+    """The rule that makes the retrieved advisory win over the recollection."""
+    from app.agent.chat import INSTRUCTIONS, PROMPT_VERSION
+
+    assert PROMPT_VERSION == "3", "the prompt changed; the version must move with it"
+    lowered = INSTRUCTIONS.lower()
+    assert "what you remember does not count" in lowered
+    assert "will not answer from memory" in lowered
