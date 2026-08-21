@@ -54,11 +54,31 @@ MEASURE = """
   };
 
   // Composite every background layer from this element upward until opaque.
+  //
+  // `background-image` counts. A surface painted by a gradient reports
+  // `backgroundColor: transparent`, so reading only the colour walks straight
+  // past it to the page ground and measures text against a background it is
+  // not on — which reported two false failures the moment panels gained a
+  // gradient. The gradient's own stops are sampled instead.
+  const gradientStops = (image) => {
+    if (!image || image === 'none') return null;
+    const stops = image.match(/rgba?\([^)]*\)/g);
+    if (!stops || !stops.length) return null;
+    // The darkest stop, because it is the worst case for text sitting on it.
+    return stops.map(parse).filter(Boolean).sort((a, b) => {
+      const l = (c) => 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
+      return l(a) - l(b);
+    })[0];
+  };
+
   const effectiveBackground = (el) => {
     const layers = [];
     for (let n = el; n; n = n.parentElement) {
-      const c = parse(getComputedStyle(n).backgroundColor);
+      const s = getComputedStyle(n);
+      const c = parse(s.backgroundColor);
       if (c && c[3] > 0) { layers.push(c); if (c[3] === 1) break; }
+      const g = gradientStops(s.backgroundImage);
+      if (g && g[3] > 0) { layers.push(g); if (g[3] === 1) break; }
     }
     let base = layers.length && layers[layers.length-1][3] === 1
       ? layers.pop()

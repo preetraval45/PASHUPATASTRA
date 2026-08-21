@@ -21,12 +21,16 @@ export type Status = "critical" | "high" | "warning" | "ok" | "neutral";
  * colour-blind operator, the monochrome print-out, and the screenshot pasted
  * into a ticket — all of which are ordinary, not edge cases.
  */
-export const STATUS: Record<Status, { glyph: string; text: string; ring: string }> = {
-  critical: { glyph: "▲", text: "text-[rgb(var(--crit))]", ring: "border-[rgb(var(--crit))]/40 bg-[rgb(var(--crit))]/10" },
-  high: { glyph: "▲", text: "text-[rgb(var(--high))]", ring: "border-[rgb(var(--high))]/40 bg-[rgb(var(--high))]/10" },
-  warning: { glyph: "◆", text: "text-[rgb(var(--warn))]", ring: "border-[rgb(var(--warn))]/40 bg-[rgb(var(--warn))]/10" },
-  ok: { glyph: "●", text: "text-[rgb(var(--ok))]", ring: "border-[rgb(var(--ok))]/40 bg-[rgb(var(--ok))]/10" },
-  neutral: { glyph: "○", text: "text-[rgb(var(--faint))]", ring: "border-[rgb(var(--edge))] bg-[rgb(var(--raised))]" },
+/** `stroke` is the raw colour, for SVG fills and inline styles where a Tailwind
+ *  class cannot reach. It resolves the same custom property the classes do, so
+ *  a chart and a badge cannot end up disagreeing about what critical looks
+ *  like — or about what it looks like in the other theme. */
+export const STATUS: Record<Status, { glyph: string; text: string; ring: string; stroke: string }> = {
+  critical: { glyph: "▲", text: "text-[rgb(var(--crit))]", ring: "border-[rgb(var(--crit))]/40 bg-[rgb(var(--crit))]/10", stroke: "rgb(var(--crit))" },
+  high: { glyph: "▲", text: "text-[rgb(var(--high))]", ring: "border-[rgb(var(--high))]/40 bg-[rgb(var(--high))]/10", stroke: "rgb(var(--high))" },
+  warning: { glyph: "◆", text: "text-[rgb(var(--warn))]", ring: "border-[rgb(var(--warn))]/40 bg-[rgb(var(--warn))]/10", stroke: "rgb(var(--warn))" },
+  ok: { glyph: "●", text: "text-[rgb(var(--ok))]", ring: "border-[rgb(var(--ok))]/40 bg-[rgb(var(--ok))]/10", stroke: "rgb(var(--ok))" },
+  neutral: { glyph: "○", text: "text-[rgb(var(--faint))]", ring: "border-[rgb(var(--edge))] bg-[rgb(var(--raised))]", stroke: "rgb(var(--muted))" },
 };
 
 export function statusForSeverity(severity: string | null | undefined): Status {
@@ -124,23 +128,35 @@ export function Stat({
   value,
   hint,
   status,
+  chart,
 }: {
   label: string;
   value: string | number;
   hint?: string;
   status?: Status;
+  /** A sparkline or bar drawn from data the caller already had. */
+  chart?: ReactNode;
 }) {
+  const numeric = typeof value === "number";
   return (
-    <div className="panel p-4">
+    <div
+      className={`panel lift flex flex-col p-4 sm:p-5 ${
+        status === "critical" ? "panel-critical" : status === "warning" ? "panel-warn" : ""
+      }`}
+    >
       <div className="label">{label}</div>
+      {/* Much larger than the body text on purpose. The number is what the panel
+          is for, and at 24px it was the same weight as its own caption — which
+          is why every page read as one continuous block of small text. */}
       <div
-        className={`tnum mt-2 text-2xl font-semibold ${
+        className={`figure mt-3 text-[2.25rem] sm:text-[2.75rem] ${
           status ? STATUS[status].text : "text-[rgb(var(--ink))]"
         }`}
       >
-        {typeof value === "number" ? value.toLocaleString() : value}
+        {numeric ? value.toLocaleString() : value}
       </div>
-      {hint && <div className="mt-1 text-xs text-[rgb(var(--faint))]">{hint}</div>}
+      {hint && <div className="mt-2 text-xs text-[rgb(var(--faint))]">{hint}</div>}
+      {chart && <div className="mt-auto pt-4">{chart}</div>}
     </div>
   );
 }

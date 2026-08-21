@@ -1,3 +1,4 @@
+import { Distribution } from "@/components/charts";
 import { Badge, Ident, Offline, Page, Panel, statusForRisk } from "@/components/ui";
 import { getActions } from "@/lib/api";
 
@@ -27,6 +28,20 @@ export default async function ActionsPage() {
       title="Action registry"
       description="The closed set of operations this system can perform. Anything not listed here cannot be executed — actions are registered, never generated."
     >
+      {/* Counted from the registry the API returned. The bands are the autonomy
+          tiers, so the shape of this chart is the shape of the policy. */}
+      <Panel title="Risk distribution" aside={`${actions.length} actions`}>
+        <Distribution
+          bands={[
+            { label: "autonomous", count: actions.filter((a) => a.base_risk <= 30).length, status: "ok" },
+            { label: "approval", count: actions.filter((a) => a.base_risk > 30 && a.base_risk <= 60).length, status: "warning" },
+            { label: "senior", count: actions.filter((a) => a.base_risk > 60 && a.base_risk <= 80).length, status: "high" },
+            { label: "never", count: actions.filter((a) => a.base_risk > 80).length, status: "critical" },
+          ]}
+          total={actions.length}
+        />
+      </Panel>
+
       <Panel title="Registered actions" aside={`${actions.length} actions`}>
         <div className="-mx-5 overflow-x-auto">
           <table className="stacked w-full min-w-[42rem] text-left text-sm">

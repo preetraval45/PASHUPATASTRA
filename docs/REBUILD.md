@@ -580,36 +580,47 @@ Direction: **rich SOC console.** Keep the calm, precise register the prompt asks
 for — an air-traffic display, not a movie-hacker terminal — and add the depth
 and the graphics it is missing.
 
-- [ ] **R40 — Surfaces with depth.** Needs: **R17**.
+- [x] **R40 — Surfaces with depth.** Needs: **R17**.
   Elevation, gradient panels, and a glow on critical state. Every surface is
   currently one flat fill with a 1px border.
   **Done when:** a critical incident is visibly different in weight from a
   resolved one before reading a word, and contrast still passes in both themes.
 
-- [ ] **R41 — A type scale with real contrast.** Needs: **R40**.
+- [x] **R41 — A type scale with real contrast.** Needs: **R40**.
   Headline numbers much larger, labels smaller and quieter, so a page has an
   order to read it in.
   **Done when:** the overview's numbers read at a glance from across a desk.
 
-- [ ] **R42 — Charts and sparklines.** Needs: **R41**.
+- [x] **R42 — Charts and sparklines.** Needs: **R41**.
   Severity over time, risk distribution across the registry, entity status
   breakdown. **Every series comes from data the API already returns** — a chart
   of invented numbers on a page about not inventing things would be absurd.
   **Done when:** the overview and the action registry each carry a chart drawn
   from real values, and no series is synthesised.
 
-- [ ] **R43 — The attack chain as a flow.** Needs: **R40**.
+- [x] **R43 — The attack chain as a flow.** Needs: **R40**.
   The causal chain drawn as connected entities with the technique on each edge,
   instead of a numbered list. Keeps the list underneath for screen readers.
   **Done when:** the chain reads as a picture at a glance and loses nothing for
   a reader who cannot see it.
 
-- [ ] **R44 — Motion.** Needs: **R41**.
+- [x] **R44 — Motion.** Needs: **R41**.
   Page transitions, numbers counting up, staggered reveals, depth on hover.
   **Done when:** every animation is disabled under `prefers-reduced-motion`, and
   nothing load-bearing depends on motion to be understood.
 
-- [ ] **R45 — Deploy and review.** Needs: **R40–R44**.
+- [x] **R45 — Deploy and review.** Needs: **R40–R44**.
+  *Evidence: contrast passes in both themes and `verifyui.py` is 18/18, both
+  after the contrast tool was taught to read gradient backgrounds — see below.*
+  **The measurement tool was wrong before it was right.** `.panel` began
+  painting with `background-image`, and the tool only read `backgroundColor`,
+  so a gradient surface reported as transparent and text was measured against
+  the page ground instead. It reported two failures; the fix I nearly made was
+  to darken `--ok` and drop an opacity — changing brand colours to satisfy a
+  broken measurement. Once the tool sampled gradient stops the real cause was
+  visible: in light theme `--raised` is *darker* than `--panel`, so a top-down
+  gradient darkens the top of every panel. Light panels are flat with a shadow
+  now, which is where a light surface should get its depth from anyway.
 
 ## Phase 3 — The agent
 

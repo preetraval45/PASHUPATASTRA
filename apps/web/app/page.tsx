@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Sparkline, StatusBar } from "@/components/charts";
+
 import {
   Ago,
   Badge,
@@ -11,16 +13,21 @@ import {
   Stat,
   statusForSeverity,
 } from "@/components/ui";
-import { getAudit, getHealth, getIncidents, getTopologyCounts, type Incident } from "@/lib/api";
+import { getAudit, getHealth, getIncidents, getTopology, getTopologyCounts, type Incident } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
 export default async function OverviewPage() {
-  const [health, incidents, topology, audit] = await Promise.all([
+  const [health, incidents, topology, audit, graph] = await Promise.all([
     getHealth(),
     getIncidents(),
     getTopologyCounts(),
-    getAudit(8),
+    // Twelve buckets need more than eight records to be a line rather than a
+    // dot, so the overview asks for a window rather than a preview.
+    getAudit(120),
+    // The counts endpoint returns two numbers; the posture bar needs the nodes
+    // themselves to count severities. Both are small.
+    getTopology(),
   ]);
 
   if (!health) return <Offline />;
@@ -28,6 +35,13 @@ export default async function OverviewPage() {
   const open = (incidents ?? []).filter((i) => i.state !== "resolved");
   const awaiting = open.filter((i) => i.state === "awaiting_approval");
   const users = open.reduce((n, i) => n + i.impact.estimated_users_affected, 0);
+  // Both series below are counted from records the API returned. Nothing is
+  // interpolated and no empty bucket is filled in — a chart that invents a
+  // number, on a page whose argument is that nothing here is invented, would
+  // undo the argument.
+  const activity = bucketByHour(audit ?? [], 12);
+  const posture = countSeverity(graph?.nodes ?? []);
+
   const worst = open.reduce<Incident | null>(
     (acc, i) => (acc === null || rank(i) > rank(acc) ? i : acc),
     null,
@@ -71,12 +85,19 @@ export default async function OverviewPage() {
         </p>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*:nth-child(1)]:rise [&>*:nth-child(2)]:rise [&>*:nth-child(2)]:rise-1 [&>*:nth-child(3)]:rise [&>*:nth-child(3)]:rise-2 [&>*:nth-child(4)]:rise [&>*:nth-child(4)]:rise-3">
         <Stat
           label="Open incidents"
           value={open.length}
           status={open.length ? "critical" : "ok"}
           hint={awaiting.length ? `${awaiting.length} need a decision` : "none awaiting approval"}
+          chart={
+            <Sparkline
+              values={activity}
+              status={open.length ? "critical" : "ok"}
+              label="Audit records per hour, last 12 hours"
+            />
+          }
         />
         <Stat
           label="Accounts affected"
@@ -96,6 +117,15 @@ export default async function OverviewPage() {
           hint={health.dry_run ? "nothing is executed" : "actions change real systems"}
         />
       </section>
+
+      {posture.some((s) => s.count > 0) && (
+        <Panel
+          title="Posture"
+          aside={<Link href="/infrastructure" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">the map →</Link>}
+        >
+          <StatusBar segments={posture} />
+        </Panel>
+      )}
 
       {/* `[&>*]:min-w-0` because a grid item defaults to `min-width: auto`,
           which refuses to shrink below its content's minimum contribution. One
@@ -239,4 +269,33 @@ function Row({ label, value, warn }: { label: string; value: string | number; wa
 function rank(incident: Incident): number {
   const severity = { critical: 4, high: 3, medium: 2, low: 1 }[incident.severity] ?? 0;
   return severity * 10 + (incident.state === "awaiting_approval" ? 5 : 0);
+}
+
+
+/**
+ * Audit records per hour, oldest bucket first.
+ *
+ * Counts what is there. An hour with nothing in it is a zero, not a gap to be
+ * smoothed over — the flat stretch is the true shape of a quiet night.
+ */
+function bucketByHour(records: { at: string }[], hours: number): number[] {
+  const buckets = new Array(hours).fill(0);
+  const now = Date.now();
+  for (const record of records) {
+    const age = (now - new Date(record.at).getTime()) / 3_600_000;
+    if (age < 0 || age >= hours) continue;
+    buckets[hours - 1 - Math.floor(age)] += 1;
+  }
+  return buckets;
+}
+
+/** Entities by their worst recent severity, in the order an operator reads. */
+function countSeverity(nodes: { severity: string | null }[]) {
+  const of = (s: string | null) => nodes.filter((n) => n.severity === s).length;
+  return [
+    { label: "critical", count: of("critical"), status: "critical" as const },
+    { label: "degraded", count: of("warning"), status: "warning" as const },
+    { label: "healthy", count: of("info"), status: "ok" as const },
+    { label: "no data", count: of(null), status: "neutral" as const },
+  ];
 }

@@ -66,27 +66,52 @@ export function IncidentView({
         </dl>
       </Panel>
 
+      {/* The chain as a chain.
+          
+          It was a numbered list, which is an accurate description of a sequence
+          and not a picture of one. A rail with a node per step and the line
+          continuing between them says "this led to that" before any word is
+          read — which is the claim the panel is making.
+          
+          Still an <ol> of entity, transition, evidence and technique underneath
+          the styling, so a screen reader gets the sequence and loses nothing. */}
       <Panel title="Causal chain">
-        <ol className="space-y-4">
-          {incident.causal_chain.map((link, index) => (
-            <li key={`${link.entity.id}-${index}`} className="flex gap-4">
-              <span className="mono mt-0.5 w-6 shrink-0 text-xs text-[rgb(var(--faint))]">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <div className="min-w-0">
-                <Link
-                  href={`/entity/${link.entity.kind}:${link.entity.id}`}
-                  className="focusable rounded"
+        <ol className="relative space-y-0">
+          {incident.causal_chain.map((link, index) => {
+            const last = index === incident.causal_chain.length - 1;
+            return (
+              <li key={`${link.entity.id}-${index}`} className="relative flex gap-4 pb-6 last:pb-0">
+                {/* The rail. Drawn behind the node and stopped at the final
+                    step, because a line continuing past the end would promise
+                    another one. */}
+                {!last && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-[11px] top-7 h-[calc(100%-1.25rem)] w-px bg-gradient-to-b from-[rgb(var(--edge-strong))] to-[rgb(var(--edge))]"
+                  />
+                )}
+                <span
+                  aria-hidden="true"
+                  className="relative z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[rgb(var(--edge-strong))] bg-[rgb(var(--raised))]"
                 >
-                  <Ident>{link.entity.name}</Ident>
-                </Link>
-                <p className="text-sm">{link.transition}</p>
-                {/* A chain without citations is a story, not a diagnosis. */}
-                <Evidence refs={link.evidence} />
-                <Technique technique={link.attack_technique} />
-              </div>
-            </li>
-          ))}
+                  <span className="mono text-[10px] text-[rgb(var(--muted))]">{index + 1}</span>
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/entity/${link.entity.kind}:${link.entity.id}`}
+                    className="focusable lift inline-flex max-w-full items-center gap-2 rounded-md border border-[rgb(var(--edge))] bg-[rgb(var(--raised))]/60 px-2.5 py-1 hover:border-[rgb(var(--astra))]/40"
+                  >
+                    <Ident>{link.entity.name}</Ident>
+                  </Link>
+                  <p className="mt-2 text-sm">{link.transition}</p>
+                  {/* A chain without citations is a story, not a diagnosis. */}
+                  <Evidence refs={link.evidence} />
+                  <Technique technique={link.attack_technique} />
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </Panel>
 

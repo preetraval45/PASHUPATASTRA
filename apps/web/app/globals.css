@@ -91,8 +91,86 @@ body {
 }
 
 @layer components {
+  /* A panel is a surface, not an outline.
+     
+     Every panel used to be one flat fill inside a 1px border, at every level of
+     importance, which is why the pages read as a document rather than a
+     console: nothing had weight. A shallow gradient and a soft shadow give the
+     surface a top and a bottom, so panels sit *above* the page instead of being
+     drawn onto it. */
   .panel {
-    @apply rounded-lg border border-[rgb(var(--edge))] bg-[rgb(var(--panel))];
+    @apply rounded-lg border border-[rgb(var(--edge))];
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--raised) / 0.75) 0%,
+      rgb(var(--panel)) 62%
+    );
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.03) inset,
+      0 1px 2px rgb(0 0 0 / 0.25),
+      0 8px 24px -12px rgb(0 0 0 / 0.45);
+  }
+
+  /* No gradient in light, and that is not a shortcut.
+     
+     On dark the raised tone is *lighter* than the panel, so a top-down gradient
+     reads as a surface catching light from above. In light it is darker, so the
+     same gradient darkens the top of every panel and takes text sitting there
+     below 4.5:1 — measured at 4.35 and 4.38 once the contrast tool learned to
+     sample gradient stops rather than walking past them.
+     
+     A light surface gets its depth from the shadow beneath it, not from a tint
+     laid over it. */
+  :root[data-theme="light"] .panel {
+    background-image: none;
+    background-color: rgb(var(--panel));
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.9) inset,
+      0 1px 2px rgb(15 23 42 / 0.05),
+      0 10px 24px -14px rgb(15 23 42 / 0.16);
+  }
+
+  /* Severity you can feel before you read it. The tint is the status colour at
+     a few percent, so a critical panel is warm and a healthy one is not, and
+     the glow only ever appears on the state that should interrupt you. */
+  .panel-critical {
+    border-color: rgb(var(--crit) / 0.35);
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--crit) / 0.1) 0%,
+      rgb(var(--panel)) 58%
+    );
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.04) inset,
+      0 0 0 1px rgb(var(--crit) / 0.06),
+      0 10px 34px -14px rgb(var(--crit) / 0.4);
+  }
+
+  .panel-warn {
+    border-color: rgb(var(--warn) / 0.3);
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--warn) / 0.08) 0%,
+      rgb(var(--panel)) 58%
+    );
+  }
+
+  /* Interactive surfaces lift. Cheap to render, and it tells a pointer what is
+     clickable without adding a word. */
+  .lift {
+    @apply transition-transform duration-150;
+  }
+
+  .lift:hover {
+    transform: translateY(-1px);
+  }
+
+  /* The number a page is about. Tabular so it cannot jitter between refreshes,
+     and tight so the digits read as one object rather than a row of glyphs. */
+  .figure {
+    @apply tnum font-semibold tracking-[-0.02em];
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
 
   .label {
@@ -169,6 +247,31 @@ body {
     content: none;
   }
 }
+
+/* Content arriving, rather than appearing.
+   
+   A staggered rise gives a page an order to be read in: the eye follows the
+   sequence instead of meeting everything at once. The delays are small enough
+   that nobody waits for them — the whole sequence is under a fifth of a second.
+   
+   Nothing here is load-bearing. Every element is at its final position and full
+   opacity by the end of one animation, so if the animation never runs — reduced
+   motion, an old browser, JS disabled — the page is exactly the same page. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.rise {
+  animation: rise 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.rise-1 { animation-delay: 40ms; }
+.rise-2 { animation-delay: 80ms; }
+.rise-3 { animation-delay: 120ms; }
+.rise-4 { animation-delay: 160ms; }
 
 /* Respect reduced-motion. Nothing here is load-bearing animation. */
 @media (prefers-reduced-motion: reduce) {
