@@ -528,6 +528,102 @@ def intel_status() -> dict[str, object]:
     return {"feeds": cursors, "durable": backend is not None}
 
 
+# --- blue team mode ----------------------------------------------------------
+
+
+@router.get("/game/scenarios")
+def game_scenarios() -> list[dict[str, object]]:
+    """What can be played, without saying what any of them are.
+
+    Severity and the opening alert only. A list that summarised each incident
+    would answer the question the exercise asks before it is opened.
+    """
+    from .. import game
+
+    graph = entitystore()
+    out = []
+    for incident in STORE.all():
+        alert = game.opening_alert(incident, graph)
+        out.append(
+            {
+                "incident_id": incident.id,
+                "severity": str(incident.severity),
+                "opened_at": incident.opened_at.isoformat(),
+                "opening": (alert or {}).get("summary", ""),
+                "steps": len(incident.causal_chain),
+            }
+        )
+    return out
+
+
+@router.get("/game/{incident_id}/briefing")
+def game_briefing(incident_id: str) -> dict[str, object]:
+    from .. import game
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+    settings = get_settings()
+    return game.briefing(incident, entitystore(), domain=settings.action_domain)
+
+
+class InvestigateRequest(BaseModel):
+    entity_key: str
+
+
+@router.post("/game/{incident_id}/investigate")
+def game_investigate(incident_id: str, request: InvestigateRequest) -> dict[str, object]:
+    from .. import game
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+    result = game.investigate(incident, entitystore(), request.entity_key)
+    if not result["ok"]:
+        raise HTTPException(status_code=400, detail=str(result["reason"]))
+    return result
+
+
+class AnswerRequest(BaseModel):
+    diagnosis_id: str
+    action_id: str
+    investigated: list[str] = []
+
+
+@router.post("/game/{incident_id}/answer")
+def game_answer(incident_id: str, request: AnswerRequest) -> dict[str, object]:
+    """Mark the attempt and reveal the chain.
+
+    The only route that returns the answer, and it returns it *after* an
+    attempt — which is what keeps the briefing honest.
+    """
+    from .. import game
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+
+    result = game.score(
+        incident,
+        entitystore(),
+        diagnosis_id=request.diagnosis_id,
+        action_id=request.action_id,
+        investigated=request.investigated,
+    )
+    AUDIT.append(
+        AuditRecord(
+            at=datetime.now().astimezone(),
+            kind=AuditKind.OBSERVATION,
+            actor="human:trainee",
+            incident_ref=incident.id,
+            summary=(
+                f"blue team attempt: {result['total']}/100 ({result['grade']})"
+            ),
+        )
+    )
+    return result
+
+
 # --- entities ----------------------------------------------------------------
 
 

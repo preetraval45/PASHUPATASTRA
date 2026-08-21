@@ -393,3 +393,80 @@ export const getIntel = (limit = 60, source?: string) =>
  *  feed, and this is the difference. */
 export const getIntelStatus = () =>
   get<{ feeds: Record<string, string | null>; durable: boolean }>("/intel/status");
+
+/* ------------------------------------------------------------- blue team */
+
+export interface Briefing {
+  incident_id: string;
+  opened_at: string;
+  alert: {
+    id: string;
+    at: string;
+    entity_key: string;
+    severity: string | null;
+    detection: string;
+    summary: string;
+  } | null;
+  entities: string[];
+  candidates: { id: string; statement: string }[];
+  actions: { id: string; description: string; base_risk: number; read_only: boolean }[];
+  scoring: { diagnosis: number; response: number; investigation: number };
+}
+
+export interface Investigation {
+  ok: boolean;
+  entity: Record<string, unknown> | null;
+  events: {
+    id: string;
+    at: string;
+    severity: string | null;
+    detection: string | null;
+    summary: string;
+  }[];
+}
+
+export interface Verdict2 {
+  total: number;
+  grade: "clean" | "sound" | "shaky" | "missed";
+  breakdown: { name: string; points: number; of: number; note: string }[];
+  chose: string | null;
+  answer: {
+    diagnosis: string | null;
+    confidence: number | null;
+    chain: {
+      entity_key: string;
+      transition: string;
+      technique: { id: string; name: string; tactic: string; url: string } | null;
+      evidence: string[];
+    }[];
+    plan: { order: number; action_id: string }[];
+    decoy: {
+      statement: string;
+      ruled_out_by: { id: string; summary: string; entity_key: string }[];
+    } | null;
+  };
+}
+
+export const getScenarios = () =>
+  get<
+    {
+      incident_id: string;
+      severity: string;
+      opened_at: string;
+      opening: string;
+      steps: number;
+    }[]
+  >("/game/scenarios");
+
+export const getBriefing = (id: string) =>
+  get<Briefing>(`/game/${encodeURIComponent(id)}/briefing`);
+
+export const investigateEntity = (id: string, entity_key: string) =>
+  post<Investigation>(`/game/${encodeURIComponent(id)}/investigate`, { entity_key });
+
+/** Submit an attempt. This is the only call that returns the answer, and it
+ *  returns it *after* an attempt — which is what keeps the briefing honest. */
+export const submitAttempt = (
+  id: string,
+  body: { diagnosis_id: string; action_id: string; investigated: string[] },
+) => post<Verdict2>(`/game/${encodeURIComponent(id)}/answer`, body);

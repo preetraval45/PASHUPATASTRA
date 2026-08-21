@@ -1137,12 +1137,52 @@ Needs **R23**. Additive, and benefits from the patterns above being solid.
   across the site and the agent — the only "Learn" on the site is the platform's
   own `Observe → … → Learn` loop, which is a different claim and predates this.
 
-- [ ] **R27 — Blue Team mode.** Needs: **R5, R11, R25**.
-  Show only the first alert; let the player choose what to investigate and which
-  read-only action to run; score diagnosis, proportionality of response, and
-  whether they avoided the red herring; reveal the full chain and ATT&CK mapping
-  as the answer.
-  **Done when:** all three scenarios are playable start to finish and scored.
+- [x] **R27 — Blue Team mode.** Needs: **R5, R11, R25**.
+  **Done when:** all three scenarios are playable start to finish and scored. —
+  **met, verified in a browser against the deployed site.** All three listed,
+  played, and marked: exactly one explanation scores the diagnosis marks in each,
+  the investigation marks move from 20 to 0 when nothing is opened, and the
+  reveal and the wrong-answer explanation both appear every time. 27/27 layout
+  checks; 51 engine tests across the three scenarios.
+
+  **The answer stays on the server.** The briefing carries the opening alert,
+  the entities, the candidate explanations and the action menu — and no
+  confidence, no contradictions, no chain, no technique mapping, no plan. A page
+  that ships its own solution teaches the player to open dev tools, and the
+  thing being taught here is how to read evidence. Only the attempt returns the
+  answer.
+
+  **Scored on three dimensions because incidents fail on three.** A player can
+  name the right cause and reach for a sledgehammer; can pick the proportionate
+  action for the wrong reason; and can be right by luck, never having opened the
+  evidence that rules out the plausible alternative. That last one is what the
+  exercise is really for, because the plausible alternative is what a tired
+  analyst takes at 3am.
+
+  **Two bugs found by building it, both of the same kind — a thing that looks
+  fine and cannot be won.**
+
+  - The action menu was the registry sorted by risk, first eight. That left
+    `isolate_host` off the list for a beaconing workstation: the correct answer
+    was not on offer, so the response dimension could not score above a third,
+    and nothing said so. The menu is composed now — the plan's actions,
+    something that does too little, something that does far too much, and
+    plausible middle ground.
+  - Excluding rollbacks by *being some action's `rollback_action_id`* removed
+    `isolate_host`, `block_ip`, `revoke_session` and `quarantine_email` — every
+    correct answer. The relationship is **mutual**: `isolate_host` names
+    `rejoin_network` as its rollback and `rejoin_network` names `isolate_host`
+    as its, so there is no direction to read. What can be identified is
+    narrower and is the only exclusion worth making: the inverse of what *this*
+    plan calls for.
+
+  **The checker does not know the answers, and must not.** The first version
+  guessed — it picked the last option and called that the careful attempt — and
+  reported two scenarios broken because its guess was the decoy. It was
+  measuring itself. It now submits *every* explanation and asserts exactly one
+  scores, and isolates the investigation dimension by changing only whether the
+  evidence was opened. Both are checkable from outside without a second copy of
+  the truth to drift.
 
 - [ ] **R28 — Streak or leaderboard.** Needs: **R27**.
   Lightweight, DynamoDB-backed.
