@@ -25,6 +25,7 @@ const NAV = [
   // while reading; this is for arriving with one. Sitting only inside an
   // incident, it was 1,500px down a 10,000px page and nobody found it.
   { href: "/ask", label: "Ask" },
+  { href: "/observatory", label: "Observatory" },
   { href: "/infrastructure", label: "Infrastructure" },
   { href: "/actions", label: "Actions" },
   { href: "/audit", label: "Audit" },

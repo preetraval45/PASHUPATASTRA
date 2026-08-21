@@ -347,3 +347,49 @@ export async function askAgent(
     return { error: "Could not reach the API.", retryable: true };
   }
 }
+
+/**
+ * How much weight an intelligence entry has earned.
+ *
+ * A closed union, mirroring `app/feeds/Verification`. R25 asks for the badge
+ * vocabulary to be enforced by a type rather than by convention, and this is
+ * where that is cashed: `VERIFICATION` below is a `Record` over exactly these
+ * three, so adding a fourth to the API without deciding how it should look is a
+ * compile error rather than an entry that renders with no badge at all.
+ */
+export type Verification = "reported" | "corroborated" | "confirmed";
+
+export const VERIFICATIONS: readonly Verification[] = [
+  "reported",
+  "corroborated",
+  "confirmed",
+] as const;
+
+export function isVerification(value: unknown): value is Verification {
+  return typeof value === "string" && (VERIFICATIONS as readonly string[]).includes(value);
+}
+
+/** One stored intelligence entry. The shape `/intel` returns, which is the
+ *  event shape every other read returns — feeds are telemetry, not a
+ *  parallel kind of record with its own schema. */
+export interface IntelEntry {
+  id: string;
+  source: string;
+  entity_key: string;
+  occurred_at: string;
+  observed_at: string;
+  severity: string | null;
+  payload: { detection_type?: string; confidence?: number; asset?: string | null };
+  provenance: { source_system: string; url: string | null; offset?: string | null };
+  labels: Record<string, string>;
+}
+
+export const getIntel = (limit = 60, source?: string) =>
+  get<{ sources: string[]; count: number; entries: IntelEntry[] }>(
+    `/intel?limit=${limit}${source ? `&source=${encodeURIComponent(source)}` : ""}`,
+  );
+
+/** Per-feed cursors. A feed that has quietly stopped looks exactly like a quiet
+ *  feed, and this is the difference. */
+export const getIntelStatus = () =>
+  get<{ feeds: Record<string, string | null>; durable: boolean }>("/intel/status");

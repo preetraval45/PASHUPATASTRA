@@ -1044,11 +1044,50 @@ Needs **R23**. Additive, and benefits from the patterns above being solid.
   **Free tier:** EventBridge Scheduler allows 14M invocations a month; hourly
   polling uses 720. Poll no faster — CISA publishes daily.
 
-- [ ] **R25 — Observatory page.** Needs: **R24**.
-  Timeline of real recent entries in the same visual language as incidents, with
-  verification-state badges. A report is never labelled confirmed.
+- [x] **R25 — Observatory page.** Needs: **R24**.
   **Done when:** entries render with working links back to the original
-  advisory, and the badge vocabulary is enforced by a type, not a convention.
+  advisory, and the badge vocabulary is enforced by a type, not a convention. —
+  **met, on the deployed site.** 25 entries across two feeds, grouped by the day
+  the source published, every one carrying a link to the advisory. Filtered to
+  CISA: 12 entries, 12 `confirmed`, 0 `reported`, each linking to its NVD page.
+  24/24 layout and reachability checks; WCAG AA in both themes.
+
+  **The vocabulary is a closed union with a `Record` over it**, so a fourth
+  verification state arriving from the API without a decision about how it looks
+  is a compile error rather than a badge that renders blank. An unrecognised
+  value shows as `unverified` — falling back to the friendliest state is how
+  "nobody checked this" quietly becomes "fine".
+
+  **`reported` is deliberately not green.** Green on an unverified malware
+  report reads as "checked, and fine", which is the opposite of what it says.
+  Neutral is the honest colour for a claim nobody has stood behind. `confirmed`
+  takes the strongest colour on the page, because CISA listing something as
+  exploited in the wild is the most load-bearing statement here.
+
+  **Facts differ per source because they are different.** A KEV entry has a
+  federal remediation deadline and may be tied to ransomware; a URLhaus entry
+  has neither and has liveness instead. One shape for both would mean empty
+  columns or facts dropped from whichever source lost the argument.
+
+  Per-feed cursors are on the page. A feed that has quietly stopped looks
+  exactly like a quiet feed, and on a page whose entire claim is freshness that
+  is the failure worth showing. External links carry `rel="noopener noreferrer"`
+  — the referrer would otherwise tell an advisory site which console is reading
+  about which attack.
+
+- [x] **R25b — A header that is quiet when nothing is wrong.** Needs: **R25**.
+  The chrome carried `env dev · dry run · nothing executes · updated just now`
+  on every page of a deployment that is permanently in dry run. Owner decision,
+  21 August 2026, and the right one: **a warning that is always present is one
+  nobody reads.**
+
+  Not deleted — inverted. The fact it carries is whether an approval would
+  change production, which matters enormously in one state and not at all in the
+  other, so it is now shown in one state and not the other. `LIVE EXECUTION` is
+  louder for having nothing beside it, and `memory only` still appears when the
+  store is not durable. The freshness clock went entirely: the page already says
+  when it was updated, which is why that chip was the first thing dropped at
+  every breakpoint.
 
 - [ ] **R26 — Curated knowledge base for the agent.** Needs: **R19, R24**.
   Verified feed entries become retrievable context for the chat agent.

@@ -3,7 +3,6 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { Live } from "@/components/live";
 import { Nav } from "@/components/nav";
 import { Search } from "@/components/search";
 import { ThemeToggle, themeScript } from "@/components/theme";
@@ -144,14 +143,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <div className="hidden lg:flex lg:items-center lg:gap-x-3">
                 <ModeIndicator health={health} />
               </div>
-              {/* The freshness clock is the least load-bearing thing here —
-                  the page says when it was updated, and this repeats it. It is
-                  the first to go, and it goes at `2xl` rather than `xl`,
-                  because at exactly 1280 it and the mode qualifier together
-                  pushed the status group onto a second line. */}
-              <div className="hidden 2xl:flex">
-                <Live />
-              </div>
               <ThemeToggle />
             </div>
           </div>
@@ -189,9 +180,23 @@ function ModeIndicator({
   }
 
   const live = !health.dry_run;
+  const degraded = health.status !== "ok";
+
+  // Silent when the answer is boring.
+  //
+  // This used to show `env dev · dry run · nothing executes` on every page of
+  // a deployment that is permanently in dry run, and a warning that is always
+  // present is one nobody reads. The fact it carries — whether an approval
+  // would change production — matters enormously in one state and not at all
+  // in the other, so it is shown in one state and not the other.
+  //
+  // Not a removal: LIVE EXECUTION is louder now than it was when it sat in a
+  // row of grey chips being ignored.
+  if (!live && !degraded) return null;
+
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 whitespace-nowrap text-xs sm:gap-x-4">
-      {health.status !== "ok" && (
+      {degraded && (
         <span
           className="text-[rgb(var(--warn))]"
           title="Nothing is written to a database. Incidents, approvals and the audit log live in the server process and are lost when it restarts."
@@ -199,23 +204,12 @@ function ModeIndicator({
           <span aria-hidden="true">◆</span> memory only
         </span>
       )}
-      <span className="text-[rgb(var(--faint))]" title="Which environment this deployment reports itself as.">
-        env {health.environment}
-      </span>
-      <span
-        className={
-          live
-            ? "rounded border border-[rgb(var(--crit))]/40 bg-[rgb(var(--crit))]/10 px-2 py-0.5 text-[rgb(var(--crit))]"
-            : "rounded border border-[rgb(var(--edge))] px-2 py-0.5 text-[rgb(var(--muted))]"
-        }
-      >
-        {/* The base text is one node and the qualifier is a separate optional
-            one — never two copies of the same words behind breakpoints, which
-            is how the wordmark came to read PASHUPASHUPATASTRA. Below xl the
-            row has no space for the qualifier and the title still carries it. */}
-        {live ? "LIVE EXECUTION" : "dry run"}
-        {!live && <span className="hidden 2xl:inline"> · nothing executes</span>}
-      </span>
+      {live && (
+        <span className="rounded border border-[rgb(var(--crit))]/40 bg-[rgb(var(--crit))]/10 px-2 py-0.5 text-[rgb(var(--crit))]">
+          <span aria-hidden="true">▲</span> LIVE EXECUTION
+          <span className="hidden xl:inline"> · env {health.environment}</span>
+        </span>
+      )}
     </div>
   );
 }
