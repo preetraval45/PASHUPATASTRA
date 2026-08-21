@@ -430,6 +430,9 @@ export interface Verdict2 {
   grade: "clean" | "sound" | "shaky" | "missed";
   breakdown: { name: string; points: number; of: number; note: string }[];
   chose: string | null;
+  /** Filled in when an attempt carried a player token. The score is computed
+   *  server-side from the choices — the client sends no number. */
+  progress?: PlayerProgress;
   answer: {
     diagnosis: string | null;
     confidence: number | null;
@@ -468,5 +471,23 @@ export const investigateEntity = (id: string, entity_key: string) =>
  *  returns it *after* an attempt — which is what keeps the briefing honest. */
 export const submitAttempt = (
   id: string,
-  body: { diagnosis_id: string; action_id: string; investigated: string[] },
+  body: {
+    diagnosis_id: string;
+    action_id: string;
+    investigated: string[];
+    player_id?: string | null;
+  },
 ) => post<Verdict2>(`/game/${encodeURIComponent(id)}/answer`, body);
+
+export interface PlayerProgress {
+  attempts: number;
+  streak: number;
+  best_streak: number;
+  cleared: string[];
+  best: Record<string, number>;
+}
+
+export const getProgress = (playerId: string) =>
+  get<{ player: PlayerProgress; durable: boolean }>(
+    `/game/progress/${encodeURIComponent(playerId)}`,
+  );

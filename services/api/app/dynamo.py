@@ -473,7 +473,7 @@ class DynamoStore:
         )
 
     def clear(self, partitions: Iterable[str] = (
-        "INCIDENT", "AUDIT", "EVENT", "NODE", "EDGE", "META", "CHAT",
+        "INCIDENT", "AUDIT", "EVENT", "NODE", "EDGE", "META", "CHAT", "PLAYER",
     )) -> int:
         """Empty the table. For re-seeding after the scenarios change shape."""
         removed = 0
@@ -536,6 +536,24 @@ class DynamoStore:
                 "PK": self._pk("META"),
                 "SK": f"FEED#{feed}",
                 "cursor": value,
+                "at": datetime.now().astimezone().isoformat(),
+            }
+        )
+
+    # --- blue team progress --------------------------------------------------
+
+    def get_player(self, player_id: str) -> dict | None:
+        row = self.table.get_item(
+            Key={"PK": self._pk("PLAYER"), "SK": player_id}
+        ).get("Item")
+        return _plain(row) if row else None
+
+    def save_player(self, player_id: str, record: dict) -> None:
+        self.table.put_item(
+            Item={
+                "PK": self._pk("PLAYER"),
+                "SK": player_id,
+                **_numbers_to_decimal(record),
                 "at": datetime.now().astimezone().isoformat(),
             }
         )

@@ -1184,11 +1184,49 @@ Needs **R23**. Additive, and benefits from the patterns above being solid.
   evidence was opened. Both are checkable from outside without a second copy of
   the truth to drift.
 
-- [ ] **R28 — Streak or leaderboard.** Needs: **R27**.
-  Lightweight, DynamoDB-backed.
-  **Done when:** a score persists across sessions.
-  Anonymous by default — a leaderboard that collects names is a personal-data
-  decision, not a feature decision.
+- [x] **R28 — Streak or leaderboard.** Needs: **R27**.
+  **Done when:** a score persists across sessions. — **met, twice over.** A
+  scenario was played, the browser context was destroyed, and a new one carrying
+  only the token read the record back. Then every Lambda container was forcibly
+  replaced and the record was still there, `durable: true`, straight out of
+  DynamoDB.
+
+  **A streak, not a leaderboard, and that is the whole design.** A leaderboard
+  with names is a system that collects names: it needs a retention answer, a
+  deletion path, a moderation policy for what people type into it, and a line in
+  a privacy notice. None of that is worth acquiring so that a training exercise
+  can say "well done".
+
+  So there is no name and no account. The browser generates an opaque UUID,
+  keeps it locally, and sends it with an attempt. The server can tell that two
+  attempts came from the same browser and nothing else. Four things make that a
+  property rather than a promise:
+
+  - **The token is validated to a UUID shape.** Without it the identifier is an
+    arbitrary string that becomes a sort key, and it would store
+    `alice@example.com` quite happily the first time anyone sent one. The shape
+    is what makes "this holds no personal data" structural.
+  - **There is no route that lists players.** The absence is the feature: an
+    enumerable set of scores *is* a leaderboard. A token can read only itself.
+  - **The token is not in the audit line.** The trail is public, and a
+    pseudonymous id printed beside a timestamp on a public page is a thing that
+    can be correlated.
+  - **The page never mints one.** `readPlayer` on render, `ensurePlayer` on
+    submit. A page that creates an identifier because it loaded has decided on
+    the visitor's behalf, and a first-time visitor sees no mention of tokens,
+    storage or streaks at all.
+
+  Clearing the token *is* the deletion path, not a request for one — with
+  nothing to join them to, the orphaned rows are not a record of anybody. The
+  button is on the page and was tested: token gone, record gone after reload.
+
+  **The score is computed on the server and never accepted from the client.** A
+  number a player can choose is not a score, and a test asserts the request
+  model carries choices and a token and nothing resembling a total. Best per
+  scenario is a maximum rather than the last result — a player who scores 100
+  and then experiments with a deliberately wrong answer has not got worse at it
+  — while the streak breaks below `sound`, because a streak that survives a
+  wrong diagnosis measures persistence rather than competence.
 
 - [ ] **R29 — Final deploy and pass.** Needs: **R25, R26, R28**.
 

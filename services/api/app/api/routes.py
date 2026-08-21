@@ -28,6 +28,8 @@ from ..engines import astra, loop as loop_engine, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
 from ..engines.buddhi import model_health
 from ..graph import GraphStore, entitystore
+from .. import progress as progress_module
+from ..progress import PROGRESS
 from ..store import STORE
 
 GRAPH = GraphStore()
@@ -588,6 +590,10 @@ class AnswerRequest(BaseModel):
     diagnosis_id: str
     action_id: str
     investigated: list[str] = []
+    player_id: str | None = None
+    """An opaque token the browser generated and keeps locally. Optional: the
+    exercise works without one, and someone who declines to be remembered
+    across visits should still be able to play."""
 
 
 @router.post("/game/{incident_id}/answer")
@@ -616,12 +622,38 @@ def game_answer(incident_id: str, request: AnswerRequest) -> dict[str, object]:
             kind=AuditKind.OBSERVATION,
             actor="human:trainee",
             incident_ref=incident.id,
+            # The token is deliberately absent from the audit line. The trail is
+            # public, and a pseudonymous id printed beside a timestamp on a
+            # public page is a thing that can be correlated.
             summary=(
                 f"blue team attempt: {result['total']}/100 ({result['grade']})"
             ),
         )
     )
+
+    # Recorded from the marked total, never from anything the client sent. A
+    # score a player can choose is not a score.
+    result["progress"] = PROGRESS.add(
+        request.player_id or "", incident.id, int(result["total"])
+    )
     return result
+
+
+@router.get("/game/progress/{player_id}")
+def game_progress(player_id: str) -> dict[str, object]:
+    """One player's own record, by the token their browser holds.
+
+    There is no route that lists players, and that absence is the feature: an
+    enumerable set of scores is a leaderboard, and a leaderboard is what this
+    was asked not to be. A token can read only itself, and nothing joins a token
+    to a person.
+    """
+    if not progress_module.valid(player_id):
+        raise HTTPException(status_code=400, detail="not a valid player token")
+    return {
+        "player": PROGRESS.get(player_id),
+        "durable": PROGRESS.durable,
+    }
 
 
 # --- entities ----------------------------------------------------------------

@@ -23,6 +23,7 @@ import {
   type Investigation,
   type Verdict2,
 } from "@/lib/api";
+import { ensurePlayer } from "@/lib/player";
 import { Ago, Badge, Empty, Ident, Panel, statusForSeverity } from "@/components/ui";
 
 type Stage = "briefing" | "marked";
@@ -64,6 +65,10 @@ export function BlueTeam({ briefing: initial }: { briefing: Briefing }) {
     const result = await submitAttempt(briefing.incident_id, {
       diagnosis_id: diagnosis,
       action_id: action,
+      // Minted here, at the first moment there is anything to remember —
+      // not when the page rendered. A page that creates an identifier just
+      // because it loaded has decided on the visitor's behalf.
+      player_id: ensurePlayer(),
       // What was actually opened, not what was offered. The server takes this
       // on trust; a player who lies has awarded themselves points in a training
       // exercise, and the alternative is session state for a game with no
@@ -326,6 +331,34 @@ function Marked({
   return (
     <>
       <Panel title="Marked" aside={`${verdict.total} / 100`}>
+        {verdict.progress && (
+          <p className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[rgb(var(--faint))]">
+            <span>
+              streak{" "}
+              <span className="mono text-[rgb(var(--ink))]">
+                {verdict.progress.streak}
+              </span>
+            </span>
+            <span>
+              best{" "}
+              <span className="mono text-[rgb(var(--ink))]">
+                {verdict.progress.best_streak}
+              </span>
+            </span>
+            <span>
+              cleared{" "}
+              <span className="mono text-[rgb(var(--ink))]">
+                {verdict.progress.cleared.length}
+              </span>
+            </span>
+            <span>
+              attempts{" "}
+              <span className="mono text-[rgb(var(--ink))]">
+                {verdict.progress.attempts}
+              </span>
+            </span>
+          </p>
+        )}
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <Badge status={grade.status}>{grade.label}</Badge>
           <span className="text-2xl font-semibold tabular-nums">{verdict.total}</span>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Progress } from "@/components/progress";
 import { Badge, Empty, Offline, Page, Panel, statusForSeverity } from "@/components/ui";
 import { getScenarios } from "@/lib/api";
 
@@ -21,6 +22,10 @@ export default async function BlueTeamPage() {
       title="Blue team"
       description="One alert, and the rest is yours. The console shows finished investigations; this asks you to do one."
     >
+      {/* Renders nothing until there is something to show. Telling a
+          first-time visitor about a token they do not have is noise. */}
+      <Progress scenarios={scenarios.length} />
+
       <Panel title="How it is scored">
         <ul className="space-y-2 text-sm text-[rgb(var(--muted))]">
           <li>
