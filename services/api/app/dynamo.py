@@ -500,3 +500,42 @@ class DynamoStore:
                 "at": datetime.now().astimezone().isoformat(),
             }
         )
+
+    def recent_events(self, sources: list[str] | None = None, limit: int = 50) -> list[dict]:
+        """Newest events, optionally from named sources.
+
+        Filtered here rather than by the caller because the alternative is
+        fetching the whole partition into the API and discarding most of it —
+        which works at twenty-four entries and stops working at the first real
+        feed.
+        """
+        rows = self._all("EVENT")
+        if sources:
+            wanted = set(sources)
+            rows = [row for row in rows if row.get("source") in wanted]
+        rows.sort(key=lambda row: str(row.get("occurred_at", "")), reverse=True)
+        # `_event_row`, not `_plain`. The row as stored carries the table's own
+        # keys and holds payload, provenance and labels as JSON strings; the
+        # normaliser is what turns it back into the shape every other read
+        # returns. Skipping it published `PK`, `GSI1PK` and the namespace to
+        # anyone calling the route, and handed them three fields to parse
+        # themselves.
+        return [self._event_row(row) for row in rows[:limit]]
+
+    # --- threat feed cursors -------------------------------------------------
+
+    def get_feed_cursor(self, feed: str) -> str | None:
+        row = self.table.get_item(
+            Key={"PK": self._pk("META"), "SK": f"FEED#{feed}"}
+        ).get("Item")
+        return str(row["cursor"]) if row and row.get("cursor") else None
+
+    def set_feed_cursor(self, feed: str, value: str) -> None:
+        self.table.put_item(
+            Item={
+                "PK": self._pk("META"),
+                "SK": f"FEED#{feed}",
+                "cursor": value,
+                "at": datetime.now().astimezone().isoformat(),
+            }
+        )

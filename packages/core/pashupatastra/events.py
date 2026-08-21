@@ -83,6 +83,35 @@ class EntityKind(StrEnum):
     """A process on a host. Keyed `process:<host>/<pid>` — a bare pid is reused
     within hours and would silently merge two unrelated executions."""
 
+    # --- external intelligence ---
+    #
+    # These two describe the world, not this estate, and the distinction is
+    # load-bearing. Every other kind above names something we operate and can be
+    # asked about: a host we run, an account we issued. A CVE and a malicious URL
+    # are things somebody else published.
+    #
+    # So they are referenced by events and **never upserted as topology nodes**.
+    # A service map that draws a thousand CVEs alongside eleven hosts is telling
+    # a reader those are the same kind of fact, and blast radius would then
+    # traverse from a host to a vulnerability as though the two were connected.
+
+    VULNERABILITY = "vulnerability"
+    """A published weakness, keyed by its identifier — `vulnerability:CVE-…`.
+
+    Not "a vulnerability we have". Whether this estate is exposed to it is a
+    separate question, answered by matching it against what is installed, and
+    the two must not be conflated: a catalogue entry is not a finding.
+    """
+
+    INDICATOR = "indicator"
+    """An observable another party has attributed to malicious activity — a URL,
+    a hash, an address. Keyed by kind and value.
+
+    Attribution belongs to whoever reported it, which is why every one of these
+    carries a verification label. An indicator is a claim, and some claims are
+    community submissions nobody has checked.
+    """
+
 
 class Severity(StrEnum):
     INFO = "info"

@@ -275,3 +275,34 @@ def test_an_upsert_without_a_user_count_does_not_erase_one(store) -> None:
     store.upsert_nodes([Node(ref=ref, estimated_users=0)])
 
     assert store.entity(ref.key())["estimated_users"] == 250
+
+
+@needs_table
+def test_no_read_path_leaks_the_tables_own_keys(store) -> None:
+    """`PK`, `SK` and `GSI1PK` are storage, not API.
+
+    `recent_events` published all three, and `GSI1PK` carries the namespace —
+    so a public route was handing out `prod#ENTITY#…` along with three fields
+    the caller had to JSON-parse itself. The cause was skipping `_event_row`
+    and returning the row as stored; asserted over every read that returns
+    events, so the next one added cannot repeat it.
+    """
+    from app.demoincidents import scenarios
+
+    scenario = scenarios(NOW)[0]
+    store.save_events(scenario.events(NOW))
+    signal = scenario.signals[0]
+
+    reads = [
+        [store.event(signal.id)],
+        store.entity_events(signal.entity.key(), limit=5),
+        store.recent_events(limit=5),
+    ]
+    for rows in reads:
+        for row in rows:
+            assert row is not None
+            assert not {"PK", "SK", "GSI1PK", "GSI1SK"} & set(row)
+            # And the three structured fields come back structured.
+            assert isinstance(row["payload"], dict)
+            assert isinstance(row["provenance"], dict)
+            assert isinstance(row["labels"], dict)

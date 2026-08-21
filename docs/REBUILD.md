@@ -988,14 +988,50 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
 
 Needs **R23**. Additive, and benefits from the patterns above being solid.
 
-- [ ] **R24 — Threat feed ingestion.** Needs: **R18**.
-  CISA KEV, abuse.ch (URLhaus, ThreatFox), NVD for enrichment. Normalised into
-  the existing event schema, polled on an EventBridge schedule into Lambda,
-  stored server-side. Never called from the browser.
+- [~] **R24 — Threat feed ingestion.** Needs: **R18**.
   **Done when:** real entries land in the store on a schedule, each carrying its
-  source URL as provenance.
-  **Free tier:** EventBridge Scheduler and Lambda both always-free at this rate.
-  Poll hourly at most — KEV updates daily.
+  source URL as provenance. — **ingestion met, the schedule is not.** Invoking
+  the function with `{"task": "ingest_feeds"}` stored 24 real entries: CISA KEV
+  advisories added the day before, and live URLhaus submissions, each with a
+  working link to the original. A forced cold start then re-ran it and stored
+  **0**, because the cursor is in DynamoDB.
+  **Remaining:** the deploying IAM user has neither `scheduler:CreateSchedule`
+  nor `events:PutRule`, so nothing fires hourly yet. The role is created and
+  scoped, and `scripts/schedulefeeds.py` prints both the policy to grant and the
+  five console fields to enter.
+
+  **ThreatFox is deliberately absent.** abuse.ch now requires an API key for it.
+  A key nobody has is a dependency that fails in production and passes in every
+  test written around it, so the feed is left out rather than half-wired.
+
+  **`Verification` is a closed vocabulary**, not a free-text field: CISA is
+  `confirmed` because its entry criterion is evidence of exploitation; URLhaus
+  is `reported`, always, because those are community submissions the publisher
+  does not assert. Rating an unreviewed submission as highly as observed
+  exploitation is the mistake this exists to prevent, and it is enforced by
+  ordering (`RANK`) so anything sorting by weight gets it right.
+
+  **Intelligence is never a topology node.** These describe the world, not this
+  estate. `VULNERABILITY` and `INDICATOR` are referenced by events and never
+  upserted as nodes — a map drawing a thousand CVEs beside eleven hosts says
+  they are the same kind of fact, and blast radius would traverse from a host
+  into a vulnerability as though the two were connected. A test asserts the node
+  count does not move when a feed is ingested.
+
+  **The malware URL is never rendered.** URLhaus entries are keyed by host, and
+  the link a reader follows is the advisory *about* the URL. A console that
+  renders live distribution points as anchors is one that eventually gets
+  clicked.
+
+  Two things this found: `recent_events` returned rows exactly as stored, which
+  published the table's own `PK`/`GSI1PK` — including the namespace — and left
+  three fields as JSON strings for callers to parse. The normaliser every other
+  read already used was the fix, and a test now covers every read path. And the
+  first severity mapping made ransomware-linked and ordinary advisories
+  identical; ransomware use is what separates urgent from important, so it
+  decides severity rather than sitting in the payload for a reader to notice.
+  **Free tier:** EventBridge Scheduler allows 14M invocations a month; hourly
+  polling uses 720. Poll no faster — CISA publishes daily.
 
 - [ ] **R25 — Observatory page.** Needs: **R24**.
   Timeline of real recent entries in the same visual language as incidents, with

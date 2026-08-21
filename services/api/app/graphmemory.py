@@ -182,6 +182,17 @@ class MemoryGraph:
                     return {**_isoformat(event), "entity_key": entity_key}
         return None
 
+    def recent_events(self, sources: list[str] | None = None, limit: int = 50) -> list[dict]:
+        """Newest events across every entity, optionally from named sources."""
+        rows = [
+            {**event, "entity_key": key}
+            for key, events in self._events.items()
+            for event in events
+            if not sources or event.get("source") in set(sources)
+        ]
+        rows.sort(key=lambda row: (row["occurred_at"], row["id"]), reverse=True)
+        return [_isoformat(row) for row in rows[:limit]]
+
     def entity_events(self, entity_key: str, limit: int = 50) -> list[dict]:
         events = sorted(
             self._events.get(entity_key, ()),

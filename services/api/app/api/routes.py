@@ -478,6 +478,56 @@ def _overlay_open_incidents(snapshot: dict) -> None:
             node["severity"] = incident_level
 
 
+@router.get("/intel")
+def intel(limit: int = 50, source: str | None = None) -> dict[str, object]:
+    """Recent threat intelligence, as stored.
+
+    Served from our own store, never proxied. A route that fetched from CISA or
+    abuse.ch on request would tell those services who is reading what, and would
+    fail whenever they do; the schedule already put this on disk.
+
+    Entries keep their `verification` label. A reader deciding what to do with
+    "somebody submitted this URL an hour ago" needs it to be distinguishable
+    from "CISA has observed this being exploited", and by the time both are
+    rendered as cards they look identical without it.
+    """
+    from ..feeds.sources import FEEDS
+
+    known = sorted(FEEDS)
+    sources = [source] if source else known
+    if source and source not in known:
+        raise HTTPException(
+            status_code=404, detail=f"unknown source {source}; known: {', '.join(known)}"
+        )
+
+    store = entitystore()
+    reader = getattr(store, "recent_events", None)
+    entries = reader(sources=sources, limit=min(limit, 200)) if reader else []
+    return {
+        "sources": known,
+        "count": len(entries),
+        "entries": entries,
+    }
+
+
+@router.get("/intel/status")
+def intel_status() -> dict[str, object]:
+    """How current each feed is, and when it last moved.
+
+    A feed that has quietly stopped looks exactly like a quiet feed. The cursor
+    is the difference, so it is published rather than kept for debugging.
+    """
+    from ..backend import durable
+    from ..feeds.sources import FEEDS
+
+    backend = durable()
+    cursors = {}
+    for name in sorted(FEEDS):
+        read = getattr(backend, "get_feed_cursor", None)
+        cursors[name] = read(name) if read else None
+    return {"feeds": cursors, "durable": backend is not None}
+
+
 # --- entities ----------------------------------------------------------------
 
 
