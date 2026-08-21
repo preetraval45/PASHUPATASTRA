@@ -264,11 +264,17 @@ def test_whitespace_and_case_share_an_entry() -> None:
 
 @pytest.fixture(autouse=True)
 def _clean_cache():
+    """Isolated per test, and pointed away from any real backend.
+
+    The cache resolves its own store now, so a test that does not do this can
+    reach whatever `PASHU_DYNAMO_TABLE` names — which on a developer machine is
+    the deployed table.
+    """
     answer_cache.CACHE._local.clear()
-    answer_cache.CACHE.store = None
+    answer_cache.CACHE._resolver = lambda: None
     yield
     answer_cache.CACHE._local.clear()
-    answer_cache.CACHE.store = None
+    answer_cache.CACHE._resolver = None
 
 
 def test_the_cache_is_shared_across_calls() -> None:
@@ -479,3 +485,237 @@ def test_a_proposal_is_never_served_from_cache() -> None:
 
     source = inspect.getsource(chat_engine.answer)
     assert 'hit.get("proposed_action_id")' in source
+
+
+# --- R22: why did it say that -------------------------------------------------
+
+
+def _turn(monkeypatch, message="what happened?", cached=False, tools=()):
+    """Drive one chat turn through the route and return the audit record."""
+    from fastapi.testclient import TestClient
+    from pashupatastra.gateway import ConversationResponse, TraceEntry
+    from app.main import app
+    from app.api import routes
+    from app.engines import buddhi
+
+    incident = routes.STORE.get("INC-2026-0901")
+    if incident is None:
+        pytest.skip("demo incidents are not seeded in this configuration")
+
+    trace = [
+        TraceEntry(hop=0, kind="tool_call", name=name, detail={"entity_key": "host:x"})
+        for name in tools
+    ] + [TraceEntry(hop=0, kind="answer", usage=Usage(input_tokens=10, output_tokens=5))]
+
+    class Fixed:
+        provider = type("P", (), {"name": "scripted", "model": "m-1", "available": lambda self: True})()
+
+        def converse(self, request, dispatch):
+            return ConversationResponse(
+                output={
+                    "answer": "Because the evidence says so.",
+                    "evidence_refs": [request.incident_id],
+                    "answerable": True,
+                    "proposed_action_id": None,
+                },
+                usage=Usage(input_tokens=10, output_tokens=5),
+                model="m-1",
+                provider="scripted",
+                purpose="chat",
+                trace=trace,
+            )
+
+    monkeypatch.setattr(buddhi, "gateway", lambda: Fixed())
+    response = TestClient(app).post(
+        "/api/v1/agent/chat",
+        json={"incident_id": "INC-2026-0901", "message": message},
+    )
+    assert response.status_code == 200, response.text
+    records = TestClient(app).get(
+        "/api/v1/audit?incident_ref=INC-2026-0901&limit=20"
+    ).json()
+    turns = [r for r in records if r["kind"] == "agent_turn"]
+    assert turns, "the turn was not written to the audit trail"
+    return turns[0]
+
+
+def test_a_chat_turn_is_its_own_kind_of_record() -> None:
+    """An observation is something the platform saw; a turn is something it
+    said. Filed together, the agent's turns vanish into a trail of telemetry."""
+    from app.engines.audit import AuditKind
+
+    assert AuditKind.AGENT_TURN == "agent_turn"
+    assert AuditKind.AGENT_TURN != AuditKind.OBSERVATION
+
+
+def test_every_turn_records_what_it_would_take_to_explain_it(monkeypatch) -> None:
+    """R22's done-when. Not that a turn happened — nobody doubted that — but
+    the question, the reply, the model, the prompt in force, and the trace."""
+    record = _turn(monkeypatch, message="Which account was hit?")
+    detail = record["detail"]
+
+    assert detail["asked"] == "Which account was hit?"
+    assert detail["answer"].startswith("Because the evidence")
+    assert detail["model"] == "m-1"
+    assert detail["provider"] == "scripted"
+    assert detail["prompt_version"]
+    assert detail["prompt_digest"]
+    assert detail["trace"]
+    assert detail["evidence_refs"] == ["INC-2026-0901"]
+
+
+def test_the_summary_carries_no_visitor_text(monkeypatch) -> None:
+    """The summary is the line the audit page shows without being asked. A
+    stranger's words belong behind an expander, not in the default view of a
+    public, append-only page."""
+    record = _turn(monkeypatch, message="MARKER-VISITOR-TEXT please")
+    assert "MARKER-VISITOR-TEXT" not in record["summary"]
+    assert "MARKER-VISITOR-TEXT" in record["detail"]["asked"]
+
+
+def test_a_recorded_question_is_bounded_and_printable(monkeypatch) -> None:
+    """This is a permanent public record accepting text from anyone."""
+    from app.api.routes import MAX_RECORDED_QUESTION, _asked
+
+    assert len(_asked("x" * 5000)) <= MAX_RECORDED_QUESTION + 1
+    assert "\x00" not in _asked("bad\x00null")
+    assert _asked("  spaced  ") == "spaced"
+
+
+def test_tool_calls_are_named_in_the_summary(monkeypatch) -> None:
+    """Which lookups it made is the first thing anyone asks after "why", so it
+    is on the line rather than only inside the expander."""
+    record = _turn(monkeypatch, tools=("read_logs",))
+    assert "read_logs" in record["summary"]
+
+
+def test_the_prompt_digest_changes_when_the_prompt_does() -> None:
+    """The version is written by hand, so it is wrong exactly when someone
+    edited the prompt and forgot to bump it — the case where a reader most
+    needs to know. The digest cannot be forgotten."""
+    import app.agent.chat as chat_engine
+
+    before = chat_engine.prompt_digest()
+    original = chat_engine.INSTRUCTIONS
+    try:
+        chat_engine.INSTRUCTIONS = original + "\n5. Also rhyme."
+        assert chat_engine.prompt_digest() != before
+    finally:
+        chat_engine.INSTRUCTIONS = original
+    assert chat_engine.prompt_digest() == before
+
+
+def test_the_audit_trail_is_not_evidence() -> None:
+    """It moves while the page does not, and that broke three things at once:
+    citations that could never resolve, a cache key that changed on every
+    request, and the agent reading its own previous replies as observed fact.
+
+    The plan steps carry what an analyst actually wants from the trail — which
+    actions were proposed and how policy scored them — as refs that stay put.
+    """
+    from datetime import datetime
+
+    from app.agent import context
+    from app.engines.audit import AuditKind, AuditRecord
+
+    now = datetime(2026, 8, 21, 12, 0, 0).astimezone()
+
+    class Incident:
+        id = "INC-1"
+        affected_entities: list = []
+        causal_chain: list = []
+        event_ids: list = []
+        hypotheses: list = []
+        plan: list = []
+        impact = type("I", (), {"blast_radius_entities": 0, "estimated_users_affected": 0})()
+        state = "detected"
+        severity = "high"
+        opened_at = now
+
+    class Audit:
+        def records(self, incident_ref=None, limit=8):
+            return [
+                AuditRecord(at=now, kind=AuditKind.POLICY_EVALUATION, actor="dharma",
+                            summary="isolate_host: risk 67")
+            ]
+
+    class Graph:
+        def event(self, _id):
+            return None
+
+    refs = [e.ref for e in context.build(Incident(), Graph(), Audit())]
+    assert not any(r.startswith("audit") for r in refs), refs
+
+
+def test_the_cache_key_survives_a_new_audit_record(monkeypatch) -> None:
+    """The regression this pins cost every cache hit for two phases.
+
+    Audit refs are timestamps and every answer appends one, so while the trail
+    was evidence the key changed on each request. A cache that always misses
+    still returns correct answers — it just pays full price for each, which on a
+    per-minute allowance is the difference between serving visitors and refusing
+    them. Kept after the trail was removed from evidence, because the property
+    that matters is the one being asserted: the same question keys the same.
+    """
+    from app.agent import chat as chat_engine
+
+    keys = []
+
+    class Recording:
+        provider = type("P", (), {"name": "s", "model": "m", "available": lambda self: True})()
+
+        def converse(self, request, dispatch):
+            from pashupatastra.gateway import ConversationResponse
+
+            return ConversationResponse(
+                output={"answer": "a", "evidence_refs": [], "answerable": True},
+                usage=Usage(), model="m", provider="s", purpose="chat",
+            )
+
+    monkeypatch.setattr(
+        chat_engine.answer_cache, "key",
+        lambda **kw: keys.append(kw["evidence_refs"]) or "digest",
+    )
+
+    class Incident:
+        id = "INC-1"
+        affected_entities: list = []
+        causal_chain: list = []
+        event_ids: list = []
+        hypotheses: list = []
+        plan: list = []
+        impact = type("I", (), {"blast_radius_entities": 0, "estimated_users_affected": 0})()
+        state = "detected"
+        severity = "high"
+        from datetime import datetime as _dt
+        opened_at = _dt(2026, 8, 21).astimezone()
+
+    class Audit:
+        def __init__(self, extra=0):
+            self.extra = extra
+
+        def records(self, incident_ref=None, limit=8):
+            from datetime import datetime, timedelta
+
+            from app.engines.audit import AuditKind, AuditRecord
+
+            base = datetime(2026, 8, 21, 12, 0, 0).astimezone()
+            return [
+                AuditRecord(at=base + timedelta(seconds=i), kind=AuditKind.AGENT_TURN,
+                            actor="sati.analyst", summary=f"answered {i}")
+                for i in range(self.extra)
+            ]
+
+    class Graph:
+        def event(self, _id):
+            return None
+
+    for extra in (0, 1, 2):
+        chat_engine.answer(
+            incident=Incident(), message="q", store=None, graph=Graph(),
+            audit=Audit(extra), gateway=Recording(),
+        )
+
+    assert keys[0] == keys[1] == keys[2], (
+        "three identical questions produced three different cache keys"
+    )

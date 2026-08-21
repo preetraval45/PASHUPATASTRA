@@ -25,6 +25,7 @@ def build_provider(
     base_url: str | None = None,
     api_key_env: str = "PASHU_MODEL_API_KEY",
     fallback: dict | None = None,
+    reasoning_effort: str | None = None,
 ) -> Provider:
     """Resolve a provider by name.
 
@@ -54,6 +55,7 @@ def build_provider(
                 model=model,
                 base_url=base_url or DEFAULT_BASE_URL,
                 api_key_env=api_key_env,
+                reasoning_effort=reasoning_effort,
             )
         case "failover":
             # Groq first for speed, a self-hosted box second for the quota it
@@ -68,6 +70,7 @@ def build_provider(
                     model=model,
                     base_url=base_url or DEFAULT_BASE_URL,
                     api_key_env=api_key_env,
+                    reasoning_effort=reasoning_effort,
                 ),
                 secondary=OpenAICompatProvider(
                     model=fallback["model"],

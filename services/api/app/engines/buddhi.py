@@ -35,6 +35,7 @@ def gateway() -> Gateway:
         region=settings.aws_region,
         base_url=settings.model_base_url,
         api_key_env=settings.model_api_key_env,
+        reasoning_effort=settings.model_reasoning_effort,
         fallback=(
             {
                 "base_url": settings.fallback_base_url,

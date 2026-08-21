@@ -34,6 +34,13 @@ DEFAULT_TIMEOUT = 60.0
 USER_AGENT = "pashupatastra/0.1 (+https://pashupatastra.vercel.app)"
 
 
+def _rejects_effort(error: Exception) -> bool:
+    """Whether a failure means "this model has no reasoning setting"."""
+    text = str(error).lower()
+    return "reasoning_effort" in text and ("unsupported" in text or "not support" in text
+                                            or "unrecognized" in text or "invalid" in text)
+
+
 def _rejects_tools(error: Exception) -> bool:
     """Whether a failure means "this model has no tools" rather than an outage.
 
@@ -55,12 +62,25 @@ class OpenAICompatProvider:
         api_key_env: str = "PASHU_MODEL_API_KEY",
         timeout: float = DEFAULT_TIMEOUT,
         requires_key: bool = True,
+        reasoning_effort: str | None = None,
     ) -> None:
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.api_key_env = api_key_env
         self.timeout = timeout
         self.requires_key = requires_key
+        self.reasoning_effort = reasoning_effort
+        """How much thinking to pay for, on models that charge for it.
+
+        `gpt-oss` emits reasoning tokens and bills them as output. Measured on
+        one factual question: 326 output tokens at `high`, 43 at `low` — the
+        same answer, 7.5× the cost. These answers are short summaries of
+        evidence already retrieved and assembled, not problems to work through,
+        so the reasoning is being paid for and thrown away.
+
+        On an 8,000-token-a-minute allowance that is the difference between
+        serving one visitor a minute and serving several.
+        """
         """False for a self-hosted endpoint. Ollama takes no key, and treating
         a missing one as "not configured" would leave the fallback permanently
         switched off for the deployment that needs it most."""
@@ -143,6 +163,7 @@ class OpenAICompatProvider:
         schema = schema_for(request.schema_name)
         payload = self._post(
             {
+                **self._tuning(),
                 "model": self.model,
                 "messages": [{"role": "system", "content": prompt}],
                 "response_format": {
@@ -175,6 +196,20 @@ class OpenAICompatProvider:
     """Claimed up front, then corrected by the endpoint if it turns out to be
     false — see `_tools_rejected`."""
 
+    _effort_rejected = False
+
+    def _tuning(self) -> dict[str, Any]:
+        """Optional knobs, dropped once an endpoint says it does not know them.
+
+        Only reasoning models take `reasoning_effort`, and the fallback box runs
+        one that does not. Sending it regardless and learning from the refusal
+        keeps the provider one class rather than a table of model capabilities
+        that has to be maintained against services nobody here controls.
+        """
+        if self.reasoning_effort and not self._effort_rejected:
+            return {"reasoning_effort": self.reasoning_effort}
+        return {}
+
     _tools_rejected = False
 
     def converse(
@@ -192,6 +227,7 @@ class OpenAICompatProvider:
         module that knows about HTTP.
         """
         body: dict[str, Any] = {
+            **self._tuning(),
             "model": self.model,
             "messages": messages,
             "max_tokens": max_tokens,
@@ -211,6 +247,10 @@ class OpenAICompatProvider:
         try:
             payload = self._post(body)
         except ProviderUnavailable as error:
+            if "reasoning_effort" in body and _rejects_effort(error):
+                self._effort_rejected = True
+                body.pop("reasoning_effort")
+                return self._answer(self._post(body))
             if "tools" not in body or not _rejects_tools(error):
                 raise
             # The endpoint says this model has no tools. Remembered, so the rest
@@ -225,5 +265,11 @@ class OpenAICompatProvider:
             body.pop("tools")
             payload = self._post(body)
 
-        choice = (payload.get("choices") or [{}])[0]
-        return choice.get("message") or {}, self._usage(payload)
+        return self._answer(payload)
+
+    @staticmethod
+    def _message(payload: dict[str, Any]) -> dict[str, Any]:
+        return (payload.get("choices") or [{}])[0].get("message") or {}
+
+    def _answer(self, payload: dict[str, Any]) -> tuple[dict[str, Any], Usage]:
+        return self._message(payload), self._usage(payload)

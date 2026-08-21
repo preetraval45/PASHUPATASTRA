@@ -19,8 +19,6 @@ per-process cache on Lambda warms up and is then thrown away with the container.
 from __future__ import annotations
 
 import hashlib
-import json
-from typing import Any
 
 VERSION = "1"
 """Bumped when the instructions or the answer shape change. Answers computed
@@ -58,48 +56,59 @@ def key(
 
 
 class AnswerCache:
-    """Durable when the backend supports it, in-process when it does not."""
+    """Durable when a durable backend exists, in-process when it does not.
 
-    def __init__(self, store: Any | None = None) -> None:
-        self.store = store
+    The backend is resolved on each access through `backend.durable()` — the one
+    resolver R18 established — rather than being handed in by a caller. Passing
+    it in meant the cache was bound on the first question a container answered
+    and not before, so `/health` could only ever report it unbound, and there
+    was no way to tell a cache that was working from one that was not.
+
+    Resolution is cheap: `durable()` decides once per process and returns the
+    same object afterwards.
+    """
+
+    def __init__(self, resolver=None) -> None:
+        self._resolver = resolver
         self._local: dict[str, dict] = {}
 
     @property
+    def store(self):
+        if self._resolver is not None:
+            return self._resolver()
+        from ..backend import durable
+
+        return durable()
+
+    @property
     def durable(self) -> bool:
-        return self.store is not None and hasattr(self.store, "get_cached_answer")
+        return hasattr(self.store, "get_cached_answer")
 
     def get(self, digest: str) -> dict | None:
-        if self.durable:
-            found = self.store.get_cached_answer(digest)
+        store = self.store
+        if hasattr(store, "get_cached_answer"):
+            found = store.get_cached_answer(digest)
             if found is not None:
                 return found
         return self._local.get(digest)
 
     def put(self, digest: str, answer: dict) -> None:
         self._local[digest] = answer
-        if self.durable:
-            self.store.put_cached_answer(digest, answer)
-
-
-def loads(raw: str | dict) -> dict:
-    return raw if isinstance(raw, dict) else json.loads(raw)
+        store = self.store
+        if hasattr(store, "put_cached_answer"):
+            store.put_cached_answer(digest, answer)
 
 
 CACHE = AnswerCache()
 """Process-wide, like the audit log and the store.
 
 Built per call it was useless: the in-process half started empty every time, so
-nothing was ever served from it, and the durable half was doing all the work
-alone. A cache with request lifetime is not a cache.
+nothing was ever served from it, and the durable half did all the work alone.
+A cache with request lifetime is not a cache.
 """
 
 
-def shared(store: Any | None = None) -> AnswerCache:
-    """The process cache, bound to a durable store the first time one appears.
-
-    Late binding because the store is resolved lazily and may be `None` on the
-    first call — attaching at import would freeze in whatever was true then.
-    """
-    if store is not None and CACHE.store is None:
-        CACHE.store = store
+def shared(_store=None) -> AnswerCache:
+    """The process cache. The argument is ignored and kept only so callers do
+    not have to change; the cache resolves its own backend now."""
     return CACHE

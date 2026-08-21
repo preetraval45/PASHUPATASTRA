@@ -37,7 +37,7 @@ def main() -> int:
     parser.add_argument("--base", default="http://localhost:3111")
     parser.add_argument("--incident", default="INC-2026-0901")
     parser.add_argument("--timeout", type=int, default=120_000)
-    parser.add_argument("--pace", type=int, default=45_000,
+    parser.add_argument("--pace", type=int, default=70_000,
                         help="ms to wait between questions, to stay under the "
                              "provider's per-minute token allowance")
     args = parser.parse_args()
@@ -51,6 +51,9 @@ def main() -> int:
     url = f"{args.base}/incidents/{args.incident}"
     failures: list[str] = []
     seen_answers: dict[str, str] = {}
+    answered = 0
+    """Replies the panel has rendered. The next question must add one; anything
+    else means it did not get an answer of its own."""
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -65,13 +68,15 @@ def main() -> int:
         print(f"{args.incident} — the panel opens\n")
 
         for index, question in enumerate(STARTERS):
+            # Paced under the free tier's per-minute token allowance, including
+            # before the first question. Without that wait the opening question
+            # fires seconds after whatever ran last — another run, a manual
+            # check — and comes back rate-limited every time, which reads as a
+            # broken panel rather than a busy one.
+            page.wait_for_timeout(args.pace)
             if index == 0:
                 page.get_by_role("button", name=question, exact=True).click()
             else:
-                # Paced under the free tier's per-minute token allowance. Fired
-                # back to back, the later questions come back as rate limits and
-                # the run reports a broken panel instead of a busy one.
-                page.wait_for_timeout(args.pace)
                 # Only the first turn shows the chips; the rest go through the
                 # box, which is also the path a visitor takes for anything of
                 # their own.
@@ -86,16 +91,22 @@ def main() -> int:
             page.wait_for_selector("text=Reading the evidence…", state="detached",
                                    timeout=args.timeout)
 
-            # Located by data attribute, not by position. An earlier version
-            # counted `<p>` elements and read the visitor's own question back as
-            # though it were the reply — passing while testing nothing.
+            # Located by data attribute, and required to be *new*.
+            #
+            # Two earlier versions reported success on the wrong element. The
+            # first counted <p> nodes and read the visitor's own question back
+            # as the reply. The second read the last answer on the page — so
+            # when a question hit the rate limit and the panel appended an
+            # error, the previous answer was reported as this question's, four
+            # times over. Both passed while testing nothing.
             turns = page.locator("[data-turn='sati']")
-            if not turns.count():
+            if turns.count() <= answered:
                 error = page.locator("[data-turn='error']")
                 detail = error.last.inner_text() if error.count() else "no reply rendered"
                 failures.append(f"{question}: {detail}")
                 print(f"  x {question}\n      {detail}\n")
                 continue
+            answered = turns.count()
 
             turn = turns.nth(turns.count() - 1)
             body = turn.locator("[data-answer]").inner_text().strip()

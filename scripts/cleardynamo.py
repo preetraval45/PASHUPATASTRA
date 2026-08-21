@@ -8,6 +8,7 @@ before `dynamo_namespace` existed — that data sits under bare partition keys
 Deletes nothing without `--yes`.
 
     python scripts/cleardynamo.py --namespace test
+    python scripts/cleardynamo.py --namespace prod --partition CHAT --yes
     python scripts/cleardynamo.py --legacy --yes
 """
 
@@ -42,6 +43,15 @@ def main() -> int:
         action="store_true",
         help="target bare partition keys, written before namespacing existed",
     )
+    parser.add_argument(
+        "--partition",
+        action="append",
+        choices=PARTITIONS,
+        help="limit to these partitions; repeatable. Without it, everything in "
+             "the namespace goes. Added after clearing a whole namespace to "
+             "drop four cached answers — the seed rebuilt it, but a tool whose "
+             "narrow use requires the widest flag invites exactly that.",
+    )
     parser.add_argument("--yes", action="store_true", help="actually delete")
     args = parser.parse_args()
 
@@ -49,8 +59,11 @@ def main() -> int:
 
     table = boto3.resource("dynamodb", region_name=args.region).Table(args.table)
     label = "legacy (un-namespaced)" if args.legacy else args.namespace
+    if args.partition:
+        label += " / " + ", ".join(args.partition)
 
-    targets = {p: rows(table, p if args.legacy else f"{args.namespace}#{p}") for p in PARTITIONS}
+    wanted = tuple(args.partition) if args.partition else PARTITIONS
+    targets = {p: rows(table, p if args.legacy else f"{args.namespace}#{p}") for p in wanted}
     total = sum(len(v) for v in targets.values())
 
     print(f"{args.table} / {label}")

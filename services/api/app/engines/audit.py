@@ -23,6 +23,14 @@ class AuditKind(StrEnum):
     EXECUTION_RESULT = "execution_result"
     VERIFICATION = "verification"
     ESCALATION = "escalation"
+    AGENT_TURN = "agent_turn"
+    """One question answered by the agent.
+
+    Its own kind rather than an observation. An observation is something the
+    platform saw; this is something it *said*, and the two answer different
+    questions when a reader is working out where a claim came from. Filing them
+    together also made the agent's turns invisible in a trail full of telemetry.
+    """
 
 
 class AuditRecord(BaseModel):

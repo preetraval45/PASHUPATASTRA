@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { VerdictPanel } from "@/components/approval";
+import { AgentTurn } from "@/components/agentturn";
 import { ChatPanel } from "@/components/chat";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
@@ -47,6 +48,9 @@ const KIND: Record<string, { label: string; status: Status }> = {
   execution_result: { label: "executed", status: "ok" },
   verification: { label: "verified", status: "ok" },
   escalation: { label: "escalated", status: "high" },
+  // Its own kind because it is its own thing: not something the platform saw,
+  // but something it said.
+  agent_turn: { label: "answered", status: "neutral" },
 };
 
 export default async function IncidentDetailPage({
@@ -178,7 +182,10 @@ function AuditRow({ record, index }: { record: AuditRecord; index: number }) {
       >
         {record.actor}
       </span>
-      <span className="min-w-0 flex-1 text-sm">{record.summary}</span>
+      <span className="min-w-0 flex-1 text-sm">
+        {record.summary}
+        <AgentTurn record={record} />
+      </span>
     </li>
   );
 }

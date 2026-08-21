@@ -60,6 +60,22 @@ def health() -> dict[str, object]:
         # fresh checkout, and something an operator should see rather than infer
         # from suspiciously empty reasoning output.
         "model": model_health(),
+        # Whether repeat questions cost anything. On a per-minute token
+        # allowance this is the difference between serving a burst of visitors
+        # and refusing them, and a cache that silently stops working looks
+        # exactly like one that works — the answers stay correct, they just get
+        # paid for again. So it reports itself.
+        "chat_cache": _cache_health(),
+    }
+
+
+def _cache_health() -> dict[str, object]:
+    from ..agent.cache import CACHE
+
+    return {
+        "durable": CACHE.durable,
+        "in_process": len(CACHE._local),
+        "store": type(CACHE.store).__name__ if CACHE.store else None,
     }
 
 
@@ -537,23 +553,75 @@ def agent_chat(request: ChatRequest) -> dict[str, object]:
             ),
         ) from error
 
-    AUDIT.append(
-        AuditRecord(
-            at=datetime.now().astimezone(),
-            kind=AuditKind.OBSERVATION,
-            actor="sati.analyst",
-            incident_ref=incident.id,
-            summary=(
-                f"chat: {len(result.trace)} trace entries, {result.tokens} tokens, "
-                f"grounded={result.grounded}"
-            ),
-        )
-    )
+    AUDIT.append(_turn_record(result, incident, message))
 
     if result.proposed_action_id:
         _queue_proposal(result, incident)
 
     return result.model_dump(mode="json")
+
+
+MAX_RECORDED_QUESTION = 240
+
+
+def _asked(message: str) -> str:
+    """The question, made safe to keep and to show.
+
+    It is worth keeping: "why did it say that" is unanswerable without knowing
+    what it was asked. It is also text a stranger typed into a public box, on
+    its way to an append-only record rendered on a public page — so it is capped
+    and stripped of control characters first. Neither is about the model; both
+    are about what a permanent public trail should accept from anyone.
+    """
+    cleaned = "".join(c for c in message if c.isprintable() or c == " ").strip()
+    if len(cleaned) > MAX_RECORDED_QUESTION:
+        return cleaned[:MAX_RECORDED_QUESTION] + "…"
+    return cleaned
+
+
+def _turn_record(result, incident, message: str) -> AuditRecord:
+    """Everything needed to answer "why did it say that", months later.
+
+    The summary is the line the audit page shows by default, so it carries the
+    facts that decide whether to trust the answer — which model, whether it was
+    grounded — and no visitor text. The detail carries the rest, including the
+    tool-call trace and the prompt fingerprint.
+
+    Recorded for cached turns too, with the cost and trace of the run that
+    produced the answer. A cache hit is still an answer given to someone, and a
+    trail that skips them would show a page of questions with no replies.
+    """
+    tools = [entry["name"] for entry in result.trace if entry.get("kind") == "tool_call"]
+    return AuditRecord(
+        at=datetime.now().astimezone(),
+        kind=AuditKind.AGENT_TURN,
+        actor="sati.analyst",
+        incident_ref=incident.id,
+        summary=(
+            f"answered · {result.model or 'unknown model'} · "
+            + ("from cache" if result.cached else f"{result.tokens} tokens")
+            + (f" · called {', '.join(tools)}" if tools else "")
+            + ("" if result.grounded else " · NOT GROUNDED")
+            + ("" if result.answerable else " · not in the evidence")
+        ),
+        detail={
+            "asked": _asked(message),
+            "model": result.model,
+            "provider": result.provider,
+            "prompt_version": result.prompt_version,
+            "prompt_digest": result.prompt_digest,
+            "tokens": result.tokens,
+            "cached": result.cached,
+            "grounded": result.grounded,
+            "answerable": result.answerable,
+            "truncated": result.truncated,
+            "evidence_refs": result.evidence_refs,
+            "dropped_refs": result.dropped_refs,
+            "proposed_action_id": result.proposed_action_id,
+            "answer": result.answer,
+            "trace": result.trace,
+        },
+    )
 
 
 def _queue_proposal(result, incident) -> None:

@@ -22,7 +22,6 @@ from pashupatastra.gateway import Evidence
 from pashupatastra.incidents import Incident
 
 MAX_EVENTS = 12
-MAX_AUDIT = 8
 
 
 def incident_evidence(incident: Incident) -> list[Evidence]:
@@ -135,34 +134,6 @@ def event_evidence(store, event_ids: list[str], limit: int = MAX_EVENTS) -> list
     return blocks
 
 
-def audit_evidence(records, limit: int = MAX_AUDIT) -> list[Evidence]:
-    """Recent audit entries — what the platform itself did, and when.
-
-    Trusted, because the platform wrote them. This is the only category here
-    that is, and it earns it by never containing text from outside.
-    """
-    blocks: list[Evidence] = []
-    for record in records[:limit]:
-        blocks.append(
-            Evidence(
-                # Keyed by *when*, not by position. `audit#2` was positional,
-                # and the trail moves: answering a question appends an audit
-                # record of its own, so by the time the page rendered, index 0
-                # was the chat turn that produced the citation. A ref that
-                # silently points at a different record than the one it was
-                # taken from is worse than no ref at all.
-                ref=f"audit:{record.at.isoformat()}",
-                source="audit",
-                trusted=True,
-                content=(
-                    f"{record.at.isoformat()} {record.kind} by {record.actor}: "
-                    f"{record.summary}"
-                ),
-            )
-        )
-    return blocks
-
-
 def cited_event_ids(incident: Incident) -> list[str]:
     """Every event id the incident points at, in the order it points at them.
 
@@ -179,10 +150,30 @@ def cited_event_ids(incident: Incident) -> list[str]:
     return seen
 
 
-def build(incident: Incident, store, audit) -> list[Evidence]:
-    """Everything known about one incident, ready to be fenced."""
+def build(incident: Incident, store, audit=None) -> list[Evidence]:
+    """Everything known about one incident, ready to be fenced.
+
+    **The audit trail is deliberately not here.** It was, and it caused three
+    separate problems that all had the same root: the trail moves while the
+    page does not.
+
+    - Its citations could never resolve. The page renders anchors for the
+      records that existed when it was rendered; the agent cites the records
+      that exist when it answers, which is later. A citation that 404s is worse
+      than none, because it looks checkable.
+    - It broke the answer cache. Refs are timestamps and answering appends a
+      record, so the cache key changed on every request and never hit once —
+      silently, because a cache that always misses still returns correct
+      answers, at full price.
+    - It fed the agent its own previous replies as observed facts.
+
+    Nothing of substance is lost. What an analyst wants from the trail is which
+    actions were proposed and how policy scored them, and the plan steps carry
+    exactly that, as `#plan-N` refs that point at something stable.
+
+    `audit` is still accepted so callers do not have to change, and ignored.
+    """
     return [
         *incident_evidence(incident),
         *event_evidence(store, cited_event_ids(incident)),
-        *audit_evidence(audit.records(incident_ref=incident.id, limit=MAX_AUDIT)),
     ]

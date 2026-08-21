@@ -1,3 +1,4 @@
+import { AgentTurn } from "@/components/agentturn";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
 import { getAudit, type AuditRecord } from "@/lib/api";
 
@@ -26,6 +27,9 @@ const KIND: Record<string, { label: string; status: Status }> = {
   execution_result: { label: "executed", status: "ok" },
   verification: { label: "verified", status: "ok" },
   escalation: { label: "escalated", status: "high" },
+  // Its own kind because it is its own thing: not something the platform saw,
+  // but something it said.
+  agent_turn: { label: "answered", status: "neutral" },
 };
 
 export default async function AuditPage() {
@@ -91,7 +95,10 @@ function Row({ record }: { record: AuditRecord }) {
       >
         {record.actor}
       </span>
-      <span className="min-w-0 flex-1 break-words text-sm">{record.summary}</span>
+      <span className="min-w-0 flex-1 break-words text-sm">
+        {record.summary}
+        <AgentTurn record={record} />
+      </span>
       {record.incident_ref && (
         <span className="text-xs">
           <Ident>{record.incident_ref}</Ident>

@@ -15,6 +15,7 @@ truth; the store is, and the refs are the join between them.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime
 
 from pashupatastra.gateway import (
@@ -57,6 +58,25 @@ put in an approval queue. Never claim to have done anything.
 
 PURPOSE = "chat"
 
+PROMPT_VERSION = "2"
+"""Bumped whenever `INSTRUCTIONS` changes in a way that changes answers.
+
+Version 2 added the action-proposal rule (R20). An answer is only comparable to
+another answer produced under the same instructions, so this is what makes
+"why did it say that" answerable a month later, when the prompt has moved on.
+"""
+
+
+def prompt_digest() -> str:
+    """A fingerprint of the instructions actually in force.
+
+    The version above is written by hand, so it is wrong exactly when someone
+    edits the prompt and forgets to bump it — which is the case where a reader
+    most needs to know. The digest cannot be forgotten: two turns claiming
+    version 2 with different digests are visibly not the same prompt.
+    """
+    return hashlib.sha256(INSTRUCTIONS.encode("utf-8")).hexdigest()[:12]
+
 
 class ChatAnswer(BaseModel):
     """What one turn produced, including how much of it can be trusted."""
@@ -91,6 +111,8 @@ class ChatAnswer(BaseModel):
     model: str = ""
     provider: str = ""
     truncated: bool = False
+    prompt_version: str = PROMPT_VERSION
+    prompt_digest: str = ""
     cached: bool = False
     """True when this turn cost nothing. Shown rather than hidden — a reader
     deciding how current an answer is should know it was computed earlier."""
@@ -165,6 +187,10 @@ def answer(
         max_hops=settings.chat_max_tool_hops,
     )
 
+    # Every ref here is stable — chain steps, plan steps, event ids. That was
+    # not true while the audit trail was evidence: its refs are timestamps and
+    # answering appends a record, so the key changed on every request and the
+    # cache never hit once. See `context.build` for why the trail left.
     digest = answer_cache.key(
         incident_id=incident.id,
         question=message,
@@ -203,6 +229,8 @@ def answer(
         model=response.model,
         provider=response.provider,
         truncated=response.truncated,
+        prompt_version=PROMPT_VERSION,
+        prompt_digest=prompt_digest(),
     )
 
     # Only answers worth repeating. A truncated or ungrounded turn is a bad

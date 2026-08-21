@@ -102,6 +102,17 @@ class Settings(BaseSettings):
     an analyst's day.
     """
 
+    model_reasoning_effort: str | None = "low"
+    """How much thinking to pay for, where the model charges for it.
+
+    `low` by default. These answers summarise evidence that has already been
+    retrieved, filtered and assembled — the hard part happened before the model
+    was asked. Measured on one factual question: 326 output tokens at `high`,
+    43 at `low`, same answer.
+
+    Set to `None` to leave it to the provider, or `high` for a deployment where
+    the model is doing genuine reasoning rather than reporting."""
+
     fallback_base_url: str | None = None
     """Second endpoint, tried when the first refuses. Intended for Ollama on an
     always-free box: no quota, but slow enough that it should never be first.

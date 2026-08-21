@@ -849,10 +849,51 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
   answers**, because four questions returning one answer would satisfy every
   other check while proving nothing.
 
-- [ ] **R22 — Audit the agent.** Needs: **R18, R19**.
-  Model id, prompt version and full tool-call trace written to the audit table
-  for every turn, so "why did it say that" is answerable from the Audit page.
-  **Done when:** every chat turn appears in `/audit` with its trace.
+- [x] **R22 — Audit the agent.** Needs: **R18, R19**.
+  **Done when:** every chat turn appears in `/audit` with its trace. — **met, on
+  the deployed site.** Each turn is an `agent_turn` record carrying the
+  question, the answer, the model, the provider, the prompt version *and its
+  digest*, the citations, and every step the agent took. The audit page renders
+  it behind a "why it said that" expander.
+
+  A chat turn is its own kind of record. An observation is something the
+  platform saw; a turn is something it *said*, and filed together the agent's
+  turns vanish into a trail of telemetry.
+
+  The prompt version is written by hand and therefore wrong exactly when
+  someone edits the prompt and forgets to bump it — the case a reader most needs
+  to notice — so a digest of the instructions goes with it. Two turns claiming
+  version 2 with different digests are visibly not the same prompt.
+
+  Cached turns are recorded too, carrying the cost and trace of the run that
+  produced the answer. A cache hit is still an answer given to someone, and a
+  trail that skipped them would show questions with no replies.
+
+  **The visitor's question is capped and stripped of control characters before
+  it is stored**, and kept out of the summary line. It is text a stranger typed
+  into a public box, on its way to an append-only record on a public page.
+
+  **This phase found the cache had never worked.** R21 made audit refs
+  timestamps; answering appends an audit record; the refs were in the cache key
+  — so the key changed on every request and nothing was ever served from cache.
+  It was invisible, because a cache that always misses still returns correct
+  answers, at full price. On an 8,000-token-a-minute allowance that is the
+  difference between serving a burst of visitors and refusing them. `/health`
+  now reports `chat_cache` so it cannot fail silently again.
+
+  The audit trail was removed from the evidence entirely. It caused three
+  problems with one root — the trail moves while the page does not: citations
+  that could never resolve, a cache key that changed every request, and the
+  agent reading its own previous replies as observed fact. Nothing of substance
+  is lost; the plan steps carry the verdicts, as refs that stay put.
+
+  **Free-tier tuning, measured rather than assumed.** `gpt-oss` bills reasoning
+  as output: 326 output tokens at `high` effort against 43 at `low`, same
+  answer. These replies summarise evidence already retrieved and assembled, so
+  the reasoning was being paid for and thrown away. A live turn went from 6,584
+  tokens to 4,869, and the provider drops the setting by itself on an endpoint
+  that does not know it.
+
 
 - [ ] **R23 — Deploy Phase 3 and review.** Needs: **R20, R21, R22**.
   **Stop here for review.**
