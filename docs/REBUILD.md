@@ -8,8 +8,8 @@ task depends on*, and *how you know it is done*.
 
 ## How to use this
 
-Every task has an id (`R1`, `R2`, …). Tell me **"do R7"** and I do exactly that
-task and stop. A task is only startable when everything in its **Needs** column
+Every task has an id — `R1`, `R2`, … for the rebuild, `S1`, `S2`, … for turning
+it into a SaaS. Tell me **"do R7"** and I do exactly that task and stop. A task is only startable when everything in its **Needs** column
 is ticked — that is the whole point of the ordering, and jumping it is how a
 half-built feature lands on top of an unfinished one.
 
@@ -35,8 +35,15 @@ platform. Where the two touch, this file says so.
 
 ## Cost ceiling: free tiers only
 
-Every task below fits AWS free tier and Vercel Hobby. Two of them do not, and
-both are flagged where they appear rather than discovered later.
+Every task below fits AWS free tier and Vercel Hobby. Where one does not, it is
+flagged where it appears rather than discovered later.
+
+> **Vercel Hobby is non-commercial, and Phase 7 sells something.** The moment
+> this has a pricing page and a paying customer, Hobby is the wrong licence and
+> the deployment has to move to Vercel Pro (~$20/month) or somewhere else. That
+> is not a technical constraint and no amount of engineering removes it — it is
+> the first real bill this project acquires, and it arrives with S11 rather than
+> with any amount of traffic.
 
 | Service | Allowance | Expires? |
 |---|---|---|
@@ -46,7 +53,9 @@ both are flagged where they appear rather than discovered later.
 | CloudWatch Logs | 5 GB ingest / month | **Always free** |
 | API Gateway HTTP API | 1M requests / month | 12 months, then ~$1/M |
 | S3 | 5 GB | 12 months |
-| Vercel Hobby | 100 GB bandwidth, unlimited static | **Always free**, non-commercial |
+| Cognito | 50,000 monthly active users | **Always free** |
+| SES (sandbox) | 200 messages / day, verified addresses only | **Always free** |
+| Vercel Hobby | 100 GB bandwidth, unlimited static | **Always free**, non-commercial — see above |
 
 **Free, but small — which changes the design rather than the budget:**
 
@@ -58,6 +67,13 @@ both are flagged where they appear rather than discovered later.
   permanently, running Ollama for the requests Groq's per-minute allowance
   refuses. The only piece of the platform not on AWS, because the AWS free tier
   is a 1 GB instance and a usable model needs three to four.
+
+**Free, and enough for the SaaS phases:**
+
+- **Cognito** — 50,000 monthly active users, always free. Identity is where a
+  SaaS usually acquires its first bill; this one does not.
+- **SES in sandbox** — free, and sends only to verified addresses, which is
+  enough to build and test invitations against.
 
 **Not free:**
 
@@ -235,10 +251,32 @@ Phase 4 ─ observatory + game             needs R22
   R23, R11 ─────► R26 ──► R27 ──► R28 (final deploy)
 
 Phase 5 ─ the visitor's path            needs R17
-  R40 ──► R41 ──► R42
-  R43 ──► R44
-  R41, R42, R43, R44 ──────────► R45 (deploy + review)
+  R50 ──► R51 ──► R52
+  R53 ──► R54
+  R51, R52, R53, R54 ──────────► R55 (deploy + review)
+
+Phase 6 ─ tenancy and identity           needs R18, R55
+  S1 ──► S2 ──► S3 ──► S4 ──► S5        the order is not negotiable:
+                       S3 ──► S6        tenancy before sign-in, scoping
+                                        before invitations
+
+Phase 7 ─ the product surface            needs S4
+  S4, R53 ──► S7 ──┬──► S8
+                   ├──► S9 ──► S10 ──► S11
+                   └──► S12
+
+Phase 8 ─ operating it as a service      needs S10
+  S10 ──► S13 ──► S14
+  S7 ─────────► S15
+  S5, S8, S11, S14 ────────────► S16 (deploy + review)
 ```
+
+**Two numbering notes.** `R40`–`R45` appeared twice — Phase 2A, delivered, and
+Phase 5, not started — so Phase 5's are now `R50`–`R55`. Two tasks with one id
+is a plan that cannot be pointed at. The SaaS phases use `S` rather than
+continuing the `R` sequence, because they are a different kind of work: `R` is
+"rebuild this demo into a console", `S` is "turn the console into something a
+stranger can sign up for".
 
 ---
 
@@ -895,8 +933,54 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
   that does not know it.
 
 
-- [ ] **R23 — Deploy Phase 3 and review.** Needs: **R20, R21, R22**.
-  **Stop here for review.**
+- [x] **R23 — Deploy Phase 3 and review.** Needs: **R20, R21, R22**.
+  Deployed and verified against `https://pashupatastra.vercel.app`.
+
+  *Evidence: 21/21 layout and reachability checks at 375, 768 and 1280. All four
+  starter questions answered with distinct, grounded replies carrying 7, 9, 1
+  and 1 citations, every one resolving. Asking it to act returns
+  `isolate_host`, a verdict of `senior` at risk 67 needing a `senior_operator`,
+  an approval id, and nothing executed. Every turn is in `/audit` with its
+  trace. `/health`: `ok · dynamodb · chat_cache durable`. 697 tests, ruff clean,
+  WCAG AA in both themes.*
+
+  **What Phase 3 actually built.** An agent that answers from the store and
+  cannot act. Three properties carry that, and none of them is the prompt:
+  retrieval is deterministic, so a model that never calls a tool still answers
+  from real data; citations are verified against what was retrieved, so an
+  invented ref is dropped and the answer marked ungrounded; and the tool set is
+  derived from `ActionSpec.read_only` intersected with `AgentSpec.may_use`, so
+  `isolate_host` is absent because of what it is, not because someone remembered
+  to exclude it.
+
+  **The recurring lesson of this phase was that checks lie.** Four times a green
+  result meant nothing: `verifychat` read the visitor's own question back as the
+  reply; then it read the previous answer when a question was rate-limited;
+  `verifyui` passed 18/18 while the navbar was unnavigable at 768px; and the
+  answer cache reported nothing wrong while missing on every single request,
+  because a cache that always misses still returns correct answers. Each fix was
+  the same shape — **count what changed, not what is present** — and each was
+  found by looking at the deployed site rather than at the suite.
+
+  ### Known weaknesses, stated rather than discovered later
+
+  - **The free tier is 8,000 tokens a minute.** A turn costs ~4,900, so a burst
+    of visitors gets a 429 and a polite sentence. The cache makes repeats free,
+    which covers the starter questions; anything novel competes for the window.
+    `scripts/oracle-ollama.sh` provisions the unlimited fallback and **has not
+    been run**, so today a rate limit is a refusal rather than a slower answer.
+  - **The security topology has no edges.** Eleven nodes, zero dependencies, so
+    the map draws no connections and blast radius has nothing to traverse —
+    `0 observed access paths` is truthful and looks broken. The scripted
+    scenarios never asserted a dependency; adding them is data, not code.
+  - **Map severity now blends telemetry with open incidents.** Defensible — an
+    entity is shown as the most serious thing currently true about it — but it
+    is a display rule layered on top of a windowed measurement, and the two
+    should probably become one explicit concept.
+  - **The Groq key was pasted into a chat window on 21 August 2026.** Rotate it.
+  - `next start` cannot serve this app from a OneDrive path on the owner's
+    machine (the `[id]` chunk 400s and nothing hydrates). `next dev` works, and
+    the deployed build is unaffected — but it will cost someone an hour.
 
 ---
 
@@ -959,7 +1043,7 @@ who has not.
 The rule this phase applies: **a top-level tab is for something a visitor would
 go looking for. Everything else appears where it is needed and nowhere else.**
 
-- [ ] **R40 — Access paths in the scenarios.** Needs: **R17**.
+- [ ] **R50 — Access paths in the scenarios.** Needs: **R17**.
   R6 seeded the scenarios' entities with **no edges**, deliberately — they
   declared a sequence of events, not a graph. That is why the map is a list of
   boxes, and it blocks everything below: a blast radius over a graph with no
@@ -971,7 +1055,7 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   **Done when:** all three scenarios render a connected access graph, every edge
   traces to a cited event, and a test fails on any edge no evidence supports.
 
-- [ ] **R41 — Blast radius inside the incident.** Needs: **R40**.
+- [ ] **R51 — Blast radius inside the incident.** Needs: **R50**.
   The map is built and correct; it is in the wrong place. Rendered beside the
   failure it belongs to — these entities, what they can reach, what is already
   compromised — it is the screen that proves the system has a model of the
@@ -982,10 +1066,10 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   **Done when:** an incident page shows its affected entities and their access
   paths inline, and `/infrastructure` is reachable from it.
 
-- [ ] **R42 — Nav that follows the visitor, not the architecture.** Needs: **R41**.
+- [ ] **R52 — Nav that follows the visitor, not the architecture.** Needs: **R51**.
   Drop **Infrastructure** and **Audit** from `components/nav.tsx`. Both routes
   stay — they are built, tested, and right — but they stop being front doors.
-  Infrastructure is reached from the incident (R41) and from entity pages, which
+  Infrastructure is reached from the incident (R51) and from entity pages, which
   already link into it. Audit is reached from the incident whose actions it
   records.
   The reasoning is the same for both, and it is not that the pages are weak:
@@ -998,7 +1082,7 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   still reachable in two clicks from the overview — verified by clicking, not by
   reading the code.
 
-- [ ] **R43 — A landing page that is not the console.** Needs: nothing.
+- [ ] **R53 — A landing page that is not the console.** Needs: nothing.
   `/` is currently Overview, an operator's dashboard, shown to people who have
   no idea what they are looking at. Split them: `/` becomes the page that
   explains the product, and the console moves to its own route.
@@ -1012,7 +1096,7 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   **Done when:** someone who has never heard of the project can say what it does
   after reading only `/`, and reaches a real incident in one click.
 
-- [ ] **R44 — How it works.** Needs: **R43**.
+- [ ] **R54 — How it works.** Needs: **R53**.
   One page for the visitor who got interested and now wants to know whether to
   believe it: the seven stages, the risk tiers and who may authorise each, the
   two gates that keep this deployment in dry run, and the audit trail — with a
@@ -1022,11 +1106,166 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   **Done when:** every claim on `/` has a page here that substantiates it, and
   the risk table matches the registry rather than restating it from memory.
 
-- [ ] **R45 — Deploy Phase 5 and review.** Needs: **R41, R42, R43, R44**.
+- [ ] **R55 — Deploy Phase 5 and review.** Needs: **R51, R52, R53, R54**.
   **Done when:** the deployed site opens on something a stranger understands,
   the console is still one click away, no route was deleted, and `verifyui.py`
   and `verifycontrast.py` both pass on the new pages.
   **Stop here for review.**
+
+---
+
+## Phase 6 — Tenancy and identity *(the floor a SaaS stands on)*
+
+Needs **R18** and **R55**. Everything up to here is one console showing one
+organisation's data to anyone who opens the URL. A SaaS is the opposite claim:
+many organisations, each seeing only its own, and each certain the others cannot
+see theirs. That claim is made in the data model, not in the login screen.
+
+**The order in this phase is not negotiable.** Tenancy lands before sign-in, and
+scoping lands before invitations. A product that adds accounts first has a
+window in which users exist and data is still shared, and nobody finds that
+window by using the product — they find it by being in someone else's data.
+
+`packages/core` already carries a `tenant` setting that nothing enforces. That
+is the seam this phase makes real.
+
+- [ ] **S1 — A tenant on every record.** Needs: **R18**.
+  `tenant_id` on incidents, audit records, events, nodes, edges and cached
+  answers, and in the DynamoDB partition key beside the namespace — the same
+  mechanism that already separates `prod` from `test`, doing the job it was
+  shaped for. Backfill the demo data to a `demo` tenant.
+  **Done when:** no store method can read or write without a tenant, enforced by
+  the signature rather than by convention, and a test proves that two tenants
+  writing the same incident id get two incidents.
+
+- [ ] **S2 — Sign-in.** Needs: **S1**.
+  **AWS Cognito** — 50,000 monthly active users on the always-free tier, which
+  is more than this will ever need and keeps identity on the platform the rest
+  of the system already runs on. Hosted UI first; a custom form is a later
+  cosmetic task, not a prerequisite.
+  **Done when:** a visitor can create an account, sign in, sign out, and reach a
+  page that names them.
+  **Cost:** free to 50k MAU. Stated because "auth" is where SaaS projects
+  usually acquire their first bill.
+
+- [ ] **S3 — Organisations and membership.** Needs: **S2**.
+  A user belongs to one or more organisations; an organisation owns tenants.
+  Roles: `owner`, `analyst`, `viewer` — three, because two cannot express "may
+  approve" and four are invented before anyone has asked for them.
+  **Done when:** a new sign-up creates an organisation, and a user's role is
+  visible in their session.
+
+- [ ] **S4 — Every route scoped to the caller.** Needs: **S3**.
+  **The security task of this phase.** Each API route derives its tenant from
+  the authenticated session, never from a parameter — a tenant id in a request
+  body is an invitation to type someone else's.
+  **Done when:** a test signs in as one organisation, requests another's
+  incident by id, and gets a 404 rather than a 403. *404, deliberately: a 403
+  confirms the id exists, and confirming which incident ids exist is itself a
+  leak.*
+
+- [ ] **S5 — Approval means a person now.** Needs: **S4**.
+  Dharma's `required_approvers` are role names; approval is currently an
+  anonymous POST. With identity available, an approval records *who*, and the
+  route refuses a caller whose role is not in the verdict's approver list.
+  **Done when:** a `viewer` cannot approve a `senior` action, the audit record
+  names the human who did, and the existing approval-fatigue metrics attribute
+  to real people. Closes the gap R20 left: the agent's proposals reach a queue
+  that, until now, anyone could clear.
+
+- [ ] **S6 — Invite a teammate.** Needs: **S3**.
+  Email invitation with a signed, expiring link. **SES** in sandbox mode is free
+  and sends only to verified addresses, which is enough to build and test
+  against; leaving the sandbox is a support ticket, not a code change.
+  **Done when:** an invited address can join an existing organisation and lands
+  in it, not in a new one of their own.
+
+---
+
+## Phase 7 — The product surface *(what someone can buy)*
+
+Needs **S4**. The console is the thing being sold, but nobody buys a console
+they cannot get into, and nobody signs up for something that opens on a
+dependency map. This phase is the shell around the product.
+
+- [ ] **S7 — The console moves to `/app`.** Needs: **S4**, **R53**.
+  `/` becomes the landing page built in R53; the console lives under `/app` and
+  requires a session. Marketing pages stay static and public — they are what a
+  search engine and a stranger see.
+  **Done when:** signed out, `/app/*` redirects to sign-in and `/` renders
+  without touching the API; signed in, `/app` is the console.
+
+- [ ] **S8 — Onboarding that ends in something real.** Needs: **S7**.
+  Create an organisation, connect a source, see a first incident. The demo
+  scenarios are the fallback so a new tenant is never an empty console — but
+  they are **labelled as sample data**, everywhere they appear. An empty state
+  that quietly fills itself with fiction is how a product teaches its users not
+  to trust it.
+  **Done when:** a new sign-up reaches a populated console in under two minutes
+  without reading anything.
+
+- [ ] **S9 — Settings, and an API key.** Needs: **S7**.
+  Organisation name, members, roles, and per-tenant API keys for the ingest
+  route — hashed at rest, shown once at creation.
+  **Done when:** a key can be created, used against `/ingest`, and revoked, and
+  a revoked key is refused.
+
+- [ ] **S10 — Plans, and limits that are real.** Needs: **S9**.
+  A `free` plan with quotas the code actually enforces — entities watched,
+  incidents retained, agent questions per day. Enforced at the seam, returning
+  402 with what was exceeded and what the limit is.
+  **Done when:** exceeding a quota is refused with a message naming the number,
+  and `/health` reports current usage against it. *The chat quota already half
+  exists as `chat_token_ceiling`; this makes it per tenant.*
+
+- [ ] **S11 — Pricing, and a way to say yes.** Needs: **S10**.
+  A pricing page with the plans from S10, and a waitlist form for paid tiers.
+  **No payment integration.** Stripe costs nothing to add and everything to
+  operate — refunds, tax, dunning, a legal entity — and none of that should be
+  built before someone has asked to pay.
+  **Done when:** the page states what each plan includes, matching S10's
+  enforced numbers rather than a marketing table that drifts from them.
+
+- [ ] **S12 — Terms, privacy, and a security page.** Needs: **S7**.
+  Not decoration: this product ingests telemetry from other people's
+  infrastructure. The security page states what is stored, where, for how long,
+  and what the agent is permitted to do — which is the shortest honest summary
+  of `docs/SECURITY.md` and R20.
+  **Done when:** all three exist, are linked from the footer, and say something
+  specific enough to be wrong if the system changed.
+
+---
+
+## Phase 8 — Operating it as a service
+
+Needs **S10**. The difference between a deployed app and a service is that
+somebody is accountable for it while nobody is watching.
+
+- [ ] **S13 — Per-tenant metering.** Needs: **S10**.
+  Tokens, ingested events, actions evaluated and storage, per tenant per day.
+  The `Accountant` already does this per incident and per agent; this adds the
+  dimension a bill or a quota would be argued from.
+  **Done when:** a tenant's usage for a day can be produced from stored records,
+  not reconstructed from logs.
+
+- [ ] **S14 — Status, and knowing before the user does.** Needs: **S13**.
+  A public status page driven by the same `/health` the console reads, plus an
+  alert when the API, the store or the model provider stops answering.
+  **Done when:** killing the model provider's key turns the status page amber
+  within a minute and does not take the console down with it.
+
+- [ ] **S15 — A way to be told something is wrong.** Needs: **S7**.
+  A feedback route from inside the console that files with context — tenant,
+  page, and the last audit records — so a report arrives with the evidence
+  attached rather than as "it broke".
+  **Done when:** a report from the console arrives with enough context to
+  reproduce it without replying to ask.
+
+- [ ] **S16 — Deploy Phase 6–8 and review.** Needs: **S5, S8, S11, S14**.
+  **Stop here for review.**
+  **Done when:** two organisations exist, each sees only its own incidents,
+  neither can approve the other's actions, quotas are enforced, and the landing
+  page is what a stranger reaches first.
 
 ---
 
