@@ -83,19 +83,44 @@ export default async function LandingPage() {
           carries a link to the evidence it came from.
         </p>
 
-        <div className="flex flex-wrap items-center gap-3 pt-2">
-          <Link
-            href={demo}
-            className="focusable rounded-lg border border-[rgb(var(--astra))]/50 bg-[rgb(var(--astra))]/10 px-5 py-2.5 text-sm font-medium transition hover:bg-[rgb(var(--astra))]/20"
-          >
-            Open a real incident →
-          </Link>
-          <Link
-            href="/blue-team"
-            className="focusable rounded-lg border border-[rgb(var(--edge-strong))] px-5 py-2.5 text-sm transition hover:bg-[rgb(var(--raised))]"
-          >
-            Or work one yourself
-          </Link>
+        {/* R58: the one affordance a skimmer needs, and it says what it opens.
+            Plain links — no modal, no overlay, nothing that has to boot before
+            the page beneath it renders, and it works with JavaScript off.
+
+            The previous label said "Open a real incident" and pointed at a
+            scripted scenario. That was the site's own honesty rule broken on
+            its first screen, and it got worse the day genuinely real attacks
+            landed on /observatory: two things were being called real and only
+            one of them was. */}
+        <div className="pt-2">
+          <p className="label mb-3 text-[rgb(var(--faint))]">Start here</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={demo}
+              className="focusable rounded-lg border border-[rgb(var(--astra))]/50 bg-[rgb(var(--astra))]/10 px-5 py-2.5 text-sm font-medium transition hover:bg-[rgb(var(--astra))]/20"
+            >
+              Open a worked incident →
+            </Link>
+            <Link
+              href="/observatory"
+              className="focusable rounded-lg border border-[rgb(var(--edge-strong))] px-5 py-2.5 text-sm transition hover:bg-[rgb(var(--raised))]"
+            >
+              Or today&rsquo;s real attacks
+            </Link>
+            <Link
+              href="/blue-team"
+              className="focusable rounded-lg border border-[rgb(var(--edge))] px-5 py-2.5 text-sm text-[rgb(var(--muted))] transition hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]"
+            >
+              Work one yourself
+            </Link>
+          </div>
+          <p className="mt-3 max-w-2xl text-xs leading-relaxed text-[rgb(var(--faint))]">
+            The worked incident is a written scenario, labelled as one wherever
+            it appears — it exists to show the whole chain end to end. The
+            attacks on the Observatory are real: ransomware groups naming
+            victims, botnet controllers answering right now, breaches as they
+            are disclosed.
+          </p>
         </div>
 
         <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 pt-4 text-xs text-[rgb(var(--faint))]">
@@ -158,7 +183,7 @@ export default async function LandingPage() {
                 href={demo}
                 className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
               >
-                This is a real incident on this site — open it →
+                See the whole chain on this one — open it →
               </Link>
             </p>
           </div>
@@ -241,16 +266,18 @@ export default async function LandingPage() {
           Everything here is live
         </h2>
         <p className="max-w-2xl text-sm leading-relaxed text-[rgb(var(--muted))]">
-          The incidents are scripted and labelled as such; the threat
-          intelligence is real and polled hourly from CISA and abuse.ch. Nothing
-          on this site executes anything.
+          The worked incidents are scripted and labelled as such. Everything on
+          the Observatory is real and polled hourly: ransomware groups naming
+          victims, botnet command-and-control servers answering now, breaches as
+          they are disclosed, and CISA&rsquo;s catalogue of vulnerabilities being
+          exploited in the wild. Nothing on this site executes anything.
         </p>
         <div className="flex flex-wrap gap-3 pt-1">
           <Link
             href={demo}
             className="focusable rounded border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]"
           >
-            A real incident
+            A worked incident
           </Link>
           <Link
             href="/blue-team"

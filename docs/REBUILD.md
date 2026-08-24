@@ -1708,7 +1708,7 @@ Everything in Phases 5B–5D is worth less until these land.
   and every external link fetched. Contrast passes AA in both themes; 33/33
   responsive combinations pass; 959 tests pass.
 
-- [ ] **R58 — Start here.** Needs: **R53**.
+- [x] **R58 — Start here.** Needs: **R53**.
   A skimmer on `/` currently has to notice a text link to find the real
   incident. A *Start here* affordance near the top, leading straight into it —
   a link or a scroll, **not a modal**, and nothing that blocks the page beneath
@@ -1717,6 +1717,22 @@ Everything in Phases 5B–5D is worth less until these land.
   **Done when:** a visitor who reads nothing but the first screen reaches a real
   incident in one click, and the affordance is keyboard-reachable and legible in
   both themes.
+  Done — and the geometry half was **already true** before the task started, at
+  every viewport. Measuring it first is what found the real defect, which the
+  task had not anticipated: the button said `Open a real incident →` and pointed
+  at a scripted scenario. That was the site's own honesty rule broken on its
+  first screen, and R88 made it worse the same day by putting genuinely real
+  attacks on `/observatory` — two things called real and only one of them was.
+  So the affordance is now a labelled *Start here* with three plain links and a
+  line saying which is which: the worked incident is a written scenario that
+  exists to show the whole chain, and the Observatory is real. No modal, no
+  overlay, nothing that boots before the page under it renders.
+  `scripts/verifystart.py` measures the claim as geometry rather than as a
+  class name — the link's bounding box must lie fully inside the viewport before
+  any scroll — across 6 viewports × 2 themes, and reaches the primary link by
+  pressing Tab rather than trusting that a class called `focusable` focuses
+  anything. 12/12 pass, contrast passes AA in both themes, 33/33 responsive
+  combinations pass.
 
 - [ ] **R59 — Deploy Phase 5A and review.** Needs: **R56, R57, R58**.
   **Done when:** the deployed Observatory shows grouped indicators against the
