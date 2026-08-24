@@ -14,7 +14,7 @@
 
 import {
   isVerification,
-  type IntelEntry,
+  type IntelGroup,
   type Verification,
 } from "@/lib/api";
 import { Ago, Badge, statusForSeverity, type Status } from "@/components/ui";
@@ -82,35 +82,32 @@ export function VerificationBadge({ value }: { value: unknown }) {
   );
 }
 
-export function IntelEntryRow({ entry }: { entry: IntelEntry }) {
-  const labels = entry.labels ?? {};
-  const advisory = entry.provenance?.url ?? null;
-  const title = labels.title || entry.entity_key;
-  const identifier = entry.entity_key.split(":").slice(1).join(":");
+export function IntelGroupRow({ group }: { group: IntelGroup }) {
+  const advisory = group.provenance?.url ?? null;
+  const identifier = group.entity_key.split(":").slice(1).join(":");
+  const repeated = group.reports > 1;
 
   return (
     <li className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="w-16 shrink-0 text-xs text-[rgb(var(--faint))]">
-          <Ago at={entry.occurred_at} />
+          <Ago at={group.last_at} />
         </span>
-        <VerificationBadge value={labels.verification} />
-        <Badge status={statusForSeverity(entry.severity)}>
-          {entry.severity ?? "unrated"}
+        <VerificationBadge value={group.verification} />
+        <Badge status={statusForSeverity(group.severity)}>
+          {group.severity ?? "unrated"}
         </Badge>
         <span
           className="text-xs text-[rgb(var(--muted))]"
-          title={sourceAbout(entry.source) ?? undefined}
+          title={sourceAbout(group.source) ?? undefined}
         >
-          {sourceName(entry.source)}
+          {sourceName(group.source)}
         </span>
         {/* Wraps, because the identifier comes from a feed and feeds bring
-            whatever the internet contains. This row was laid out against IP
-            addresses and held until URLhaus ingested a 56-character random
-            subdomain, which pushed the page 100px wide at 375px. `min-w-0` as
-            well as `break-all`: a flex item refuses to shrink below its
-            content's minimum without it, so breaking alone would not have
-            been enough. */}
+            whatever the internet contains — a 56-character random subdomain
+            took this page 100px wide at 375px. `min-w-0` as well as
+            `break-all`: a flex item refuses to shrink below its content's
+            minimum contribution without it. */}
         {identifier && (
           <span className="mono min-w-0 break-all text-[rgb(var(--astra))]">
             {identifier}
@@ -118,36 +115,99 @@ export function IntelEntryRow({ entry }: { entry: IntelEntry }) {
         )}
       </div>
 
-      <p className="text-sm font-medium leading-snug">{title}</p>
+      <p className="text-sm font-medium leading-snug">{group.title}</p>
 
-      {labels.summary && (
+      {group.summary && (
         <p className="max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
-          {labels.summary}
+          {group.summary}
         </p>
       )}
 
-      <Facts entry={entry} />
+      <Facts labels={group.labels} />
 
-      {advisory ? (
-        <a
-          href={advisory}
-          target="_blank"
-          // `noreferrer` as well as `noopener`: this is a link to a security
-          // advisory about an attack, and the referrer would tell that site
-          // which console is reading about it.
-          rel="noopener noreferrer"
-          className="focusable mono w-fit rounded text-[11px] text-[rgb(var(--faint))] underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
-        >
-          read the advisory ↗
-        </a>
-      ) : (
-        <span className="mono text-[11px] text-[rgb(var(--faint))]">
-          no advisory link recorded
-        </span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
+        {/* The count is the thing the page could not say before. Forty-three
+            near-identical cards stated it by taking up the screen; one line
+            states it and leaves room for the other hundred and seven
+            indicators. */}
+        {repeated && (
+          <span className="text-[rgb(var(--muted))]">
+            reported{" "}
+            <span className="text-[rgb(var(--ink))]">
+              {group.reports_in_window}×
+            </span>{" "}
+            {group.reports_in_window === group.reports
+              ? `in the last ${group.window_hours}h`
+              : `in ${group.window_hours}h, ${group.reports} in total`}
+          </span>
+        )}
+        {advisory ? (
+          <a
+            href={advisory}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="focusable mono rounded text-[rgb(var(--faint))] underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+          >
+            read the advisory ↗
+          </a>
+        ) : (
+          <span className="mono text-[rgb(var(--faint))]">
+            no advisory link recorded
+          </span>
+        )}
+      </div>
+
+      {/* Every individual report, one click away. Collapsing the display is
+          only defensible if nothing is lost by it. */}
+      {repeated && (
+        <details className="mt-1">
+          <summary className="focusable inline-block cursor-pointer rounded text-[11px] text-[rgb(var(--faint))] hover:text-[rgb(var(--ink))]">
+            all {group.reports} reports
+          </summary>
+          <ol className="mt-2 space-y-1 border-l border-[rgb(var(--edge))] pl-3">
+            {group.history.map((report) => (
+              <li
+                key={report.id}
+                className="flex flex-wrap items-baseline gap-x-3 text-[11px]"
+              >
+                <span className="mono text-[rgb(var(--faint))]">
+                  {report.at.slice(0, 16).replace("T", " ")}
+                </span>
+                {report.status && (
+                  <span
+                    className={
+                      report.status === "online"
+                        ? "text-[rgb(var(--warn))]"
+                        : "text-[rgb(var(--faint))]"
+                    }
+                  >
+                    {report.status}
+                  </span>
+                )}
+                {report.tags && (
+                  <span className="min-w-0 break-all text-[rgb(var(--muted))]">
+                    {report.tags}
+                  </span>
+                )}
+                {report.url && (
+                  <a
+                    href={report.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="focusable mono rounded text-[rgb(var(--faint))] underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+                  >
+                    ↗
+                  </a>
+                )}
+              </li>
+            ))}
+          </ol>
+        </details>
       )}
     </li>
   );
 }
+
 
 /**
  * The two or three facts that change what a reader does about an entry.
@@ -157,8 +217,7 @@ export function IntelEntryRow({ entry }: { entry: IntelEntry }) {
  * has a liveness instead. Rendering one shape for both would mean either empty
  * columns or facts left out of whichever source lost the argument.
  */
-function Facts({ entry }: { entry: IntelEntry }) {
-  const labels = entry.labels ?? {};
+function Facts({ labels }: { labels: Record<string, string> }) {
   const facts: { key: string; value: string; warn?: boolean }[] = [];
 
   if (labels.ransomware === "known") {

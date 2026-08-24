@@ -387,10 +387,44 @@ export interface IntelEntry {
   labels: Record<string, string>;
 }
 
-export const getIntel = (limit = 60, source?: string) =>
-  get<{ sources: string[]; count: number; entries: IntelEntry[] }>(
-    `/intel?limit=${limit}${source ? `&source=${encodeURIComponent(source)}` : ""}`,
-  );
+/** One report of an indicator. Several of these make a group. */
+export interface IntelReport {
+  id: string;
+  at: string;
+  status: string | null;
+  tags: string | null;
+  summary: string;
+  url: string | null;
+}
+
+/** One indicator, with every report of it. Grouped server-side: the page should
+ *  not receive two hundred rows to render a hundred and eight. */
+export interface IntelGroup {
+  entity_key: string;
+  source: string;
+  severity: string | null;
+  verification: string | null;
+  title: string;
+  summary: string;
+  provenance: { source_system?: string; url?: string | null };
+  labels: Record<string, string>;
+  reports: number;
+  reports_in_window: number;
+  window_hours: number;
+  first_at: string;
+  last_at: string;
+  active: boolean;
+  history: IntelReport[];
+}
+
+export const getIntel = (limit = 200, source?: string) =>
+  get<{
+    sources: string[];
+    count: number;
+    reports: number;
+    window_hours: number;
+    groups: IntelGroup[];
+  }>(`/intel?limit=${limit}${source ? `&source=${encodeURIComponent(source)}` : ""}`);
 
 /** Per-feed cursors. A feed that has quietly stopped looks exactly like a quiet
  *  feed, and this is the difference. */

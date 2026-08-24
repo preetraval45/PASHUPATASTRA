@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { IntelEntryRow, sourceAbout, sourceName } from "@/components/intel";
+import { IntelGroupRow, sourceAbout, sourceName } from "@/components/intel";
 import { Empty, Offline, Page, Panel } from "@/components/ui";
-import { getIntel, getIntelStatus, type IntelEntry } from "@/lib/api";
+import { getIntel, getIntelStatus, type IntelGroup } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Observatory",
@@ -47,7 +47,17 @@ export default async function ObservatoryPage({
     );
   }
 
-  const days = groupByDay(intel.entries);
+  // Split by whether the thing is still up, because that is the difference
+  // between "block this" and "note that this happened". The status came back
+  // from abuse.ch on every report and was spent on nothing but a severity
+  // colour.
+  //
+  // The timeline stays on the live half. A day-by-day reading of infrastructure
+  // that has already gone offline is a chronology of things that no longer
+  // matter; one collapsed section says the same and takes a line.
+  const active = intel.groups.filter((entry) => entry.active);
+  const offline = intel.groups.filter((entry) => !entry.active);
+  const days = groupByDay(active);
 
   return (
     <Page
@@ -60,7 +70,7 @@ export default async function ObservatoryPage({
           status?.durable === false ? (
             <span className="text-[rgb(var(--warn))]">not stored durably</span>
           ) : (
-            `${intel.count} entries shown`
+            `${intel.count} indicators · ${intel.reports} reports`
           )
         }
       >
@@ -96,7 +106,7 @@ export default async function ObservatoryPage({
         )}
       </Panel>
 
-      {days.length === 0 ? (
+      {days.length === 0 && offline.length === 0 ? (
         <Panel title="Nothing yet">
           <Empty art="ledger" title="No intelligence has been ingested.">
             The feeds are polled hourly. Nothing here is generated — if this is
@@ -112,15 +122,38 @@ export default async function ObservatoryPage({
           >
             <ol className="divide-y divide-[rgb(var(--edge))]">
               {entries.map((entry) => (
-                <IntelEntryRow key={entry.id} entry={entry} />
+                <IntelGroupRow key={entry.entity_key} group={entry} />
               ))}
             </ol>
           </Panel>
         ))
       )}
 
+      {offline.length > 0 && (
+        <Panel
+          title="Gone offline"
+          aside={`${offline.length} ${offline.length === 1 ? "indicator" : "indicators"}`}
+        >
+          <p className="mb-3 text-sm text-[rgb(var(--muted))]">
+            Last reported as no longer serving. Kept because an address that
+            went quiet is not an address that was never used — it is worth
+            recognising if it comes back.
+          </p>
+          <details>
+            <summary className="focusable inline-block cursor-pointer rounded text-xs text-[rgb(var(--faint))] hover:text-[rgb(var(--ink))]">
+              show them
+            </summary>
+            <ol className="mt-2 divide-y divide-[rgb(var(--edge))]">
+              {offline.map((entry) => (
+                <IntelGroupRow key={entry.entity_key} group={entry} />
+              ))}
+            </ol>
+          </details>
+        </Panel>
+      )}
+
       <p className="text-xs text-[rgb(var(--faint))]">
-        Newest {LIMIT} entries, oldest last. Nothing on this page is a finding
+        Newest {LIMIT} reports, collapsed to one row per indicator, oldest last. Nothing on this page is a finding
         about this estate — it is what other people are publishing, kept so a
         claim can be checked against its source rather than believed.
       </p>
@@ -159,10 +192,13 @@ function Filter({
  * noticed — those differ by up to an hour of polling, and a reader comparing
  * this against a vendor bulletin is looking at the publisher's date.
  */
-function groupByDay(entries: IntelEntry[]): [string, IntelEntry[]][] {
-  const days = new Map<string, IntelEntry[]>();
+function groupByDay(entries: IntelGroup[]): [string, IntelGroup[]][] {
+  const days = new Map<string, IntelGroup[]>();
   for (const entry of entries) {
-    const day = entry.occurred_at.slice(0, 10);
+    // The day of the most recent report. A group whose activity spans midnight
+    // belongs to the day it was last seen, which is the day a reader is asking
+    // about.
+    const day = entry.last_at.slice(0, 10);
     const bucket = days.get(day);
     if (bucket) bucket.push(entry);
     else days.set(day, [entry]);

@@ -530,13 +530,22 @@ def intel(limit: int = 50, source: str | None = None) -> dict[str, object]:
             status_code=404, detail=f"unknown source {source}; known: {', '.join(known)}"
         )
 
+    from ..feeds.grouping import GROUPING_WINDOW, group
+
     store = entitystore()
     reader = getattr(store, "recent_events", None)
     entries = reader(sources=sources, limit=min(limit, 200)) if reader else []
+    groups = group(entries)
+
     return {
         "sources": known,
-        "count": len(entries),
-        "entries": entries,
+        # Both counts, because they answer different questions: how many
+        # indicators there are, and how many times they were reported. A page
+        # that showed only the second was the bug.
+        "count": len(groups),
+        "reports": len(entries),
+        "window_hours": int(GROUPING_WINDOW.total_seconds() // 3600),
+        "groups": groups,
     }
 
 
