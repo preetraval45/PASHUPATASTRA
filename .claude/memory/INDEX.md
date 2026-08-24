@@ -25,3 +25,4 @@ Protocol: before every push, write a topic-named file from
 - 2026-08-24 · [Phase 5 closed](Phase5Complete.md) — R50–R55: the visitor's path, and seven checks that were green while measuring nothing
 - [ObservatoryGrouping](ObservatoryGrouping.md) — R56: one row per indicator; why the window is relative to the indicator and not the clock
 - [BuildAttribution](BuildAttribution.md) — R57: why the stack belongs on one page and attribution on all of them
+- [RealAttackData](RealAttackData.md) — Phase R: real world attacks replace the scripted scenarios; why reported attacks get no causal chain
