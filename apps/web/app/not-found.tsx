@@ -16,7 +16,11 @@ export default function NotFound() {
         href="/"
         className="focusable mt-4 inline-block rounded border border-[rgb(var(--edge-strong))] px-3 py-1.5 text-sm hover:bg-[rgb(var(--raised))]"
       >
-        Back to overview
+        {/* The label followed the route. `/` was the Overview until R53 moved
+            the console to `/overview`, and the button went on saying so — a
+            small lie, on the page a reader lands on when something has already
+            gone wrong. */}
+        Back to the start
       </Link>
     </div>
   );

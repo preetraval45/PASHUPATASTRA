@@ -1518,7 +1518,49 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   *Verified: 33/33 layout and reachability checks, WCAG AA in both themes,
   807 tests.*
 
-- [ ] **R55 — Deploy Phase 5 and review.** Needs: **R51, R52, R53, R54**.
+- [x] **R55 — Deploy Phase 5 and review.** Needs: **R51, R52, R53, R54**.
+  Deployed and reviewed. **Phase 5 is closed — R50–R55 all done.**
+
+  *Evidence, against `https://pashupatastra.vercel.app`: 33/33 layout and
+  reachability checks at 375, 768 and 1280; WCAG AA in both themes; every
+  click-through journey intact; all four chat starters grounded with citations
+  resolving; all three blue team scenarios playable and discriminating; 939
+  tests; ruff clean.*
+
+  **The phase set out to fix one thing and did.** A stranger opening the URL
+  used to land in an operator's console. They now land on a page that states
+  the claim — *four alerts in four tools are one intrusion* — and reaches a real
+  incident in one click. At 375px the claim, the explanation and the button are
+  all above the fold, which is the whole of the thirty seconds this phase was
+  written about.
+
+  **What the pass found**, beyond the checks:
+
+  - **The not-found page still said "Back to overview"** and pointed at `/`,
+    which stopped being the Overview when R53 moved the console. A small lie, on
+    the page a reader reaches when something has already gone wrong.
+  - **Nav highlighting was worth re-checking rather than assuming.** R52
+    replaced `isCurrent`'s exact-match branch with a bare prefix, and
+    `/observatory` sitting beside `/overview` is exactly the pair that would
+    have collided. Verified on all eight routes, including that `/` and
+    `/how-it-works` correctly highlight nothing.
+  - **The CISA feed looked stuck and was not.** Its cursor sat at 2026-08-21
+    while URLhaus had moved to the 24th. Fetching the catalogue settled it:
+    CISA has published nothing newer, and the cursor matches its latest entry
+    exactly. This is the R25 decision earning its keep — a feed that has stopped
+    and a feed that is quiet look identical until you publish the cursor.
+
+  **Three days of real operation.** The hourly schedule has been ingesting since
+  R24 without intervention; the URLhaus cursor has advanced to today. Nothing in
+  the phase needed a manual poke to keep working.
+
+  **Carried forward, unchanged and stated again rather than quietly dropped:**
+  every entity still reports `estimated_users: 0`, so blast radius gives real
+  entity counts and an absent user figure — absent rather than wrong, because
+  inventing one is what R50 forbids. `notFound()` still returns 200 rather than
+  404, since the layout streams before the page resolves; readers see the right
+  page, crawlers see the wrong status. And Vercel Hobby remains non-commercial,
+  so S11's pricing page — not traffic — is the first real bill.
   **Done when:** the deployed site opens on something a stranger understands,
   the console is still one click away, no route was deleted, and `verifyui.py`
   and `verifycontrast.py` both pass on the new pages.

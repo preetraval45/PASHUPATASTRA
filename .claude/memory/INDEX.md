@@ -22,3 +22,4 @@ Protocol: before every push, write a topic-named file from
 - 2026-08-21 · [Blue team mode](BlueTeam.md) — R27: playing the incident forwards, and two ways to build a game nobody can win
 - 2026-08-21 · [A streak, deliberately not a leaderboard](AnonymousProgress.md) — R28: anonymous progress, and the four things that make that structural
 - 2026-08-21 · [Phase 4 closed](Phase4Complete.md) — R24–R29 done; five checks that were green while measuring nothing
+- 2026-08-24 · [Phase 5 closed](Phase5Complete.md) — R50–R55: the visitor's path, and seven checks that were green while measuring nothing
