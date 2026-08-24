@@ -2393,3 +2393,104 @@ before.
   **Done when:** loading an incident page any number of times adds no audit
   records, authorizing an action still records exactly one, and a test asserts
   both by counting the ledger before and after.
+
+---
+
+## Phase Sati — the agentic layer, and getting better with time
+
+**Owner decision, 24 August 2026**, from the *Layers of AI* diagram: *"i want my
+ai to [have] all those layers so it can get better with time"*.
+
+The diagram is a taxonomy of the field rather than an architecture, and two of
+its rows are already this project's strongest ground: **Classical AI** is Dharma
+(symbolic rules, risk tiers), the action registry (an expert system) and the
+topology graph with its MITRE mapping (knowledge representation); **Generative
+AI** is the gateway. Two more rows — neural networks and deep learning — stay
+deliberately empty. Hand-building CNNs, LSTMs or VAEs here would reimplement
+what the model provider already does, with no training data, no GPU and a free
+tier, and a box added to a diagram is not a capability.
+
+What is left is the row that matters and the phrase that matters. Of the five
+**Agentic AI** boxes, Sati has *Tool Use* (four tools, and `AgentSpec.may_use`
+makes an undeclared tool unreachable rather than discouraged) and *Autonomous
+Execution* (present, and deliberately shut at `risk_limit=0` because the input
+arrives from an unauthenticated public text box). It has neither *Planning* nor
+*Memory*.
+
+And **"better with time" is the requirement underneath all of it.** An agent
+that plans and recalls but never finds out whether it was right does not
+improve; it repeats itself with more steps. So the phase ends at learning rather
+than at memory, and the engines for it already exist unused: `Smriti` carries
+`Outcome`, `Trust`, `MatchBasis` and `score_retrieval`, and `learning.py` and
+`arms.py` were written for exactly this.
+
+Order is not negotiable. Memory is worth little without a loop to inform, and
+learning is meaningless without an outcome to learn from.
+
+- [ ] **R94 — Planning: reach for the tool before giving up.** Needs: **R26**.
+  **Corrected after reading the gateway rather than assuming.** The investigate
+  loop already exists: `gateway.py` runs `for hop in range(max_hops + 1)` with a
+  token budget, a per-hop trace, and `chat_max_tool_hops = 4`; the last hop is
+  offered no tools, which is what makes the limit a limit. The mechanism is not
+  the gap.
+  The gap is that Sati does not use it. Asked *"which hosts did ws-0148 open SMB
+  to, and what is the blast radius of the busiest one?"* against the live
+  deployment, it answered at **hop 0 with no tool call**: *"I cannot tell from
+  what I have… it does not name those hosts."* It was holding `get_entity` and
+  `blast_radius`, either of which would have answered.
+  Refusing to invent is right and is the rule working. Refusing to *look* is not
+  — an agent that declines to answer a question its own tools cover is a search
+  box that apologises. What is missing is the step before the refusal: name what
+  would settle the question, check whether a tool provides it, and only then
+  report that it cannot be answered.
+  A bounded loop: propose the next lookup, call the tool, revise, and stop —
+  with a hard step ceiling, because an agent that can loop is an agent that can
+  loop forever on somebody else's free tier. Every step keeps the existing
+  bounds: `AgentSpec` gates the tools, every claim is still checked against what
+  was actually retrieved, and a step that retrieves nothing is a reason to stop
+  rather than to try again.
+  The trace is the product as much as the answer is. R68 asks for the reasoning
+  to be visible; this is the thing that produces something worth showing.
+  **Done when:** the SMB question above is answered from a tool call rather than
+  refused, a question genuinely outside the evidence is *still* refused, the
+  existing hop ceiling is proven to hold under a model that keeps asking, and
+  every step's tool call and result reach the audit ledger.
+
+- [ ] **R95 — Memory: Smriti, wired to the agent.** Needs: **R94**.
+  The memory engine exists and the chat agent's own prompt says *"You have no
+  memory of other conversations."* Recall is of **incidents and their outcomes**,
+  never of users — there are no accounts, and building a per-person history
+  without them would be building the wrong thing twice.
+  Retrieved memories are evidence like any other: cited, checkable, and subject
+  to the same rule that an unverifiable claim is removed. A recollection that
+  cannot be traced to a stored record is not a memory, it is the model agreeing
+  with itself.
+  **Done when:** an answer about a new incident cites a prior one where the
+  overlap is real, a test proves a fabricated recollection is stripped, and
+  `Trust` is honoured — a low-trust memory cannot outrank retrieved evidence.
+
+- [ ] **R96 — Learning: outcomes close the loop.** Needs: **R95**.
+  The part that makes "better with time" true rather than aspirational. An
+  answer, a plan and a retrieval each have an outcome that is already observable
+  — the verification result, the approval decision, whether the cited evidence
+  held. Feed those back so retrieval trust and strategy selection move on
+  evidence rather than staying where they were initialised.
+  **Improvement must be measured, not asserted.** `score_retrieval` already
+  exists to produce a number; a claim that the agent is learning, with no
+  before-and-after, is precisely the invented metric this project refuses
+  everywhere else.
+  **Done when:** a recorded outcome demonstrably changes a later retrieval, the
+  change is visible as a score moving between two measured runs, and a bad
+  outcome lowers trust rather than only a good one raising it.
+
+- [ ] **R97 — Show the layers that are real.** Needs: **R96**.
+  A page mapping what this system actually is onto the taxonomy — Dharma to
+  symbolic reasoning, the graph to knowledge representation, the registry to an
+  expert system, the loop to the agentic row — **generated from the code**, the
+  way `/how-it-works` reads its risk tiers from the engine.
+  It must name what is absent as absent. A layers diagram with every box filled
+  is a marketing asset; one that says "no neural networks here, and why" is a
+  claim a reader can check, which is the only kind this site makes.
+  **Done when:** every capability shown resolves to a module in this repository,
+  the empty layers are shown as empty with the reason, and nothing on the page
+  is written from memory.

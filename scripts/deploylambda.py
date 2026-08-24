@@ -102,14 +102,53 @@ def environment(cors: list[str]) -> str:
     )
 
 
+def _key_already_deployed() -> str:
+    """The key currently on the function, if any.
+
+    `update-function-configuration` **replaces** the environment block rather
+    than merging into it, so a deploy run from a shell without
+    `PASHU_MODEL_API_KEY` silently wipes the key that was there and the console
+    falls back to the stub. That is not hypothetical: five deploys on
+    24 August 2026 took the assistant down without a single one failing, because
+    every other check on the site kept passing — the chat says "unavailable",
+    which reads like a provider outage rather than like a deploy that dropped a
+    variable.
+
+    Carrying the deployed key forward makes the destructive case the one that
+    has to be asked for. Wiping it is still possible with
+    `PASHU_MODEL_PROVIDER=echo`, which is explicit.
+    """
+    try:
+        out = subprocess.run(
+            [
+                "aws", "lambda", "get-function-configuration",
+                "--function-name", os.environ.get("PASHU_FUNCTION", "pashupatastra-api"),
+                "--region", os.environ.get("AWS_REGION", "us-east-1"),
+                "--query", "Environment.Variables.PASHU_MODEL_API_KEY",
+                "--output", "text",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    found = (out.stdout or "").strip()
+    if out.returncode != 0 or found in ("", "None"):
+        return ""
+    print("  carrying forward the model key already on the function")
+    return found
+
+
 def _model_env() -> dict[str, str]:
     """Model settings for the deployed function, read from this environment.
 
-    Defaults to the deterministic stub. A deploy that forgets the key ships a
-    console whose chat says it is not configured, which is the honest failure —
-    the alternative default would be a chat that invents answers.
+    Falls back to the key already deployed, and only then to the deterministic
+    stub. A deploy that forgets the key used to ship a console whose chat says
+    it is not configured — honest, but indistinguishable from an outage, and
+    silently caused by every unrelated deploy.
     """
-    key = os.environ.get("PASHU_MODEL_API_KEY", "")
+    key = os.environ.get("PASHU_MODEL_API_KEY", "") or _key_already_deployed()
     if not key:
         return {"PASHU_MODEL_PROVIDER": "echo"}
 
