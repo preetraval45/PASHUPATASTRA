@@ -491,3 +491,14 @@ export const getProgress = (playerId: string) =>
   get<{ player: PlayerProgress; durable: boolean }>(
     `/game/progress/${encodeURIComponent(playerId)}`,
   );
+
+/** The sub-graph one incident's own evidence names, plus what those entities
+ *  can reach beyond it. Filtered server-side — the incident page is the screen
+ *  that has to load while somebody is waiting. */
+export const getIncidentGraph = (id: string) =>
+  get<{
+    incident_id: string;
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+    beyond: string[];
+  }>(`/incidents/${encodeURIComponent(id)}/graph`);

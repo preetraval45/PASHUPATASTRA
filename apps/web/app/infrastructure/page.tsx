@@ -1,8 +1,9 @@
 import Link from "next/link";
 
+import { AccessMap, STATUS, statusOf, tally } from "@/components/accessmap";
 import { Empty, Offline, Page, Panel } from "@/components/ui";
 import { getTopology, isInfrastructure, type GraphNode } from "@/lib/api";
-import { layout, NODE_HEIGHT, NODE_WIDTH, severityWeight } from "@/lib/layout";
+import { severityWeight } from "@/lib/layout";
 
 import type { Metadata } from "next";
 
@@ -24,40 +25,11 @@ export const dynamic = "force-dynamic";
 // page and the glyphs measured 1.6:1 to 2.7:1 in light mode. The classes are
 // written out rather than composed from a token name because Tailwind reads
 // source text, and a class assembled at runtime is a class it never generates.
-const STATUS = {
-  critical: {
-    glyph: "▲", label: "critical",
-    className: "text-[rgb(var(--crit))]", stroke: "rgb(var(--crit))",
-  },
-  warning: {
-    glyph: "◆", label: "degraded",
-    className: "text-[rgb(var(--warn))]", stroke: "rgb(var(--warn))",
-  },
-  info: {
-    glyph: "●", label: "healthy",
-    className: "text-[rgb(var(--ok))]", stroke: "rgb(var(--ok))",
-  },
-  unknown: {
-    glyph: "○", label: "no data",
-    className: "text-[rgb(var(--muted))]", stroke: "rgb(var(--edge-strong))",
-  },
-} as const;
-
-function statusOf(node: GraphNode) {
-  return STATUS[node.severity ?? "unknown"];
-}
 
 /** The whole node as one sentence, for anyone reading the map without seeing it.
  *  Built as a single string rather than as sibling text nodes: the latter is
  *  what React splits with comment markers, and it is what made this element
  *  disagree with itself between server and client. */
-function describe(node: GraphNode, status: string): string {
-  const parts = [node.key];
-  if (node.namespace) parts.push(node.namespace);
-  parts.push(status);
-  if (node.estimated_users) parts.push(`~${node.estimated_users} users`);
-  return parts.join(" · ");
-}
 
 export default async function InfrastructurePage({
   searchParams,
@@ -107,7 +79,6 @@ export default async function InfrastructurePage({
         a.name.localeCompare(b.name),
     );
 
-  const placed = layout(connected, edges);
   const counts = tally(visible);
 
   return (
@@ -148,83 +119,13 @@ export default async function InfrastructurePage({
           seeing an entity establishes only that it is there.
         </div>
       ) : (
-      <div className="panel overflow-x-auto p-2">
-        <svg
-          width={placed.width}
-          height={placed.height}
-          viewBox={`0 0 ${placed.width} ${placed.height}`}
-          role="img"
-          aria-label="Map of what can reach what"
-          className="min-w-full"
-        >
-          <defs>
-            <marker
-              id="arrow"
-              viewBox="0 0 8 8"
-              refX="7"
-              refY="4"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto-start-reverse"
-            >
-              <path d="M0 0 L8 4 L0 8 z" fill="rgb(var(--edge))" />
-            </marker>
-          </defs>
-
-          {/* Connectors are recessive: the nodes carry the state, the lines only
-              carry the relationship. */}
-          {placed.edges.map((edge, index) => (
-            <path
-              key={`${edge.source}-${edge.target}-${index}`}
-              d={`M ${edge.x1} ${edge.y1} C ${edge.x1 + 40} ${edge.y1}, ${edge.x2 - 40} ${edge.y2}, ${edge.x2} ${edge.y2}`}
-              fill="none"
-              stroke="rgb(var(--edge))"
-              strokeWidth={edge.kind === "owned_by" ? 1 : 1.5}
-              strokeDasharray={edge.kind === "owned_by" ? "3 3" : undefined}
-              markerEnd="url(#arrow)"
-            />
-          ))}
-
-          {placed.nodes.map((node) => {
-            const status = statusOf(node);
-            return (
-              <g key={node.key} transform={`translate(${node.x}, ${node.y})`}>
-                {/* The description is an `aria-label`, not an SVG <title>.
-                    React 19 treats <title> as hoistable document metadata and
-                    deduplicates it against the page title, so the server sent
-                    `<title></title>` and the client filled it in — a hydration
-                    mismatch that discarded and re-rendered this whole subtree
-                    on every load, silently, because the map still looked right.
-                    `aria-label` reaches a screen reader, which <title> here was
-                    failing to do anyway. */}
-                <a
-                  href={`/entity/${node.key.split("/").map(encodeURIComponent).join("/")}`}
-                  className="focusable"
-                  aria-label={describe(node, status.label)}
-                >
-                <rect
-                  width={NODE_WIDTH}
-                  height={NODE_HEIGHT}
-                  rx={6}
-                  fill="rgb(var(--panel))"
-                  stroke={status.stroke}
-                  strokeWidth={node.severity === "critical" ? 1.75 : 1}
-                />
-                <text x={12} y={17} fontSize={11} fill={status.stroke}>
-                  {status.glyph}
-                </text>
-                <text x={28} y={17} fontSize={12} fill="rgb(var(--ink))">
-                  {truncate(node.name, 20)}
-                </text>
-                <text x={28} y={31} fontSize={10} fill="rgb(var(--muted))">
-                  {node.kind}
-                  {node.estimated_users > 0 && ` · ~${node.estimated_users} users`}
-                </text>
-                </a>
-              </g>
-            );
-          })}
-        </svg>
+      <div className="panel p-2">
+        <AccessMap
+          nodes={connected}
+          edges={edges}
+          idPrefix="estate"
+          label="Map of what can reach what"
+        />
       </div>
       )}
 
@@ -279,7 +180,7 @@ export default async function InfrastructurePage({
               </tr>
             </thead>
             <tbody className="divide-y divide-[rgb(var(--edge))]">
-              {placed.nodes.map((node) => {
+              {connected.map((node) => {
                 const status = statusOf(node);
                 const reaches = edges
                   .filter((e) => e.source === node.key)
@@ -326,12 +227,4 @@ export default async function InfrastructurePage({
   );
 }
 
-function tally(nodes: GraphNode[]) {
-  const counts = { critical: 0, warning: 0, info: 0, unknown: 0 };
-  for (const node of nodes) counts[node.severity ?? "unknown"] += 1;
-  return counts;
-}
 
-function truncate(value: string, max: number) {
-  return value.length > max ? `${value.slice(0, max - 1)}…` : value;
-}

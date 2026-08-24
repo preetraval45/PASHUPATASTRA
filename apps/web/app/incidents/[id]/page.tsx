@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { VerdictPanel } from "@/components/approval";
 import { AgentTurn } from "@/components/agentturn";
 import { ChatPanel } from "@/components/chat";
+import { IncidentGraph } from "@/components/incidentgraph";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
 import { Timeline } from "@/components/timeline";
@@ -120,6 +121,12 @@ export default async function IncidentDetailPage({
       <ChatPanel incident={incident} />
 
       <IncidentView incident={incident} risk={risk} />
+
+      {/* Directly after the incident's own account of itself, before the loop.
+          The map answers the question the chain raises — "and what else could
+          it have touched?" — so it belongs where that question occurs, not on a
+          separate page a reader has to think to visit. */}
+      <IncidentGraph incident={incident} />
 
       <Panel
         title="The loop"

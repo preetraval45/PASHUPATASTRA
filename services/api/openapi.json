@@ -1971,6 +1971,48 @@
         "summary": "Get Incident"
       }
     },
+    "/api/v1/incidents/{incident_id}/graph": {
+      "get": {
+        "description": "The sub-graph this incident's own evidence names.\n\nFiltered here rather than in the browser. The alternative is shipping the\nwhole estate to draw three nodes, which works at eleven entities and stops\nworking at the first real deployment \u2014 and the incident page is the one\nscreen that has to load while somebody is waiting.\n\nAn edge is included only when **both** ends are in the incident. A path from\none of these entities out to something the incident never mentions is real,\nand drawing it here would say the incident reached further than its evidence\nestablishes \u2014 the same rule R50 applied to inventing edges, applied to\nborrowing them.",
+        "operationId": "incident_graph_api_v1_incidents__incident_id__graph_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Incident Graph Api V1 Incidents  Incident Id  Graph Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incident Graph"
+      }
+    },
     "/api/v1/ingest/otlp": {
       "post": {
         "description": "OTLP/HTTP trace endpoint.\n\nPoint an OpenTelemetry collector's OTLP/HTTP exporter here. Traces are the\nstrongest edge source available: a span with a parent is direct evidence\nthat one service called another.",

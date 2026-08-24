@@ -530,6 +530,53 @@ def intel_status() -> dict[str, object]:
     return {"feeds": cursors, "durable": backend is not None}
 
 
+@router.get("/incidents/{incident_id}/graph")
+def incident_graph(incident_id: str) -> dict[str, object]:
+    """The sub-graph this incident's own evidence names.
+
+    Filtered here rather than in the browser. The alternative is shipping the
+    whole estate to draw three nodes, which works at eleven entities and stops
+    working at the first real deployment — and the incident page is the one
+    screen that has to load while somebody is waiting.
+
+    An edge is included only when **both** ends are in the incident. A path from
+    one of these entities out to something the incident never mentions is real,
+    and drawing it here would say the incident reached further than its evidence
+    establishes — the same rule R50 applied to inventing edges, applied to
+    borrowing them.
+    """
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+
+    keys = {entity.key() for entity in incident.affected_entities}
+    keys |= {link.entity.key() for link in incident.causal_chain}
+
+    snapshot = GRAPH.snapshot()
+    _overlay_open_incidents(snapshot)
+
+    nodes = [node for node in snapshot["nodes"] if node["key"] in keys]
+    edges = [
+        edge
+        for edge in snapshot["edges"]
+        if edge["source"] in keys and edge["target"] in keys
+    ]
+
+    # What these entities can reach *beyond* the incident, counted but not
+    # drawn. Zero would be a claim; the number is what makes the difference
+    # between "contained" and "not looked at yet" visible.
+    reach: set[str] = set()
+    for key in keys:
+        reach.update(GRAPH.blast_radius(key).affected)
+
+    return {
+        "incident_id": incident.id,
+        "nodes": nodes,
+        "edges": edges,
+        "beyond": sorted(reach - keys),
+    }
+
+
 # --- blue team mode ----------------------------------------------------------
 
 

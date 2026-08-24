@@ -1339,16 +1339,45 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   trusted: an uncited edge is caught as *cites nothing*, and one citing a ref
   from another scenario as *not one of this scenario's signals*.
 
-- [ ] **R51 — Blast radius inside the incident.** Needs: **R50**.
-  The map is built and correct; it is in the wrong place. Rendered beside the
-  failure it belongs to — these entities, what they can reach, what is already
-  compromised — it is the screen that proves the system has a model of the
-  estate rather than an LLM narrating log lines. Standing alone and all green,
-  it is a screensaver.
-  Show the sub-graph the incident's own evidence names, with the full map one
-  click away.
+- [x] **R51 — Blast radius inside the incident.** Needs: **R50**.
   **Done when:** an incident page shows its affected entities and their access
-  paths inline, and `/infrastructure` is reachable from it.
+  paths inline, and `/infrastructure` is reachable from it. — **met, live.**
+  Every incident carries a *What this reached* panel: the C2 channel into
+  `ws-0148`, out to `app-07` and `fs-02`, and on to the scheduled task —
+  5 entities, 4 access paths, with *the whole map →* beside the heading.
+
+  **The map was extracted rather than redrawn.** `/infrastructure` had 337 lines
+  with the SVG inline; a second copy for the incident page would have been
+  quicker and would have drifted, and the half that drifts is always the one
+  drawn less often — which here is the one an operator reads *during* an
+  incident. `components/accessmap.tsx` now serves both, so someone who has
+  learned to read the map on the whole estate does not have to learn it again on
+  one incident.
+
+  **Only what the incident's evidence names.** An edge is drawn when both ends
+  are in the incident. A path from one of these entities out to something the
+  incident never mentions is real and is not drawn — that would say the incident
+  reached further than its evidence establishes, which is R50's rule about
+  inventing edges applied to borrowing them. What lies beyond is counted instead
+  and listed in words: `reachable beyond it · 0` is a finding, and it reads very
+  differently from an absence.
+
+  **Filtered server-side.** The alternative ships the whole estate to draw three
+  nodes, which works at eleven entities and stops working at the first real
+  deployment — and this is the one screen that has to load while somebody is
+  waiting.
+
+  Two things this turned up. The marker id had to be per-map: two maps on one
+  page sharing `#arrow` means the second one's arrowheads resolve to the first
+  one's definition, which works right up until the first is conditionally not
+  rendered. And **the R29 OpenAPI drift test earned its place immediately** —
+  adding `/incidents/{id}/graph` failed the suite before the route reached a
+  browser, which is exactly the job.
+
+  *Known and not invented: every entity carries `estimated_users: 0`, so blast
+  radius reports entity counts truthfully and user impact as zero. The counts
+  are real; the user figure is absent rather than wrong, and inventing one is
+  precisely what R50 forbids.*
 
 - [ ] **R52 — Nav that follows the visitor, not the architecture.** Needs: **R51**.
   Drop **Infrastructure** and **Audit** from `components/nav.tsx`. Both routes
