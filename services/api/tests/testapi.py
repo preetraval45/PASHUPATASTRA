@@ -240,3 +240,28 @@ def test_the_committed_openapi_spec_is_current() -> None:
     extra = sorted(stored - live)
     assert not missing, f"regenerate openapi.json — missing {missing}"
     assert not extra, f"regenerate openapi.json — removed routes still listed: {extra}"
+
+
+def test_the_palette_index_carries_every_incident() -> None:
+    """Read from `STORE.all()` rather than `STORE.incidents`.
+
+    The in-memory dict is empty on a durable deployment, where incidents live in
+    DynamoDB — so the index had zero incidents in production and every incident
+    on a laptop, which is the shape of bug that passes local tests and ships.
+    """
+    listed = {incident["id"] for incident in client.get("/api/v1/incidents").json()}
+    indexed = {
+        item["label"]
+        for item in client.get("/api/v1/search/index").json()["items"]
+        if item["kind"] == "incident"
+    }
+    assert listed, "no incidents to index — this test would prove nothing"
+    assert listed == indexed
+
+
+def test_the_palette_index_stays_small() -> None:
+    """It is fetched on the server for every page render and handed to every
+    visitor. A per-record payload that grows silently is a page-weight
+    regression nobody attributes to search."""
+    items = client.get("/api/v1/search/index").json()["items"]
+    assert all(set(item) <= {"kind", "label", "hint", "href"} for item in items)

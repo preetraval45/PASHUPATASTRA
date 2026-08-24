@@ -5,9 +5,10 @@ import { Suspense } from "react";
 
 import { Attribution } from "@/components/attribution";
 import { Nav } from "@/components/nav";
+import { CommandPalette } from "@/components/palette";
 import { Search } from "@/components/search";
 import { ThemeToggle, themeScript } from "@/components/theme";
-import { getHealth } from "@/lib/api";
+import { getHealth, getSearchIndex } from "@/lib/api";
 import { SITE } from "@/lib/site";
 import "./globals.css";
 
@@ -97,7 +98,9 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const health = await getHealth();
+  // Both in parallel. The palette's index is fetched here, on the server, so
+  // that filtering it later costs a keystroke rather than a round trip.
+  const [health, searchIndex] = await Promise.all([getHealth(), getSearchIndex()]);
 
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
@@ -109,6 +112,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen antialiased">
         {/* Keyboard operators are faster than mouse operators during an
             incident, and this is the first thing they reach for. */}
+        {/* Rendered on every page, so Ctrl-K works from every page. Returns
+            null until opened, so it costs nothing until it is wanted. */}
+        <CommandPalette index={searchIndex} />
+
         <a
           href="#main"
           className="focusable sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-[rgb(var(--raised))] focus:px-3 focus:py-2 focus:text-sm"

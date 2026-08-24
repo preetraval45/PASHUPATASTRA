@@ -85,6 +85,7 @@ export function Search() {
         value={value}
         onChange={(event) => setValue(event.target.value)}
         placeholder="Search entities, incidents"
+        title="Press / to focus this field, or Ctrl-K (Cmd-K) for the command palette"
         autoComplete="off"
         className="focusable w-full rounded border border-[rgb(var(--edge))] bg-[rgb(var(--raised))] py-1.5 pl-8 pr-8 text-sm text-[rgb(var(--ink))] placeholder:text-[rgb(var(--faint))] [&::-webkit-search-cancel-button]:appearance-none"
       />

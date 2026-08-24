@@ -549,6 +549,82 @@ def intel(limit: int = 50, source: str | None = None) -> dict[str, object]:
     }
 
 
+@router.get("/search/index")
+def search_index(advisories: int = 40) -> dict[str, object]:
+    """Everything the command palette can jump to, in one compact list.
+
+    Built here rather than assembled in the browser from four separate calls,
+    because the palette's whole claim is that it is faster than the navigation
+    it replaces. A palette that fires a request per keystroke is slower than
+    clicking a link, and one that fires four on open is slower than the page it
+    is opened from.
+
+    Compact on purpose: a label, a hint and a href. The palette matches text and
+    then navigates, so anything else on the record is weight sent to every
+    visitor on every page for no reason. Advisories are capped because the feeds
+    hold thousands and the palette is for reaching a thing you can name.
+    """
+    items: list[dict[str, str]] = []
+
+    # `STORE.all()`, not `STORE.incidents` — the in-memory dict is empty on a
+    # durable deployment, where incidents live in DynamoDB. Reading the dict
+    # gave the palette an index with zero incidents on the deployed site while
+    # working perfectly on a laptop.
+    for incident in STORE.all():
+        statement = incident.hypotheses[0].statement if incident.hypotheses else ""
+        items.append(
+            {
+                "kind": "incident",
+                "label": incident.id,
+                "hint": statement[:120],
+                "href": f"/incidents/{incident.id}",
+            }
+        )
+
+    snapshot = GRAPH.snapshot(limit=400)
+    for node in snapshot.get("nodes", []):
+        key = node.get("key") or ""
+        if not key:
+            continue
+        items.append(
+            {
+                "kind": "entity",
+                "label": node.get("name") or key,
+                "hint": key,
+                "href": f"/entity/{key}",
+            }
+        )
+
+    for action in all_actions():
+        items.append(
+            {
+                "kind": "action",
+                "label": action.id,
+                "hint": action.description[:120],
+                "href": "/actions",
+            }
+        )
+
+    from ..feeds.grouping import group
+
+    store = entitystore()
+    reader = getattr(store, "recent_events", None)
+    from ..feeds.ingest import FEEDS
+
+    entries = reader(sources=sorted(FEEDS), limit=advisories * 2) if reader else []
+    for entry in group(entries)[:advisories]:
+        items.append(
+            {
+                "kind": "advisory",
+                "label": str(entry.get("title") or entry.get("entity_key") or ""),
+                "hint": str(entry.get("entity_key") or ""),
+                "href": f"/observatory?source={entry.get('source')}",
+            }
+        )
+
+    return {"count": len(items), "items": items}
+
+
 @router.get("/intel/status")
 def intel_status() -> dict[str, object]:
     """How current each feed is, and when it last moved.

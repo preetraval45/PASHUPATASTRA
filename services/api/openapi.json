@@ -1,59 +1,1174 @@
 {
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Pashupatastra API",
+    "description": "Autonomous intelligence for complex systems. Observe \u2192 Reason \u2192 Act \u2192 Verify, under policy-bounded autonomy.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents": {
+      "get": {
+        "summary": "List Incidents",
+        "operationId": "list_incidents_api_v1_incidents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Incident"
+                  },
+                  "type": "array",
+                  "title": "Response List Incidents Api V1 Incidents Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incident_id}": {
+      "get": {
+        "summary": "Get Incident",
+        "operationId": "get_incident_api_v1_incidents__incident_id__get",
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Incident"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/actions": {
+      "get": {
+        "summary": "List Actions",
+        "description": "The closed registry. Actions not listed here cannot be executed.\n\nFiltered to the deployment's domain when one is configured. Filtering the\nlist does not narrow what `get` resolves \u2014 an action still registered but\nnot listed remains executable if a plan names it, because a plan that\nreferenced a rollback which quietly stopped resolving would fail at the\nmoment the rollback was needed.",
+        "operationId": "list_actions_api_v1_actions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ActionSpec"
+                  },
+                  "type": "array",
+                  "title": "Response List Actions Api V1 Actions Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/policy/evaluate": {
+      "post": {
+        "summary": "Evaluate Policy",
+        "description": "Dharma. The only way to obtain authorization to execute.",
+        "operationId": "evaluate_policy_api_v1_policy_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verdict"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/policy/model": {
+      "get": {
+        "summary": "Policy Model Route",
+        "description": "The policy this deployment enforces, generated from the engine.\n\nServes the page that explains the risk tiers. That page must not restate\nthem: a table written from memory is a second answer to \"who may approve\nthis\", and on the day the two disagree the wrong one is the one on the\nmarketing site.\n\nThe gates are here for the same reason. \"This deployment is in dry run and\nits environment is not on the live list\" is a claim the front page makes,\nand it is worth exactly as much as the reader's ability to check it.",
+        "operationId": "policy_model_route_api_v1_policy_model_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Policy Model Route Api V1 Policy Model Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/actions/execute": {
+      "post": {
+        "summary": "Execute Action",
+        "operationId": "execute_action_api_v1_actions_execute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/actions/remediate": {
+      "post": {
+        "summary": "Remediate Action",
+        "description": "The closed loop: act, verify over a window, roll back, learn.\n\nDistinct from `/actions/execute`, which runs one action and stops. This one\nowns the consequences \u2014 and because a rollback is itself an execution, it is\nauthorised by its own Dharma verdict rather than the one supplied here.",
+        "operationId": "remediate_action_api_v1_actions_remediate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemediateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemediateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/policy/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_api_v1_policy_approve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verdict"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/policy/deny": {
+      "post": {
+        "summary": "Deny",
+        "description": "Refuse an action. A first-class outcome, not an error path.\n\nReturns the verdict with the refusal recorded rather than raising: a denial\nis the approval step working, and expressing it as an HTTP error would make\nthe client's success path the one where a human said yes.",
+        "operationId": "deny_api_v1_policy_deny_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DenyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verdict"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/policy/approvals/fatigue": {
+      "get": {
+        "summary": "Approval Fatigue",
+        "description": "Whether the approval step is doing anything.\n\nExposed as an endpoint rather than buried in a log because a metric nobody\nlooks at cannot change behaviour \u2014 and this one is meant to be uncomfortable.\n`looks_decorative` requires *both* near-total approval and near-instant\ndecisions; either alone is consistent with a well-calibrated system.",
+        "operationId": "approval_fatigue_api_v1_policy_approvals_fatigue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Approval Fatigue Api V1 Policy Approvals Fatigue Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/verification/observe": {
+      "post": {
+        "summary": "Observe",
+        "operationId": "observe_api_v1_verification_observe_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verification"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ingest/otlp": {
+      "post": {
+        "summary": "Ingest Otlp",
+        "description": "OTLP/HTTP trace endpoint.\n\nPoint an OpenTelemetry collector's OTLP/HTTP exporter here. Traces are the\nstrongest edge source available: a span with a parent is direct evidence\nthat one service called another.",
+        "operationId": "ingest_otlp_api_v1_ingest_otlp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Ingest Otlp Api V1 Ingest Otlp Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/topology/blast-radius/{entity_key}": {
+      "get": {
+        "summary": "Blast Radius",
+        "description": "What breaks when this breaks, and roughly how many users notice.\n\nAn input to risk scoring, so it is served from the graph rather than\nrecomputed here \u2014 a second implementation would be a second answer.",
+        "operationId": "blast_radius_api_v1_topology_blast_radius__entity_key__get",
+        "parameters": [
+          {
+            "name": "entity_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Key"
+            }
+          },
+          {
+            "name": "max_depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "title": "Max Depth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Blast Radius Api V1 Topology Blast Radius  Entity Key  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/topology": {
+      "get": {
+        "summary": "Topology",
+        "operationId": "topology_api_v1_topology_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object",
+                  "title": "Response Topology Api V1 Topology Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/topology/graph": {
+      "get": {
+        "summary": "Topology Graph",
+        "description": "Nodes and edges for the service map, each node carrying its worst recent\nseverity rather than its latest \u2014 a service that went critical and then\nreported info seconds later is flapping, not healthy.",
+        "operationId": "topology_graph_api_v1_topology_graph_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 400,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Topology Graph Api V1 Topology Graph Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intel": {
+      "get": {
+        "summary": "Intel",
+        "description": "Recent threat intelligence, as stored.\n\nServed from our own store, never proxied. A route that fetched from CISA or\nabuse.ch on request would tell those services who is reading what, and would\nfail whenever they do; the schedule already put this on disk.\n\nEntries keep their `verification` label. A reader deciding what to do with\n\"somebody submitted this URL an hour ago\" needs it to be distinguishable\nfrom \"CISA has observed this being exploited\", and by the time both are\nrendered as cards they look identical without it.",
+        "operationId": "intel_api_v1_intel_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Intel Api V1 Intel Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search/index": {
+      "get": {
+        "summary": "Search Index",
+        "description": "Everything the command palette can jump to, in one compact list.\n\nBuilt here rather than assembled in the browser from four separate calls,\nbecause the palette's whole claim is that it is faster than the navigation\nit replaces. A palette that fires a request per keystroke is slower than\nclicking a link, and one that fires four on open is slower than the page it\nis opened from.\n\nCompact on purpose: a label, a hint and a href. The palette matches text and\nthen navigates, so anything else on the record is weight sent to every\nvisitor on every page for no reason. Advisories are capped because the feeds\nhold thousands and the palette is for reaching a thing you can name.",
+        "operationId": "search_index_api_v1_search_index_get",
+        "parameters": [
+          {
+            "name": "advisories",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "title": "Advisories"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Search Index Api V1 Search Index Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intel/status": {
+      "get": {
+        "summary": "Intel Status",
+        "description": "How current each feed is, and when it last moved.\n\nA feed that has quietly stopped looks exactly like a quiet feed. The cursor\nis the difference, so it is published rather than kept for debugging.",
+        "operationId": "intel_status_api_v1_intel_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Intel Status Api V1 Intel Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incident_id}/graph": {
+      "get": {
+        "summary": "Incident Graph",
+        "description": "The sub-graph this incident's own evidence names.\n\nFiltered here rather than in the browser. The alternative is shipping the\nwhole estate to draw three nodes, which works at eleven entities and stops\nworking at the first real deployment \u2014 and the incident page is the one\nscreen that has to load while somebody is waiting.\n\nAn edge is included only when **both** ends are in the incident. A path from\none of these entities out to something the incident never mentions is real,\nand drawing it here would say the incident reached further than its evidence\nestablishes \u2014 the same rule R50 applied to inventing edges, applied to\nborrowing them.",
+        "operationId": "incident_graph_api_v1_incidents__incident_id__graph_get",
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Incident Graph Api V1 Incidents  Incident Id  Graph Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/game/scenarios": {
+      "get": {
+        "summary": "Game Scenarios",
+        "description": "What can be played, without saying what any of them are.\n\nSeverity and the opening alert only. A list that summarised each incident\nwould answer the question the exercise asks before it is opened.",
+        "operationId": "game_scenarios_api_v1_game_scenarios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Game Scenarios Api V1 Game Scenarios Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/game/{incident_id}/briefing": {
+      "get": {
+        "summary": "Game Briefing",
+        "operationId": "game_briefing_api_v1_game__incident_id__briefing_get",
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Game Briefing Api V1 Game  Incident Id  Briefing Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/game/{incident_id}/investigate": {
+      "post": {
+        "summary": "Game Investigate",
+        "operationId": "game_investigate_api_v1_game__incident_id__investigate_post",
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvestigateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Game Investigate Api V1 Game  Incident Id  Investigate Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/game/{incident_id}/answer": {
+      "post": {
+        "summary": "Game Answer",
+        "description": "Mark the attempt and reveal the chain.\n\nThe only route that returns the answer, and it returns it *after* an\nattempt \u2014 which is what keeps the briefing honest.",
+        "operationId": "game_answer_api_v1_game__incident_id__answer_post",
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Game Answer Api V1 Game  Incident Id  Answer Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/game/progress/{player_id}": {
+      "get": {
+        "summary": "Game Progress",
+        "description": "One player's own record, by the token their browser holds.\n\nThere is no route that lists players, and that absence is the feature: an\nenumerable set of scores is a leaderboard, and a leaderboard is what this\nwas asked not to be. A token can read only itself, and nothing joins a token\nto a person.",
+        "operationId": "game_progress_api_v1_game_progress__player_id__get",
+        "parameters": [
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Player Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Game Progress Api V1 Game Progress  Player Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{entity_key}": {
+      "get": {
+        "summary": "Entity Detail",
+        "description": "One entity: what it is, what depends on it, and what it has been saying.\n\nBlast radius is included because \"what breaks if this breaks\" is the first\nquestion anyone asks about an entity, and making it a second request invites\na view that renders without it.",
+        "operationId": "entity_detail_api_v1_entities__entity_key__get",
+        "parameters": [
+          {
+            "name": "entity_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Key"
+            }
+          },
+          {
+            "name": "events",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Events"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Entity Detail Api V1 Entities  Entity Key  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}": {
+      "get": {
+        "summary": "Event",
+        "description": "One event, so a citation can be followed to the thing it cites.\n\nEvery hypothesis and every causal step names evidence by id. Without this\nthe id is decoration: it looks checkable, a reader takes it on trust, and an\ninvented reference is indistinguishable from a real one.",
+        "operationId": "event_api_v1_events__event_id__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Event Api V1 Events  Event Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit": {
+      "get": {
+        "summary": "Audit",
+        "operationId": "audit_api_v1_audit_get",
+        "parameters": [
+          {
+            "name": "incident_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Incident Ref"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditRecord"
+                  },
+                  "title": "Response Audit Api V1 Audit Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agent/chat": {
+      "post": {
+        "summary": "Agent Chat",
+        "description": "Ask Sati about one incident.\n\nScoped to an incident on purpose. A general \"ask the console anything\" box\non a public site is an interface for enumerating the estate, and there is no\nquestion worth answering here that is not about something already on screen.\n\nThe route can read and nothing else. It holds no execute path, and the tools\nit offers are derived from `ActionSpec.read_only` rather than listed by hand\n\u2014 see `app/agent/tools.py`.",
+        "operationId": "agent_chat_api_v1_agent_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Agent Chat Api V1 Agent Chat Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "components": {
     "schemas": {
       "ActionDomain": {
-        "description": "What kind of system an action operates on.\n\nA deployment serves one domain. The registry holds both because some actions\nbelong to both \u2014 reading an entity's logs is the same act whichever question\nprompted it \u2014 and because deleting the infrastructure set to present a\nsecurity console would throw away executors verified against a live cluster.",
+        "type": "string",
         "enum": [
           "infrastructure",
           "security"
         ],
         "title": "ActionDomain",
-        "type": "string"
+        "description": "What kind of system an action operates on.\n\nA deployment serves one domain. The registry holds both because some actions\nbelong to both \u2014 reading an entity's logs is the same act whichever question\nprompted it \u2014 and because deleting the infrastructure set to present a\nsecurity console would throw away executors verified against a live cluster."
       },
       "ActionSpec": {
-        "description": "A registered action. Actions come from this closed registry, never from\nparsed model text (the Grounding ADR).",
         "properties": {
-          "base_risk": {
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Base Risk",
-            "type": "integer"
+          "id": {
+            "type": "string",
+            "title": "Id"
           },
           "description": {
-            "title": "Description",
-            "type": "string"
+            "type": "string",
+            "title": "Description"
           },
-          "domains": {
-            "default": [
-              "infrastructure"
-            ],
-            "items": {
-              "$ref": "#/components/schemas/ActionDomain"
-            },
-            "title": "Domains",
-            "type": "array",
-            "uniqueItems": true
+          "base_risk": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Base Risk"
           },
           "expected_post_state": {
             "additionalProperties": {
               "type": "string"
             },
-            "title": "Expected Post State",
-            "type": "object"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "irreversible": {
-            "default": false,
-            "title": "Irreversible",
-            "type": "boolean"
-          },
-          "read_only": {
-            "default": false,
-            "title": "Read Only",
-            "type": "boolean"
+            "type": "object",
+            "title": "Expected Post State"
           },
           "rollback_action_id": {
             "anyOf": [
@@ -65,8 +1180,30 @@
               }
             ],
             "title": "Rollback Action Id"
+          },
+          "irreversible": {
+            "type": "boolean",
+            "title": "Irreversible",
+            "default": false
+          },
+          "domains": {
+            "items": {
+              "$ref": "#/components/schemas/ActionDomain"
+            },
+            "type": "array",
+            "uniqueItems": true,
+            "title": "Domains",
+            "default": [
+              "infrastructure"
+            ]
+          },
+          "read_only": {
+            "type": "boolean",
+            "title": "Read Only",
+            "default": false
           }
         },
+        "type": "object",
         "required": [
           "id",
           "description",
@@ -74,25 +1211,25 @@
           "expected_post_state"
         ],
         "title": "ActionSpec",
-        "type": "object"
+        "description": "A registered action. Actions come from this closed registry, never from\nparsed model text (the Grounding ADR)."
       },
       "AnswerRequest": {
         "properties": {
-          "action_id": {
-            "title": "Action Id",
-            "type": "string"
-          },
           "diagnosis_id": {
-            "title": "Diagnosis Id",
-            "type": "string"
+            "type": "string",
+            "title": "Diagnosis Id"
+          },
+          "action_id": {
+            "type": "string",
+            "title": "Action Id"
           },
           "investigated": {
-            "default": [],
             "items": {
               "type": "string"
             },
+            "type": "array",
             "title": "Investigated",
-            "type": "array"
+            "default": []
           },
           "player_id": {
             "anyOf": [
@@ -106,68 +1243,69 @@
             "title": "Player Id"
           }
         },
+        "type": "object",
         "required": [
           "diagnosis_id",
           "action_id"
         ],
-        "title": "AnswerRequest",
-        "type": "object"
+        "title": "AnswerRequest"
       },
       "ApproveRequest": {
         "properties": {
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          },
           "approver": {
-            "title": "Approver",
-            "type": "string"
+            "type": "string",
+            "title": "Approver"
           },
           "presented_at": {
             "anyOf": [
               {
-                "format": "date-time",
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Presented At"
-          },
-          "verdict": {
-            "$ref": "#/components/schemas/Verdict"
           }
         },
+        "type": "object",
         "required": [
           "verdict",
           "approver"
         ],
-        "title": "ApproveRequest",
-        "type": "object"
+        "title": "ApproveRequest"
       },
       "AttackTechnique": {
-        "description": "A MITRE ATT&CK mapping for one step of a causal chain.\n\nShared vocabulary, not decoration: \"the account was brute-forced\" is a\nsentence one analyst wrote, and `T1110.004` is a thing a second analyst,\na detection rule, and a report can all agree refers to the same technique.\n\nThe id format is enforced. An id is rendered as a link to the ATT&CK\ncatalogue, so a malformed one produces a citation that looks authoritative\nand leads nowhere \u2014 the same failure the evidence references already have,\nand not one worth reproducing deliberately.",
         "properties": {
           "id": {
+            "type": "string",
             "pattern": "^T\\d{4}(\\.\\d{3})?$",
-            "title": "Id",
-            "type": "string"
+            "title": "Id"
           },
           "name": {
-            "title": "Name",
-            "type": "string"
+            "type": "string",
+            "title": "Name"
           },
           "tactic": {
-            "title": "Tactic",
-            "type": "string"
+            "type": "string",
+            "title": "Tactic"
           }
         },
+        "type": "object",
         "required": [
           "id",
           "name",
           "tactic"
         ],
         "title": "AttackTechnique",
-        "type": "object"
+        "description": "A MITRE ATT&CK mapping for one step of a causal chain.\n\nShared vocabulary, not decoration: \"the account was brute-forced\" is a\nsentence one analyst wrote, and `T1110.004` is a thing a second analyst,\na detection rule, and a report can all agree refers to the same technique.\n\nThe id format is enforced. An id is rendered as a link to the ATT&CK\ncatalogue, so a malformed one produces a citation that looks authoritative\nand leads nowhere \u2014 the same failure the evidence references already have,\nand not one worth reproducing deliberately."
       },
       "AuditKind": {
+        "type": "string",
         "enum": [
           "observation",
           "hypothesis",
@@ -179,24 +1317,21 @@
           "escalation",
           "agent_turn"
         ],
-        "title": "AuditKind",
-        "type": "string"
+        "title": "AuditKind"
       },
       "AuditRecord": {
         "properties": {
-          "actor": {
-            "title": "Actor",
-            "type": "string"
-          },
           "at": {
+            "type": "string",
             "format": "date-time",
-            "title": "At",
-            "type": "string"
+            "title": "At"
           },
-          "detail": {
-            "additionalProperties": true,
-            "title": "Detail",
-            "type": "object"
+          "kind": {
+            "$ref": "#/components/schemas/AuditKind"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
           },
           "incident_ref": {
             "anyOf": [
@@ -209,24 +1344,41 @@
             ],
             "title": "Incident Ref"
           },
-          "kind": {
-            "$ref": "#/components/schemas/AuditKind"
-          },
           "summary": {
-            "title": "Summary",
-            "type": "string"
+            "type": "string",
+            "title": "Summary"
+          },
+          "detail": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Detail"
           }
         },
+        "type": "object",
         "required": [
           "kind",
           "actor",
           "summary"
         ],
-        "title": "AuditRecord",
-        "type": "object"
+        "title": "AuditRecord"
       },
       "CausalLink": {
         "properties": {
+          "entity": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "transition": {
+            "type": "string",
+            "title": "Transition"
+          },
+          "evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Evidence"
+          },
           "attack_technique": {
             "anyOf": [
               {
@@ -236,85 +1388,70 @@
                 "type": "null"
               }
             ]
-          },
-          "entity": {
-            "$ref": "#/components/schemas/EntityRef"
-          },
-          "evidence": {
-            "items": {
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "Evidence",
-            "type": "array"
-          },
-          "transition": {
-            "title": "Transition",
-            "type": "string"
           }
         },
+        "type": "object",
         "required": [
           "entity",
           "transition",
           "evidence"
         ],
-        "title": "CausalLink",
-        "type": "object"
+        "title": "CausalLink"
       },
       "ChatRequest": {
         "properties": {
           "incident_id": {
-            "title": "Incident Id",
-            "type": "string"
+            "type": "string",
+            "title": "Incident Id"
           },
           "message": {
-            "title": "Message",
-            "type": "string"
+            "type": "string",
+            "title": "Message"
           }
         },
+        "type": "object",
         "required": [
           "incident_id",
           "message"
         ],
-        "title": "ChatRequest",
-        "type": "object"
+        "title": "ChatRequest"
       },
       "DenyRequest": {
         "properties": {
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          },
           "approver": {
-            "title": "Approver",
-            "type": "string"
+            "type": "string",
+            "title": "Approver"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
           },
           "presented_at": {
             "anyOf": [
               {
-                "format": "date-time",
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Presented At"
-          },
-          "reason": {
-            "title": "Reason",
-            "type": "string"
-          },
-          "verdict": {
-            "$ref": "#/components/schemas/Verdict"
           }
         },
+        "type": "object",
         "required": [
           "verdict",
           "approver",
           "reason"
         ],
-        "title": "DenyRequest",
-        "type": "object"
+        "title": "DenyRequest"
       },
       "EntityKind": {
-        "description": "What a topology node is.\n\nTwo domains share one namespace. The infrastructure kinds describe what a\ncluster runs; the security kinds describe what an intrusion moves through.\nThey coexist rather than replace each other \u2014 the Kubernetes and Prometheus\nconnectors observe services and pods because those are what is actually\nthere, and a host runs processes whichever domain is asking.",
+        "type": "string",
         "enum": [
           "service",
           "host",
@@ -333,14 +1470,25 @@
           "asset",
           "process",
           "vulnerability",
+          "organisation",
           "indicator"
         ],
         "title": "EntityKind",
-        "type": "string"
+        "description": "What a topology node is.\n\nTwo domains share one namespace. The infrastructure kinds describe what a\ncluster runs; the security kinds describe what an intrusion moves through.\nThey coexist rather than replace each other \u2014 the Kubernetes and Prometheus\nconnectors observe services and pods because those are what is actually\nthere, and a host runs processes whichever domain is asking."
       },
       "EntityRef": {
-        "description": "Reference to a topology node. Events and the graph share one namespace.",
         "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/EntityKind"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
           "cluster": {
             "anyOf": [
               {
@@ -351,17 +1499,6 @@
               }
             ],
             "title": "Cluster"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/EntityKind"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
           },
           "namespace": {
             "anyOf": [
@@ -375,69 +1512,29 @@
             "title": "Namespace"
           }
         },
+        "type": "object",
         "required": [
           "kind",
           "id",
           "name"
         ],
         "title": "EntityRef",
-        "type": "object"
+        "description": "Reference to a topology node. Events and the graph share one namespace."
       },
       "Environment": {
+        "type": "string",
         "enum": [
           "dev",
           "staging",
           "prod"
         ],
-        "title": "Environment",
-        "type": "string"
+        "title": "Environment"
       },
       "EvaluateRequest": {
         "properties": {
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
-          },
-          "agent_risk_limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Agent Risk Limit"
-          },
-          "blast_radius_entities": {
-            "default": 0,
-            "title": "Blast Radius Entities",
-            "type": "integer"
-          },
-          "blast_radius_users": {
-            "default": 0,
-            "title": "Blast Radius Users",
-            "type": "integer"
-          },
-          "diagnostic_confidence": {
-            "default": 1.0,
-            "title": "Diagnostic Confidence",
-            "type": "number"
-          },
-          "environment": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Environment"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "executed_here_before": {
-            "default": true,
-            "title": "Executed Here Before",
-            "type": "boolean"
+            "type": "string",
+            "title": "Action Id"
           },
           "incident_ref": {
             "anyOf": [
@@ -449,81 +1546,111 @@
               }
             ],
             "title": "Incident Ref"
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Environment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "blast_radius_entities": {
+            "type": "integer",
+            "title": "Blast Radius Entities",
+            "default": 0
+          },
+          "blast_radius_users": {
+            "type": "integer",
+            "title": "Blast Radius Users",
+            "default": 0
+          },
+          "diagnostic_confidence": {
+            "type": "number",
+            "title": "Diagnostic Confidence",
+            "default": 1.0
+          },
+          "executed_here_before": {
+            "type": "boolean",
+            "title": "Executed Here Before",
+            "default": true
+          },
+          "agent_risk_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Risk Limit"
           }
         },
+        "type": "object",
         "required": [
           "action_id"
         ],
-        "title": "EvaluateRequest",
-        "type": "object"
+        "title": "EvaluateRequest"
       },
       "ExecuteRequest": {
         "properties": {
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
+            "type": "string",
+            "title": "Action Id"
           },
-          "actor": {
-            "default": "human:operator",
-            "title": "Actor",
-            "type": "string"
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
           },
           "params": {
             "additionalProperties": {
               "type": "string"
             },
-            "default": {},
+            "type": "object",
             "title": "Params",
-            "type": "object"
+            "default": {}
           },
-          "verdict": {
-            "$ref": "#/components/schemas/Verdict"
+          "actor": {
+            "type": "string",
+            "title": "Actor",
+            "default": "human:operator"
           }
         },
+        "type": "object",
         "required": [
           "action_id",
           "verdict"
         ],
-        "title": "ExecuteRequest",
-        "type": "object"
+        "title": "ExecuteRequest"
       },
       "Execution": {
         "properties": {
+          "step_order": {
+            "type": "integer",
+            "title": "Step Order"
+          },
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
+            "type": "string",
+            "title": "Action Id"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
           },
           "finished_at": {
             "anyOf": [
               {
-                "format": "date-time",
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Finished At"
-          },
-          "output": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Output"
-          },
-          "started_at": {
-            "format": "date-time",
-            "title": "Started At",
-            "type": "string"
-          },
-          "step_order": {
-            "title": "Step Order",
-            "type": "integer"
           },
           "succeeded": {
             "anyOf": [
@@ -536,48 +1663,60 @@
             ],
             "title": "Succeeded"
           },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
           "verdict_snapshot": {
             "$ref": "#/components/schemas/Verdict"
           }
         },
+        "type": "object",
         "required": [
           "step_order",
           "action_id",
           "started_at",
           "verdict_snapshot"
         ],
-        "title": "Execution",
-        "type": "object"
+        "title": "Execution"
       },
       "ExecutionResult": {
         "properties": {
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
-          },
-          "dry_run": {
-            "title": "Dry Run",
-            "type": "boolean"
-          },
-          "finished_at": {
-            "format": "date-time",
-            "title": "Finished At",
-            "type": "string"
-          },
-          "output": {
-            "title": "Output",
-            "type": "string"
+            "type": "string",
+            "title": "Action Id"
           },
           "started_at": {
+            "type": "string",
             "format": "date-time",
-            "title": "Started At",
-            "type": "string"
+            "title": "Started At"
+          },
+          "finished_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Finished At"
           },
           "succeeded": {
-            "title": "Succeeded",
-            "type": "boolean"
+            "type": "boolean",
+            "title": "Succeeded"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run"
+          },
+          "output": {
+            "type": "string",
+            "title": "Output"
           }
         },
+        "type": "object",
         "required": [
           "action_id",
           "started_at",
@@ -586,8 +1725,7 @@
           "dry_run",
           "output"
         ],
-        "title": "ExecutionResult",
-        "type": "object"
+        "title": "ExecutionResult"
       },
       "HTTPValidationError": {
         "properties": {
@@ -595,101 +1733,103 @@
             "items": {
               "$ref": "#/components/schemas/ValidationError"
             },
-            "title": "Detail",
-            "type": "array"
+            "type": "array",
+            "title": "Detail"
           }
         },
-        "title": "HTTPValidationError",
-        "type": "object"
+        "type": "object",
+        "title": "HTTPValidationError"
       },
       "Hypothesis": {
-        "description": "A causal explanation.\n\n`evidence` is required and non-empty: a hypothesis that cannot cite the\ntelemetry supporting it is suppressed, not surfaced at low confidence\n(the Grounding ADR). `contradicted_by` lets the system show its own doubt.",
         "properties": {
+          "statement": {
+            "type": "string",
+            "title": "Statement"
+          },
           "confidence": {
+            "type": "number",
             "maximum": 1.0,
             "minimum": 0.0,
-            "title": "Confidence",
-            "type": "number"
-          },
-          "contradicted_by": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Contradicted By",
-            "type": "array"
+            "title": "Confidence"
           },
           "evidence": {
             "items": {
               "type": "string"
             },
+            "type": "array",
             "minItems": 1,
-            "title": "Evidence",
-            "type": "array"
+            "title": "Evidence"
+          },
+          "contradicted_by": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contradicted By"
           },
           "mechanism": {
             "items": {
               "type": "string"
             },
-            "title": "Mechanism",
-            "type": "array"
-          },
-          "statement": {
-            "title": "Statement",
-            "type": "string"
+            "type": "array",
+            "title": "Mechanism"
           }
         },
+        "type": "object",
         "required": [
           "statement",
           "confidence",
           "evidence"
         ],
         "title": "Hypothesis",
-        "type": "object"
+        "description": "A causal explanation.\n\n`evidence` is required and non-empty: a hypothesis that cannot cite the\ntelemetry supporting it is suppressed, not surfaced at low confidence\n(the Grounding ADR). `contradicted_by` lets the system show its own doubt."
       },
       "Impact": {
         "properties": {
+          "estimated_users_affected": {
+            "type": "integer",
+            "title": "Estimated Users Affected",
+            "default": 0
+          },
           "affected_services": {
             "items": {
               "type": "string"
             },
-            "title": "Affected Services",
-            "type": "array"
+            "type": "array",
+            "title": "Affected Services"
           },
           "blast_radius_entities": {
-            "default": 0,
+            "type": "integer",
             "title": "Blast Radius Entities",
-            "type": "integer"
-          },
-          "estimated_users_affected": {
-            "default": 0,
-            "title": "Estimated Users Affected",
-            "type": "integer"
+            "default": 0
           }
         },
-        "title": "Impact",
-        "type": "object"
+        "type": "object",
+        "title": "Impact"
       },
       "Incident": {
         "properties": {
-          "affected_entities": {
-            "items": {
-              "$ref": "#/components/schemas/EntityRef"
-            },
-            "title": "Affected Entities",
-            "type": "array"
+          "id": {
+            "type": "string",
+            "title": "Id"
           },
-          "causal_chain": {
-            "items": {
-              "$ref": "#/components/schemas/CausalLink"
-            },
-            "title": "Causal Chain",
-            "type": "array"
+          "state": {
+            "$ref": "#/components/schemas/IncidentState",
+            "default": "detected"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/IncidentSeverity"
+          },
+          "opened_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Opened At"
           },
           "closed_at": {
             "anyOf": [
               {
-                "format": "date-time",
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -697,66 +1837,50 @@
             ],
             "title": "Closed At"
           },
+          "affected_entities": {
+            "items": {
+              "$ref": "#/components/schemas/EntityRef"
+            },
+            "type": "array",
+            "title": "Affected Entities"
+          },
+          "impact": {
+            "$ref": "#/components/schemas/Impact"
+          },
           "event_ids": {
             "items": {
               "type": "string"
             },
-            "title": "Event Ids",
-            "type": "array"
-          },
-          "executions": {
-            "items": {
-              "$ref": "#/components/schemas/Execution"
-            },
-            "title": "Executions",
-            "type": "array"
+            "type": "array",
+            "title": "Event Ids"
           },
           "hypotheses": {
             "items": {
               "$ref": "#/components/schemas/Hypothesis"
             },
-            "title": "Hypotheses",
-            "type": "array"
+            "type": "array",
+            "title": "Hypotheses"
           },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "impact": {
-            "$ref": "#/components/schemas/Impact"
-          },
-          "opened_at": {
-            "format": "date-time",
-            "title": "Opened At",
-            "type": "string"
+          "causal_chain": {
+            "items": {
+              "$ref": "#/components/schemas/CausalLink"
+            },
+            "type": "array",
+            "title": "Causal Chain"
           },
           "plan": {
             "items": {
               "$ref": "#/components/schemas/PlanStep"
             },
-            "title": "Plan",
-            "type": "array"
+            "type": "array",
+            "title": "Plan"
           },
-          "severity": {
-            "$ref": "#/components/schemas/IncidentSeverity"
-          },
-          "similar_incident_ids": {
+          "executions": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/Execution"
             },
-            "title": "Similar Incident Ids",
-            "type": "array"
-          },
-          "state": {
-            "$ref": "#/components/schemas/IncidentState",
-            "default": "detected"
-          },
-          "transitions": {
-            "items": {
-              "$ref": "#/components/schemas/Transition"
-            },
-            "title": "Transitions",
-            "type": "array"
+            "type": "array",
+            "title": "Executions"
           },
           "verification": {
             "anyOf": [
@@ -767,27 +1891,42 @@
                 "type": "null"
               }
             ]
+          },
+          "similar_incident_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Similar Incident Ids"
+          },
+          "transitions": {
+            "items": {
+              "$ref": "#/components/schemas/Transition"
+            },
+            "type": "array",
+            "title": "Transitions"
           }
         },
+        "type": "object",
         "required": [
           "id",
           "severity",
           "opened_at"
         ],
-        "title": "Incident",
-        "type": "object"
+        "title": "Incident"
       },
       "IncidentSeverity": {
+        "type": "string",
         "enum": [
           "critical",
           "high",
           "medium",
           "low"
         ],
-        "title": "IncidentSeverity",
-        "type": "string"
+        "title": "IncidentSeverity"
       },
       "IncidentState": {
+        "type": "string",
         "enum": [
           "detected",
           "correlated",
@@ -801,38 +1940,37 @@
           "rolled_back",
           "escalated"
         ],
-        "title": "IncidentState",
-        "type": "string"
+        "title": "IncidentState"
       },
       "InvestigateRequest": {
         "properties": {
           "entity_key": {
-            "title": "Entity Key",
-            "type": "string"
+            "type": "string",
+            "title": "Entity Key"
           }
         },
+        "type": "object",
         "required": [
           "entity_key"
         ],
-        "title": "InvestigateRequest",
-        "type": "object"
+        "title": "InvestigateRequest"
       },
       "PlanStep": {
         "properties": {
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          },
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
+            "type": "string",
+            "title": "Action Id"
           },
           "expected_post_state": {
             "additionalProperties": {
               "type": "string"
             },
-            "title": "Expected Post State",
-            "type": "object"
-          },
-          "order": {
-            "title": "Order",
-            "type": "integer"
+            "type": "object",
+            "title": "Expected Post State"
           },
           "rollback_action_id": {
             "anyOf": [
@@ -856,32 +1994,30 @@
             ]
           }
         },
+        "type": "object",
         "required": [
           "order",
           "action_id",
           "expected_post_state"
         ],
-        "title": "PlanStep",
-        "type": "object"
+        "title": "PlanStep"
       },
       "RemediateRequest": {
         "properties": {
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
+            "type": "string",
+            "title": "Action Id"
           },
-          "actor": {
-            "default": "agent:orchestrator",
-            "title": "Actor",
-            "type": "string"
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
           },
-          "entities": {
-            "default": [],
-            "items": {
+          "params": {
+            "additionalProperties": {
               "type": "string"
             },
-            "title": "Entities",
-            "type": "array"
+            "type": "object",
+            "title": "Params",
+            "default": {}
           },
           "incident_ref": {
             "anyOf": [
@@ -894,35 +2030,26 @@
             ],
             "title": "Incident Ref"
           },
-          "observed_entities": {
+          "actor": {
+            "type": "string",
+            "title": "Actor",
+            "default": "agent:orchestrator"
+          },
+          "tenant": {
+            "type": "string",
+            "title": "Tenant",
+            "default": "default"
+          },
+          "summary": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Observed Entities"
-          },
-          "observed_users": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Observed Users"
-          },
-          "params": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "default": {},
-            "title": "Params",
-            "type": "object"
+            "title": "Summary"
           },
           "predicted_entities": {
             "anyOf": [
@@ -946,76 +2073,88 @@
             ],
             "title": "Predicted Users"
           },
-          "signals": {
-            "default": [],
-            "items": {
-              "type": "string"
-            },
-            "title": "Signals",
-            "type": "array"
-          },
-          "summary": {
+          "observed_entities": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Summary"
+            "title": "Observed Entities"
           },
-          "tenant": {
-            "default": "default",
-            "title": "Tenant",
-            "type": "string"
+          "observed_users": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Users"
           },
-          "verdict": {
-            "$ref": "#/components/schemas/Verdict"
+          "entities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Entities",
+            "default": []
+          },
+          "signals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Signals",
+            "default": []
           }
         },
+        "type": "object",
         "required": [
           "action_id",
           "verdict"
         ],
-        "title": "RemediateRequest",
-        "type": "object"
+        "title": "RemediateRequest"
       },
       "RemediateResponse": {
         "properties": {
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
+            "type": "string",
+            "title": "Action Id"
+          },
+          "disposition": {
+            "type": "string",
+            "title": "Disposition"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "rollback_ran": {
+            "type": "boolean",
+            "title": "Rollback Ran"
+          },
+          "learned": {
+            "type": "boolean",
+            "title": "Learned"
           },
           "checks": {
-            "default": [],
             "items": {
               "$ref": "#/components/schemas/VerificationCheck"
             },
+            "type": "array",
             "title": "Checks",
-            "type": "array"
-          },
-          "disposition": {
-            "title": "Disposition",
-            "type": "string"
-          },
-          "learned": {
-            "title": "Learned",
-            "type": "boolean"
-          },
-          "reason": {
-            "title": "Reason",
-            "type": "string"
-          },
-          "rollback_ran": {
-            "title": "Rollback Ran",
-            "type": "boolean"
-          },
-          "verified": {
-            "title": "Verified",
-            "type": "boolean"
+            "default": []
           }
         },
+        "type": "object",
         "required": [
           "action_id",
           "disposition",
@@ -1024,48 +2163,42 @@
           "rollback_ran",
           "learned"
         ],
-        "title": "RemediateResponse",
-        "type": "object"
+        "title": "RemediateResponse"
       },
       "RiskAdjustment": {
         "properties": {
-          "delta": {
-            "title": "Delta",
-            "type": "integer"
-          },
           "reason": {
-            "title": "Reason",
-            "type": "string"
+            "type": "string",
+            "title": "Reason"
+          },
+          "delta": {
+            "type": "integer",
+            "title": "Delta"
           }
         },
+        "type": "object",
         "required": [
           "reason",
           "delta"
         ],
-        "title": "RiskAdjustment",
-        "type": "object"
+        "title": "RiskAdjustment"
       },
       "Tier": {
+        "type": "string",
         "enum": [
           "autonomous",
           "approval",
           "senior",
           "denied"
         ],
-        "title": "Tier",
-        "type": "string"
+        "title": "Tier"
       },
       "Transition": {
-        "description": "Append-only. Every state change names its actor and justification.",
         "properties": {
-          "actor": {
-            "title": "Actor",
-            "type": "string"
-          },
           "at": {
+            "type": "string",
             "format": "date-time",
-            "title": "At",
-            "type": "string"
+            "title": "At"
           },
           "from_state": {
             "anyOf": [
@@ -1077,14 +2210,19 @@
               }
             ]
           },
-          "justification": {
-            "title": "Justification",
-            "type": "string"
-          },
           "to_state": {
             "$ref": "#/components/schemas/IncidentState"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "justification": {
+            "type": "string",
+            "title": "Justification"
           }
         },
+        "type": "object",
         "required": [
           "at",
           "from_state",
@@ -1093,17 +2231,10 @@
           "justification"
         ],
         "title": "Transition",
-        "type": "object"
+        "description": "Append-only. Every state change names its actor and justification."
       },
       "ValidationError": {
         "properties": {
-          "ctx": {
-            "title": "Context",
-            "type": "object"
-          },
-          "input": {
-            "title": "Input"
-          },
           "loc": {
             "items": {
               "anyOf": [
@@ -1115,100 +2246,38 @@
                 }
               ]
             },
-            "title": "Location",
-            "type": "array"
+            "type": "array",
+            "title": "Location"
           },
           "msg": {
-            "title": "Message",
-            "type": "string"
+            "type": "string",
+            "title": "Message"
           },
           "type": {
-            "title": "Error Type",
-            "type": "string"
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
+        "type": "object",
         "required": [
           "loc",
           "msg",
           "type"
         ],
-        "title": "ValidationError",
-        "type": "object"
+        "title": "ValidationError"
       },
       "Verdict": {
-        "description": "Required argument to any execution. Carries its own reasoning.",
         "properties": {
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
-          },
-          "adjustments": {
-            "items": {
-              "$ref": "#/components/schemas/RiskAdjustment"
-            },
-            "title": "Adjustments",
-            "type": "array"
-          },
-          "base_risk": {
-            "title": "Base Risk",
-            "type": "integer"
-          },
-          "constraints": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "title": "Constraints",
-            "type": "object"
-          },
-          "denial_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Denial Reason"
-          },
-          "effective_risk": {
-            "title": "Effective Risk",
-            "type": "integer"
-          },
-          "expires_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expires At"
-          },
-          "granted_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Granted At"
-          },
-          "granted_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Granted By"
+            "type": "string",
+            "title": "Action Id"
           },
           "incident_ref": {
             "anyOf": [
@@ -1221,17 +2290,86 @@
             ],
             "title": "Incident Ref"
           },
+          "base_risk": {
+            "type": "integer",
+            "title": "Base Risk"
+          },
+          "adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/RiskAdjustment"
+            },
+            "type": "array",
+            "title": "Adjustments"
+          },
+          "effective_risk": {
+            "type": "integer",
+            "title": "Effective Risk"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/Tier"
+          },
           "required_approvers": {
             "items": {
               "type": "string"
             },
-            "title": "Required Approvers",
-            "type": "array"
+            "type": "array",
+            "title": "Required Approvers"
           },
-          "tier": {
-            "$ref": "#/components/schemas/Tier"
+          "granted_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Granted By"
+          },
+          "granted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Granted At"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "constraints": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Constraints"
+          },
+          "denial_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Denial Reason"
           }
         },
+        "type": "object",
         "required": [
           "action_id",
           "incident_ref",
@@ -1242,50 +2380,50 @@
           "required_approvers"
         ],
         "title": "Verdict",
-        "type": "object"
+        "description": "Required argument to any execution. Carries its own reasoning."
       },
       "Verification": {
-        "description": "Observational, never model-judged (the Grounding ADR).",
         "properties": {
+          "window_seconds": {
+            "type": "integer",
+            "title": "Window Seconds"
+          },
           "checks": {
             "items": {
               "$ref": "#/components/schemas/VerificationCheck"
             },
-            "title": "Checks",
-            "type": "array"
+            "type": "array",
+            "title": "Checks"
           },
           "completed_at": {
             "anyOf": [
               {
-                "format": "date-time",
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Completed At"
-          },
-          "window_seconds": {
-            "title": "Window Seconds",
-            "type": "integer"
           }
         },
+        "type": "object",
         "required": [
           "window_seconds"
         ],
         "title": "Verification",
-        "type": "object"
+        "description": "Observational, never model-judged (the Grounding ADR)."
       },
       "VerificationCheck": {
         "properties": {
-          "expected": {
-            "title": "Expected",
-            "type": "string"
-          },
           "name": {
-            "title": "Name",
-            "type": "string"
+            "type": "string",
+            "title": "Name"
+          },
+          "expected": {
+            "type": "string",
+            "title": "Expected"
           },
           "observed": {
             "anyOf": [
@@ -1310,18 +2448,25 @@
             "title": "Passed"
           }
         },
+        "type": "object",
         "required": [
           "name",
           "expected"
         ],
-        "title": "VerificationCheck",
-        "type": "object"
+        "title": "VerificationCheck"
       },
       "VerifyRequest": {
         "properties": {
           "action_id": {
-            "title": "Action Id",
-            "type": "string"
+            "type": "string",
+            "title": "Action Id"
+          },
+          "observed": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Observed"
           },
           "incident_ref": {
             "anyOf": [
@@ -1334,1119 +2479,18 @@
             ],
             "title": "Incident Ref"
           },
-          "observed": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "title": "Observed",
-            "type": "object"
-          },
           "window_seconds": {
-            "default": 60,
+            "type": "integer",
             "title": "Window Seconds",
-            "type": "integer"
+            "default": 60
           }
         },
+        "type": "object",
         "required": [
           "action_id",
           "observed"
         ],
-        "title": "VerifyRequest",
-        "type": "object"
-      }
-    }
-  },
-  "info": {
-    "description": "Autonomous intelligence for complex systems. Observe \u2192 Reason \u2192 Act \u2192 Verify, under policy-bounded autonomy.",
-    "title": "Pashupatastra API",
-    "version": "0.1.0"
-  },
-  "openapi": "3.1.0",
-  "paths": {
-    "/": {
-      "get": {
-        "operationId": "root__get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Root  Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Root"
-      }
-    },
-    "/api/v1/actions": {
-      "get": {
-        "description": "The closed registry. Actions not listed here cannot be executed.\n\nFiltered to the deployment's domain when one is configured. Filtering the\nlist does not narrow what `get` resolves \u2014 an action still registered but\nnot listed remains executable if a plan names it, because a plan that\nreferenced a rollback which quietly stopped resolving would fail at the\nmoment the rollback was needed.",
-        "operationId": "list_actions_api_v1_actions_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ActionSpec"
-                  },
-                  "title": "Response List Actions Api V1 Actions Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "List Actions"
-      }
-    },
-    "/api/v1/actions/execute": {
-      "post": {
-        "operationId": "execute_action_api_v1_actions_execute_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExecuteRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExecutionResult"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Execute Action"
-      }
-    },
-    "/api/v1/actions/remediate": {
-      "post": {
-        "description": "The closed loop: act, verify over a window, roll back, learn.\n\nDistinct from `/actions/execute`, which runs one action and stops. This one\nowns the consequences \u2014 and because a rollback is itself an execution, it is\nauthorised by its own Dharma verdict rather than the one supplied here.",
-        "operationId": "remediate_action_api_v1_actions_remediate_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RemediateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RemediateResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Remediate Action"
-      }
-    },
-    "/api/v1/agent/chat": {
-      "post": {
-        "description": "Ask Sati about one incident.\n\nScoped to an incident on purpose. A general \"ask the console anything\" box\non a public site is an interface for enumerating the estate, and there is no\nquestion worth answering here that is not about something already on screen.\n\nThe route can read and nothing else. It holds no execute path, and the tools\nit offers are derived from `ActionSpec.read_only` rather than listed by hand\n\u2014 see `app/agent/tools.py`.",
-        "operationId": "agent_chat_api_v1_agent_chat_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChatRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Agent Chat Api V1 Agent Chat Post",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Agent Chat"
-      }
-    },
-    "/api/v1/audit": {
-      "get": {
-        "operationId": "audit_api_v1_audit_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "incident_ref",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Incident Ref"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "title": "Limit",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AuditRecord"
-                  },
-                  "title": "Response Audit Api V1 Audit Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Audit"
-      }
-    },
-    "/api/v1/entities/{entity_key}": {
-      "get": {
-        "description": "One entity: what it is, what depends on it, and what it has been saying.\n\nBlast radius is included because \"what breaks if this breaks\" is the first\nquestion anyone asks about an entity, and making it a second request invites\na view that renders without it.",
-        "operationId": "entity_detail_api_v1_entities__entity_key__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "entity_key",
-            "required": true,
-            "schema": {
-              "title": "Entity Key",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "events",
-            "required": false,
-            "schema": {
-              "default": 50,
-              "title": "Events",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Entity Detail Api V1 Entities  Entity Key  Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Entity Detail"
-      }
-    },
-    "/api/v1/events/{event_id}": {
-      "get": {
-        "description": "One event, so a citation can be followed to the thing it cites.\n\nEvery hypothesis and every causal step names evidence by id. Without this\nthe id is decoration: it looks checkable, a reader takes it on trust, and an\ninvented reference is indistinguishable from a real one.",
-        "operationId": "event_api_v1_events__event_id__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "event_id",
-            "required": true,
-            "schema": {
-              "title": "Event Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Event Api V1 Events  Event Id  Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Event"
-      }
-    },
-    "/api/v1/game/progress/{player_id}": {
-      "get": {
-        "description": "One player's own record, by the token their browser holds.\n\nThere is no route that lists players, and that absence is the feature: an\nenumerable set of scores is a leaderboard, and a leaderboard is what this\nwas asked not to be. A token can read only itself, and nothing joins a token\nto a person.",
-        "operationId": "game_progress_api_v1_game_progress__player_id__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "player_id",
-            "required": true,
-            "schema": {
-              "title": "Player Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Game Progress Api V1 Game Progress  Player Id  Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Game Progress"
-      }
-    },
-    "/api/v1/game/scenarios": {
-      "get": {
-        "description": "What can be played, without saying what any of them are.\n\nSeverity and the opening alert only. A list that summarised each incident\nwould answer the question the exercise asks before it is opened.",
-        "operationId": "game_scenarios_api_v1_game_scenarios_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "additionalProperties": true,
-                    "type": "object"
-                  },
-                  "title": "Response Game Scenarios Api V1 Game Scenarios Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Game Scenarios"
-      }
-    },
-    "/api/v1/game/{incident_id}/answer": {
-      "post": {
-        "description": "Mark the attempt and reveal the chain.\n\nThe only route that returns the answer, and it returns it *after* an\nattempt \u2014 which is what keeps the briefing honest.",
-        "operationId": "game_answer_api_v1_game__incident_id__answer_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "incident_id",
-            "required": true,
-            "schema": {
-              "title": "Incident Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AnswerRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Game Answer Api V1 Game  Incident Id  Answer Post",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Game Answer"
-      }
-    },
-    "/api/v1/game/{incident_id}/briefing": {
-      "get": {
-        "operationId": "game_briefing_api_v1_game__incident_id__briefing_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "incident_id",
-            "required": true,
-            "schema": {
-              "title": "Incident Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Game Briefing Api V1 Game  Incident Id  Briefing Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Game Briefing"
-      }
-    },
-    "/api/v1/game/{incident_id}/investigate": {
-      "post": {
-        "operationId": "game_investigate_api_v1_game__incident_id__investigate_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "incident_id",
-            "required": true,
-            "schema": {
-              "title": "Incident Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InvestigateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Game Investigate Api V1 Game  Incident Id  Investigate Post",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Game Investigate"
-      }
-    },
-    "/api/v1/health": {
-      "get": {
-        "operationId": "health_api_v1_health_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Health Api V1 Health Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Health"
-      }
-    },
-    "/api/v1/incidents": {
-      "get": {
-        "operationId": "list_incidents_api_v1_incidents_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Incident"
-                  },
-                  "title": "Response List Incidents Api V1 Incidents Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "List Incidents"
-      }
-    },
-    "/api/v1/incidents/{incident_id}": {
-      "get": {
-        "operationId": "get_incident_api_v1_incidents__incident_id__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "incident_id",
-            "required": true,
-            "schema": {
-              "title": "Incident Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Incident"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Get Incident"
-      }
-    },
-    "/api/v1/incidents/{incident_id}/graph": {
-      "get": {
-        "description": "The sub-graph this incident's own evidence names.\n\nFiltered here rather than in the browser. The alternative is shipping the\nwhole estate to draw three nodes, which works at eleven entities and stops\nworking at the first real deployment \u2014 and the incident page is the one\nscreen that has to load while somebody is waiting.\n\nAn edge is included only when **both** ends are in the incident. A path from\none of these entities out to something the incident never mentions is real,\nand drawing it here would say the incident reached further than its evidence\nestablishes \u2014 the same rule R50 applied to inventing edges, applied to\nborrowing them.",
-        "operationId": "incident_graph_api_v1_incidents__incident_id__graph_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "incident_id",
-            "required": true,
-            "schema": {
-              "title": "Incident Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incident Graph Api V1 Incidents  Incident Id  Graph Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Incident Graph"
-      }
-    },
-    "/api/v1/ingest/otlp": {
-      "post": {
-        "description": "OTLP/HTTP trace endpoint.\n\nPoint an OpenTelemetry collector's OTLP/HTTP exporter here. Traces are the\nstrongest edge source available: a span with a parent is direct evidence\nthat one service called another.",
-        "operationId": "ingest_otlp_api_v1_ingest_otlp_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "title": "Payload",
-                "type": "object"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Ingest Otlp Api V1 Ingest Otlp Post",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Ingest Otlp"
-      }
-    },
-    "/api/v1/intel": {
-      "get": {
-        "description": "Recent threat intelligence, as stored.\n\nServed from our own store, never proxied. A route that fetched from CISA or\nabuse.ch on request would tell those services who is reading what, and would\nfail whenever they do; the schedule already put this on disk.\n\nEntries keep their `verification` label. A reader deciding what to do with\n\"somebody submitted this URL an hour ago\" needs it to be distinguishable\nfrom \"CISA has observed this being exploited\", and by the time both are\nrendered as cards they look identical without it.",
-        "operationId": "intel_api_v1_intel_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 50,
-              "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "source",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Source"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Intel Api V1 Intel Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Intel"
-      }
-    },
-    "/api/v1/intel/status": {
-      "get": {
-        "description": "How current each feed is, and when it last moved.\n\nA feed that has quietly stopped looks exactly like a quiet feed. The cursor\nis the difference, so it is published rather than kept for debugging.",
-        "operationId": "intel_status_api_v1_intel_status_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Intel Status Api V1 Intel Status Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Intel Status"
-      }
-    },
-    "/api/v1/policy/approvals/fatigue": {
-      "get": {
-        "description": "Whether the approval step is doing anything.\n\nExposed as an endpoint rather than buried in a log because a metric nobody\nlooks at cannot change behaviour \u2014 and this one is meant to be uncomfortable.\n`looks_decorative` requires *both* near-total approval and near-instant\ndecisions; either alone is consistent with a well-calibrated system.",
-        "operationId": "approval_fatigue_api_v1_policy_approvals_fatigue_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Approval Fatigue Api V1 Policy Approvals Fatigue Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Approval Fatigue"
-      }
-    },
-    "/api/v1/policy/approve": {
-      "post": {
-        "operationId": "approve_api_v1_policy_approve_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApproveRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Verdict"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Approve"
-      }
-    },
-    "/api/v1/policy/deny": {
-      "post": {
-        "description": "Refuse an action. A first-class outcome, not an error path.\n\nReturns the verdict with the refusal recorded rather than raising: a denial\nis the approval step working, and expressing it as an HTTP error would make\nthe client's success path the one where a human said yes.",
-        "operationId": "deny_api_v1_policy_deny_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DenyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Verdict"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Deny"
-      }
-    },
-    "/api/v1/policy/evaluate": {
-      "post": {
-        "description": "Dharma. The only way to obtain authorization to execute.",
-        "operationId": "evaluate_policy_api_v1_policy_evaluate_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EvaluateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Verdict"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Evaluate Policy"
-      }
-    },
-    "/api/v1/policy/model": {
-      "get": {
-        "description": "The policy this deployment enforces, generated from the engine.\n\nServes the page that explains the risk tiers. That page must not restate\nthem: a table written from memory is a second answer to \"who may approve\nthis\", and on the day the two disagree the wrong one is the one on the\nmarketing site.\n\nThe gates are here for the same reason. \"This deployment is in dry run and\nits environment is not on the live list\" is a claim the front page makes,\nand it is worth exactly as much as the reader's ability to check it.",
-        "operationId": "policy_model_route_api_v1_policy_model_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Policy Model Route Api V1 Policy Model Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Policy Model Route"
-      }
-    },
-    "/api/v1/topology": {
-      "get": {
-        "operationId": "topology_api_v1_topology_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "integer"
-                  },
-                  "title": "Response Topology Api V1 Topology Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Topology"
-      }
-    },
-    "/api/v1/topology/blast-radius/{entity_key}": {
-      "get": {
-        "description": "What breaks when this breaks, and roughly how many users notice.\n\nAn input to risk scoring, so it is served from the graph rather than\nrecomputed here \u2014 a second implementation would be a second answer.",
-        "operationId": "blast_radius_api_v1_topology_blast_radius__entity_key__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "entity_key",
-            "required": true,
-            "schema": {
-              "title": "Entity Key",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "max_depth",
-            "required": false,
-            "schema": {
-              "default": 10,
-              "title": "Max Depth",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Blast Radius Api V1 Topology Blast Radius  Entity Key  Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Blast Radius"
-      }
-    },
-    "/api/v1/topology/graph": {
-      "get": {
-        "description": "Nodes and edges for the service map, each node carrying its worst recent\nseverity rather than its latest \u2014 a service that went critical and then\nreported info seconds later is flapping, not healthy.",
-        "operationId": "topology_graph_api_v1_topology_graph_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 400,
-              "title": "Limit",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Topology Graph Api V1 Topology Graph Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Topology Graph"
-      }
-    },
-    "/api/v1/verification/observe": {
-      "post": {
-        "operationId": "observe_api_v1_verification_observe_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Verification"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Observe"
+        "title": "VerifyRequest"
       }
     }
   }

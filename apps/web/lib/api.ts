@@ -559,3 +559,22 @@ export interface PolicyModel {
  *  a second answer to "who may approve this", and on the day the two disagree
  *  the wrong one is the one on the marketing site. */
 export const getPolicyModel = () => get<PolicyModel>("/policy/model");
+
+/** One row in the command palette's index. Deliberately tiny: a label, a hint
+ *  and a href. The palette matches text and then navigates, so anything else is
+ *  weight sent to every visitor on every page. */
+export type SearchItem = {
+  kind: string;
+  label: string;
+  hint?: string;
+  href: string;
+};
+
+/** The palette's whole index, fetched once on the server so no keystroke ever
+ *  waits on a request. Returns an empty list rather than throwing: a palette
+ *  that cannot reach the API should still offer the named jumps and the pages,
+ *  which are static and always correct. */
+export async function getSearchIndex(): Promise<SearchItem[]> {
+  const data = await get<{ items: SearchItem[] }>("/search/index");
+  return data?.items ?? [];
+}

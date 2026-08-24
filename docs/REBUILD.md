@@ -1777,7 +1777,7 @@ faster to use or makes visible a claim it already makes.
 Take these in order of leverage and stop when the time budget does — R60 and
 R65 are the two that change how the product feels; the rest are additive.
 
-- [ ] **R60 — Command palette.** Needs: **R58**.
+- [x] **R60 — Command palette.** Needs: **R58**.
   `Cmd-K` / `Ctrl-K`, fuzzy across incidents, entities, advisories, actions and
   pages, plus the four named jump points: show me a real incident, let me work
   one myself, show today's threat feed, talk to the assistant. Search runs
@@ -1787,6 +1787,30 @@ R65 are the two that change how the product feels; the rest are additive.
   escape and arrow keys, traps focus while open and returns it on close, and
   degrades on touch to a visible search affordance rather than a shortcut nobody
   can type.
+  Done. `components/palette.tsx`, `Ctrl-K` / `Cmd-K`, 87 indexed rows on the
+  deployed site — 3 incidents, 11 entities, 33 actions, 40 advisories — plus the
+  four named jumps and eight pages.
+  **No keystroke waits on a request.** The index is fetched once on the server
+  in the layout and handed down as a prop, so filtering is an array scan. A
+  palette that round-trips per keystroke is slower than the navigation it
+  replaces, which would make it a worse version of the thing it exists to beat.
+  `scripts/verifypalette.py` asserts this by counting network requests while
+  typing, rather than by reading the code and believing it: **0**.
+  The matcher is twenty lines rather than a dependency — it ranks consecutive
+  characters and word boundaries, which is what makes `ws` return `ws-0148`
+  first. A fuzzy-search library shipped to every visitor to rank 87 short
+  strings would be weight for nothing.
+  One bug caught before it shipped, and only because the index was checked on
+  the deployed site rather than locally: it read `STORE.incidents`, the
+  in-memory dict, which is **empty on a durable deployment** where incidents
+  live in DynamoDB. Every incident appeared on a laptop and none in production.
+  Now `STORE.all()`, with a test asserting the indexed set equals the listed set.
+  Verified in a real browser, every clause pressing real keys: opens and closes
+  on 7/7 pages, focus captured on open and **returned to the element that had
+  it**, six Tabs stayed inside the dialog, arrows move and return, Enter
+  navigates and the dialog closes, and a visible search affordance survives at
+  390px with touch emulation. 33/33 responsive, AA contrast in both themes, 58
+  pages crawl clean, 987 tests pass.
 
 - [ ] **R61 — Show that it is live.** Needs: **R56**.
   Observatory and the incident feed poll real sources hourly and the page says
