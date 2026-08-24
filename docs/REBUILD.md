@@ -2427,7 +2427,7 @@ than at memory, and the engines for it already exist unused: `Smriti` carries
 Order is not negotiable. Memory is worth little without a loop to inform, and
 learning is meaningless without an outcome to learn from.
 
-- [ ] **R94 — Planning: reach for the tool before giving up.** Needs: **R26**.
+- [x] **R94 — Planning: reach for the tool before giving up.** Needs: **R26**.
   **Corrected after reading the gateway rather than assuming.** The investigate
   loop already exists: `gateway.py` runs `for hop in range(max_hops + 1)` with a
   token budget, a per-hop trace, and `chat_max_tool_hops = 4`; the last hop is
@@ -2455,6 +2455,30 @@ learning is meaningless without an outcome to learn from.
   refused, a question genuinely outside the evidence is *still* refused, the
   existing hop ceiling is proven to hold under a model that keeps asking, and
   every step's tool call and result reach the audit ledger.
+  Done, and the fix was four sentences of prompt rather than any code. The old
+  rule 1 read "if the evidence does not contain the answer, set answerable to
+  false" and never mentioned looking; `lookup_advisory` was the control that
+  proved it, being the one tool with a rule pointing at it and the one tool that
+  got called. Rule 1 is now *look before you decline*, and `PROMPT_VERSION` is 4.
+  **Both failure directions are measured, because they pull opposite ways.**
+  Refusing to look is the bug; answering anyway is the over-correction and is
+  far worse on a console whose whole argument is that its claims can be checked.
+  `scripts/verifyagent.py` therefore carries questions that are genuinely
+  unanswerable and requires those to still be refused — a run where everything
+  is answered is a regression, and a battery of only answerable questions could
+  not tell the difference.
+  Measured on the deployed agent. Before: hop 0, **no tool call at all**,
+  declined. After: a tool call on every question the tools cover, `app-07`'s
+  blast radius and the `sso-portal` reach both answered from lookups, and the
+  guard question still declined with no tool call.
+  One expectation in the battery was **wrong and was corrected against the
+  store, not against the agent**. It demanded an answer to "which hosts did
+  ws-0148 open SMB to"; the stored chain says only "two hosts never previously
+  contacted", and while two others appear in `affected_entities`, naming them as
+  the SMB peers is inference the evidence never states. Asserting it is precisely
+  the plausible-and-unverifiable claim this console refuses to make, so the
+  agent looking and then declining is correct — the checker was deciding the
+  answer, which is the failure this script exists to catch elsewhere.
 
 - [ ] **R95 — Memory: Smriti, wired to the agent.** Needs: **R94**.
   The memory engine exists and the chat agent's own prompt says *"You have no

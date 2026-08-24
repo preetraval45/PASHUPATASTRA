@@ -392,10 +392,33 @@ def test_the_prompt_forbids_answering_a_cve_from_memory() -> None:
     """The rule that makes the retrieved advisory win over the recollection."""
     from app.agent.chat import INSTRUCTIONS, PROMPT_VERSION
 
-    assert PROMPT_VERSION == "3", "the prompt changed; the version must move with it"
+    assert PROMPT_VERSION == "4", "the prompt changed; the version must move with it"
     lowered = INSTRUCTIONS.lower()
     assert "what you remember does not count" in lowered
     assert "will not answer from memory" in lowered
+
+
+def test_the_prompt_tells_the_agent_to_look_before_it_declines() -> None:
+    """R94, as a property of the text that causes it.
+
+    The agent answered "I cannot tell from what I have" at hop zero while
+    holding two tools that would have answered. The cause was in the prompt: the
+    old rule 1 said "if the evidence does not contain the answer, set answerable
+    to false" and never mentioned looking.
+
+    Asserted here as well as in `scripts/verifyagent.py` because the two check
+    different things — this one that the instruction exists, that one that the
+    agent's behaviour actually changed. Neither substitutes for the other: a
+    prompt can say the right thing and change nothing.
+    """
+    from app.agent.chat import INSTRUCTIONS
+
+    lowered = INSTRUCTIONS.lower()
+    assert "look before you decline" in lowered
+    # The refusal must survive the correction. An agent that stops declining is
+    # a worse failure than one that declines too readily.
+    assert "i cannot tell from what i have" in lowered
+    assert "set answerable to false" in lowered
 
 
 # --- freshness: quiet is not the same as broken -----------------------------
