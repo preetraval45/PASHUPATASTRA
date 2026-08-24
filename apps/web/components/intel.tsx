@@ -290,12 +290,17 @@ function Facts({ labels }: { labels: Record<string, string> }) {
   return (
     <dl className="flex flex-wrap gap-x-5 gap-y-1 text-[11px]">
       {facts.map((fact) => (
-        <div key={fact.key} className="flex gap-1.5">
-          <dt className="text-[rgb(var(--faint))]">{fact.key}</dt>
+        // `min-w-0` on the row and `break-words` on the value. The values here
+        // come from feeds, and a feed sends whatever it sends: HIBP's `exposed`
+        // is a comma list of data classes that ran a 375px page 47px wide. A
+        // flex item will not shrink below its content's minimum contribution
+        // without `min-w-0`, so the label alone is not enough.
+        <div key={fact.key} className="flex min-w-0 max-w-full gap-1.5">
+          <dt className="shrink-0 text-[rgb(var(--faint))]">{fact.key}</dt>
           <dd
-            className={
+            className={`min-w-0 break-words ${
               fact.warn ? "text-[rgb(var(--warn))]" : "text-[rgb(var(--muted))]"
-            }
+            }`}
           >
             {fact.value}
           </dd>

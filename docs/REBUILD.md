@@ -1856,7 +1856,7 @@ R65 are the two that change how the product feels; the rest are additive.
   33/33 responsive, AA contrast in both themes, 58 pages crawl clean, palette
   still passes, 991 tests.
 
-- [ ] **R62 — The causal chain builds itself.** Needs: **R43**.
+- [x] **R62 — The causal chain builds itself.** Needs: **R43**.
   On an incident page, the chain reveals signal → signal → signal → diagnosis
   rather than appearing complete. This is the site's central claim — *this is
   what connecting the dots looks like* — animated once, briefly, and not again
@@ -1864,6 +1864,38 @@ R65 are the two that change how the product feels; the rest are additive.
   **Done when:** the full chain is present in the DOM from the first paint with
   motion applied on top, `prefers-reduced-motion` renders it complete and
   instant, and no text is unreadable at any point in the sequence.
+  Done. The third clause decided the design: **nothing animates on text at
+  all.** A fade-in leaves words at an opacity nobody can read, and half a second
+  of that on every incident page is a console being decorative during an
+  incident. What moves is the rail drawing downward and each marker lighting as
+  the line reaches it, with every word at full contrast from the first frame.
+  Additive throughout. `components/chainreveal.tsx` adds one class after mount;
+  without it — no JavaScript, a thrown effect, reduced motion — every property
+  is already at the value the animation ends on and the chain is simply
+  complete. The reveal can never be the path by which the page becomes
+  finished. Once per incident per session, so returning from an entity page does
+  not replay it.
+  **A screenshot found a bug three green checks had missed.** The CSS matched
+  the rail and the marker *by position*, and the final step renders no rail — so
+  on that one row the marker was `:first-child` and got handed the rail's
+  `scaleY(0)`, disappearing for the length of its own delay. Positional
+  selectors describe where an element sits; `data-rail` and `data-node` describe
+  what it is, and only the second survives a conditional sibling.
+  The checks missed it because they measured opacity, and a transform hides an
+  element without changing a single colour. `verifychain.py` now samples
+  *geometry* on every frame, and that was proven rather than assumed: with the
+  old selector re-injected, marker 3 collapses to **24×0** and the check fires on
+  exactly that marker while 1 and 2 stay 24×24.
+  Two checker bugs fixed on the way, both of the same family — a check that
+  reports a defect it invented. It relied on `browser.new_page()` for isolation,
+  so the "did it animate" pass inherited the session watermark and reported that
+  the reveal never ran; and it sampled from `domcontentloaded`, reading every
+  box as 0×0 and calling the whole chain hidden, because it was measuring a page
+  that had not been drawn yet.
+  Also fixed here: R88's new fact rows overflowed `/observatory` by 47px at
+  375px — HIBP's `exposed` is a comma list of data classes, and a flex item will
+  not shrink below its content without `min-w-0`.
+  33/33 responsive, AA contrast in both themes, 58 pages crawl clean, 992 tests.
 
 - [ ] **R63 — Blast radius as a graph.** Needs: **R51**.
   R51 put the access map on the incident page; this gives blast radius its own

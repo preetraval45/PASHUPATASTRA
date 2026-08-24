@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { ChainReveal } from "@/components/chainreveal";
+
 import {
   Ago,
   Badge,
@@ -76,7 +78,8 @@ export function IncidentView({
           Still an <ol> of entity, transition, evidence and technique underneath
           the styling, so a screen reader gets the sequence and loses nothing. */}
       <Panel title="Causal chain">
-        <ol className="relative space-y-0">
+        <ChainReveal incidentId={incident.id} />
+        <ol data-chain className="relative space-y-0">
           {incident.causal_chain.map((link, index) => {
             const last = index === incident.causal_chain.length - 1;
             return (
@@ -87,6 +90,10 @@ export function IncidentView({
               <li
                 key={`${link.entity.id}-${index}`}
                 id={`chain-${index}`}
+                // `--step` staggers the reveal in CSS rather than with a timer
+                // per row. The index is already here; a JS timeline would be a
+                // second source of truth for the order the list already has.
+                style={{ "--step": index } as React.CSSProperties}
                 className="relative flex scroll-mt-24 gap-4 pb-6 target:bg-[rgb(var(--raised))] last:pb-0"
               >
                 {/* The rail. Drawn behind the node and stopped at the final
@@ -95,11 +102,21 @@ export function IncidentView({
                 {!last && (
                   <span
                     aria-hidden="true"
+                    data-rail
                     className="absolute left-[11px] top-7 h-[calc(100%-1.25rem)] w-px bg-gradient-to-b from-[rgb(var(--edge-strong))] to-[rgb(var(--edge))]"
                   />
                 )}
+                {/* `data-rail` and `data-node` rather than letting CSS find
+                    these by position. The last step renders no rail, so on that
+                    one row the marker *was* the first child — and the reveal
+                    handed it the rail's `scaleY(0)`, which made the final
+                    marker invisible for the length of its own delay. A
+                    positional selector describes where an element sits; these
+                    describe what it is, and only one of those survives a
+                    conditional sibling. */}
                 <span
                   aria-hidden="true"
+                  data-node
                   className="relative z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[rgb(var(--edge-strong))] bg-[rgb(var(--raised))]"
                 >
                   <span className="mono text-[10px] text-[rgb(var(--muted))]">{index + 1}</span>

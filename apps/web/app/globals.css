@@ -456,3 +456,61 @@ body::before {
     border-left-color: rgb(var(--astra));
   }
 }
+
+/* --- the causal chain drawing itself (R62) ---------------------------------
+ *
+ * Everything below is additive. Without `.chain-building` — no JavaScript, a
+ * thrown effect, or a reader who asked for no motion — every property here is
+ * already at the value the animation ends on, and the chain is simply complete.
+ * The reveal can only ever be something the page does *on top of* being
+ * finished, never the path by which it becomes finished.
+ *
+ * Nothing animates on text. A fade-in leaves words at an opacity nobody can
+ * read, and half a second of unreadable text on every incident page is a
+ * console being decorative during an incident. The rail draws and the markers
+ * light; every word is at full contrast from the first frame. */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The rail, drawn downward from the node above it. `scaleY` and not `height`
+     — height is laid out, and animating it would reflow the steps below on
+     every frame.
+     Matched by `data-rail`, not by position: the final step renders no rail, so
+     a positional selector gave that step's *marker* this animation and hid it
+     behind `scaleY(0)` for the length of its delay. */
+  .chain-building [data-rail] {
+    transform-origin: top;
+    animation: chain-rail 0.42s ease-out backwards;
+    animation-delay: calc(var(--step, 0) * 0.34s + 0.12s);
+  }
+
+  /* The marker, lit as the line reaches it and then settling back. Only the
+     border and its glow move, so the number inside never changes contrast. */
+  .chain-building [data-node] {
+    animation: chain-node 0.6s ease-out backwards;
+    animation-delay: calc(var(--step, 0) * 0.34s + 0.3s);
+  }
+}
+
+@keyframes chain-rail {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes chain-node {
+  0% {
+    border-color: rgb(var(--edge-strong));
+    box-shadow: none;
+  }
+  35% {
+    border-color: rgb(var(--astra));
+    box-shadow: 0 0 0 3px rgb(var(--astra) / 0.18);
+  }
+  100% {
+    border-color: rgb(var(--edge-strong));
+    box-shadow: none;
+  }
+}
