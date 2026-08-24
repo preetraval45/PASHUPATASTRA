@@ -413,7 +413,9 @@ export interface IntelGroup {
   window_hours: number;
   first_at: string;
   last_at: string;
-  active: boolean;
+  /** `null` when the publisher does not report liveness at all — a ransomware
+   *  claim is neither still up nor gone. Only `false` means gone offline. */
+  active: boolean | null;
   history: IntelReport[];
 }
 

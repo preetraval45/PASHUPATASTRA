@@ -1,0 +1,74 @@
+{
+  "1886324": [
+    {
+      "ioc_value": "z3u99l6p.en-us-en-nervealive.com",
+      "ioc_type": "domain",
+      "threat_type": "payload_delivery",
+      "malware": "js.clearfake",
+      "malware_alias": null,
+      "malware_printable": "ClearFake",
+      "first_seen_utc": "2026-08-24 15:20:17",
+      "last_seen_utc": null,
+      "confidence_level": 100,
+      "is_compromised": false,
+      "reference": null,
+      "tags": "ClearFake,mac-0x68dc,macos",
+      "anonymous": 1,
+      "reporter": "anonymous"
+    }
+  ],
+  "1886307": [
+    {
+      "ioc_value": "ciliwaja.workers.dev",
+      "ioc_type": "domain",
+      "threat_type": "botnet_cc",
+      "malware": "php.shin_webshell",
+      "malware_alias": null,
+      "malware_printable": "php.shin_webshell",
+      "first_seen_utc": "2026-08-24 15:20:07",
+      "last_seen_utc": null,
+      "confidence_level": 50,
+      "is_compromised": true,
+      "reference": null,
+      "tags": "Cloudflare,GIF,PHP,webshell,WordPress,workers.dev,wp-admin",
+      "anonymous": 0,
+      "reporter": "xscon"
+    }
+  ],
+  "1886308": [
+    {
+      "ioc_value": "zavyvolu.workers.dev",
+      "ioc_type": "domain",
+      "threat_type": "botnet_cc",
+      "malware": "php.shin_webshell",
+      "malware_alias": null,
+      "malware_printable": "php.shin_webshell",
+      "first_seen_utc": "2026-08-24 15:20:06",
+      "last_seen_utc": null,
+      "confidence_level": 50,
+      "is_compromised": true,
+      "reference": null,
+      "tags": "Cloudflare,GIF,PHP,webshell,WordPress,workers.dev,wp-admin",
+      "anonymous": 0,
+      "reporter": "xscon"
+    }
+  ],
+  "1886309": [
+    {
+      "ioc_value": "pygufi.workers.dev",
+      "ioc_type": "domain",
+      "threat_type": "botnet_cc",
+      "malware": "php.shin_webshell",
+      "malware_alias": null,
+      "malware_printable": "php.shin_webshell",
+      "first_seen_utc": "2026-08-24 15:20:06",
+      "last_seen_utc": null,
+      "confidence_level": 50,
+      "is_compromised": true,
+      "reference": null,
+      "tags": "Cloudflare,GIF,PHP,webshell,WordPress,workers.dev,wp-admin",
+      "anonymous": 0,
+      "reporter": "xscon"
+    }
+  ]
+}

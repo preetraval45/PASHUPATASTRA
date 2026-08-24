@@ -521,7 +521,7 @@ def intel(limit: int = 50, source: str | None = None) -> dict[str, object]:
     from "CISA has observed this being exploited", and by the time both are
     rendered as cards they look identical without it.
     """
-    from ..feeds.sources import FEEDS
+    from ..feeds.ingest import FEEDS
 
     known = sorted(FEEDS)
     sources = [source] if source else known
@@ -557,7 +557,7 @@ def intel_status() -> dict[str, object]:
     is the difference, so it is published rather than kept for debugging.
     """
     from ..backend import durable
-    from ..feeds.sources import FEEDS
+    from ..feeds.ingest import FEEDS
 
     backend = durable()
     cursors = {}

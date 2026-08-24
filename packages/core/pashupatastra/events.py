@@ -103,6 +103,21 @@ class EntityKind(StrEnum):
     the two must not be conflated: a catalogue entry is not a finding.
     """
 
+    ORGANISATION = "organisation"
+    """A named third party an attack was reported against — the victim in
+    somebody else's incident.
+
+    Deliberately not `ASSET`, which means a resource *this* estate protects.
+    A ransomware group's leak-site post names a company we do not run, cannot
+    observe and cannot act on, and filing it as an asset would put a stranger's
+    business on our topology map and let blast radius traverse into it.
+
+    The claim is also the attacker's. A leak-site listing is a criminal's
+    assertion that they breached someone, published to pressure a payment —
+    some are inflated and a few are fabricated. It is `reported`, never
+    `confirmed`, unless the victim or a regulator has said so.
+    """
+
     INDICATOR = "indicator"
     """An observable another party has attributed to malicious activity — a URL,
     a hash, an address. Keyed by kind and value.

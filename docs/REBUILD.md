@@ -2145,3 +2145,150 @@ likely to creep in: no multi-tenant SaaS, no billing, no auth beyond what
 exists, no fine-tuning or MLOps, no graph database, no SIEM/EDR integrations,
 and no describing anything as "autonomous" unless an action actually executed
 without a human approving it.
+
+---
+
+## Phase R — real attacks, not scripted ones
+
+**Owner decision, 24 August 2026.** *"i want real time incident and real time
+help in cyber space not fake data"*, then *"not my code stuff i want real stuff
+like the world cyber attacks and incidents"*. The three scripted scenarios go.
+Everything the site presents as an incident becomes something that actually
+happened.
+
+This supersedes the parts of Phases 1–5 that assume a scripted corpus. It does
+not supersede the engines: Dharma, the action registry, the audit ledger and the
+verification loop are unchanged and are the reason this is worth doing at all.
+
+### The distinction the whole phase rests on
+
+Real data arrives in two kinds, and conflating them would reintroduce exactly
+the fabrication this phase exists to remove.
+
+**Reported attacks** — ransomware.live victim disclosures, Feodo Tracker's live
+C2 servers, ThreatFox IOCs, HIBP breach records, CISA KEV. Real, dated, sourced,
+free, and already fetching. What they carry is *that it happened and to whom*.
+What they carry nothing about is *how*.
+
+So a reported attack gets **no causal chain and no action plan**. We have no
+telemetry for it, and inventing three plausible steps and a `isolate_host`
+proposal for somebody else's breach would be the same failure as an invented
+metric, dressed as analysis. `Hypothesis.evidence` has `min_length=1` for this
+reason and the schema should be left to enforce it.
+
+A group's documented tradecraft may be shown, but as a statement about *the
+group* and never about *this intrusion* — "Qilin's published tradecraft includes
+T1486" is a sourced claim; "Qilin encrypted this victim's files via T1486" is a
+guess with a technique id stapled to it.
+
+**Observed attacks** — a honeypot on infrastructure we own. Real attackers, real
+credentials tried, real commands run, and telemetry we actually hold. This is
+the only source that legitimately supports the full loop: observation →
+hypothesis with evidence → causal chain → plan → Dharma → execute → verify.
+
+The loop is the product. Reported attacks give it real context; observed attacks
+give it real work.
+
+### Sequencing, and why the deletion comes last
+
+Deleting the scripted incidents first would leave `/incidents`, `/overview`,
+`/blue-team` and `/actions` empty until the honeypot lands. The scripted
+scenarios are removed in **R92**, once real ones exist to replace them — not
+before.
+
+- [x] **R88 — Connectors for the real feeds.** Needs: **R23**.
+  `ransomware.live` (recent victims), Feodo Tracker (live C2), ThreatFox (recent
+  IOCs), HIBP (disclosed breaches). All four verified reachable with no API key
+  on 24 August 2026. In `packages/connectors/drishti/` beside the existing
+  feeds, each returning schema-validated records with the publisher's own
+  timestamps and a link back to the source record.
+  Rate limits and courtesy: cached, polled on the existing hourly schedule, and
+  a `User-Agent` that identifies this project — the URLhaus work already proved
+  an anonymous urllib request gets a Cloudflare 1010.
+  **Done when:** each connector is tested against a committed sample of the real
+  response, a malformed record is dropped rather than crashing the poll, and no
+  connector invents a field the source did not send.
+  Done. `app/feeds/attacks.py`, 26 tests against samples captured from the live
+  endpoints and committed under `tests/samples/` — real shapes, including the
+  awkward parts a tidy fixture would have omitted: ransomware.live sends `"N/A"`
+  for a missing description, Feodo sends `first_seen_utc: null` on most rows,
+  and HIBP's `BreachDate` is routinely years before its `AddedDate`.
+  A new `EntityKind.ORGANISATION` was needed. A victim is not an `ASSET` —
+  that kind means a resource *this* estate protects, and filing a stranger's
+  company there would put it on the topology map and let blast radius traverse
+  into it.
+  `claim_url` on a ransomware.live record is a **Tor leak site serving stolen
+  data**. Nothing links to it; provenance points at ransomware.live's clearnet
+  page for the group, and a test asserts no `.onion` string survives anywhere in
+  a serialised event.
+  Three bugs found by deploying rather than by reading:
+  (1) `/intel` imported `FEEDS` from `sources.py` instead of the merged registry,
+  so all four feeds polled fine, wrote 44 real events, and were filtered out of
+  the only endpoint that reads them — every piece worked and the site showed
+  nothing. A test now asserts polled and served are the *same set*, not that one
+  contains the other.
+  (2) HIBP breaches were dated to `BreachDate`, sorting every one of them off the
+  end of a recency timeline; the event being recorded is the **disclosure**, and
+  the breach date is a label.
+  (3) **R56's active/offline split assumed every feed reports liveness.** It did
+  not: `active` was `status == "online"`, so ransomware claims and disclosed
+  breaches — which are neither up nor gone — evaluated false and were collapsed
+  into a panel headed "Gone offline". Four of the six feeds were live on the site
+  and unreachable. `active` is now three-state and absent no longer means dead.
+  HIBP had made it worse by using `status` to mean *verified*; that label is now
+  `confirmation`.
+  Live on the deployed site: `krybit claims a breach of resi.com`, `qilin claims
+  a breach of A&E + SMA Design`, `coinbasecartel claims a breach of Westwing
+  Group SE`, and QakBot and Emotet controllers answering right now.
+
+- [ ] **R89 — Reported attacks, modelled honestly.** Needs: **R88**.
+  A real disclosure becomes a first-class thing on the site carrying victim,
+  group, date, sector, country and the source link — and *visibly carrying no
+  causal chain*, because none is known. The absence is the honest part and
+  should read as deliberate rather than as missing data.
+  **Done when:** no reported attack has a hypothesis, causal chain or plan
+  attached; every field on screen traces to a field the publisher sent; and a
+  test asserts that constructing one from a feed record produces no invented
+  technique attribution.
+
+- [ ] **R90 — The honeypot.** Needs: **R88**.
+  An SSH/telnet honeypot on the Oracle Always Free VM (`scripts/oracle-ollama.sh`
+  already provisions the box). Real attackers arrive within minutes of exposure.
+  Isolated from everything else, no real credentials, no path to any other
+  system, and it holds nothing worth stealing.
+  **Done when:** the box is up, events reach Drishti, and the first real
+  intrusion attempt is visible on the site with its source IP, the credentials
+  tried and the commands run.
+
+- [ ] **R91 — Real incidents, full loop.** Needs: **R90**.
+  Honeypot telemetry correlated into incidents the way the corpus scenarios were
+  — hypotheses citing real events, a causal chain built from what was actually
+  observed, a plan scored by Dharma. This is the first time every claim on the
+  page is about something that happened to infrastructure we own.
+  **Done when:** an incident exists whose every citation resolves to a real
+  observed event, and Dharma's verdict on its plan is recorded in the audit
+  ledger.
+
+- [ ] **R92 — Delete the scripted scenarios.** Needs: **R89, R91**.
+  Remove `seed.py`'s corpus replay and the three `INC-2026-090x` incidents.
+  Consequences to handle rather than discover: **Blue team mode** scores against
+  a known answer and has no known answer for a real incident — it either moves
+  to a labelled training corpus kept for that one purpose or it goes; the
+  **landing page** before/after walkthrough is written around `INC-2026-0903`;
+  and `/actions` currently derives its relevance from the scripted plans.
+  **Done when:** no incident on the site is scripted, nothing links to a deleted
+  id, and the landing page describes the real thing.
+
+- [ ] **R93 — A read must not write to the audit ledger.** Needs: nothing.
+  Found while answering a question about the audit trail on 24 August 2026:
+  rendering `/incidents/[id]` POSTs to `/policy/evaluate`, which appends an
+  append-only audit record. The page is `force-dynamic`, so **every page view
+  writes one**. 143 of 299 records were the identical
+  `revoke_session: risk 31 → approval` line — 48% of the ledger was page views.
+  Computing a verdict to *display* is not the same act as computing one to
+  *authorize*, and rule 6's "audit everything" means decisions, approvals and
+  executions, not renders. A non-recording preview serves the page; the
+  recording call stays for actual authorization.
+  **Done when:** loading an incident page any number of times adds no audit
+  records, authorizing an action still records exactly one, and a test asserts
+  both by counting the ledger before and after.

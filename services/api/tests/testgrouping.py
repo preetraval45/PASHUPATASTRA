@@ -182,3 +182,33 @@ def test_the_group_carries_the_newest_reports_details() -> None:
 
 def test_an_empty_feed_groups_to_nothing() -> None:
     assert group([]) == []
+
+
+def test_a_feed_that_reports_no_liveness_is_not_filed_as_offline() -> None:
+    """Regression, and it reached production.
+
+    `active` was `status == "online"`, so every source that does not report
+    liveness — a ransomware leak-site claim, a disclosed breach — evaluated
+    false and was collapsed into a panel headed "Gone offline". Four of the six
+    feeds were on the site and unreachable.
+
+    Absent is not offline. It is the publisher declining to make the claim.
+    """
+    silent = [
+        {
+            "id": "claim-1",
+            "entity_key": "organisation:victim:example ltd",
+            "occurred_at": BASE.isoformat(),
+            "source": "ransomware-live",
+            "severity": "critical",
+            "provenance": {},
+            "labels": {"verification": "reported", "group": "qilin"},
+        }
+    ]
+    assert group(silent)[0]["active"] is None
+
+
+def test_only_an_explicit_offline_is_offline() -> None:
+    rows = {r["entity_key"]: r for r in group(FIXTURE)}
+    assert rows["indicator:url:1.1.1.1"]["active"] is True
+    assert rows["indicator:url:2.2.2.2"]["active"] is False

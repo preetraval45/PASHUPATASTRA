@@ -58,6 +58,24 @@ const SOURCE: Record<string, { name: string; about: string }> = {
     name: "URLhaus",
     about: "URLs submitted to abuse.ch as distributing malware",
   },
+  "ransomware-live": {
+    name: "Leak sites",
+    about:
+      "Victims a ransomware group has publicly claimed, tracked by ransomware.live. The claim is the attacker's — most victims never confirm it.",
+  },
+  "feodo-tracker": {
+    name: "Feodo Tracker",
+    about:
+      "Botnet command-and-control servers abuse.ch observes answering right now — Emotet, QakBot, Dridex",
+  },
+  threatfox: {
+    name: "ThreatFox",
+    about: "Indicators abuse.ch ties to a named malware family",
+  },
+  hibp: {
+    name: "HIBP",
+    about: "Data breaches disclosed and loaded into Have I Been Pwned",
+  },
 };
 
 export function sourceName(source: string): string {
@@ -228,6 +246,31 @@ function Facts({ labels }: { labels: Record<string, string> }) {
   }
   if (labels.status) {
     facts.push({ key: "url", value: labels.status, warn: labels.status === "online" });
+  }
+  if (labels.group) {
+    facts.push({ key: "claimed by", value: labels.group, warn: true });
+  }
+  if (labels.sector) {
+    facts.push({ key: "sector", value: labels.sector });
+  }
+  if (labels.country) {
+    facts.push({ key: "country", value: labels.country });
+  }
+  if (labels.malware) {
+    facts.push({ key: "malware", value: labels.malware, warn: true });
+  }
+  if (labels.accounts && labels.accounts !== "0") {
+    facts.push({
+      key: "accounts",
+      value: Number(labels.accounts).toLocaleString(),
+      warn: Number(labels.accounts) >= 1_000_000,
+    });
+  }
+  if (labels.exposed) {
+    facts.push({ key: "exposed", value: labels.exposed });
+  }
+  if (labels.breach_date) {
+    facts.push({ key: "breach occurred", value: labels.breach_date });
   }
   if (labels.tags) {
     facts.push({ key: "tags", value: labels.tags });

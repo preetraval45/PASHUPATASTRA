@@ -13,7 +13,15 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const LIMIT = 60;
+const LIMIT = 200;
+/* The API's ceiling, and it has to be the ceiling rather than a comfortable
+   page length.
+
+   URLhaus publishes far more than the other five feeds combined — at 60 it was
+   107 of the newest reports, which buried every ransomware claim and every
+   disclosed breach below the fold of the fetch itself. The rarer feeds are the
+   ones worth reading, and a limit tuned to page length silently decided they
+   were not there. Grouping already collapses 200 reports to ~126 rows. */
 
 export default async function ObservatoryPage({
   searchParams,
@@ -55,8 +63,11 @@ export default async function ObservatoryPage({
   // The timeline stays on the live half. A day-by-day reading of infrastructure
   // that has already gone offline is a chronology of things that no longer
   // matter; one collapsed section says the same and takes a line.
-  const active = intel.groups.filter((entry) => entry.active);
-  const offline = intel.groups.filter((entry) => !entry.active);
+  // `active === false` only. `null` means the publisher does not report
+  // liveness — a ransomware claim is neither up nor gone — and treating absent
+  // as offline swept four of the six feeds into the collapsed panel.
+  const offline = intel.groups.filter((entry) => entry.active === false);
+  const active = intel.groups.filter((entry) => entry.active !== false);
   const days = groupByDay(active);
 
   return (

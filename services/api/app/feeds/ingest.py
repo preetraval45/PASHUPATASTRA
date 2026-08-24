@@ -14,7 +14,14 @@ from __future__ import annotations
 
 import logging
 
-from .sources import FEEDS, FeedUnavailable
+from .attacks import ATTACK_FEEDS
+from .sources import FEEDS as INDICATOR_FEEDS, FeedUnavailable
+
+# Indicators and attacks, polled together but kept separate above so the
+# distinction survives: `sources.py` publishes what to watch for, `attacks.py`
+# publishes what happened to somebody. Merged here rather than in `sources.py`
+# because `attacks.py` imports from it, and the reverse import would be a cycle.
+FEEDS = {**INDICATOR_FEEDS, **ATTACK_FEEDS}
 
 log = logging.getLogger(__name__)
 

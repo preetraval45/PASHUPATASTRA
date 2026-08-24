@@ -105,11 +105,19 @@ def group(entries: Iterable[dict], window: timedelta = GROUPING_WINDOW) -> list[
                 "window_hours": int(window.total_seconds() // 3600),
                 "first_at": oldest.get("occurred_at"),
                 "last_at": newest.get("occurred_at"),
-                # The *latest* report's status, not "any report said online".
-                # An indicator whose most recent sighting says offline has gone
-                # offline; carrying the optimistic reading forward would leave
-                # dead infrastructure on the board as a live threat.
-                "active": labels.get("status") == "online",
+                # Three states, not two, and the third is the one that
+                # matters: **most feeds do not report liveness at all**.
+                #
+                # This read `status == "online"` and everything else was
+                # offline. A ransomware group's claim and a disclosed breach
+                # have no liveness — nothing about them is "still up" or "gone"
+                # — so both were filed as dead infrastructure and collapsed into
+                # a panel titled "Gone offline". The feeds the owner asked for
+                # were on the site and invisible.
+                #
+                # Only an explicit `offline` is offline. Absent means the
+                # publisher never said, which is not the same claim.
+                "active": None if not labels.get("status") else labels.get("status") != "offline",
                 "history": [_report(row) for row in rows],
             }
         )
