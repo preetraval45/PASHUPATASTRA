@@ -60,8 +60,14 @@ def main() -> int:
         page = browser.new_page(viewport={"width": 1280, "height": 900})
         page.goto(url, wait_until="networkidle")
 
+        # Waited for, not sampled. `networkidle` says the network went quiet,
+        # not that the page finished rendering — a single `count()` immediately
+        # after it reported the panel missing from a page that plainly had one,
+        # and would have failed the whole run on a slow deploy.
         panel = page.get_by_role("button", name="Ask about this incident")
-        if not panel.count():
+        try:
+            panel.wait_for(state="visible", timeout=20_000)
+        except Exception:
             print("FAIL: the chat panel is not on the incident page")
             return 1
         panel.click()

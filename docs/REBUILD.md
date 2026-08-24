@@ -1228,7 +1228,58 @@ Needs **R23**. Additive, and benefits from the patterns above being solid.
   — while the streak breaks below `sound`, because a streak that survives a
   wrong diagnosis measures persistence rather than competence.
 
-- [ ] **R29 — Final deploy and pass.** Needs: **R25, R26, R28**.
+- [x] **R29 — Final deploy and pass.** Needs: **R25, R26, R28**.
+  Deployed and reviewed. **Phase 4 is closed — R24–R29 all done.** What remains
+  is Phase 5 (the visitor's path, R50–R55), the SaaS phases (S1–S16), and Phase
+  A, the agent that watches a real machine.
+
+  *Evidence, against `https://pashupatastra.vercel.app`: 27/27 layout and
+  reachability checks at 375, 768 and 1280; WCAG AA in both themes; all four
+  chat starters grounded with every citation resolving; all three blue team
+  scenarios playable, with exactly one explanation scoring per scenario and the
+  investigation marks moving when evidence is opened; 916 tests; ruff clean;
+  the deployed API and the committed OpenAPI spec agree on all 27 routes.*
+
+  **A pass means trying to break it, not re-running green checks.** What that
+  found:
+
+  - **The committed `openapi.json` was eight routes stale** — the entire chat
+    and game surface. Nothing noticed because nothing was looking. A stale spec
+    is worse than none: it describes a system that no longer exists and the
+    reader cannot tell. Regenerated, and `testapi.py` now compares the committed
+    paths against the live app. Confirmed the test fails on the old spec before
+    trusting that it passes on the new one.
+  - **The not-found page named a console that no longer exists** — "Overview,
+    Incidents, Infrastructure, Actions, and Audit", written before Ask,
+    Observatory and Blue team. It no longer lists the sections at all; the
+    navigation above it is already that list and cannot drift from itself.
+  - **A comment in `timeline.tsx` still called the audit trail "in-memory and
+    per-process today"**, which stopped being true at R18.
+  - **`verifychat.py` sampled once after `networkidle`** and reported the chat
+    panel missing from a page that plainly had one. It waits for the panel now.
+    `networkidle` means the network went quiet, not that the page finished.
+
+  Probed and correct: every error path returns the right status (404 for unknown
+  feeds, scenarios, incidents, events and entities; 400 for a malformed player
+  token); the game refuses entities from other incidents, entities that do not
+  exist, intelligence keys and path traversal alike; the briefing leaks none of
+  confidence, contradictions, chain, technique or plan; both themes render
+  without overflow at 375px on every page added this phase; the sitemap covers
+  the new routes and the hourly feed schedule is still `ENABLED`.
+
+  **One characteristic, stated rather than left to be discovered.** The console
+  publishes the full incident — chain, confidence, plan — at
+  `/incidents/{id}`, and the blue team scenarios *are* those incidents. A player
+  who wants the answer can read it there. That is deliberate: hiding them would
+  break the console, which is the product, and this is a teaching exercise
+  rather than an examination. What R27 protects is narrower and worth having —
+  the answer is not in the page you are playing on.
+
+  **Also known:** `notFound()` returns HTTP 200 on these routes rather than 404.
+  The rendered page is correct and a visitor sees the right thing; the status is
+  wrong because the layout streams before the page resolves. It affects
+  crawlers, not readers, and the sitemap lists only real ids. Left for a later
+  task rather than restructured at the close of a phase.
 
 ---
 

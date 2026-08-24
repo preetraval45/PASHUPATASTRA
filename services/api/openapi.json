@@ -50,6 +50,11 @@
             "title": "Irreversible",
             "type": "boolean"
           },
+          "read_only": {
+            "default": false,
+            "title": "Read Only",
+            "type": "boolean"
+          },
           "rollback_action_id": {
             "anyOf": [
               {
@@ -69,6 +74,43 @@
           "expected_post_state"
         ],
         "title": "ActionSpec",
+        "type": "object"
+      },
+      "AnswerRequest": {
+        "properties": {
+          "action_id": {
+            "title": "Action Id",
+            "type": "string"
+          },
+          "diagnosis_id": {
+            "title": "Diagnosis Id",
+            "type": "string"
+          },
+          "investigated": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Investigated",
+            "type": "array"
+          },
+          "player_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player Id"
+          }
+        },
+        "required": [
+          "diagnosis_id",
+          "action_id"
+        ],
+        "title": "AnswerRequest",
         "type": "object"
       },
       "ApproveRequest": {
@@ -134,7 +176,8 @@
           "execution_attempt",
           "execution_result",
           "verification",
-          "escalation"
+          "escalation",
+          "agent_turn"
         ],
         "title": "AuditKind",
         "type": "string"
@@ -218,6 +261,24 @@
         "title": "CausalLink",
         "type": "object"
       },
+      "ChatRequest": {
+        "properties": {
+          "incident_id": {
+            "title": "Incident Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "incident_id",
+          "message"
+        ],
+        "title": "ChatRequest",
+        "type": "object"
+      },
       "DenyRequest": {
         "properties": {
           "approver": {
@@ -270,7 +331,9 @@
           "account",
           "network_flow",
           "asset",
-          "process"
+          "process",
+          "vulnerability",
+          "indicator"
         ],
         "title": "EntityKind",
         "type": "string"
@@ -740,6 +803,19 @@
         ],
         "title": "IncidentState",
         "type": "string"
+      },
+      "InvestigateRequest": {
+        "properties": {
+          "entity_key": {
+            "title": "Entity Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity_key"
+        ],
+        "title": "InvestigateRequest",
+        "type": "object"
       },
       "PlanStep": {
         "properties": {
@@ -1409,6 +1485,47 @@
         "summary": "Remediate Action"
       }
     },
+    "/api/v1/agent/chat": {
+      "post": {
+        "description": "Ask Sati about one incident.\n\nScoped to an incident on purpose. A general \"ask the console anything\" box\non a public site is an interface for enumerating the estate, and there is no\nquestion worth answering here that is not about something already on screen.\n\nThe route can read and nothing else. It holds no execute path, and the tools\nit offers are derived from `ActionSpec.read_only` rather than listed by hand\n\u2014 see `app/agent/tools.py`.",
+        "operationId": "agent_chat_api_v1_agent_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Agent Chat Api V1 Agent Chat Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Agent Chat"
+      }
+    },
     "/api/v1/audit": {
       "get": {
         "operationId": "audit_api_v1_audit_get",
@@ -1563,6 +1680,216 @@
         "summary": "Event"
       }
     },
+    "/api/v1/game/progress/{player_id}": {
+      "get": {
+        "description": "One player's own record, by the token their browser holds.\n\nThere is no route that lists players, and that absence is the feature: an\nenumerable set of scores is a leaderboard, and a leaderboard is what this\nwas asked not to be. A token can read only itself, and nothing joins a token\nto a person.",
+        "operationId": "game_progress_api_v1_game_progress__player_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "player_id",
+            "required": true,
+            "schema": {
+              "title": "Player Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Game Progress Api V1 Game Progress  Player Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Game Progress"
+      }
+    },
+    "/api/v1/game/scenarios": {
+      "get": {
+        "description": "What can be played, without saying what any of them are.\n\nSeverity and the opening alert only. A list that summarised each incident\nwould answer the question the exercise asks before it is opened.",
+        "operationId": "game_scenarios_api_v1_game_scenarios_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Game Scenarios Api V1 Game Scenarios Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Game Scenarios"
+      }
+    },
+    "/api/v1/game/{incident_id}/answer": {
+      "post": {
+        "description": "Mark the attempt and reveal the chain.\n\nThe only route that returns the answer, and it returns it *after* an\nattempt \u2014 which is what keeps the briefing honest.",
+        "operationId": "game_answer_api_v1_game__incident_id__answer_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Game Answer Api V1 Game  Incident Id  Answer Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Game Answer"
+      }
+    },
+    "/api/v1/game/{incident_id}/briefing": {
+      "get": {
+        "operationId": "game_briefing_api_v1_game__incident_id__briefing_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Game Briefing Api V1 Game  Incident Id  Briefing Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Game Briefing"
+      }
+    },
+    "/api/v1/game/{incident_id}/investigate": {
+      "post": {
+        "operationId": "game_investigate_api_v1_game__incident_id__investigate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvestigateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Game Investigate Api V1 Game  Incident Id  Investigate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Game Investigate"
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_api_v1_health_get",
@@ -1685,6 +2012,86 @@
           }
         },
         "summary": "Ingest Otlp"
+      }
+    },
+    "/api/v1/intel": {
+      "get": {
+        "description": "Recent threat intelligence, as stored.\n\nServed from our own store, never proxied. A route that fetched from CISA or\nabuse.ch on request would tell those services who is reading what, and would\nfail whenever they do; the schedule already put this on disk.\n\nEntries keep their `verification` label. A reader deciding what to do with\n\"somebody submitted this URL an hour ago\" needs it to be distinguishable\nfrom \"CISA has observed this being exploited\", and by the time both are\nrendered as cards they look identical without it.",
+        "operationId": "intel_api_v1_intel_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Intel Api V1 Intel Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Intel"
+      }
+    },
+    "/api/v1/intel/status": {
+      "get": {
+        "description": "How current each feed is, and when it last moved.\n\nA feed that has quietly stopped looks exactly like a quiet feed. The cursor\nis the difference, so it is published rather than kept for debugging.",
+        "operationId": "intel_status_api_v1_intel_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Intel Status Api V1 Intel Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Intel Status"
       }
     },
     "/api/v1/policy/approvals/fatigue": {

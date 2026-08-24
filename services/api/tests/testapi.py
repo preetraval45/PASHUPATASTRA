@@ -211,3 +211,32 @@ def test_the_overlay_never_downgrades_live_telemetry() -> None:
     snapshot = {"nodes": [{"key": key, "severity": "critical"}], "edges": []}
     _overlay_open_incidents(snapshot)
     assert snapshot["nodes"][0]["severity"] == "critical"
+
+
+def test_the_committed_openapi_spec_is_current() -> None:
+    """The spec is a published artefact, and it drifted.
+
+    Phase 4 added eight routes — the whole chat and game surface — without
+    regenerating it, and nothing noticed because nothing was looking. A stale
+    spec is worse than none: it is a contract that describes a system that no
+    longer exists, and the reader has no way to tell.
+
+    Compared on paths rather than byte-for-byte, so that a FastAPI version bump
+    reformatting a description does not fail the suite over nothing.
+    """
+    import json
+    from pathlib import Path
+
+    from app.main import app
+
+    committed = Path(__file__).resolve().parents[1] / "openapi.json"
+    if not committed.exists():
+        pytest.skip("no committed spec in this checkout")
+
+    stored = set(json.loads(committed.read_text(encoding="utf-8"))["paths"])
+    live = set(app.openapi()["paths"])
+
+    missing = sorted(live - stored)
+    extra = sorted(stored - live)
+    assert not missing, f"regenerate openapi.json — missing {missing}"
+    assert not extra, f"regenerate openapi.json — removed routes still listed: {extra}"

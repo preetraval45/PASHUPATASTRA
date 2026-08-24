@@ -114,9 +114,10 @@ const STAGE_STATES: Record<StageKey, IncidentState[]> = {
  * A stage counts as having happened on any of three kinds of evidence: an audit
  * record, a state transition through it, or the artefact it produces.
  *
- * Audit records alone are not enough. The trail is a separate store that can be
- * empty — in-memory and per-process today — while the incident's own transition
- * history still shows the stage ran. Judging on records alone marked Detection
+ * Audit records alone are not enough. The trail is a separate store and can be
+ * empty for reasons that have nothing to do with the incident — it was durable
+ * from R18, and before that it was per-process — while the incident's own
+ * transition history still shows the stage ran. Judging on records alone marked Detection
  * "never ran" on an incident that had plainly been detected, which is worse than
  * useless here: a component whose job is flagging skipped stages loses all its
  * signal the moment it cries wolf.
