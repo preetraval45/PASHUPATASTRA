@@ -1,318 +1,267 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Sparkline, StatusBar } from "@/components/charts";
+import { getIncidents } from "@/lib/api";
 
-import {
-  Ago,
-  Badge,
-  Empty,
-  Ident,
-  Offline,
-  Page,
-  Panel,
-  Stat,
-  statusForSeverity,
-} from "@/components/ui";
-import { getAudit, getHealth, getIncidents, getTopology, getTopologyCounts, type Incident } from "@/lib/api";
+/**
+ * The page a stranger sees.
+ *
+ * `/` was the operator's dashboard — severity counts, a posture bar, an audit
+ * ledger — shown to people with no idea what any of it meant. A console is the
+ * right shape for someone who already bought the product and the wrong shape
+ * for everyone who has not.
+ *
+ * Four things and then it stops: what the loop is, what an incident looks like
+ * before and after, what "bounded autonomy" actually constrains, and a door
+ * into the live thing. **No pricing** — this has no accounts and no billing,
+ * and a price invites a question the site cannot answer.
+ *
+ * Every number here comes from the scenarios the demo actually serves, and the
+ * page links to the incident it is describing. Nothing on this page is a
+ * benchmark: `ROADMAP.md` records that MTTR is not computable in this
+ * deployment, so a measured time-saving claim would be an invention, and an
+ * invented number on the front page would undo the thing the rest of the
+ * product spends its effort proving.
+ */
+
+export const metadata: Metadata = {
+  title: "Pashupatastra",
+  description:
+    "A security console that assembles scattered signals into one incident with a causal chain, scores the response, and needs a human before anything consequential runs.",
+};
 
 export const dynamic = "force-dynamic";
 
-export default async function OverviewPage() {
-  const [health, incidents, topology, audit, graph] = await Promise.all([
-    getHealth(),
-    getIncidents(),
-    getTopologyCounts(),
-    // Twelve buckets need more than eight records to be a line rather than a
-    // dot, so the overview asks for a window rather than a preview.
-    getAudit(120),
-    // The counts endpoint returns two numbers; the posture bar needs the nodes
-    // themselves to count severities. Both are small.
-    getTopology(),
-  ]);
+const LOOP = ["Observe", "Understand", "Predict", "Decide", "Act", "Verify", "Learn"];
 
-  if (!health) return <Offline />;
+/** The scattered signals of one real scenario, in the order they arrive. Taken
+ *  from INC-2026-0903 — each is individually ignorable, which is the point. */
+const SCATTERED = [
+  ["09:12", "a host talks to an address nothing has used before"],
+  ["09:14", "the connection repeats every 60 seconds, ±2"],
+  ["10:31", "SMB opens to two hosts it has never contacted"],
+  ["10:42", "a scheduled task appears on one of them"],
+];
 
-  const open = (incidents ?? []).filter((i) => i.state !== "resolved");
-  const awaiting = open.filter((i) => i.state === "awaiting_approval");
-  const users = open.reduce((n, i) => n + i.impact.estimated_users_affected, 0);
-  // Both series below are counted from records the API returned. Nothing is
-  // interpolated and no empty bucket is filled in — a chart that invents a
-  // number, on a page whose argument is that nothing here is invented, would
-  // undo the argument.
-  const activity = bucketByHour(audit ?? [], 12);
-  const posture = countSeverity(graph?.nodes ?? []);
+export default async function LandingPage() {
+  const incidents = await getIncidents();
 
-  const worst = open.reduce<Incident | null>(
-    (acc, i) => (acc === null || rank(i) > rank(acc) ? i : acc),
-    null,
+  // The incident this page describes, not merely the first one.
+  //
+  // "Open it →" sat under a panel describing the beaconing scenario and linked
+  // to whichever incident happened to be first — credential stuffing. The
+  // sentence and the destination disagreed, on the one page whose entire job is
+  // that the two match.
+  //
+  // Matched on the hypothesis rather than the id, because an id is a fixture
+  // detail and would go stale silently the day the scenarios are renumbered;
+  // this falls back to the list instead of pointing somewhere wrong.
+  const described = incidents?.find((incident) =>
+    incident.hypotheses[0]?.statement.toLowerCase().includes("beaconing"),
   );
+  const demo = described
+    ? `/incidents/${encodeURIComponent(described.id)}`
+    : "/incidents";
 
   return (
-    <Page
-      title="Overview"
-      description="System state, open incidents, and the autonomy posture currently in force."
-    >
-      {/* The headline is a sentence, not a number. An operator arriving cold
-          needs the verdict first and the metrics second. */}
-      <section
-        className={`panel p-5 ${
-          worst ? "border-[rgb(var(--crit))]/30 bg-[rgb(var(--crit))]/5" : ""
-        }`}
-      >
-        <p className="text-lg">
-          {worst ? (
-            <>
-              <span className="text-[rgb(var(--crit))]">
-                {open.length} open incident{open.length === 1 ? "" : "s"}
+    <div className="space-y-16 pb-8">
+      {/* --- what it is ------------------------------------------------- */}
+      <section className="space-y-6">
+        <p className="label text-[rgb(var(--astra))]">
+          Observe. Reason. Act. Verify.
+        </p>
+        <h1 className="max-w-4xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
+          Four alerts in four tools are one intrusion.{" "}
+          <span className="text-[rgb(var(--muted))]">
+            This is the thing that says so.
+          </span>
+        </h1>
+        <p className="max-w-2xl text-base leading-relaxed text-[rgb(var(--muted))]">
+          Pashupatastra assembles scattered signals into a single incident with
+          a causal chain, maps each step to a known technique, and proposes a
+          response that is scored before anyone runs it. Every claim it makes
+          carries a link to the evidence it came from.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          <Link
+            href={demo}
+            className="focusable rounded-lg border border-[rgb(var(--astra))]/50 bg-[rgb(var(--astra))]/10 px-5 py-2.5 text-sm font-medium transition hover:bg-[rgb(var(--astra))]/20"
+          >
+            Open a real incident →
+          </Link>
+          <Link
+            href="/blue-team"
+            className="focusable rounded-lg border border-[rgb(var(--edge-strong))] px-5 py-2.5 text-sm transition hover:bg-[rgb(var(--raised))]"
+          >
+            Or work one yourself
+          </Link>
+        </div>
+
+        <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 pt-4 text-xs text-[rgb(var(--faint))]">
+          {LOOP.map((stage, index) => (
+            <li key={stage} className="flex items-center gap-2">
+              {index > 0 && <span aria-hidden="true">→</span>}
+              <span
+                className={
+                  index < 6 ? "text-[rgb(var(--muted))]" : "text-[rgb(var(--faint))]"
+                }
+              >
+                {stage}
               </span>
-              {awaiting.length > 0 && (
-                <>
-                  {" · "}
-                  <span className="text-[rgb(var(--warn))]">
-                    {awaiting.length} awaiting approval
-                  </span>
-                </>
-              )}
-            </>
-          ) : (
-            <span className="text-[rgb(var(--ok))]">No open incidents</span>
-          )}
-        </p>
-        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
-          {worst
-            ? worst.hypotheses[0]?.statement ?? "Diagnosis in progress."
-            : `Watching ${topology?.nodes ?? 0} entities and ${topology?.edges ?? 0} observed access paths.`}
-        </p>
+            </li>
+          ))}
+          <li className="w-full pt-1 sm:w-auto sm:pl-3">
+            Most tools stop after the second one.
+          </li>
+        </ol>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*:nth-child(1)]:rise [&>*:nth-child(2)]:rise [&>*:nth-child(2)]:rise-1 [&>*:nth-child(3)]:rise [&>*:nth-child(3)]:rise-2 [&>*:nth-child(4)]:rise [&>*:nth-child(4)]:rise-3">
-        <Stat
-          label="Open incidents"
-          value={open.length}
-          status={open.length ? "critical" : "ok"}
-          hint={awaiting.length ? `${awaiting.length} need a decision` : "none awaiting approval"}
-          chart={
-            <Sparkline
-              values={activity}
-              status={open.length ? "critical" : "ok"}
-              label="Audit records per hour, last 12 hours"
-            />
-          }
-        />
-        <Stat
-          label="Accounts affected"
-          value={users}
-          status={users ? "warning" : undefined}
-          hint="estimated, from blast radius"
-        />
-        <Stat
-          label="Entities watched"
-          value={topology?.nodes ?? 0}
-          hint={`${topology?.edges ?? 0} observed access paths`}
-        />
-        <Stat
-          label="Execution mode"
-          value={health.dry_run ? "Dry run" : "Live"}
-          status={health.dry_run ? undefined : "critical"}
-          hint={health.dry_run ? "nothing is executed" : "actions change real systems"}
-        />
-      </section>
+      {/* --- before and after -------------------------------------------- */}
+      <section className="space-y-5">
+        <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+          What an incident looks like, before and after
+        </h2>
 
-      {posture.some((s) => s.count > 0) && (
-        <Panel
-          title="Posture"
-          aside={<Link href="/infrastructure" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">the map →</Link>}
-        >
-          <StatusBar segments={posture} />
-        </Panel>
-      )}
-
-      {/* `[&>*]:min-w-0` because a grid item defaults to `min-width: auto`,
-          which refuses to shrink below its content's minimum contribution. One
-          long line in an incident summary therefore widened the panel to 834px
-          inside a 343px column and took the whole page sideways with it. */}
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] [&>*]:min-w-0">
-        <Panel
-          title="Open incidents"
-          aside={open.length > 0 && <Link href="/incidents" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">all incidents →</Link>}
-        >
-          {open.length === 0 ? (
-            <Empty art="quiet" title="Quiet." action={{ href: "/incidents", label: "Open a scenario →" }}>
-              Incidents appear here when Drishti correlates related detections. Quiet
-              means nothing was detected, which is not the same as nothing happening.
-            </Empty>
-          ) : (
-            <ul className="divide-y divide-[rgb(var(--edge))]">
-              {open.map((incident) => (
-                <li key={incident.id} className="py-4 first:pt-0 last:pb-0">
-                  {/* The incident, not the list. Every card here linked to
-                      `/incidents`, so clicking the one you were reading about
-                      took you to a page listing it again — the commonest path
-                      into the product, and it went one step sideways. */}
-                  <Link
-                    href={`/incidents/${encodeURIComponent(incident.id)}`}
-                    className="focusable block rounded"
-                  >
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Ident>{incident.id}</Ident>
-                      <Badge status={statusForSeverity(incident.severity)}>
-                        {incident.severity}
-                      </Badge>
-                      <span className="text-[11px] uppercase tracking-wide text-[rgb(var(--muted))]">
-                        {incident.state.replace(/_/g, " ")}
-                      </span>
-                      <span className="ml-auto text-xs text-[rgb(var(--faint))]">
-                        <Ago at={incident.opened_at} />
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm">
-                      {incident.hypotheses[0]?.statement ?? "Diagnosis in progress."}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[rgb(var(--muted))]">
-                      <span>
-                        confidence{" "}
-                        <span className="tnum text-[rgb(var(--ink))]">
-                          {Math.round((incident.hypotheses[0]?.confidence ?? 0) * 100)}%
-                        </span>
-                      </span>
-                      <span>
-                        users{" "}
-                        <span className="tnum text-[rgb(var(--ink))]">
-                          {incident.impact.estimated_users_affected.toLocaleString()}
-                        </span>
-                      </span>
-                      <span>
-                        blast radius{" "}
-                        <span className="tnum text-[rgb(var(--ink))]">
-                          {incident.impact.blast_radius_entities}
-                        </span>
-                      </span>
-                    </div>
-                  </Link>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="panel p-5">
+            <p className="label mb-3">Before — four separate alerts</p>
+            <ol className="space-y-2.5">
+              {SCATTERED.map(([at, what]) => (
+                <li key={at} className="flex gap-3 text-sm">
+                  <span className="mono shrink-0 text-[rgb(var(--faint))]">{at}</span>
+                  <span className="text-[rgb(var(--muted))]">{what}</span>
                 </li>
               ))}
+            </ol>
+            <p className="mt-4 border-t border-[rgb(var(--edge))] pt-3 text-xs text-[rgb(var(--faint))]">
+              Ninety minutes apart, in different tools. Each one is individually
+              ignorable, and each one was ignored.
+            </p>
+          </div>
+
+          <div className="panel p-5">
+            <p className="label mb-3">After — one incident</p>
+            <p className="text-sm leading-relaxed">
+              A workstation is beaconing to a command-and-control host and has
+              begun moving laterally: new SMB peers, then a scheduled task on
+              one of them.
+            </p>
+            <ul className="mt-4 space-y-1.5 text-xs text-[rgb(var(--muted))]">
+              <li>· three causal steps, each citing the signal it rests on</li>
+              <li>· mapped to T1071.001, T1021.002 and T1053.005</li>
+              <li>· blast radius over observed access, not guesswork</li>
+              <li>· a two-step plan, scored before anything runs</li>
             </ul>
-          )}
-        </Panel>
-
-        <div className="space-y-6">
-          <Panel title="Perception" aside={<Ago at={audit?.[0]?.at} />}>
-            <dl className="space-y-3 text-sm">
-              <Row label="Entities" value={topology?.nodes ?? 0} />
-              <Row label="Observed access paths" value={topology?.edges ?? 0} />
-              <Row label="Audit records" value={health.audit_records} />
-              {/* The backend names itself. This read
-                  `audit_storage === "postgres" ? "durable" : "in memory"`, so a
-                  DynamoDB deployment was reported to every visitor as losing its
-                  data on restart — while /health said `ok` two panels away.
-
-                  The same hardcoded "postgres" was fixed in the API during R18
-                  and in its test after that; this was the third copy. A list of
-                  backends that count as durable has to be updated in step with
-                  the backends, and this one was not. Naming what answered
-                  cannot drift. */}
-              <Row
-                label="Storage"
-                value={health.audit_storage === "memory" ? "in memory" : health.audit_storage}
-                warn={health.audit_storage === "memory"}
-              />
-            </dl>
-          </Panel>
-
-          <Panel
-            title="Recent activity"
-            aside={<Link href="/audit" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">audit →</Link>}
-          >
-            {!audit?.length ? (
-              <Empty art="ledger" title="No activity recorded yet." action={{ href: "/incidents", label: "Open a scenario →" }}>
-                Records are written before an action runs, never after, so an empty log
-                means nothing has been attempted — not that something was attempted and
-                lost.
-              </Empty>
-            ) : (
-              <ul className="space-y-3 text-xs">
-                {audit.slice(0, 6).map((record, index) => (
-                  <li key={index} className="flex gap-3">
-                    <span className="shrink-0 text-[rgb(var(--faint))]">
-                      <Ago at={record.at} />
-                    </span>
-                    {/* `min-w-0` is what lets `truncate` truncate. A flex item
-                        will not shrink below its content width, so `nowrap`
-                        pushed the row out instead of clipping it — 239px past
-                        the edge of a 375px screen. */}
-                    <span className="min-w-0 truncate" title={record.summary}>
-                      {record.summary}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
+            <p className="mt-4 border-t border-[rgb(var(--edge))] pt-3 text-xs">
+              <Link
+                href={demo}
+                className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+              >
+                This is a real incident on this site — open it →
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
 
-      <Panel title="The loop">
-        <ol className="mono flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[rgb(var(--faint))]">
-          {["Observe", "Understand", "Predict", "Decide", "Act", "Verify", "Learn"].map(
-            (stage, index, all) => (
-              <li key={stage}>
-                <span className="text-[rgb(var(--muted))]">{stage}</span>
-                {index < all.length - 1 && <span className="px-1">→</span>}
-              </li>
-            ),
-          )}
-        </ol>
-        <p className="mt-3 text-xs text-[rgb(var(--muted))]">
-          Observe and Understand are live. Decide and Act run behind policy in dry-run.
-          Verify compares observed state to what an action promised.
+        {/* The arithmetic, made of the demo's own numbers rather than a
+            benchmark. The cost of an incident is the gap between the first
+            signal and somebody joining it to the fourth. */}
+        <p className="max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+          The cost of an intrusion is not the alert. It is the gap between the
+          first signal and the moment someone connects it to the fourth. In the
+          three scenarios on this site that gap is{" "}
+          <span className="text-[rgb(var(--ink))]">11, 30 and 90 minutes</span>{" "}
+          — and every minute of it is an attacker working uninterrupted while
+          four true alerts sit in four different tools, each one too small to
+          act on alone.
         </p>
-      </Panel>
-    </Page>
-  );
-}
+      </section>
 
-function Row({ label, value, warn }: { label: string; value: string | number; warn?: boolean }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-[rgb(var(--muted))]">{label}</dt>
-      <dd className={`tnum ${warn ? "text-[rgb(var(--warn))]" : ""}`}>
-        {typeof value === "number" ? value.toLocaleString() : value}
-      </dd>
+      {/* --- bounded autonomy -------------------------------------------- */}
+      <section className="space-y-5">
+        <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+          It proposes. A human authorises.
+        </h2>
+        <p className="max-w-2xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+          Every executable action is registered with a risk score and routed
+          through the policy engine. There is no path around it — not in the
+          product, and not in the demo fixtures.
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            {
+              title: "Scored, not judged",
+              body: "Risk is computed from blast radius, confidence and reversibility — then a tier decides who may authorise it.",
+            },
+            {
+              title: "Rollback declared first",
+              body: "An action states how to undo it and what it expects to be true afterwards, before it is allowed to run.",
+            },
+            {
+              title: "Two shut gates",
+              body: "This deployment is in dry run and its environment is not on the live list. Both must open before anything executes.",
+            },
+          ].map((card) => (
+            <div key={card.title} className="panel p-4">
+              <p className="mb-2 text-sm font-medium">{card.title}</p>
+              <p className="text-xs leading-relaxed text-[rgb(var(--muted))]">
+                {card.body}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-sm text-[rgb(var(--muted))]">
+          The assistant is bound by the same rule: ask it to isolate a host and
+          it names the action, sends it for approval, and executes nothing.{" "}
+          <Link
+            href="/ask"
+            className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+          >
+            Try that →
+          </Link>
+        </p>
+      </section>
+
+      {/* --- the way in --------------------------------------------------- */}
+      <section className="panel space-y-4 p-6">
+        <h2 className="text-lg font-semibold tracking-tight">
+          Everything here is live
+        </h2>
+        <p className="max-w-2xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+          The incidents are scripted and labelled as such; the threat
+          intelligence is real and polled hourly from CISA and abuse.ch. Nothing
+          on this site executes anything.
+        </p>
+        <div className="flex flex-wrap gap-3 pt-1">
+          <Link
+            href={demo}
+            className="focusable rounded border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]"
+          >
+            A real incident
+          </Link>
+          <Link
+            href="/blue-team"
+            className="focusable rounded border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]"
+          >
+            Work one yourself
+          </Link>
+          <Link
+            href="/observatory"
+            className="focusable rounded border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]"
+          >
+            Today&rsquo;s advisories
+          </Link>
+          <Link
+            href="/overview"
+            className="focusable rounded border border-[rgb(var(--edge))] px-4 py-2 text-sm text-[rgb(var(--muted))] transition hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]"
+          >
+            The console
+          </Link>
+        </div>
+      </section>
     </div>
   );
-}
-
-/** Order incidents by how loudly they are asking for attention. */
-function rank(incident: Incident): number {
-  const severity = { critical: 4, high: 3, medium: 2, low: 1 }[incident.severity] ?? 0;
-  return severity * 10 + (incident.state === "awaiting_approval" ? 5 : 0);
-}
-
-
-/**
- * Audit records per hour, oldest bucket first.
- *
- * Counts what is there. An hour with nothing in it is a zero, not a gap to be
- * smoothed over — the flat stretch is the true shape of a quiet night.
- */
-function bucketByHour(records: { at: string }[], hours: number): number[] {
-  const buckets = new Array(hours).fill(0);
-  const now = Date.now();
-  for (const record of records) {
-    const age = (now - new Date(record.at).getTime()) / 3_600_000;
-    if (age < 0 || age >= hours) continue;
-    buckets[hours - 1 - Math.floor(age)] += 1;
-  }
-  return buckets;
-}
-
-/** Entities by their worst recent severity, in the order an operator reads. */
-function countSeverity(nodes: { severity: string | null }[]) {
-  const of = (s: string | null) => nodes.filter((n) => n.severity === s).length;
-  return [
-    { label: "critical", count: of("critical"), status: "critical" as const },
-    { label: "degraded", count: of("warning"), status: "warning" as const },
-    { label: "healthy", count: of("info"), status: "ok" as const },
-    { label: "no data", count: of(null), status: "neutral" as const },
-  ];
 }

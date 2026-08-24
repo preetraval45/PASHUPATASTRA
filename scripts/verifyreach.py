@@ -26,9 +26,12 @@ import sys
 # label does not describe what it does is the failure mode this whole session
 # kept running into.
 JOURNEYS = [
-    ("the map, from the overview", "/", "/infrastructure", 1),
-    ("the audit trail, from the overview", "/", "/audit", 1),
-    ("an incident, from the overview", "/", "/incidents/INC-", 1),
+    # `/` is the landing page since R53; the console lives at `/overview`, and
+    # these journeys are about the console's own links.
+    ("a real incident, from the landing page", "/", "/incidents/INC-", 1),
+    ("the map, from the overview", "/overview", "/infrastructure", 1),
+    ("the audit trail, from the overview", "/overview", "/audit", 1),
+    ("an incident, from the overview", "/overview", "/incidents/INC-", 1),
     ("the map, from an incident", "/incidents/INC-2026-0901", "/infrastructure", 1),
     ("the audit trail, from an incident", "/incidents/INC-2026-0901", "/audit", 2),
 ]

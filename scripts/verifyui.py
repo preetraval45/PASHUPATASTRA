@@ -28,8 +28,8 @@ VIEWPORTS = [
     ("desktop", 1440, 900),
 ]
 
-DEFAULT_ROUTES = ["/", "/incidents", "/ask", "/observatory", "/blue-team",
-                  "/infrastructure", "/actions", "/audit", "/search"]
+DEFAULT_ROUTES = ["/", "/overview", "/incidents", "/ask", "/observatory",
+                  "/blue-team", "/infrastructure", "/actions", "/audit", "/search"]
 
 
 def check(page, url: str, route: str, label: str, width: int) -> list[str]:

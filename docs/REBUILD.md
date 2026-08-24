@@ -1422,19 +1422,36 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   in one click each; `/incidents/… → /infrastructure` in one and `→ /audit` in
   two; 27/27 layout and reachability checks; the header still one row at 65px.*
 
-- [ ] **R53 — A landing page that is not the console.** Needs: nothing.
-  `/` is currently Overview, an operator's dashboard, shown to people who have
-  no idea what they are looking at. Split them: `/` becomes the page that
-  explains the product, and the console moves to its own route.
-  It has to carry four things and stop: the loop in one line, the before/after
-  of an incident, the bounded-autonomy claim, and a way into the live demo. The
-  buyer's arithmetic belongs here too — this is sold against the cost of an
-  incident lasting forty minutes instead of twelve, and the site currently never
-  says so.
-  **No pricing.** Out of scope names billing and multi-tenancy, and a price on a
-  product with no auth invites a question the site cannot answer.
+- [x] **R53 — A landing page that is not the console.** Needs: nothing.
   **Done when:** someone who has never heard of the project can say what it does
-  after reading only `/`, and reaches a real incident in one click.
+  after reading only `/`, and reaches a real incident in one click. — **met.**
+  `/` is now the landing page and the console moved to `/overview`. The headline
+  states the claim — *four alerts in four tools are one intrusion; this is the
+  thing that says so* — and the primary button opens
+  `/incidents/INC-2026-0903`, one click, verified by clicking.
+
+  Four things and it stops: the loop in one line, the before/after of an
+  incident, what bounded autonomy actually constrains, and the doors in. **No
+  pricing**, as the task required — there are no accounts and no billing, and a
+  price invites a question the site cannot answer.
+
+  **The arithmetic is made of the demo's own numbers.** `ROADMAP.md` records
+  that MTTR is *not computable* in this deployment — the recorded clock is not
+  MTTR's clock — so a measured time-saving claim would have been an invention,
+  and an invented number on the front page would undo what the rest of the
+  product spends its effort proving. What is said instead is checkable on the
+  site: the three scenarios' signals arrive **11, 30 and 90 minutes apart**, and
+  the cost is the gap between the first and someone joining it to the fourth.
+
+  **The before/after panel and its link disagreed.** The panel describes the
+  beaconing scenario; the link went to whichever incident came back first, which
+  is credential stuffing. On the one page whose whole job is that the sentence
+  and the destination match, they did not. It now finds the incident it is
+  describing, matched on the hypothesis rather than an id — an id is a fixture
+  detail and would go stale silently the day the scenarios are renumbered.
+
+  *Verified: 30/30 layout and reachability checks, WCAG AA in both themes, every
+  click-through journey intact after the route move, 807 tests.*
 
 - [ ] **R54 — How it works.** Needs: **R53**.
   One page for the visitor who got interested and now wants to know whether to

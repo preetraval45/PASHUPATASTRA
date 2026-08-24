@@ -39,7 +39,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
  * sections for arithmetic.
  */
 const NAV = [
-  { href: "/", label: "Overview" },
+  { href: "/overview", label: "Overview" },
   { href: "/incidents", label: "Incidents" },
   { href: "/ask", label: "Ask" },
   { href: "/blue-team", label: "Blue team" },
@@ -51,7 +51,10 @@ const NAV = [
 /** Exact for the root, prefix elsewhere, so a detail page still shows its
  *  section as current. */
 function isCurrent(href: string, pathname: string): boolean {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  // No `/` special case any more: the root is the landing page and is reached
+  // through the wordmark, not through a tab. The exact-match branch existed
+  // only because a prefix match on "/" matches everything.
+  return pathname.startsWith(href);
 }
 
 export function Nav({ status }: { status?: ReactNode }) {
