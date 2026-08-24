@@ -551,6 +551,33 @@ class DynamoStore:
             }
         )
 
+    def set_feed_sync(self, feed: str, ok: bool, error: str | None = None) -> None:
+        """When this feed was last *polled*, separately from when it last moved.
+
+        `set_feed_cursor` only fires when something new was stored, so a healthy
+        feed with nothing new to report looks identical to one that has stopped
+        answering. That is the difference between "quiet" and "broken", and it is
+        the whole question a reader has about a live feed.
+
+        Written on every poll, success or failure, so a feed that has been
+        failing for six hours says so instead of showing its last good cursor.
+        """
+        self.table.put_item(
+            Item={
+                "PK": self._pk("META"),
+                "SK": f"SYNC#{feed}",
+                "ok": ok,
+                "error": (error or "")[:300],
+                "at": datetime.now().astimezone().isoformat(),
+            }
+        )
+
+    def get_feed_sync(self, feed: str) -> dict | None:
+        row = self.table.get_item(
+            Key={"PK": self._pk("META"), "SK": f"SYNC#{feed}"}
+        ).get("Item")
+        return _plain(row) if row else None
+
     # --- blue team progress --------------------------------------------------
 
     def get_player(self, player_id: str) -> dict | None:

@@ -1812,13 +1812,49 @@ R65 are the two that change how the product feels; the rest are additive.
   390px with touch emulation. 33/33 responsive, AA contrast in both themes, 58
   pages crawl clean, 987 tests pass.
 
-- [ ] **R61 — Show that it is live.** Needs: **R56**.
+- [x] **R61 — Show that it is live.** Needs: **R56**.
   Observatory and the incident feed poll real sources hourly and the page says
   nothing about it. `last synced 14m ago`, and new entries arriving with a brief
   highlight as they land — **the entry renders first and is highlighted after**,
   never the reverse.
   **Done when:** the sync age is derived from the record's own timestamp rather
   than from page load, and a stale feed reads as stale instead of as empty.
+  Done. `128 indicators · 200 reports · last synced 11m ago` in the panel head,
+  and each feed carrying `answered 11m ago` under it.
+  The task needed a fact the system was not recording. `set_feed_cursor` fires
+  only when something new is *stored*, so a healthy feed that answered and had
+  nothing to report never updated its timestamp and looked identical to one that
+  had stopped answering — and "quiet" versus "broken" is the entire question a
+  reader has about a live feed. A sync heartbeat is now written on **every**
+  poll, storing or not, and `/intel/status` keeps three facts apart: when a feed
+  last answered, where it last moved to, and whether the first is too long ago.
+  Never-polled is deliberately **not** stale. A deployment that has not run its
+  first ingest is not broken, and colouring it as a fault would cry wolf on
+  every fresh start — which is how a reader learns to ignore the warning that
+  matters.
+  The highlight is added **after paint** by `components/fresh.tsx` rather than
+  rendered into the markup, which is what the task asks for and not a detail: a
+  class baked into the HTML arrives *with* the row, so a first-ever load would
+  flash every entry as new and a feed that had not moved in a day would look
+  like it had just landed. The watermark is per-tab `sessionStorage`, wrapped in
+  try/catch because a private window throws on access rather than returning null.
+  `prefers-reduced-motion` keeps the rail and drops the fade — the information
+  is not the animation.
+  Verified by `scripts/verifylive.py`, and the age check is the one that matters:
+  it loads the page, **waits 70 seconds, loads it again**, and asserts the
+  printed age grew. A page deriving freshness from its own render prints the
+  same "just now" both times, and no single-load assertion can tell the two
+  apart. Observed 600s → 660s.
+  The stale check was initially written as a browser route interception and
+  reported a failure that meant nothing — **this page renders on the server**, so
+  that request never passes through the browser. Split instead: the computation
+  is covered by four tests in `testfeeds.py`, and the render was proven once by
+  building the site against a local stub reporting every feed stale, which
+  printed `last answered … over 3h ago`. What the script keeps is the contract
+  the branch depends on — six feeds, six freshness fields each — since a
+  silently dropped field would make every feed render as healthy.
+  33/33 responsive, AA contrast in both themes, 58 pages crawl clean, palette
+  still passes, 991 tests.
 
 - [ ] **R62 — The causal chain builds itself.** Needs: **R43**.
   On an incident page, the chain reveals signal → signal → signal → diagnosis

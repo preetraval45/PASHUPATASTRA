@@ -625,22 +625,72 @@ def search_index(advisories: int = 40) -> dict[str, object]:
     return {"count": len(items), "items": items}
 
 
+STALE_AFTER_HOURS = 3
+"""A feed polled hourly that has not answered in three hours has missed three
+runs, which is a fault rather than a slow afternoon. Named because the page
+prints the number and a literal in two places is one chance to disagree."""
+
+
 @router.get("/intel/status")
 def intel_status() -> dict[str, object]:
-    """How current each feed is, and when it last moved.
+    """How current each feed is — three different facts, kept apart.
 
-    A feed that has quietly stopped looks exactly like a quiet feed. The cursor
-    is the difference, so it is published rather than kept for debugging.
+    **Synced** is when the feed last answered. **Moved** is when it last had
+    something new. **Stale** is synced being too long ago.
+
+    Conflating the first two is the bug this route existed with: the cursor only
+    advances when something is stored, so a healthy feed with nothing new to
+    report looked exactly like one that had stopped answering. "Quiet" and
+    "broken" are the whole question a reader has about a live feed, and the page
+    could not tell them apart.
+
+    Timestamps go out as ISO strings and the age is computed from them. A page
+    that derived "synced just now" from its own load time would say the feed was
+    current at the moment it was actually broken.
     """
     from ..backend import durable
     from ..feeds.ingest import FEEDS
 
     backend = durable()
-    cursors = {}
+    now = datetime.now().astimezone()
+    feeds: dict[str, dict[str, object]] = {}
+    freshest: datetime | None = None
+
     for name in sorted(FEEDS):
-        read = getattr(backend, "get_feed_cursor", None)
-        cursors[name] = read(name) if read else None
-    return {"feeds": cursors, "durable": backend is not None}
+        read_cursor = getattr(backend, "get_feed_cursor", None)
+        read_sync = getattr(backend, "get_feed_sync", None)
+        sync = read_sync(name) if read_sync else None
+
+        synced_at = (sync or {}).get("at")
+        age_seconds: float | None = None
+        if synced_at:
+            try:
+                stamp = datetime.fromisoformat(str(synced_at))
+                age_seconds = (now - stamp).total_seconds()
+                if freshest is None or stamp > freshest:
+                    freshest = stamp
+            except ValueError:
+                age_seconds = None
+
+        feeds[name] = {
+            "cursor": read_cursor(name) if read_cursor else None,
+            "synced_at": synced_at,
+            "age_seconds": age_seconds,
+            "ok": bool((sync or {}).get("ok", False)) if sync else None,
+            "error": (sync or {}).get("error") or None,
+            # Never synced is not stale — it is a deployment that has not polled
+            # yet, and calling that a fault would cry wolf on every fresh start.
+            "stale": (
+                age_seconds is not None and age_seconds > STALE_AFTER_HOURS * 3600
+            ),
+        }
+
+    return {
+        "feeds": feeds,
+        "synced_at": freshest.isoformat() if freshest else None,
+        "stale_after_hours": STALE_AFTER_HOURS,
+        "durable": backend is not None,
+    }
 
 
 @router.get("/incidents/{incident_id}/graph")

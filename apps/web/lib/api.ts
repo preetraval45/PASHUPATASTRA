@@ -430,8 +430,29 @@ export const getIntel = (limit = 200, source?: string) =>
 
 /** Per-feed cursors. A feed that has quietly stopped looks exactly like a quiet
  *  feed, and this is the difference. */
-export const getIntelStatus = () =>
-  get<{ feeds: Record<string, string | null>; durable: boolean }>("/intel/status");
+/** One feed's health. Three separate facts, deliberately not collapsed:
+ *  `synced_at` is when it last answered, `cursor` is where it last *moved to*,
+ *  and `stale` is the first being too long ago. A quiet feed and a broken one
+ *  look identical unless all three are kept apart. */
+export interface FeedStatus {
+  cursor: string | null;
+  synced_at: string | null;
+  age_seconds: number | null;
+  /** `null` when it has never been polled — a fresh deployment, not a fault. */
+  ok: boolean | null;
+  error: string | null;
+  stale: boolean;
+}
+
+export interface IntelStatus {
+  feeds: Record<string, FeedStatus>;
+  /** The most recent successful poll across all feeds. The page's headline. */
+  synced_at: string | null;
+  stale_after_hours: number;
+  durable: boolean;
+}
+
+export const getIntelStatus = () => get<IntelStatus>("/intel/status");
 
 /* ------------------------------------------------------------- blue team */
 

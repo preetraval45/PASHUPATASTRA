@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Fresh } from "@/components/fresh";
 import { IntelGroupRow, sourceAbout, sourceName } from "@/components/intel";
-import { Empty, Offline, Page, Panel } from "@/components/ui";
-import { getIntel, getIntelStatus, type IntelGroup } from "@/lib/api";
+import { Ago, Empty, Offline, Page, Panel } from "@/components/ui";
+import {
+  getIntel,
+  getIntelStatus,
+  type FeedStatus,
+  type IntelGroup,
+} from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Observatory",
@@ -70,6 +76,15 @@ export default async function ObservatoryPage({
   const active = intel.groups.filter((entry) => entry.active !== false);
   const days = groupByDay(active);
 
+  // The newest thing on the page, as the watermark for "since you last looked".
+  // Taken from the entries actually rendered rather than from the sync time: a
+  // poll that found nothing is still a poll, and it must not mark everything
+  // already on screen as new.
+  const newest = intel.groups.reduce<string | null>(
+    (latest, entry) => (latest === null || entry.last_at > latest ? entry.last_at : latest),
+    null,
+  );
+
   return (
     <Page
       title="Observatory"
@@ -81,7 +96,12 @@ export default async function ObservatoryPage({
           status?.durable === false ? (
             <span className="text-[rgb(var(--warn))]">not stored durably</span>
           ) : (
-            `${intel.count} indicators · ${intel.reports} reports`
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>
+                {intel.count} indicators · {intel.reports} reports
+              </span>
+              <SyncedAt at={status?.synced_at ?? null} />
+            </span>
           )
         }
       >
@@ -97,16 +117,21 @@ export default async function ObservatoryPage({
           ))}
         </div>
 
-        {/* When each feed last moved. A feed that has quietly stopped looks
-            exactly like a quiet one, and on a page whose whole claim is
-            freshness that is the failure worth surfacing. */}
+        {/* Per feed: when it last answered, and whether that was too long ago.
+            A feed that has quietly stopped looks exactly like a quiet one, and
+            on a page whose whole claim is freshness that is the failure worth
+            surfacing.
+
+            "Answered" and "had something new" are printed as separate facts.
+            Collapsing them is what made a healthy feed with nothing to report
+            read as broken. */}
         {status && (
           <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-[rgb(var(--edge))] pt-4 text-xs sm:grid-cols-2">
-            {Object.entries(status.feeds).map(([name, cursor]) => (
+            {Object.entries(status.feeds).map(([name, feed]) => (
               <div key={name} className="flex min-w-0 flex-wrap items-baseline gap-x-2">
                 <dt className="text-[rgb(var(--muted))]">{sourceName(name)}</dt>
-                <dd className="min-w-0 flex-1 text-[rgb(var(--faint))]">
-                  {cursor ? `caught up to ${cursor}` : "has not run yet"}
+                <dd className="min-w-0 flex-1">
+                  <FeedAge feed={feed} hours={status.stale_after_hours} />
                 </dd>
                 <dd className="w-full text-[rgb(var(--faint))] sm:w-auto">
                   {sourceAbout(name)}
@@ -116,6 +141,8 @@ export default async function ObservatoryPage({
           </dl>
         )}
       </Panel>
+
+      <Fresh newest={newest} />
 
       {days.length === 0 && offline.length === 0 ? (
         <Panel title="Nothing yet">
@@ -223,4 +250,61 @@ function dayLabel(day: string): string {
   const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
   if (day === yesterday) return "Yesterday";
   return day;
+}
+
+
+/**
+ * `last synced 14m ago`, from the poll's own timestamp.
+ *
+ * R61's requirement, and the reason it is stated that way: a page that derives
+ * freshness from its own load time says "synced just now" on every render,
+ * including the renders that happen while the feed is broken. The anchor has to
+ * be the record, so `Ago` is given the stored ISO stamp and computes elapsed
+ * from it.
+ */
+function SyncedAt({ at }: { at: string | null }) {
+  if (!at) {
+    return (
+      <span className="text-[rgb(var(--faint))]">no successful poll recorded</span>
+    );
+  }
+  return (
+    <span className="text-[rgb(var(--faint))]">
+      last synced <Ago at={at} />
+    </span>
+  );
+}
+
+/**
+ * One feed's freshness, in the three states it can actually be in.
+ *
+ * Never polled is not stale. A deployment that has not run its first ingest is
+ * not broken, and colouring it as a fault would cry wolf on every fresh start —
+ * which is the sort of always-on warning that trains a reader to ignore the
+ * one that matters.
+ */
+function FeedAge({
+  feed,
+  hours,
+}: {
+  feed: FeedStatus;
+  hours: number;
+}) {
+  if (!feed.synced_at) {
+    return <span className="text-[rgb(var(--faint))]">has not polled yet</span>;
+  }
+  if (feed.stale || feed.ok === false) {
+    return (
+      <span className="text-[rgb(var(--warn))]">
+        <span aria-hidden="true">◆</span> last answered <Ago at={feed.synced_at} />
+        {feed.error ? ` — ${feed.error.slice(0, 80)}` : ` — over ${hours}h ago`}
+      </span>
+    );
+  }
+  return (
+    <span className="text-[rgb(var(--faint))]">
+      answered <Ago at={feed.synced_at} />
+      {feed.cursor ? "" : ", nothing new yet"}
+    </span>
+  );
 }

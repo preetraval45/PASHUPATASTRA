@@ -396,3 +396,89 @@ def test_the_prompt_forbids_answering_a_cve_from_memory() -> None:
     lowered = INSTRUCTIONS.lower()
     assert "what you remember does not count" in lowered
     assert "will not answer from memory" in lowered
+
+
+# --- freshness: quiet is not the same as broken -----------------------------
+
+
+class _Backend:
+    """A backend that answers only the two questions `/intel/status` asks."""
+
+    def __init__(self, syncs: dict[str, dict]) -> None:
+        self._syncs = syncs
+
+    def get_feed_cursor(self, feed: str):
+        return "cursor-value"
+
+    def get_feed_sync(self, feed: str):
+        return self._syncs.get(feed)
+
+
+def _status_with(monkeypatch, syncs: dict[str, dict]) -> dict:
+    from app.api import routes
+
+    monkeypatch.setattr(routes, "durable", lambda: _Backend(syncs), raising=False)
+    import app.backend as backend_module
+
+    monkeypatch.setattr(backend_module, "durable", lambda: _Backend(syncs))
+    return routes.intel_status()
+
+
+def test_a_feed_that_has_not_answered_for_hours_is_stale(monkeypatch) -> None:
+    """Polled hourly; three missed runs is a fault, not a slow afternoon."""
+    from datetime import datetime, timedelta
+
+    from app.api.routes import STALE_AFTER_HOURS
+
+    old = (datetime.now().astimezone() - timedelta(hours=STALE_AFTER_HOURS + 1)).isoformat()
+    fresh = datetime.now().astimezone().isoformat()
+    status = _status_with(
+        monkeypatch,
+        {"urlhaus": {"at": old, "ok": True}, "cisa-kev": {"at": fresh, "ok": True}},
+    )
+    assert status["feeds"]["urlhaus"]["stale"] is True
+    assert status["feeds"]["cisa-kev"]["stale"] is False
+
+
+def test_a_feed_that_has_never_polled_is_not_stale(monkeypatch) -> None:
+    """A deployment that has not run its first ingest is not broken. Calling it
+    a fault would cry wolf on every fresh start, which is how a reader learns to
+    ignore the warning that matters."""
+    status = _status_with(monkeypatch, {})
+    for feed in status["feeds"].values():
+        assert feed["stale"] is False
+        assert feed["synced_at"] is None
+
+
+def test_the_headline_is_the_most_recent_successful_poll(monkeypatch) -> None:
+    from datetime import datetime, timedelta
+
+    now = datetime.now().astimezone()
+    status = _status_with(
+        monkeypatch,
+        {
+            "urlhaus": {"at": (now - timedelta(minutes=40)).isoformat(), "ok": True},
+            "cisa-kev": {"at": (now - timedelta(minutes=5)).isoformat(), "ok": True},
+        },
+    )
+    assert status["synced_at"].startswith((now - timedelta(minutes=5)).isoformat()[:16])
+
+
+def test_a_quiet_feed_is_not_reported_as_broken(monkeypatch) -> None:
+    """The bug this whole route was rewritten for.
+
+    `set_feed_cursor` only fires when something new is stored, so a feed that
+    answered and had nothing to report never updated its timestamp and looked
+    identical to one that had stopped answering. The sync heartbeat is recorded
+    on every successful poll, storing or not.
+    """
+    from datetime import datetime
+
+    status = _status_with(
+        monkeypatch,
+        {"urlhaus": {"at": datetime.now().astimezone().isoformat(), "ok": True}},
+    )
+    feed = status["feeds"]["urlhaus"]
+    assert feed["ok"] is True
+    assert feed["stale"] is False
+    assert feed["age_seconds"] is not None and feed["age_seconds"] < 60

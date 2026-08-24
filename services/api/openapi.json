@@ -648,7 +648,7 @@
     "/api/v1/intel/status": {
       "get": {
         "summary": "Intel Status",
-        "description": "How current each feed is, and when it last moved.\n\nA feed that has quietly stopped looks exactly like a quiet feed. The cursor\nis the difference, so it is published rather than kept for debugging.",
+        "description": "How current each feed is \u2014 three different facts, kept apart.\n\n**Synced** is when the feed last answered. **Moved** is when it last had\nsomething new. **Stale** is synced being too long ago.\n\nConflating the first two is the bug this route existed with: the cursor only\nadvances when something is stored, so a healthy feed with nothing new to\nreport looked exactly like one that had stopped answering. \"Quiet\" and\n\"broken\" are the whole question a reader has about a live feed, and the page\ncould not tell them apart.\n\nTimestamps go out as ISO strings and the age is computed from them. A page\nthat derived \"synced just now\" from its own load time would say the feed was\ncurrent at the moment it was actually broken.",
         "operationId": "intel_status_api_v1_intel_status_get",
         "responses": {
           "200": {

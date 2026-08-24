@@ -106,7 +106,13 @@ export function IntelGroupRow({ group }: { group: IntelGroup }) {
   const repeated = group.reports > 1;
 
   return (
-    <li className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0">
+    // `data-entry-at` is what the after-paint highlight matches on. Rendered as
+    // data rather than as a class so the server HTML carries no highlight —
+    // R61 requires the row to exist before it is marked.
+    <li
+      data-entry-at={group.last_at}
+      className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0"
+    >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="w-16 shrink-0 text-xs text-[rgb(var(--faint))]">
           <Ago at={group.last_at} />

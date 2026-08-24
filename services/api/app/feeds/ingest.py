@@ -13,6 +13,7 @@ the feed looks quiet rather than broken.
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 
 from .attacks import ATTACK_FEEDS
 from .sources import FEEDS as INDICATOR_FEEDS, FeedUnavailable
@@ -54,8 +55,14 @@ def run(store, cursors, limit: int = DEFAULT_LIMIT) -> dict[str, object]:
             # Recorded, not raised. The next run tries again, and a reader can
             # see which feed is stale rather than wondering why it is quiet.
             log.warning("feed %s unavailable: %s", name, error)
+            _record_sync(cursors, name, ok=False, error=str(error))
             summary[name] = {"ok": False, "error": str(error)[:200], "stored": 0}
             continue
+
+        # A poll that found nothing is a *successful* poll. Recording the sync
+        # only on the path that stores something is what made a quiet feed
+        # indistinguishable from a dead one.
+        _record_sync(cursors, name, ok=True)
 
         if not events:
             summary[name] = {"ok": True, "stored": 0, "cursor": since}
@@ -79,6 +86,18 @@ def run(store, cursors, limit: int = DEFAULT_LIMIT) -> dict[str, object]:
     return summary
 
 
+def _record_sync(cursors, feed: str, *, ok: bool, error: str | None = None) -> None:
+    """Best-effort. A backend that cannot record a heartbeat is not a reason to
+    lose the entries the poll actually fetched."""
+    recorder = getattr(cursors, "set_feed_sync", None)
+    if recorder is None:
+        return
+    try:
+        recorder(feed, ok, error)
+    except Exception:  # noqa: BLE001 — a heartbeat must never fail an ingest
+        log.warning("could not record sync for %s", feed, exc_info=True)
+
+
 class MemoryCursors:
     """Cursors for a deployment with no durable store.
 
@@ -88,12 +107,23 @@ class MemoryCursors:
 
     def __init__(self) -> None:
         self._at: dict[str, str] = {}
+        self._sync: dict[str, dict] = {}
 
     def get_feed_cursor(self, feed: str) -> str | None:
         return self._at.get(feed)
 
     def set_feed_cursor(self, feed: str, value: str) -> None:
         self._at[feed] = value
+
+    def set_feed_sync(self, feed: str, ok: bool, error: str | None = None) -> None:
+        self._sync[feed] = {
+            "ok": ok,
+            "error": error or "",
+            "at": datetime.now(UTC).isoformat(),
+        }
+
+    def get_feed_sync(self, feed: str) -> dict | None:
+        return self._sync.get(feed)
 
 
 def cursors_for(backend) -> object:

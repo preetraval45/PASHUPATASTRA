@@ -419,3 +419,40 @@ body::before {
       radial-gradient(48rem 26rem at 88% -4%, rgb(var(--astra) / 0.02), transparent 62%);
   }
 }
+
+/* An entry that arrived since this visitor last looked.
+ *
+ * Added after paint by `components/fresh.tsx`, never rendered into the markup —
+ * R61 asks for the entry to render first and be highlighted after. A rail
+ * rather than a background wash: the row already carries severity colour, and a
+ * second full-width tint competing with it would make the important signal
+ * harder to read in service of the less important one.
+ *
+ * It fades out and leaves nothing behind. A highlight that persists stops
+ * meaning "new" by the second page load and becomes decoration. */
+@keyframes just-landed {
+  from {
+    border-left-color: rgb(var(--astra));
+    background-color: rgb(var(--astra) / 0.07);
+  }
+  to {
+    border-left-color: transparent;
+    background-color: transparent;
+  }
+}
+
+.just-landed {
+  border-left: 2px solid transparent;
+  padding-left: 0.75rem;
+  margin-left: -0.75rem;
+  animation: just-landed 6s ease-out forwards;
+}
+
+/* Someone who has asked not to be shown motion still needs the information.
+ * The rail is drawn and simply stays put rather than fading. */
+@media (prefers-reduced-motion: reduce) {
+  .just-landed {
+    animation: none;
+    border-left-color: rgb(var(--astra));
+  }
+}
