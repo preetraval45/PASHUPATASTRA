@@ -147,7 +147,12 @@ class MemoryGraph:
                 for key in keys
             ],
             "edges": [
-                {"source": e.source, "target": e.target, "kind": e.kind}
+                {
+                    "source": e.source,
+                    "target": e.target,
+                    "kind": e.kind,
+                    "evidence": list(e.evidence),
+                }
                 for e in self._edges.values()
                 if e.source in included and e.target in included
             ],

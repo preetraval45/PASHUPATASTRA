@@ -309,6 +309,12 @@ class DynamoStore:
                         "source": edge.source,
                         "target": edge.target,
                         "kind": edge.kind,
+                        # Dropped here at first, which would have made the
+                        # citation local-only: the edge would survive the trip
+                        # to the table and its reason would not, so the map on
+                        # the deployed site could assert a path and never say
+                        # why. An uncheckable edge is the thing R50 forbids.
+                        "evidence": list(edge.evidence),
                     }
                 )
         return len(edges)
@@ -420,7 +426,12 @@ class DynamoStore:
                 for row in nodes
             ],
             "edges": [
-                {"source": e["source"], "target": e["target"], "kind": e["kind"]}
+                {
+                    "source": e["source"],
+                    "target": e["target"],
+                    "kind": e["kind"],
+                    "evidence": _plain(e.get("evidence") or []),
+                }
                 for e in self._all("EDGE")
                 if e["source"] in included and e["target"] in included
             ],

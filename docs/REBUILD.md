@@ -1299,17 +1299,45 @@ who has not.
 The rule this phase applies: **a top-level tab is for something a visitor would
 go looking for. Everything else appears where it is needed and nowhere else.**
 
-- [ ] **R50 — Access paths in the scenarios.** Needs: **R17**.
-  R6 seeded the scenarios' entities with **no edges**, deliberately — they
-  declared a sequence of events, not a graph. That is why the map is a list of
-  boxes, and it blocks everything below: a blast radius over a graph with no
-  edges is an empty panel.
-  Each scenario declares the access paths its own evidence establishes — the
-  account that reached the host, the host that opened the flow — and nothing it
-  does not. An invented edge is worse than a missing one, because the map is
-  the thing that is supposed to be checkable.
+- [x] **R50 — Access paths in the scenarios.** Needs: **R17**.
   **Done when:** all three scenarios render a connected access graph, every edge
-  traces to a cited event, and a test fails on any edge no evidence supports.
+  traces to a cited event, and a test fails on any edge no evidence supports. —
+  **met, live.** The map draws 11 entities and 10 access paths, each carrying
+  the event ids that establish it, and blast radius now answers:
+  `host:ws-0148` reaches `fs-02`, `app-07` and the scheduled task;
+  `account:j.rivera` reaches `sso-portal`; `account:m.okafor` reaches the
+  mailbox and the OAuth application.
+
+  **The old decision was right about the danger and wrong about the remedy.**
+  The seed added no edges at all, reasoning that a topology drawn from
+  co-occurrence would put fabricated structure behind blast radius. True — and
+  the result was a row of disconnected boxes, an empty blast radius, and
+  `isolate_host` pricing its risk against an estate of one. The answer is not
+  "no edges" but **no edge without a citation**.
+
+  `Edge` gained an `evidence` field, because an edge is a claim — *this account
+  could reach that asset* — and rule 1 says a claim carries a reference. Each
+  path names the signals that establish it and no others: the flow reaching the
+  portal is `SEC-0001-a`; the flow authenticating as an account is `SEC-0001-b`;
+  the session on the portal is `SEC-0001-d`. `SEC-0003-c` establishes two edges
+  at once, which is why evidence is a list rather than one id.
+
+  **Direction is the thing that would have been silently wrong.** `blast_radius`
+  walks dependents, so the edge runs from the asset *to* the account —
+  compromise flows target to source. It reads backwards to anyone thinking
+  "access goes account → asset", and reversed it would report that compromising
+  a mailbox endangers the attacker, with every risk score built on it wrong
+  while still looking like a number. A test pins the direction on the phishing
+  scenario in both directions.
+
+  **The citation nearly did not survive storage.** `upsert_edges` wrote source,
+  target and kind, so the edge would have reached DynamoDB and its reason would
+  not — the checkable property working on a laptop and nowhere else. Both stores
+  persist and return it now.
+
+  `testaccesspaths.py` enforces the rule and was watched failing before being
+  trusted: an uncited edge is caught as *cites nothing*, and one citing a ref
+  from another scenario as *not one of this scenario's signals*.
 
 - [ ] **R51 — Blast radius inside the incident.** Needs: **R50**.
   The map is built and correct; it is in the wrong place. Rendered beside the

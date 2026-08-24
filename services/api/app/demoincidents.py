@@ -32,6 +32,7 @@ from datetime import datetime, timedelta
 from pashupatastra import (
     AttackTechnique,
     CausalLink,
+    Edge,
     EntityKind,
     EntityRef,
     Event,
@@ -75,10 +76,20 @@ class Signal:
 
 @dataclass
 class Scenario:
-    """A written incident and the telemetry it cites."""
+    """A written incident, the telemetry it cites, and the paths that telemetry
+    establishes."""
 
     incident: Incident
     signals: list[Signal] = field(default_factory=list)
+    access: list[Edge] = field(default_factory=list)
+    """Access paths this scenario's own evidence establishes, and nothing else.
+
+    Each carries the event ids that establish it. The rule is that an invented
+    edge is worse than a missing one: the map is the artefact that is supposed
+    to be checkable, and a plausible topology drawn from co-occurrence would put
+    fabricated structure behind blast radius — which is an input to risk
+    scoring, and therefore to what the policy engine will let anyone do.
+    """
 
     def events(self, now: datetime) -> list[Event]:
         """Materialise the telemetry, anchored so the newest signal is recent.
@@ -140,6 +151,103 @@ def _plan(*action_ids: str) -> list[PlanStep]:
 
 
 # --- 1. credential stuffing ---------------------------------------------------
+
+
+ACCESS_0901 = [
+    # The connection reached the portal. SEC-0001-a is 412 sign-in attempts
+    # arriving at sso-portal:443, which is the flow touching the asset and
+    # nothing more — it does not yet say anyone got in.
+    Edge(
+        source="asset:sso-portal",
+        target="network_flow:45.61.184.22->sso-portal:443",
+        kind="reached_by",
+        evidence=["SEC-0001-a"],
+    ),
+    # That same connection authenticated as this account. SEC-0001-b is the
+    # successful sign-in "from the same address", which is what ties the flow
+    # to the identity; without that line these would be two unrelated facts.
+    Edge(
+        source="account:j.rivera",
+        target="network_flow:45.61.184.22->sso-portal:443",
+        kind="authenticated_from",
+        evidence=["SEC-0001-b"],
+    ),
+    # And the account holds a session on the portal. SEC-0001-d is the session
+    # issued to j.rivera — the portal's exposure now depends on that account.
+    Edge(
+        source="asset:sso-portal",
+        target="account:j.rivera",
+        kind="accessed_by",
+        evidence=["SEC-0001-d"],
+    ),
+]
+
+ACCESS_0902 = [
+    # Consent was granted by this account, which is where the application's
+    # access comes from. SEC-0002-c is the token issued to an application never
+    # consented to before.
+    Edge(
+        source="asset:oauth-app-Rep0rt-Sync",
+        target="account:m.okafor",
+        kind="consented_by",
+        evidence=["SEC-0002-c"],
+    ),
+    # The application then read the mailbox. SEC-0002-d is the bulk read using
+    # that token, so the mailbox's exposure depends on the application.
+    Edge(
+        source="asset:m.okafor-mailbox",
+        target="asset:oauth-app-Rep0rt-Sync",
+        kind="read_by",
+        evidence=["SEC-0002-d"],
+    ),
+    # The account owns the mailbox, established by delivery to it and by the
+    # account following the link from it. Two citations because one alone is
+    # weaker: delivery says the mailbox is theirs, the proxy log says they act
+    # on what arrives in it.
+    Edge(
+        source="asset:m.okafor-mailbox",
+        target="account:m.okafor",
+        kind="mailbox_of",
+        evidence=["SEC-0002-a", "SEC-0002-b"],
+    ),
+]
+
+ACCESS_0903 = [
+    # The workstation is being driven over that channel. SEC-0003-a is the
+    # first-ever connection to the destination and SEC-0003-b is its
+    # machine-timed cadence; together they make it a control channel rather
+    # than a connection.
+    Edge(
+        source="host:ws-0148",
+        target="network_flow:ws-0148->198.51.100.74:8443",
+        kind="controlled_over",
+        evidence=["SEC-0003-a", "SEC-0003-b"],
+    ),
+    # SMB from ws-0148 to two hosts neither of which it had contacted before —
+    # one event establishing two paths, which is why evidence is a list and why
+    # both edges cite the same id rather than one of them being assumed.
+    Edge(
+        source="host:fs-02",
+        target="host:ws-0148",
+        kind="smb_from",
+        evidence=["SEC-0003-c"],
+    ),
+    Edge(
+        source="host:app-07",
+        target="host:ws-0148",
+        kind="smb_from",
+        evidence=["SEC-0003-c"],
+    ),
+    # The scheduled task exists on app-07 because something reached app-07.
+    # SEC-0003-d says it was created by a remote session, which is the line that
+    # makes the process depend on the host rather than merely run on it.
+    Edge(
+        source="process:app-07/schtasks",
+        target="host:app-07",
+        kind="created_on",
+        evidence=["SEC-0003-d"],
+    ),
+]
 
 
 def credential_stuffing(now: datetime) -> Scenario:
@@ -236,7 +344,7 @@ def credential_stuffing(now: datetime) -> Scenario:
         IncidentState.AWAITING_APPROVAL, "dharma",
         "revoke_session scores 25 → approval tier",
     )
-    return Scenario(incident=incident, signals=signals)
+    return Scenario(incident=incident, signals=signals, access=ACCESS_0901)
 
 
 # --- 2. phishing to token theft -----------------------------------------------
@@ -344,7 +452,7 @@ def token_theft(now: datetime) -> Scenario:
         IncidentState.AWAITING_APPROVAL, "dharma",
         "revoke_session scores 25 → approval tier",
     )
-    return Scenario(incident=incident, signals=signals)
+    return Scenario(incident=incident, signals=signals, access=ACCESS_0902)
 
 
 # --- 3. beaconing and lateral movement ----------------------------------------
@@ -449,7 +557,7 @@ def beaconing(now: datetime) -> Scenario:
         IncidentState.ESCALATED, "dharma",
         "isolate_host scores 55 → senior approval",
     )
-    return Scenario(incident=incident, signals=signals)
+    return Scenario(incident=incident, signals=signals, access=ACCESS_0903)
 
 
 BUILDERS = (credential_stuffing, token_theft, beaconing)

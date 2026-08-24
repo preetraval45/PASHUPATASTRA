@@ -21,11 +21,31 @@ class Node(BaseModel):
 
 
 class Edge(BaseModel):
-    """`source` depends on `target`: a failure in target propagates to source."""
+    """`source` depends on `target`: a failure in target propagates to source.
+
+    In the security domain the same direction reads as *what is at risk from
+    what*: an asset an account can reach is an asset that depends on that
+    account staying honest, so the edge runs from the asset to the account and
+    compromise flows target to source. It reads backwards to anyone thinking
+    "access goes from the account to the asset" — but blast radius walks
+    dependents, and getting it the other way round would report that
+    compromising a mailbox endangers the attacker.
+    """
 
     source: str
     target: str
     kind: str = "depends_on"
+
+    evidence: list[str] = Field(default_factory=list)
+    """Event ids establishing that this path exists.
+
+    An edge is a claim — *this account could reach that asset* — and the map is
+    the thing that is supposed to be checkable, so it carries a citation like
+    every other claim (rule 1 in CLAUDE.md). Empty is allowed because a
+    connector observing a live dependency has its own provenance on the
+    observation rather than on the edge; a *written scenario* asserting an edge
+    it cannot cite is inventing structure, and `testaccesspaths.py` fails on it.
+    """
 
 
 class BlastRadius(BaseModel):

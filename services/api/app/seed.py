@@ -97,10 +97,17 @@ def seed_security(graph, store, incidents, now: datetime | None = None) -> dict[
 
     Entities come from the scenarios themselves — every entity an incident names
     in its causal chain, its affected list, or an event. Nothing is invented to
-    make the map look busier, and no edges are added at all: the scenarios
-    declare a sequence of events, not a dependency graph, and a plausible
-    topology drawn from co-occurrence would put fabricated structure behind
-    blast radius.
+    make the map look busier.
+
+    Edges come from the scenarios too, and only the ones their own evidence
+    establishes (R50). This used to add none at all, on the reasoning that a
+    plausible topology drawn from co-occurrence would put fabricated structure
+    behind blast radius — which was right about the danger and wrong about the
+    remedy. The map was a row of disconnected boxes and blast radius returned
+    nothing, so `isolate_host` scored its risk against an estate of one. The
+    answer is not "no edges", it is "no edge without a citation": every path
+    names the events that establish it, and `testaccesspaths.py` fails on any
+    that cannot.
     """
     now = now or datetime.now().astimezone()
     scenarios = security_scenarios(now)
@@ -116,6 +123,9 @@ def seed_security(graph, store, incidents, now: datetime | None = None) -> dict[
 
     graph.upsert_nodes([Node(ref=ref, owner=None, estimated_users=0) for ref in entities.values()])
 
+    edges = [edge for scenario in scenarios for edge in scenario.access]
+    graph.upsert_edges(edges)
+
     events = [event for scenario in scenarios for event in scenario.events(now)]
     store.save_events(events)
     for scenario in scenarios:
@@ -125,6 +135,7 @@ def seed_security(graph, store, incidents, now: datetime | None = None) -> dict[
     return {
         "incidents": len(scenarios),
         "entities": len(entities),
+        "edges": len(edges),
         "events": len(events),
         "audit_records": len(AUDIT),
     }
