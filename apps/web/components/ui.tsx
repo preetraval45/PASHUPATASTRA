@@ -8,6 +8,8 @@
  */
 
 import Link from "next/link";
+
+import { hrefFor } from "@/lib/refs";
 import type { ReactNode } from "react";
 
 import type { AttackTechnique } from "@/lib/api";
@@ -321,7 +323,16 @@ export function Ident({ children }: { children: ReactNode }) {
  * exactly like a real one. Following it is the only thing that makes the
  * grounding rule mean anything from outside the code.
  */
-export function Evidence({ refs }: { refs: string[] }) {
+export function Evidence({
+  refs,
+  incidentId,
+}: {
+  refs: string[];
+  /** Lets in-page refs — a causal step, a plan step — resolve to an anchor
+   *  rather than to a page. Optional: most callers do not know it, and without
+   *  it those refs fall through to a real page instead of a dead fragment. */
+  incidentId?: string;
+}) {
   if (!refs.length) return null;
   return (
     <p className="mono mt-1 text-[11px] text-[rgb(var(--faint))]">
@@ -330,7 +341,11 @@ export function Evidence({ refs }: { refs: string[] }) {
         <span key={ref}>
           {index > 0 && ", "}
           <Link
-            href={`/evidence/${encodeURIComponent(ref)}`}
+            // Routed by kind. Linking every ref to `/evidence/` is right only
+            // for event ids; an incident id or an entity key sent there renders
+            // "not found", and a citation that looks checkable and then fails
+            // is worse than one that was never a link.
+            href={hrefFor(ref, incidentId)}
             className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
           >
             {ref}

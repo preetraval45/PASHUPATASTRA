@@ -114,7 +114,7 @@ export function IncidentView({
                   </Link>
                   <p className="mt-2 text-sm">{link.transition}</p>
                   {/* A chain without citations is a story, not a diagnosis. */}
-                  <Evidence refs={link.evidence} />
+                  <Evidence refs={link.evidence} incidentId={incident.id} />
                   <Technique technique={link.attack_technique} />
                 </div>
               </li>
@@ -126,7 +126,7 @@ export function IncidentView({
       {top && (
         <Panel title="Diagnosis" id="diagnosis">
           <p className="text-sm">{top.statement}</p>
-          <Evidence refs={top.evidence} />
+          <Evidence refs={top.evidence} incidentId={incident.id} />
 
           {alternatives.length > 0 && (
             <div className="mt-5 border-t border-[rgb(var(--edge))] pt-4">

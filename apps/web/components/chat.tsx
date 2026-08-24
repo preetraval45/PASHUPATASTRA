@@ -14,6 +14,7 @@
  */
 
 import Link from "next/link";
+import { hrefFor } from "@/lib/refs";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { askAgent, tierLabel, type ChatAnswer, type Incident } from "@/lib/api";
@@ -311,38 +312,6 @@ export function Proposal({ answer }: { answer: ChatAnswer }) {
       </p>
     </div>
   );
-}
-
-/**
- * Where a citation goes.
- *
- * Chat refs are not all one kind, and the existing `Evidence` component sends
- * everything to `/evidence/`, which is right only for event ids. A causal step
- * or an audit record sent there 404s, and a citation that leads to a "not
- * found" is worse than one that is plainly unlinked: it looks checkable, and
- * checking it fails.
- */
-export function hrefFor(ref: string, incidentId: string): string {
-  if (ref.startsWith("audit:")) {
-    // Anchored by timestamp. The audit list is newest-first and grows as
-    // questions are asked, so a positional anchor points somewhere else by the
-    // time the page renders.
-    return `#${encodeURIComponent(ref)}`;
-  }
-  if (ref.startsWith(`${incidentId}#chain-`)) {
-    return `#chain-${ref.split("chain-")[1]}`;
-  }
-  if (ref.startsWith(`${incidentId}#plan-`)) {
-    return `#plan-${ref.split("plan-")[1]}`;
-  }
-  if (ref.startsWith(`${incidentId}#hypothesis`)) {
-    return "#diagnosis";
-  }
-  if (ref === incidentId) return `/incidents/${encodeURIComponent(ref)}`;
-  // An entity key — `host:ws-0148`. Distinguished from an event id by the
-  // colon, which event ids do not contain.
-  if (ref.includes(":")) return `/entity/${encodeURIComponent(ref)}`;
-  return `/evidence/${encodeURIComponent(ref)}`;
 }
 
 /** Shortened for reading. The full ref is the link target either way, and

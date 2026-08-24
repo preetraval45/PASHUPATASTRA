@@ -1734,11 +1734,36 @@ Everything in Phases 5B–5D is worth less until these land.
   anything. 12/12 pass, contrast passes AA in both themes, 33/33 responsive
   combinations pass.
 
-- [ ] **R59 — Deploy Phase 5A and review.** Needs: **R56, R57, R58**.
+- [x] **R59 — Deploy Phase 5A and review.** Needs: **R56, R57, R58**.
   **Done when:** the deployed Observatory shows grouped indicators against the
   live feed rather than a fixture, the build panel names the real stack, and
   `verifyui.py` and `verifycontrast.py` pass on both.
   **Stop here for review.**
+  Done. All three criteria hold on the deployed site: `/intel/status` shows live
+  cursors for all six feeds dated today, the build panel resolves 14/14
+  dependencies against manifests the checker parses itself, and both scripts
+  pass — 33/33 responsive combinations and every contrast pairing at AA in both
+  themes. 985 tests pass.
+  Treating this as a review rather than as two script runs is what made it worth
+  doing. `scripts/verifysite.py` was written for it: it crawls every internal
+  link from the entry page — 58 pages — and checks three things a status code
+  cannot, because **`notFound()` under dynamic rendering returns HTTP 200 with
+  the not-found body**. A broken link is therefore indistinguishable from a
+  working one to anything that only reads status, which is how the bug below
+  survived every check so far.
+  It found one: `Evidence` in `ui.tsx` linked every citation to `/evidence/`,
+  which is correct only for event ids. A hypothesis cites the incident it
+  belongs to, so `/evidence/INC-2026-0901` was reachable from every hypothesis
+  on the site and rendered "no such page".
+  The fix already existed. `chat.tsx` had `hrefFor()` routing refs by kind, and
+  **its docstring described this exact bug in `Evidence`** — written, understood,
+  and never back-ported. It now lives in `lib/refs.ts` and both use it, so there
+  is one answer to "where does a citation go" rather than one per component.
+  The detector was proven rather than trusted: it catches `no such page` at
+  HTTP 200 on the old URL and passes `/evidence/SEC-0001-a` and
+  `/incidents/INC-2026-0901` clean.
+  Still open and confirmed here with evidence: `notFound()` returns 200 on
+  dynamic routes while a genuinely unknown static path returns a real 404.
 
 ---
 
