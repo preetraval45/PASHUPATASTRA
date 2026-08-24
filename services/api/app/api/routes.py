@@ -160,6 +160,34 @@ def evaluate_policy(request: EvaluateRequest) -> Verdict:
     return verdict
 
 
+@router.get("/policy/model")
+def policy_model_route() -> dict[str, object]:
+    """The policy this deployment enforces, generated from the engine.
+
+    Serves the page that explains the risk tiers. That page must not restate
+    them: a table written from memory is a second answer to "who may approve
+    this", and on the day the two disagree the wrong one is the one on the
+    marketing site.
+
+    The gates are here for the same reason. "This deployment is in dry run and
+    its environment is not on the live list" is a claim the front page makes,
+    and it is worth exactly as much as the reader's ability to check it.
+    """
+    from pashupatastra.dharma import policy_model
+
+    settings = get_settings()
+    model = policy_model()
+    model["gates"] = {
+        "dry_run": settings.dry_run,
+        "environment": str(settings.environment),
+        "live_environments": [str(env) for env in settings.live_environments],
+        # Both must open. `not dry_run` alone is not enough, which is the whole
+        # point of there being two — see `Settings.live_execution_enabled`.
+        "live_execution_enabled": settings.live_execution_enabled,
+    }
+    return model
+
+
 class ExecuteRequest(BaseModel):
     action_id: str
     verdict: Verdict

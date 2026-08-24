@@ -154,6 +154,43 @@ BLAST_RADIUS_ESCALATION_ENTITIES = 5
 BLAST_RADIUS_ESCALATION_USERS = 1000
 
 
+APPROVERS: dict[Tier, list[str]] = {
+    Tier.AUTONOMOUS: [],
+    Tier.APPROVAL: ["operator"],
+    Tier.SENIOR: ["senior_operator"],
+    Tier.DENIED: [],
+}
+"""Who may authorise each tier. Lifted out of `evaluate` so that anything
+describing the policy reads the same table the engine decides with — a page
+restating these from memory is a second answer to "who may approve this", and
+the day they disagree the wrong one is on the marketing site."""
+
+
+def policy_model() -> dict[str, object]:
+    """The policy in the shape a reader needs, generated rather than written.
+
+    Exists because a page explaining the risk tiers must not restate them. The
+    numbers here are the ones `_tier_for` branches on and the approvers are the
+    ones `evaluate` attaches, so the table on the site cannot drift from the
+    engine without the drift being a code change in one place.
+    """
+    return {
+        "tiers": [
+            {
+                "tier": str(tier),
+                "max_risk": ceiling,
+                "min_risk": 0 if index == 0 else _TIERS[index - 1][0] + 1,
+                "approvers": APPROVERS[tier],
+            }
+            for index, (ceiling, tier) in enumerate(_TIERS)
+        ],
+        "escalation": {
+            "blast_radius_entities": BLAST_RADIUS_ESCALATION_ENTITIES,
+            "blast_radius_users": BLAST_RADIUS_ESCALATION_USERS,
+        },
+    }
+
+
 def _tier_for(risk: int) -> Tier:
     for ceiling, tier in _TIERS:
         if risk <= ceiling:
@@ -244,12 +281,7 @@ def evaluate(
         tier = Tier.DENIED
         denial = f"effective risk {effective} exceeds agent risk limit {agent_risk_limit}"
 
-    approvers = {
-        Tier.AUTONOMOUS: [],
-        Tier.APPROVAL: ["operator"],
-        Tier.SENIOR: ["senior_operator"],
-        Tier.DENIED: [],
-    }[tier]
+    approvers = APPROVERS[tier]
 
     now = datetime.now().astimezone()
     return Verdict(

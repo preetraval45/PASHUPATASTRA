@@ -153,7 +153,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </main>
 
         <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-[rgb(var(--faint))] sm:px-6">
-          Observe. Reason. Act. Verify.
+          <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span>Observe. Reason. Act. Verify.</span>
+            {/* Reachable from anywhere without taking a navigation slot. R52's
+                rule is that a tab is for something a visitor goes looking for;
+                "how it works" is something they go looking for *after* a claim,
+                which is here and on the landing page. */}
+            <Link href="/how-it-works" className="focusable rounded hover:text-[rgb(var(--muted))]">
+              How it works
+            </Link>
+          </span>
         </footer>
       </body>
     </html>

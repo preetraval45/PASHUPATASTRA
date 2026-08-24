@@ -28,7 +28,7 @@ VIEWPORTS = [
     ("desktop", 1440, 900),
 ]
 
-DEFAULT_ROUTES = ["/", "/overview", "/incidents", "/ask", "/observatory",
+DEFAULT_ROUTES = ["/", "/how-it-works", "/overview", "/incidents", "/ask", "/observatory",
                   "/blue-team", "/infrastructure", "/actions", "/audit", "/search"]
 
 

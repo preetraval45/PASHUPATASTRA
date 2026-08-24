@@ -17,7 +17,7 @@ import {
   type IntelEntry,
   type Verification,
 } from "@/lib/api";
-import { Ago, Badge, Ident, statusForSeverity, type Status } from "@/components/ui";
+import { Ago, Badge, statusForSeverity, type Status } from "@/components/ui";
 
 /**
  * What each state looks like and, more importantly, what it means.
@@ -104,7 +104,18 @@ export function IntelEntryRow({ entry }: { entry: IntelEntry }) {
         >
           {sourceName(entry.source)}
         </span>
-        {identifier && <Ident>{identifier}</Ident>}
+        {/* Wraps, because the identifier comes from a feed and feeds bring
+            whatever the internet contains. This row was laid out against IP
+            addresses and held until URLhaus ingested a 56-character random
+            subdomain, which pushed the page 100px wide at 375px. `min-w-0` as
+            well as `break-all`: a flex item refuses to shrink below its
+            content's minimum without it, so breaking alone would not have
+            been enough. */}
+        {identifier && (
+          <span className="mono min-w-0 break-all text-[rgb(var(--astra))]">
+            {identifier}
+          </span>
+        )}
       </div>
 
       <p className="text-sm font-medium leading-snug">{title}</p>

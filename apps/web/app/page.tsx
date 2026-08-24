@@ -214,6 +214,16 @@ export default async function LandingPage() {
         </div>
 
         <p className="text-sm text-[rgb(var(--muted))]">
+          The tiers, the gates and the registry are on{" "}
+          <Link
+            href="/how-it-works"
+            className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+          >
+            how it works
+          </Link>
+          , generated from the running system rather than written down.
+        </p>
+        <p className="text-sm text-[rgb(var(--muted))]">
           The assistant is bound by the same rule: ask it to isolate a host and
           it names the action, sends it for approval, and executes nothing.{" "}
           <Link

@@ -92,6 +92,9 @@ export interface ActionSpec {
   expected_post_state: Record<string, string>;
   rollback_action_id: string | null;
   irreversible: boolean;
+  /** Declared on the action, never inferred from its risk. `changes_nothing` is
+   *  true of paging an analyst, which is not a read — see R19. */
+  read_only: boolean;
 }
 
 export interface Verdict {
@@ -502,3 +505,21 @@ export const getIncidentGraph = (id: string) =>
     edges: GraphEdge[];
     beyond: string[];
   }>(`/incidents/${encodeURIComponent(id)}/graph`);
+
+export interface PolicyModel {
+  tiers: { tier: Tier; min_risk: number; max_risk: number; approvers: string[] }[];
+  escalation: { blast_radius_entities: number; blast_radius_users: number };
+  gates: {
+    dry_run: boolean;
+    environment: string;
+    live_environments: string[];
+    live_execution_enabled: boolean;
+  };
+}
+
+/** The policy this deployment enforces, generated from the engine.
+ *
+ *  Fetched rather than written down. A table of risk tiers typed into a page is
+ *  a second answer to "who may approve this", and on the day the two disagree
+ *  the wrong one is the one on the marketing site. */
+export const getPolicyModel = () => get<PolicyModel>("/policy/model");

@@ -2273,6 +2273,27 @@
         "summary": "Evaluate Policy"
       }
     },
+    "/api/v1/policy/model": {
+      "get": {
+        "description": "The policy this deployment enforces, generated from the engine.\n\nServes the page that explains the risk tiers. That page must not restate\nthem: a table written from memory is a second answer to \"who may approve\nthis\", and on the day the two disagree the wrong one is the one on the\nmarketing site.\n\nThe gates are here for the same reason. \"This deployment is in dry run and\nits environment is not on the live list\" is a claim the front page makes,\nand it is worth exactly as much as the reader's ability to check it.",
+        "operationId": "policy_model_route_api_v1_policy_model_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Policy Model Route Api V1 Policy Model Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Policy Model Route"
+      }
+    },
     "/api/v1/topology": {
       "get": {
         "operationId": "topology_api_v1_topology_get",

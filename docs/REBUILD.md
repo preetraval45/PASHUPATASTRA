@@ -8,8 +8,8 @@ task depends on*, and *how you know it is done*.
 
 ## How to use this
 
-Every task has an id — `R1`, `R2`, … for the rebuild, `S1`, `S2`, … for turning
-it into a SaaS. Tell me **"do R7"** and I do exactly that task and stop. A task is only startable when everything in its **Needs** column
+Every task has an id — `R1`, `R2`, … for the rebuild and the polish pass that
+followed it, `S1`, `S2`, … for turning it into a SaaS. Tell me **"do R7"** and I do exactly that task and stop. A task is only startable when everything in its **Needs** column
 is ticked — that is the whole point of the ordering, and jumping it is how a
 half-built feature lands on top of an unfinished one.
 
@@ -255,7 +255,29 @@ Phase 5 ─ the visitor's path            needs R17
   R53 ──► R54
   R51, R52, R53, R54 ──────────► R55 (deploy + review)
 
-Phase 6 ─ tenancy and identity           needs R18, R55
+Phase 5A ─ credibility + attribution     needs R55
+  R56, R57, R58 ───────────────► R59 (deploy + review)
+
+Phase 5B ─ satisfying to operate         needs R59
+  R58 ──► R60 ──► R66
+  R56 ──► R61
+  R43 ──► R62      R51 ──► R63      R27 ──► R64      R20 ──► R65
+  R60..R66 ────────────────────► R67 (deploy + review)
+
+Phase 5C ─ Sati, deeper                  needs R59, R21
+  R21 ──► R68 ─┬──► R69
+               ├──► R70 ──► R71
+               ├──► R72
+               └──► R73
+  R68..R73 ────────────────────► R74 (deploy + review)
+
+Phase 5D ─ the capability menu           needs R74   ← a menu, not a checklist
+  R75 ──► R81      R23 ──► R76 ──► R78      R71 ──► R77
+  R70 ──► R80      R20 ──► R79      R26 ──► R82, R83      R50 ──► R85
+  R84 is held behind S2 on purpose — per-user history needs accounts
+  whichever were chosen ───────► R87 (deploy + review)
+
+Phase 6 ─ tenancy and identity           needs R18, R59, R55
   S1 ──► S2 ──► S3 ──► S4 ──► S5        the order is not negotiable:
                        S3 ──► S6        tenancy before sign-in, scoping
                                         before invitations
@@ -271,12 +293,15 @@ Phase 8 ─ operating it as a service      needs S10
   S5, S8, S11, S14 ────────────► S16 (deploy + review)
 ```
 
-**Two numbering notes.** `R40`–`R45` appeared twice — Phase 2A, delivered, and
+**Three numbering notes.** `R40`–`R45` appeared twice — Phase 2A, delivered, and
 Phase 5, not started — so Phase 5's are now `R50`–`R55`. Two tasks with one id
 is a plan that cannot be pointed at. The SaaS phases use `S` rather than
 continuing the `R` sequence, because they are a different kind of work: `R` is
 "rebuild this demo into a console", `S` is "turn the console into something a
-stranger can sign up for".
+stranger can sign up for". The polish pass of 24 August 2026 continues the `R`
+sequence at `R56` and hangs its phases off Phase 5 as **5A–5D**, the way Phase
+2A was inserted after Phase 2 — renumbering Phases 6–8 would have invalidated
+every `S` dependency written against them for the sake of tidier arithmetic.
 
 ---
 
@@ -1453,15 +1478,45 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   *Verified: 30/30 layout and reachability checks, WCAG AA in both themes, every
   click-through journey intact after the route move, 807 tests.*
 
-- [ ] **R54 — How it works.** Needs: **R53**.
-  One page for the visitor who got interested and now wants to know whether to
-  believe it: the seven stages, the risk tiers and who may authorise each, the
-  two gates that keep this deployment in dry run, and the audit trail — with a
-  link to the real one rather than a description of it.
-  This is where the delisted Audit page earns its keep. The argument it makes is
-  "you can check every claim", which is an argument, not a dashboard.
+- [x] **R54 — How it works.** Needs: **R53**.
   **Done when:** every claim on `/` has a page here that substantiates it, and
-  the risk table matches the registry rather than restating it from memory.
+  the risk table matches the registry rather than restating it from memory. —
+  **met, and both halves were checked rather than assumed.**
+
+  **The risk table is generated, not written.** `dharma.policy_model()` returns
+  the bands `_tier_for` branches on and the approvers `evaluate` attaches, and
+  `/api/v1/policy/model` serves them. Proved by moving the autonomous ceiling
+  from 30 to 25 and watching the model report `0–25` and `26–60` — a page with
+  the numbers typed in is what that change would have silently contradicted.
+  The same route carries the two gates, because *"this deployment is in dry run
+  and its environment is not on the live list"* is a claim, and it is worth
+  exactly what a reader's ability to check it is worth.
+
+  `evaluate` now reads the shared `APPROVERS` table rather than its own copy.
+  Two answers to "who may approve this" is one too many, and the day they
+  disagree the wrong one is the one on the marketing site.
+
+  **The claim audit found two gaps.** A check walked every claim on `/` and
+  looked for something backing it here: *maps each step to a known technique*
+  had nothing behind it, and *risk from blast radius, confidence and
+  reversibility* mentioned only the first. Both are covered now — an ATT&CK
+  section listing the three techniques of one real incident, in order, and the
+  risk inputs named. Nine claims, nine substantiations.
+
+  Reached from the landing page beside the claims it backs, and from the footer
+  so it is available everywhere — not a seventh navigation tab, because R52's
+  rule is that a tab is for what a visitor *arrives* looking for, and this is
+  what they look for *after* reading a claim.
+
+  **A regression surfaced on the way, from data rather than code.** URLhaus
+  ingested a 56-character random subdomain, and `/observatory` — laid out
+  against IP addresses — went 100px wide at 375px. Feeds bring whatever the
+  internet contains, so the identifier wraps now. `min-w-0` as well as
+  `break-all`: a flex item refuses to shrink below its content's minimum
+  contribution, so breaking alone would not have been enough.
+
+  *Verified: 33/33 layout and reachability checks, WCAG AA in both themes,
+  807 tests.*
 
 - [ ] **R55 — Deploy Phase 5 and review.** Needs: **R51, R52, R53, R54**.
   **Done when:** the deployed site opens on something a stranger understands,
@@ -1471,9 +1526,371 @@ go looking for. Everything else appears where it is needed and nowhere else.**
 
 ---
 
+## The polish pass, added 24 August 2026
+
+A second prompt arrived after Phase 5's tasks were written: a UI/UX and polish
+upgrade covering seven priorities, from a real Observatory bug through to a menu
+of further cybersecurity capability. It is folded in here rather than kept as a
+separate document, because a second plan is how two plans start disagreeing.
+
+Where it duplicates something already planned, the existing task wins and the
+new material is folded into it — **Priority 4 ("How it's built") is R54**, which
+was already written and already needs doing. Everything else becomes **Phases
+5A–5D**, sequenced the way the prompt itself asks for: credibility and
+attribution first, then the visitor's first minute, then the agent, then the
+capability menu last and only opportunistically.
+
+**These phases run before Phases 6–8.** The SaaS work assumes a console someone
+already believes; a feed that prints the same IP twelve times is a reason not
+to. Phase 6 keeps its `S1` dependency on `R18` and gains one on `R59`.
+
+### Where the seven priorities landed
+
+| Prompt priority | Tasks | Phase |
+|---|---|---|
+| 1 — Observatory noise | R56 | 5A |
+| 2 — About this build | R57 | 5A |
+| 3 — Fast onboarding | R58, and R60 for the richer version | 5A / 5B |
+| 4 — How it's built | **R54** — already planned, extended below | 5 |
+| 5 — Advanced and fun | R60–R66 | 5B |
+| 6 — Expand Sati | R68–R73 | 5C |
+| 7 — Capability areas | R75–R86, a menu | 5D |
+
+### Two rules that apply to every task below
+
+1. **No dead buttons.** Anything from the capability menu that is not built is
+   either absent or marked as roadmap on `/how-it-works` (R54). A demo with
+   fewer real features beats one with a nav item that opens an apology.
+2. **Nothing new delays real data.** No loading skeleton, no reveal animation,
+   and no palette that has to boot before the page beneath it renders. The
+   site's whole argument is that what you are looking at is live; a spinner in
+   front of it is an odd way to make that case.
+
+The existing visual language is extended, not replaced: the dark palette, the
+`▲ ◆ ● ○` severity glyphs, the spacing and type scales from R40–R44. Copy stays
+dry — no "seamless", no "supercharge", no adjective that would survive being
+deleted.
+
+**R54 gains one requirement** from the new prompt: alongside the seven stages,
+the risk tiers and the two dry-run gates, it carries the live-versus-roadmap
+table for Phase 5D, and it explains how effective risk is computed — blast
+radius, confidence, novelty, reversibility — and why base risk only ever rises.
+
+---
+
+## Phase 5A — Credibility and attribution
+
+Needs **R55**. Two fixes, and they are the two a visitor notices before anything
+else on this list: a feed that repeats itself, and a site with no author.
+Everything in Phases 5B–5D is worth less until these land.
+
+- [ ] **R56 — Observatory: one row per indicator, not one per report.** Needs: **R23**.
+  The feed renders raw API rows, so a single IP reported twelve times in three
+  hours is twelve near-identical cards, and the page reads as noise generated by
+  a script rather than as intelligence. Group by indicator — IP, URL, hash —
+  within a rolling window (3h to start, and the window is a named constant, not
+  a literal scattered through the component), collapse repeats to
+  `reported 8x in the last 3h`, and put the individual timestamps, reporters,
+  tags and status behind an expander so nothing is lost. Sort groups by most
+  recent activity, and split *still active* from *gone offline* — the data
+  already carries that status and currently spends it on nothing.
+  **Done when:** no indicator appears at the top level twice, every individual
+  report is still reachable in one click, and a test feeds a fixture with a
+  known duplicate count and asserts both the group count and the per-group
+  report count.
+  *This is a bug, not polish, which is why it is first.*
+
+- [ ] **R57 — Build info, not a bio.** Needs: nothing.
+  The site has no author and no repository link, which for a portfolio project
+  is the one omission that costs it everything. A footer panel, styled as a
+  system readout — version, deploy target, stack — rather than an About Me card:
+  builder, one line on why this exists, the GitHub repository, a
+  LinkedIn/portfolio link, and the stack **read from `package.json` and the
+  Python requirements**, not typed from memory. A stack list claiming a
+  dependency the repo does not have is the same failure as an invented metric,
+  on the one panel whose whole subject is honesty.
+  **Done when:** every framework named is in a manifest in this repo, the panel
+  renders on every page, and it reads as another data panel — no photograph, no
+  first person, no "passionate about".
+
+- [ ] **R58 — Start here.** Needs: **R53**.
+  A skimmer on `/` currently has to notice a text link to find the real
+  incident. A *Start here* affordance near the top, leading straight into it —
+  a link or a scroll, **not a modal**, and nothing that blocks the page beneath
+  it. The palette in R60 is the richer version of this; this task is the one
+  that works without JavaScript.
+  **Done when:** a visitor who reads nothing but the first screen reaches a real
+  incident in one click, and the affordance is keyboard-reachable and legible in
+  both themes.
+
+- [ ] **R59 — Deploy Phase 5A and review.** Needs: **R56, R57, R58**.
+  **Done when:** the deployed Observatory shows grouped indicators against the
+  live feed rather than a fixture, the build panel names the real stack, and
+  `verifyui.py` and `verifycontrast.py` pass on both.
+  **Stop here for review.**
+
+---
+
+## Phase 5B — Satisfying to operate
+
+Needs **R59**. The prompt's word is "fun", and its own constraint is the right
+one: *fun means satisfying to operate, not decorative.* Nothing here adds
+illustration, bright colour or a gradient. Each task either makes the site
+faster to use or makes visible a claim it already makes.
+
+Take these in order of leverage and stop when the time budget does — R60 and
+R65 are the two that change how the product feels; the rest are additive.
+
+- [ ] **R60 — Command palette.** Needs: **R58**.
+  `Cmd-K` / `Ctrl-K`, fuzzy across incidents, entities, advisories, actions and
+  pages, plus the four named jump points: show me a real incident, let me work
+  one myself, show today's threat feed, talk to the assistant. Search runs
+  against data already loaded or already cached; a palette that waits on a round
+  trip is slower than the nav it replaces.
+  **Done when:** it opens from any page, is fully keyboard-operable including
+  escape and arrow keys, traps focus while open and returns it on close, and
+  degrades on touch to a visible search affordance rather than a shortcut nobody
+  can type.
+
+- [ ] **R61 — Show that it is live.** Needs: **R56**.
+  Observatory and the incident feed poll real sources hourly and the page says
+  nothing about it. `last synced 14m ago`, and new entries arriving with a brief
+  highlight as they land — **the entry renders first and is highlighted after**,
+  never the reverse.
+  **Done when:** the sync age is derived from the record's own timestamp rather
+  than from page load, and a stale feed reads as stale instead of as empty.
+
+- [ ] **R62 — The causal chain builds itself.** Needs: **R43**.
+  On an incident page, the chain reveals signal → signal → signal → diagnosis
+  rather than appearing complete. This is the site's central claim — *this is
+  what connecting the dots looks like* — animated once, briefly, and not again
+  on that page.
+  **Done when:** the full chain is present in the DOM from the first paint with
+  motion applied on top, `prefers-reduced-motion` renders it complete and
+  instant, and no text is unreadable at any point in the sequence.
+
+- [ ] **R63 — Blast radius as a graph.** Needs: **R51**.
+  R51 put the access map on the incident page; this gives blast radius its own
+  radial view of affected entities beside the list, so *what this reached* is a
+  shape rather than a count. Same rule as R50: **no edge without a citation.**
+  **Done when:** it draws only edges the incident's evidence establishes, the
+  list remains for screen readers, and it collapses to the list on narrow
+  viewports rather than overflowing.
+
+- [ ] **R64 — The debrief is the payoff.** Needs: **R27**.
+  After a Blue Team scenario, a score breakdown across diagnosis, response and
+  investigation, naming the specific evidence the player opened and the specific
+  evidence they did not. The training value is entirely here and the current
+  screen spends it on a number.
+  **Done when:** every point gained or lost traces to a named piece of evidence
+  or a named decision, and the unopened evidence is listed by name.
+
+- [ ] **R65 — Approving something should feel like a decision.** Needs: **R20**.
+  A proposed action awaiting approval currently reads as a form submit. Give the
+  risk score visual weight through the existing `● ◆ ▲` tiers, and a *why this
+  tier* explanation drawn from the registry's own factors — blast radius,
+  confidence, novelty, reversibility — rather than a restatement of the score.
+  **Done when:** the explanation is generated from the same numbers the tier is
+  computed from, so it cannot disagree with it, and the tier is distinguishable
+  without colour.
+
+- [ ] **R66 — Keyboard triage.** Needs: **R60**.
+  `j`/`k` between incidents, `Enter` to open, `?` for the shortcut list. Matches
+  the identity the rest of the site already claims.
+  **Done when:** shortcuts do not fire while a text input has focus, every one
+  of them has a mouse equivalent, and the list is discoverable without reading
+  the source.
+
+- [ ] **R67 — Deploy Phase 5B and review.** Needs: **R60–R66**.
+  **Done when:** the palette, the chain reveal and the blast-radius graph each
+  work on a phone or are absent there by design rather than by accident, and
+  `verifyui.py` passes at every breakpoint it checks.
+  **Stop here for review.**
+
+  *Deliberately not planned: an easter egg. The prompt offers one and says to
+  skip it if it risks the tone. It does — the site's whole register is "this is
+  not a toy", and a Konami code is the shortest available argument that it is.*
+
+---
+
+## Phase 5C — Sati, deeper
+
+Needs **R59** and **R21**. Sequenced ahead of Phase 5D because a smarter agent
+raises the ceiling on everything else here, and because `/ask` answering cited
+questions about one incident is the smallest version of what the homepage
+claims.
+
+Every task in this phase is bound by the two rules the rest of the platform is:
+**rule 1** — nothing the agent states is true because the model said it — and
+**rule 2** — nothing it drafts is adopted without passing through Dharma and a
+human. Generation is a new output, not a new authority.
+
+- [ ] **R68 — The reasoning trace is visible.** Needs: **R21**.
+  Show the intermediate steps, not only the answer: which evidence was pulled,
+  which hypotheses were considered, which were ruled out and on what. The
+  homepage asserts that *diagnoses are challenged by evidence*; this is the
+  screen that demonstrates it rather than repeating it.
+  **Done when:** every step names the records it read, a rejected hypothesis
+  names what rejected it, and the trace is stored with the answer so it can be
+  audited later rather than regenerated differently.
+  *Highest-leverage task in this phase — it turns a claim into a screen.*
+
+- [ ] **R69 — Reasoning across incidents.** Needs: **R68**.
+  "Are 0901 and 0902 related?", "same actor pattern?" — answered from entity
+  overlap, timing and shared indicators, all of which are already stored.
+  **Done when:** a relation is asserted only where the overlap is real and
+  cited, *no relation found* is an answer it is willing to give, and a test
+  covers a pair with no overlap.
+
+- [ ] **R70 — Drafts, not decisions.** Needs: **R68**.
+  A draft playbook and a draft post-incident report, written from an incident's
+  evidence. Text output, human review, and the same approval path before
+  anything is adopted.
+  **Done when:** every assertion in a draft carries its evidence reference, the
+  draft is labelled a draft everywhere it appears, and adopting one is an action
+  that goes through Dharma like any other.
+
+- [ ] **R71 — Natural language to a detection rule.** Needs: **R70**.
+  *"Write a Sigma rule that would have caught the SMB lateral movement in
+  0903"* — the agent drafts it, states which telemetry field maps to which rule
+  field, and flags what it is unsure of. An LLM generating something, held to
+  the same citation discipline as everything else.
+  **Done when:** the output parses as valid Sigma, each mapping names the source
+  field it came from, and uncertainty is stated in the output rather than
+  smoothed away.
+
+- [ ] **R72 — Counterfactuals.** Needs: **R68**.
+  *"What if we had blocked the ASN at 09:14 instead of 10:31?"* — reasoned over
+  the causal chain timeline already stored per incident, estimating the blast
+  radius that would not have happened. Ties to the *cost of the gap* framing R53
+  put on the homepage.
+  **Done when:** the estimate is derived from stored timeline and graph records,
+  is presented as an estimate with its basis stated, and refuses rather than
+  guesses where the timeline does not support the question.
+
+- [ ] **R73 — Argue the other side.** Needs: **R68**.
+  Before finalising a diagnosis, a second pass arguing the alternative
+  explanation and then saying why it was rejected — surfaced as *the
+  plausible-and-wrong explanation*, which is language the Blue Team rubric
+  already uses. The rubric becomes demonstrable by the agent scored against it.
+  **Done when:** the alternative is a real competing hypothesis rather than a
+  restatement, the rejection cites evidence, and a case where the alternative
+  *wins* is possible and is tested.
+
+- [ ] **R74 — Deploy Phase 5C and review.** Needs: **R68–R73**.
+  **Done when:** every new output is cited, no generated artefact can be adopted
+  without an approval record, and the Groq token ceiling from R19 still holds
+  with the trace and the self-critique pass both running.
+  **Stop here for review.**
+
+---
+
+## Phase 5D — The capability menu
+
+Needs **R74**. **This phase is a menu, not a checklist.** The prompt is explicit
+and it is right: pick the subset the data model and the time budget actually
+support, and mark the rest as roadmap on R54's page. Ticking things here is
+worth less than being accurate about which are ticked.
+
+Nothing here starts before Phases 5A–5C are done, and anything needing accounts
+or per-user persistence belongs to Phase 6, not to this one.
+
+**Detection and threat intelligence**
+
+- [ ] **R75 — The ATT&CK matrix as a view.** Needs: **R17**.
+  A tactic/technique matrix across the whole incident library rather than tags
+  on one incident. Coverage is the interesting claim; a tag is not.
+  **Done when:** every filled cell links to the incidents that fill it, and
+  empty cells read as *not observed* rather than as *not covered*.
+
+- [ ] **R76 — More real feeds.** Needs: **R23**.
+  Beyond CISA KEV and URLhaus: NVD/CVE recent disclosures and AlienVault OTX
+  pulses, both free and both polled the way the existing feeds are.
+  **Done when:** each new feed has its own poller, its own failure handling and
+  a source attribution on every record it produces — and one feed being down
+  does not empty the page.
+
+- [ ] **R77 — A browsable detections library.** Needs: **R71**.
+  The rules from R71, plus any written by hand, as a page tied back to the
+  incidents they came from.
+  **Done when:** every rule names its incident and its author — drafted by the
+  agent or written by a human — and the two are visually distinguishable.
+
+- [ ] **R78 — Indicator enrichment in place.** Needs: **R76**.
+  Any IP, hash or domain anywhere in the app is clickable, and queries the
+  intelligence already held before it queries anything external.
+  **Done when:** lookups are cached, a miss reads as *nothing known* rather than
+  as an error, and no lookup blocks the page it was triggered from.
+
+**Response and operations**
+
+- [ ] **R79 — Playbooks over the action registry.** Needs: **R20**.
+  Named, reusable chains of existing actions — `revoke_session`, `isolate_host`
+  — with an aggregate risk score and approval routing derived from the steps.
+  **Done when:** a playbook's tier is computed from its steps and is never lower
+  than its highest step, and a playbook cannot execute a step whose own approval
+  would have been refused. *Rule 2 has no chained-action exemption.*
+
+- [ ] **R80 — The post-incident report as an export.** Needs: **R70**.
+  Timeline, root cause and recommended follow-ups, as Markdown and PDF.
+  **Done when:** an exported report carries its evidence references and the
+  audit record ids, so it is checkable away from the site that produced it.
+
+- [ ] **R81 — Framework mapping.** Needs: **R75**.
+  Incidents and actions tagged against NIST CSF or ISO 27001 control families —
+  a real enterprise ask, and cheap once the ATT&CK mapping exists.
+  **Done when:** each mapping is stated as an assertion with its basis, not as a
+  certification, and the page says which it is.
+
+**Simulation and training**
+
+- [ ] **R82 — Adversary emulation.** Needs: **R26**.
+  Generate a synthetic incident on demand from a TTP chain or an actor profile,
+  instead of three fixed scenarios. The largest single increase in replay value
+  available here.
+  **Done when:** generated incidents are labelled synthetic everywhere they
+  appear, carry the same evidence structure as the fixed three, and never enter
+  the same feed as real advisory data.
+
+- [ ] **R83 — Phishing simulation.** Needs: **R26**.
+  A mock inbox, scored by the same rubric as Blue Team.
+  **Done when:** it shares R64's scoring code rather than reimplementing it.
+
+- [ ] **R84 — Leaderboards and streaks.** Needs: **S2**.
+  **Deliberately dependent on Phase 6, not on this one.** Per-user history needs
+  accounts and persistence; building it before S2 means inventing half an
+  identity that S2 then has to unpick.
+  **Done when:** it is built on Cognito sessions and per-tenant storage — or not
+  built.
+
+**Visibility and analytics**
+
+- [ ] **R85 — Topology as its own screen.** Needs: **R50**.
+  Mostly delivered already: R50 built the graph and R51 put it on the incident
+  page. What remains is the estate-level view of watched entities and observed
+  access paths as a first-class screen rather than a delisted route.
+  **Done when:** it shows the whole estate under the same citation rule, and the
+  10 observed access paths on the overview link into it.
+
+- [ ] **R86 — Baseline and deviation.** Needs: **R17**.
+  Normal versus current for the entities already tracked. Threshold-based is
+  fine and honest; **the framing is the value, and calling a threshold "ML" is
+  the one way to lose it.**
+  **Done when:** the method is stated on the page, the baseline window is
+  visible, and no deviation is shown without the baseline it deviates from.
+
+- [ ] **R87 — Deploy Phase 5D and review.** Needs: whichever of **R75–R86** were
+  chosen.
+  **Done when:** `/how-it-works` lists every item in this phase as live or as
+  roadmap, that list matches what is actually deployed, and no route exists for
+  anything not built.
+  **Stop here for review.**
+
+---
+
 ## Phase 6 — Tenancy and identity *(the floor a SaaS stands on)*
 
-Needs **R18** and **R55**. Everything up to here is one console showing one
+Needs **R18**, **R55** and **R59**. Everything up to here is one console showing one
 organisation's data to anyone who opens the URL. A SaaS is the opposite claim:
 many organisations, each seeing only its own, and each certain the others cannot
 see theirs. That claim is made in the data model, not in the login screen.
@@ -1486,7 +1903,7 @@ window by using the product — they find it by being in someone else's data.
 `packages/core` already carries a `tenant` setting that nothing enforces. That
 is the seam this phase makes real.
 
-- [ ] **S1 — A tenant on every record.** Needs: **R18**.
+- [ ] **S1 — A tenant on every record.** Needs: **R18**, **R59**.
   `tenant_id` on incidents, audit records, events, nodes, edges and cached
   answers, and in the DynamoDB partition key beside the namespace — the same
   mechanism that already separates `prod` from `test`, doing the job it was
