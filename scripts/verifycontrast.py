@@ -24,6 +24,18 @@ Usage:  python scripts/verifycontrast.py [url]
 from __future__ import annotations
 
 import argparse
+import io
+import sys
+
+# This prints U+2192 and the severity glyphs. A Windows console defaults to
+# cp1252, where writing either raises UnicodeEncodeError *after* the browser
+# work has finished — the whole run wasted on the last print. Rebind stdout
+# rather than removing the characters, which are the readable part of the
+# output.
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    sys.stdout = io.TextIOWrapper(
+        sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
+    )
 
 DEFAULT_URL = "https://pashupatastra.vercel.app"
 

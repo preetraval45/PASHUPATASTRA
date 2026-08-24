@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { Attribution } from "@/components/attribution";
 import { Nav } from "@/components/nav";
 import { Search } from "@/components/search";
 import { ThemeToggle, themeScript } from "@/components/theme";
@@ -162,6 +163,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Link href="/how-it-works" className="focusable rounded hover:text-[rgb(var(--muted))]">
               How it works
             </Link>
+            <Attribution />
           </span>
         </footer>
       </body>

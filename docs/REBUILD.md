@@ -1660,7 +1660,7 @@ Everything in Phases 5B–5D is worth less until these land.
   a day-by-day chronology of infrastructure that is already gone is a list of
   things that stopped mattering.
 
-- [ ] **R57 — Build info, not a bio.** Needs: nothing.
+- [x] **R57 — Build info, not a bio.** Needs: nothing.
   The site has no author and no repository link, which for a portfolio project
   is the one omission that costs it everything. A footer panel, styled as a
   system readout — version, deploy target, stack — rather than an About Me card:
@@ -1672,6 +1672,41 @@ Everything in Phases 5B–5D is worth less until these land.
   **Done when:** every framework named is in a manifest in this repo, the panel
   renders on every page, and it reads as another data panel — no photograph, no
   first person, no "passionate about".
+  Done, but **not in the shape this task describes**, and the task was wrong
+  rather than the implementation.
+  Built as specified first: a footer panel on every page carrying the revision,
+  the deploy target, and the full stack with version ranges and the manifest
+  path each dependency was read from. Rejected on sight — *"it looks like it is
+  showing the stuff I am doing while building the website"* — and correctly. A
+  bill of materials under every page is the build describing its own working
+  conditions to somebody who came to read about an incident, and
+  `pytest · ruff · mypy` is of interest to exactly one person, who already knows.
+  What shipped instead splits the two things the task had conflated. The
+  **attribution** is one line in the footer on every page — builder, source,
+  LinkedIn — because a site with no author is the omission that costs a
+  portfolio project everything, and that is one line's worth of fix. The
+  **stack** moved to `/how-it-works`, names only, no versions and no manifest
+  paths, because it is context for a reader who opened that page on purpose.
+  Splitting them fixed it; shrinking the panel would not have.
+  The honesty constraint survived the redesign intact, which was the part worth
+  keeping: `scripts/buildinfo.py` reads `package.json` and the three
+  `pyproject.toml` files and **exits non-zero if asked to name a dependency no
+  manifest carries**. `testbuildinfo.py` (9 tests) re-parses the manifests itself
+  rather than asking the generator what it found, and all four failure modes
+  were watched going red before being trusted green: a stale version, an
+  invented dependency, a name typed into the component instead of generated, and
+  a bio phrase creeping into the attribution.
+  Two defects the deployed checks caught that reading the code would not have:
+  the panel linked its commit sha to GitHub while the branch was unpushed, so
+  the one panel about verifiability shipped a 404 — the sha is now plain text
+  unless `VERCEL_GIT_COMMIT_SHA` proves the commit is on the remote; and the
+  footer separator glyph measured 1.6:1 and was deleted rather than recoloured,
+  since a divider nobody can see is not a divider.
+  Verified on the deployed site by `scripts/verifybuild.py`: attribution on 9/9
+  pages, 14/14 dependencies rendered and each resolved against a manifest the
+  checker parsed itself, the stack asserted *absent* from the other eight pages,
+  and every external link fetched. Contrast passes AA in both themes; 33/33
+  responsive combinations pass; 959 tests pass.
 
 - [ ] **R58 — Start here.** Needs: **R53**.
   A skimmer on `/` currently has to notice a text link to find the real

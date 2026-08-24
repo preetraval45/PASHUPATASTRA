@@ -24,3 +24,4 @@ Protocol: before every push, write a topic-named file from
 - 2026-08-21 · [Phase 4 closed](Phase4Complete.md) — R24–R29 done; five checks that were green while measuring nothing
 - 2026-08-24 · [Phase 5 closed](Phase5Complete.md) — R50–R55: the visitor's path, and seven checks that were green while measuring nothing
 - [ObservatoryGrouping](ObservatoryGrouping.md) — R56: one row per indicator; why the window is relative to the indicator and not the clock
+- [BuildAttribution](BuildAttribution.md) — R57: why the stack belongs on one page and attribution on all of them
