@@ -145,7 +145,26 @@ export default async function IncidentDetailPage({
         />
       )}
 
-      <Panel title="Audit trail" aside={`${audit?.length ?? 0} records`}>
+      {/* The way out to the whole trail. R52 delisted Audit as a front door on
+          the grounds that it is reached from the incident whose actions it
+          records — and that was not true until this link existed: the panel
+          showed this incident's records and offered no route to the rest.
+          `verifyreach.py` found it by clicking, which is the only way it could
+          have been found. */}
+      <Panel
+        title="Audit trail"
+        aside={
+          <span className="flex flex-wrap items-center gap-3">
+            <span>{audit?.length ?? 0} records</span>
+            <Link
+              href="/audit"
+              className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--ink))]"
+            >
+              every record →
+            </Link>
+          </span>
+        }
+      >
         {!audit?.length ? (
           <Empty art="ledger" title="No audit records for this incident yet.">
             Records appear as policy evaluates, actions execute, and verification runs.

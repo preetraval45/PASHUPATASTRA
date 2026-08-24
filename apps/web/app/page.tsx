@@ -145,7 +145,14 @@ export default async function OverviewPage() {
             <ul className="divide-y divide-[rgb(var(--edge))]">
               {open.map((incident) => (
                 <li key={incident.id} className="py-4 first:pt-0 last:pb-0">
-                  <Link href="/incidents" className="focusable block rounded">
+                  {/* The incident, not the list. Every card here linked to
+                      `/incidents`, so clicking the one you were reading about
+                      took you to a page listing it again — the commonest path
+                      into the product, and it went one step sideways. */}
+                  <Link
+                    href={`/incidents/${encodeURIComponent(incident.id)}`}
+                    className="focusable block rounded"
+                  >
                     <div className="flex flex-wrap items-center gap-3">
                       <Ident>{incident.id}</Ident>
                       <Badge status={statusForSeverity(incident.severity)}>

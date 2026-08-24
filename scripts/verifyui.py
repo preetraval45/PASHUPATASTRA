@@ -54,8 +54,12 @@ def check(page, url: str, route: str, label: str, width: int) -> list[str]:
     # not be navigated.
     #
     # Hence: count what a person can actually see and click, not what exists.
-    sections = {"Overview", "Incidents", "Ask", "Observatory", "Blue team",
-                "Infrastructure", "Actions", "Audit"}
+    # The primary sections, which is not the same as every page. Infrastructure
+    # and Audit were delisted in R52 — they are still routes, still linked, and
+    # deliberately not front doors. `verifyreach.py` is what holds them to being
+    # reachable; listing them here would assert the opposite.
+    sections = {"Overview", "Incidents", "Ask", "Blue team", "Observatory",
+                "Actions"}
     visible = {
         link.inner_text().strip()
         for link in page.locator("header nav[aria-label='Primary'] a").all()

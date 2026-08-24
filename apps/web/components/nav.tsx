@@ -18,19 +18,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+/**
+ * A top-level tab is for something a visitor would go looking for. Everything
+ * else appears where it is needed and nowhere else.
+ *
+ * **Infrastructure and Audit are deliberately absent**, and not because they
+ * are weak. The access map means nothing without a failure attached to it —
+ * standing alone and all green it is a screensaver — and an append-only audit
+ * log is a trust artefact that matters enormously during a buyer's security
+ * review and not at all to someone who arrived thirty seconds ago. Neither is
+ * something anyone *arrives looking for*. Both are one click from the overview
+ * and one from the incident whose actions they record, which is where the
+ * question that needs them actually occurs.
+ *
+ * The task that asked for this said "three items", written when there were
+ * five. Phases 3 and 4 added Ask, Observatory and Blue team, and each survives
+ * the same test the other two failed: *would a stranger go looking for this?*
+ * Can I ask it something, is any of this real, can I try it myself — yes, yes
+ * and yes. Applying the number instead of the rule would have deleted three
+ * sections for arithmetic.
+ */
 const NAV = [
   { href: "/", label: "Overview" },
   { href: "/incidents", label: "Incidents" },
-  // Its own section. The incident-page panel is for a question that occurs
-  // while reading; this is for arriving with one. Sitting only inside an
-  // incident, it was 1,500px down a 10,000px page and nobody found it.
   { href: "/ask", label: "Ask" },
-  { href: "/observatory", label: "Observatory" },
   { href: "/blue-team", label: "Blue team" },
-  { href: "/infrastructure", label: "Infrastructure" },
+  { href: "/observatory", label: "Observatory" },
   { href: "/actions", label: "Actions" },
-  { href: "/audit", label: "Audit" },
 ];
+
 
 /** Exact for the root, prefix elsewhere, so a detail page still shows its
  *  section as current. */

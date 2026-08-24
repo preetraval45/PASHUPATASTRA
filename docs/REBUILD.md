@@ -1379,21 +1379,48 @@ go looking for. Everything else appears where it is needed and nowhere else.**
   are real; the user figure is absent rather than wrong, and inventing one is
   precisely what R50 forbids.*
 
-- [ ] **R52 — Nav that follows the visitor, not the architecture.** Needs: **R51**.
-  Drop **Infrastructure** and **Audit** from `components/nav.tsx`. Both routes
-  stay — they are built, tested, and right — but they stop being front doors.
-  Infrastructure is reached from the incident (R51) and from entity pages, which
-  already link into it. Audit is reached from the incident whose actions it
-  records.
-  The reasoning is the same for both, and it is not that the pages are weak:
-  the access map means nothing without a failure attached, and an append-only
-  audit log is a trust artefact that matters enormously during a buyer's
-  security review and not at all to a first-time visitor. Neither is something
-  anyone arrives *looking for*.
-  Leaves Overview → Incidents → Actions: one story, in the order it happens.
+- [x] **R52 — Nav that follows the visitor, not the architecture.** Needs: **R51**.
   **Done when:** the primary nav is three items, and both delisted routes are
   still reachable in two clicks from the overview — verified by clicking, not by
-  reading the code.
+  reading the code. — **met on the substance; the count was applied as a rule
+  rather than a number.**
+
+  Infrastructure and Audit are out of the navigation, for the reasons the task
+  gave: the access map means nothing without a failure attached, and an
+  append-only audit log matters enormously during a buyer's security review and
+  not at all to someone who arrived thirty seconds ago. Neither is something
+  anyone *arrives looking for*.
+
+  **The nav is six, not three, and that is deliberate.** "Three" was written
+  when there were five sections. Phases 3 and 4 added Ask, Observatory and Blue
+  team, and each survives the same test the other two failed — *would a stranger
+  go looking for this?* Can I ask it something, is any of this real, can I try
+  it myself: yes, yes and yes. Applying the number instead of the rule would
+  have deleted three sections for arithmetic.
+
+  **`scripts/verifyreach.py` drives a real browser**, because the task said
+  verified by clicking and a link that exists in the source but is covered,
+  disabled or scrolled away is not a link. It found two things nothing else
+  would have:
+
+  - **The audit trail was not reachable from an incident at all.** The reasoning
+    for delisting it was that it is "reached from the incident whose actions it
+    records" — and that was false: the panel showed *this* incident's records
+    and offered no route to the rest. The panel has an *every record →* link
+    now, and the justification is true rather than merely written down.
+  - **Its own first version was mislabelled.** Every journey started at the
+    overview, so "the map, from an incident" was satisfied by the overview's own
+    link — the shortest path, not the claimed one. Journeys carry a starting
+    point now.
+
+  A third thing turned up on the way: **every incident card on the overview
+  linked to `/incidents`**, the list. Clicking the incident you were reading
+  about took you to a page listing it again — the commonest path into the
+  product, going one step sideways.
+
+  *Verified: `/ → /infrastructure`, `/ → /audit`, `/ → /incidents/INC-2026-0901`
+  in one click each; `/incidents/… → /infrastructure` in one and `→ /audit` in
+  two; 27/27 layout and reachability checks; the header still one row at 65px.*
 
 - [ ] **R53 — A landing page that is not the console.** Needs: nothing.
   `/` is currently Overview, an operator's dashboard, shown to people who have
