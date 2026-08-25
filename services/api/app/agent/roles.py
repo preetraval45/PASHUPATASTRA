@@ -20,7 +20,17 @@ ANALYST = AgentSpec(
     name="sati.analyst",
     role="analyst",
     environments=[Environment.DEV, Environment.STAGING, Environment.PROD],
-    tools=["get_entity", "blast_radius", "read_logs", "lookup_advisory"],
+    tools=[
+        "get_entity",
+        "blast_radius",
+        "read_logs",
+        "lookup_advisory",
+        # R69. Reads two stored incidents and compares them; it cannot reach an
+        # entity the conversation's incident does not name, and an incident id
+        # is already public on `/incidents`, so this widens what can be asked
+        # without widening what can be enumerated.
+        "related_incidents",
+    ],
     # Zero, and not as a placeholder. `agent_risk_limit` caps what may be
     # authorised without a human, so zero sends every action carrying any risk
     # at all back for approval — the correct setting for an agent whose input
@@ -32,6 +42,7 @@ ANALYST = AgentSpec(
     risk_limit=0,
     goals=[
         "Explain an incident from stored evidence",
+        "Say whether another incident touched the same things, or that none did",
         "Name the action a request would require, and route it to a human",
     ],
 )

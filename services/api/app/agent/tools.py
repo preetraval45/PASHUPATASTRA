@@ -121,6 +121,33 @@ class ToolBox:
             )
         )
 
+        offered.append(
+            ToolSpec(
+                name="related_incidents",
+                description=(
+                    "Whether another incident is related to this one. Compares "
+                    "what the two touched — the same host, account or address — "
+                    "and answers from stored overlap, citing the records on "
+                    "both sides. Says no relation found when there is none, "
+                    "which is a complete answer."
+                ),
+                parameters={
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["incident_id"],
+                    "properties": {
+                        "incident_id": {
+                            "type": "string",
+                            "description": (
+                                "The other incident, e.g. INC-2026-0902. Must be "
+                                "an incident that exists."
+                            ),
+                        }
+                    },
+                },
+            )
+        )
+
         available = set(self.read_only_action_ids())
         if "read_logs" in available:
             offered.append(
@@ -147,6 +174,7 @@ class ToolBox:
             "blast_radius": self._blast_radius,
             "read_logs": self._read_logs,
             "lookup_advisory": self._lookup_advisory,
+            "related_incidents": self._related_incidents,
         }
         if not self.spec.may_use(call.name):
             return ToolOutcome(
@@ -217,6 +245,61 @@ class ToolBox:
             # The ref is what makes the answer citable. Without it the model can
             # read the advisory and then have nothing that resolves to cite.
             refs=[row["id"]],
+        )
+
+    def _related_incidents(self, call: ToolCall) -> ToolOutcome:
+        """Is that one the same story as this one? (R69)
+
+        Deterministic, and not routed through `_scoped`. The entity scope exists
+        because an open-ended entity lookup on a public console is a way to ask
+        which of *our* hosts and accounts exist; an incident id is already
+        listed on `/incidents`, so naming one buys an attacker nothing it did
+        not have. The store's own `get` is the boundary — an id that is not an
+        incident is refused rather than compared against nothing.
+
+        The judgement is `relate`'s and no part of it is the model's. What comes
+        back is a sentence and a list of refs, and the refs are what make either
+        answer checkable: a relation names the records on both sides, and a "no"
+        names what was compared.
+        """
+        from pashupatastra.relations import relate
+
+        other_id = str(call.arguments.get("incident_id") or "").strip()
+        if not other_id:
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content="incident_id is required — the other incident to compare against.",
+                refused="missing argument",
+            )
+        if other_id == self.incident.id:
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content=(
+                    f"{other_id} is the incident under discussion. Compare it "
+                    "against a different one."
+                ),
+                refused="same incident",
+            )
+        other = self.store.get(other_id) if self.store is not None else None
+        if other is None:
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content=f"No incident {other_id!r} is stored.",
+                refused="not found",
+            )
+
+        relation = relate(self.incident, other)
+        return ToolOutcome(
+            call=call,
+            ok=True,
+            content=relation.describe(),
+            # Empty on a "no", deliberately. There is nothing to cite for an
+            # absence, and handing back refs anyway would let an answer that
+            # found no relation still look sourced.
+            refs=relation.refs,
         )
 
     def _scoped(self, call: ToolCall) -> tuple[str | None, ToolOutcome | None]:

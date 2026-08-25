@@ -2194,12 +2194,50 @@ human. Generation is a new output, not a new authority.
   persuasive than the doubt beside it; putting the doubt one click further away
   decides which of the two a reader sees.
 
-- [ ] **R69 — Reasoning across incidents.** Needs: **R68**.
+- [x] **R69 — Reasoning across incidents.** Needs: **R68**.
   "Are 0901 and 0902 related?", "same actor pattern?" — answered from entity
   overlap, timing and shared indicators, all of which are already stored.
   **Done when:** a relation is asserted only where the overlap is real and
   cited, *no relation found* is an answer it is willing to give, and a test
   covers a pair with no overlap.
+  Done. `packages/core/pashupatastra/relations.py` decides it — a set
+  intersection over stored records, with no model anywhere in the judgement —
+  and `related_incidents` is the tool that reaches it. Rule 7: never answer a
+  relation question without calling the tool. Prompt version 6.
+  **Proximity in time is never evidence.** Two incidents in the same minute are
+  two incidents; the correlator says so where it groups events and it would be
+  strange for this to disagree one layer up. The interval is reported because an
+  analyst wants it and can never make `related` true on its own.
+  **An overlap that cannot be cited is not asserted.** Both sides have to name a
+  record — a chain step, or an event id it rests on. An entity listed in
+  `affected_entities` and established by nothing is a claim without a citation,
+  so it is returned as `uncited` and excluded from the verdict rather than
+  quietly counted. Citable on one side only is the same failure: it says the
+  entity is in one incident and, somewhere, in the other.
+  **The demo's honest answer is no.** The three security scenarios share no
+  entity with each other and carry no independent indicators, so every pair is
+  *no relation found* — which is the case this task names and the one every
+  plausible implementation gets wrong by finding a resemblance and calling it a
+  link. A "no" therefore says what it compared: bare, it is indistinguishable
+  from not having looked. Refs stay empty on a "no", deliberately — there is
+  nothing to cite for an absence, and returning refs anyway would let an answer
+  that found nothing still look sourced.
+  Resemblance is not relation, and this does not conflate them: Smriti already
+  answers "has something like this happened before", and marks the difference
+  between a precedent and a text match for the same reason.
+  Nine tests in `testrelations.py` including the no-overlap pair, the
+  simultaneous pair, the uncited overlap and the one-sided one; six more in
+  `testagentchat.py` for the tool, its two refusals and both locks on the role.
+  `scripts/verifyrelation.py` computes the overlap itself from `/incidents` and
+  holds the agent to it, rather than asking the agent what the overlap was and
+  grading it on its own answer.
+  **Not yet measured against a live model.** The day's free allowance for
+  `gpt-oss-20b` — 200,000 tokens — was spent on R68's prompt iteration, so the
+  checker reports a failure naming what it could not measure rather than a pass.
+  The engine, the tool, its refusals and both locks are covered deterministically;
+  what is unmeasured is whether the model reliably calls the tool rather than
+  answering a relation question from its own reading. Given rules 5 and 6 each
+  needed a measurement to get right, assume this one does too until it is run.
 
 - [ ] **R70 — Drafts, not decisions.** Needs: **R68**.
   A draft playbook and a draft post-incident report, written from an incident's

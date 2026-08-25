@@ -500,6 +500,118 @@ def test_isolate_host_is_not_in_the_chat_tool_set_at_all() -> None:
     assert not ANALYST.may_use("isolate_host")
 
 
+# --- across incidents (R69) ----------------------------------------------------
+
+
+def two_incidents():
+    """One pair sharing a host, built the way the store holds them."""
+    from datetime import datetime
+
+    from pashupatastra.events import EntityKind, EntityRef
+    from pashupatastra.incidents import CausalLink, Incident, IncidentSeverity
+
+    now = datetime(2026, 8, 25, 12, 0).astimezone()
+    host = EntityRef(kind=EntityKind.HOST, id="ws-0148", name="ws-0148")
+    other = EntityRef(kind=EntityKind.ACCOUNT, id="m.okafor", name="m.okafor")
+
+    def build(incident_id: str, entity, evidence: str) -> Incident:
+        return Incident(
+            id=incident_id,
+            severity=IncidentSeverity.HIGH,
+            opened_at=now,
+            affected_entities=[entity],
+            causal_chain=[CausalLink(entity=entity, transition="did a thing",
+                                     evidence=[evidence])],
+        )
+
+    return build("INC-A", host, "evt-a"), build("INC-B", host, "evt-b"), build(
+        "INC-C", other, "evt-c"
+    )
+
+
+class FakeStore:
+    def __init__(self, *incidents) -> None:
+        self.rows = {incident.id: incident for incident in incidents}
+
+    def get(self, incident_id):
+        return self.rows.get(incident_id)
+
+
+def relate_call(incident_id: str):
+    return ToolCall(id="1", name="related_incidents", arguments={"incident_id": incident_id})
+
+
+def test_a_shared_host_comes_back_cited_on_both_sides() -> None:
+    from app.agent.tools import ToolBox
+
+    left, right, _ = two_incidents()
+    outcome = ToolBox(left, FakeStore(left, right), None).dispatch(relate_call("INC-B"))
+
+    assert outcome.ok
+    assert "host:ws-0148" in outcome.content
+    assert "evt-a" in outcome.refs and "evt-b" in outcome.refs
+
+
+def test_no_overlap_returns_no_relation_and_cites_nothing() -> None:
+    """The answer the task cares about most. Refs stay empty on purpose: there
+    is nothing to cite for an absence, and handing refs back anyway would let an
+    answer that found no relation still look sourced."""
+    from app.agent.tools import ToolBox
+
+    left, _, unrelated = two_incidents()
+    outcome = ToolBox(left, FakeStore(left, unrelated), None).dispatch(relate_call("INC-C"))
+
+    assert outcome.ok, "no relation is an answer, not a failure"
+    assert "No relation found" in outcome.content
+    assert outcome.refs == []
+
+
+def test_an_unstored_incident_is_refused_rather_than_compared() -> None:
+    """Otherwise the answer is a comparison against nothing, which comes back
+    looking exactly like a genuine "no relation"."""
+    from app.agent.tools import ToolBox
+
+    left, right, _ = two_incidents()
+    outcome = ToolBox(left, FakeStore(left, right), None).dispatch(relate_call("INC-NOPE"))
+
+    assert not outcome.ok
+    assert outcome.refused == "not found"
+
+
+def test_comparing_an_incident_with_itself_is_refused() -> None:
+    from app.agent.tools import ToolBox
+
+    left, right, _ = two_incidents()
+    outcome = ToolBox(left, FakeStore(left, right), None).dispatch(relate_call("INC-A"))
+
+    assert not outcome.ok
+    assert outcome.refused == "same incident"
+
+
+def test_the_relation_tool_is_offered_and_declared() -> None:
+    """Both locks, as with every other tool: offered by the box and declared on
+    the role."""
+    from app.agent.roles import ANALYST
+    from app.agent.tools import ToolBox
+
+    left, _, _ = two_incidents()
+    offered = {tool.name for tool in ToolBox(left, None, None).specs()}
+    assert "related_incidents" in offered
+    assert ANALYST.may_use("related_incidents")
+
+
+def test_the_prompt_forbids_answering_a_relation_question_from_the_model() -> None:
+    """R69's rule, as a property of the text that has to cause it. The measured
+    lesson from versions 4 and 5 is that a rule pointing at a named tool is the
+    one that gets followed."""
+    from app.agent.chat import INSTRUCTIONS
+
+    lowered = INSTRUCTIONS.lower()
+    assert "related_incidents" in lowered
+    assert "no relation found" in lowered
+    assert "never answer a relation question without calling the tool" in lowered
+
+
 def test_a_risky_action_is_unreachable_even_if_declared_read_only() -> None:
     """Both locks must agree. Marking something read-only by mistake does not
     reach a public text box unless the agent was also given it."""

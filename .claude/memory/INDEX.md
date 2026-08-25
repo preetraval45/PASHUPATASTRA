@@ -30,3 +30,4 @@ Protocol: before every push, write a topic-named file from
 - [KeyboardTriage](KeyboardTriage.md) — R66: j/k/Enter and a ? sheet built from a registry, so the help cannot outlive the shortcut
 - [Phase5BDeployed](Phase5BDeployed.md) — R67: deployed and reviewed; a nav link can be covered without anything overflowing, and R94 reopened
 - [ReasoningTrace](ReasoningTrace.md) — R68: what Sati ruled out and on what; why an empty structured field is a claim and how the reformat was emptying them
+- [IncidentRelations](IncidentRelations.md) — R69: relation is overlap, not resemblance; why time never decides and a "no" says what it compared

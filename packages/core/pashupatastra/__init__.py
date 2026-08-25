@@ -46,6 +46,7 @@ from .incidents import (
     VerificationCheck,
     incident_id,
 )
+from .relations import Overlap, Relation, relate
 from .topology import BlastRadius, Edge, Node, TopologyGraph
 
 __version__ = "0.1.0"
@@ -94,11 +95,14 @@ __all__ = [
     "SeasonalNaive",
     "Series",
     "QuarantinedEvent",
+    "Overlap",
+    "Relation",
     "RiskContext",
     "RiskFactor",
     "Severity",
     "Tier",
     "TierStep",
+    "relate",
     "TopologyGraph",
     "UpstreamRules",
     "Verdict",
