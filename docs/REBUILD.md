@@ -1897,13 +1897,49 @@ R65 are the two that change how the product feels; the rest are additive.
   not shrink below its content without `min-w-0`.
   33/33 responsive, AA contrast in both themes, 58 pages crawl clean, 992 tests.
 
-- [ ] **R63 — Blast radius as a graph.** Needs: **R51**.
+- [x] **R63 — Blast radius as a graph.** Needs: **R51**.
   R51 put the access map on the incident page; this gives blast radius its own
   radial view of affected entities beside the list, so *what this reached* is a
   shape rather than a count. Same rule as R50: **no edge without a citation.**
   **Done when:** it draws only edges the incident's evidence establishes, the
   list remains for screen readers, and it collapses to the list on narrow
   viewports rather than overflowing.
+  Done. `/topology/blast-radius/{key}` now returns the same reach as a **walk**:
+  nodes with a hop depth, and the edges traversed to reach them.
+  R50's rule is enforced in the walk, not in the drawing. The traversal
+  **refuses to cross an edge carrying no evidence**, so a line on the diagram
+  cannot exist without event ids behind it. Filtering at render time would have
+  left the node reachable and the reason invisible, which is how a picture ends
+  up asserting a relationship nobody can check — and the fixture in
+  `testblastradius.py` includes an uncited shortcut to a genuinely affected
+  entity, so a walk that ignored citations would find it and draw it.
+  `affected` stays authoritative and separate: it is what risk scoring uses,
+  the walk only illustrates it, and `uncited` carries the difference rather than
+  hiding it. On the live data that difference is currently zero — every reach is
+  fully cited.
+  Layout is deterministic from the data rather than a force simulation. A
+  simulation settles differently on every render, so two people would be
+  describing different pictures of the same incident, and it would have to run
+  before the page could draw — which Phase 5 forbids.
+  Those tests are in their own module because `testgraph.py` is skipped whole
+  when Postgres is unreachable. Nothing here needs a database, and a test that
+  silently does not run is worse than one that does not exist.
+  **Three bugs found, all on pages nothing had been sweeping.** `verifyui` did
+  not include an incident detail page until this task added one — the page
+  rendering the most data was the page no width sweep visited. It was carrying
+  46px of horizontal overflow at 375px, traced by bisection to the audit trail:
+  the summary column shares a row with a fixed 64px timestamp, a badge and an
+  actor, and on a phone there is no useful width left for it. It now takes its
+  own line below `sm`. The access map above it had `overflow-x-auto` on a box
+  with no width limit, which scrolls nothing.
+  And **seven `<details>` nested inside `<span>`** — flow content inside
+  phrasing content, which the parser relocates during hydration and React
+  reports as #418, on every incident page and on `/audit`.
+  The last one was mine: React 19 treats `<title>` as document metadata and
+  hoists it, so a `<title>` inside each `<line>` — an SVG tooltip — became a
+  hydration mismatch. The citation moved to `data-evidence`.
+  36/36 responsive combinations, AA contrast in both themes, 58 pages crawl
+  clean with no browser errors, 997 tests.
 
 - [ ] **R64 — The debrief is the payoff.** Needs: **R27**.
   After a Blue Team scenario, a score breakdown across diagnosis, response and

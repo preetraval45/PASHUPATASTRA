@@ -66,14 +66,20 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
   const trace = detail.trace ?? [];
 
   return (
-    <details className="mt-1 w-full">
+    <details className="mt-1 w-full min-w-0">
       <summary className="focusable inline-block cursor-pointer rounded text-xs text-[rgb(var(--faint))] hover:text-[rgb(var(--ink))]">
         why it said that
       </summary>
 
-      <div className="mt-2 space-y-3 border-l border-[rgb(var(--edge))] pl-3 text-xs">
+      {/* `min-w-0` on the details body. Everything below it is model output,
+          identifiers and prompt digests — none of it a length this layout
+          chooses — and without it the block sizes to its longest unbreakable run
+          and pushes the page sideways. This was 46px of horizontal scroll on
+          every incident page at 375px, under a `w-full` that promised the
+          opposite. */}
+      <div className="mt-2 min-w-0 space-y-3 border-l border-[rgb(var(--edge))] pl-3 text-xs">
         <div>
-          <p className="text-[rgb(var(--faint))]">asked</p>
+          <p className="break-words text-[rgb(var(--faint))]">asked</p>
           {/* Typed by a visitor. React escapes it, and the API caps its length
               and strips control characters before it is ever stored — this is a
               permanent public record accepting text from anyone. */}
@@ -82,24 +88,30 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
 
         {detail.answer && (
           <div>
-            <p className="text-[rgb(var(--faint))]">answered</p>
+            <p className="break-words text-[rgb(var(--faint))]">answered</p>
             <p className="whitespace-pre-wrap break-words">{detail.answer}</p>
           </div>
         )}
 
         {trace.length > 0 && (
           <div>
-            <p className="text-[rgb(var(--faint))]">what it did</p>
+            <p className="break-words text-[rgb(var(--faint))]">what it did</p>
             <ol className="mt-1 space-y-0.5">
               {trace.map((step, index) => (
-                <li key={index} className="flex flex-wrap gap-x-2">
-                  <span className="mono text-[rgb(var(--faint))]">
+                // `min-w-0` on the row, and every identifier inside it allowed
+                // to break. A tool name and an entity key are both as long as
+                // the data makes them — `blast_radius` beside
+                // `network_flow:ws-0148->198.51.100.74:8443` ran a 375px page
+                // 46px wide, and `flex-wrap` does not help when a single child
+                // is already wider than the line it would wrap onto.
+                <li key={index} className="flex min-w-0 flex-wrap gap-x-2">
+                  <span className="mono shrink-0 text-[rgb(var(--faint))]">
                     {step.hop}.{index}
                   </span>
                   <span>{STEP[step.kind] ?? step.kind}</span>
                   {step.name && <Ident>{step.name}</Ident>}
                   {step.detail?.entity_key ? (
-                    <span className="mono text-[rgb(var(--faint))]">
+                    <span className="mono min-w-0 break-all text-[rgb(var(--faint))]">
                       {String(step.detail.entity_key)}
                     </span>
                   ) : null}
@@ -116,7 +128,7 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
 
         {(detail.evidence_refs?.length || detail.dropped_refs?.length) && (
           <div>
-            <p className="text-[rgb(var(--faint))]">cited</p>
+            <p className="break-words text-[rgb(var(--faint))]">cited</p>
             <p className="mono break-words">
               {detail.evidence_refs?.map(short).join(", ") || "nothing"}
             </p>
@@ -130,7 +142,7 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
 
         {detail.proposed_action_id && (
           <div>
-            <p className="text-[rgb(var(--faint))]">proposed</p>
+            <p className="break-words text-[rgb(var(--faint))]">proposed</p>
             <p>
               <Ident>{detail.proposed_action_id}</Ident> — queued for a human,
               nothing executed
@@ -142,7 +154,7 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
             version is recorded with every turn. The digest goes with it because
             the version is written by hand, and is therefore wrong exactly when
             someone edited the prompt and forgot to bump it. */}
-        <p className="text-[rgb(var(--faint))]">
+        <p className="break-words text-[rgb(var(--faint))]">
           <span className="mono">{detail.model}</span>
           {detail.provider && ` via ${detail.provider}`}
           {detail.prompt_version && ` · prompt v${detail.prompt_version}`}

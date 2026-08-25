@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { VerdictPanel } from "@/components/approval";
 import { AgentTurn } from "@/components/agentturn";
 import { ChatPanel } from "@/components/chat";
+import { BlastPanel } from "@/components/blastpanel";
 import { IncidentGraph } from "@/components/incidentgraph";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
@@ -128,6 +129,8 @@ export default async function IncidentDetailPage({
           separate page a reader has to think to visit. */}
       <IncidentGraph incident={incident} />
 
+      <BlastPanel incident={incident} />
+
       <Panel
         title="The loop"
         aside="every stage, including the ones that did not run"
@@ -192,9 +195,15 @@ function AuditRow({ record, index }: { record: AuditRecord; index: number }) {
   return (
     // The anchor is what the timeline links to, so a stage can point at the
     // exact record it claims as evidence rather than at the trail in general.
+    // `min-w-0` on the row. Every audit record carries an agent turn's details
+    // — model ids, prompt digests, entity keys, whatever a visitor typed — and
+    // none of those are lengths this layout gets to choose. Without it the row
+    // sizes to its longest unbreakable run and takes the document with it: the
+    // audit panel alone was 46px of horizontal scroll on every incident page at
+    // 375px, and `flex-wrap` cannot help when one child already exceeds the line.
     <li
       id={`audit-${index}`}
-      className="relative flex scroll-mt-24 flex-wrap items-baseline gap-x-3 gap-y-1 py-3 target:bg-[rgb(var(--raised))] first:pt-0 last:pb-0"
+      className="relative flex min-w-0 scroll-mt-24 flex-wrap items-baseline gap-x-3 gap-y-1 py-3 target:bg-[rgb(var(--raised))] first:pt-0 last:pb-0"
     >
       {/* A second anchor, keyed by timestamp rather than position. The
           timeline points at rows by index; a chat citation cannot, because
@@ -213,10 +222,24 @@ function AuditRow({ record, index }: { record: AuditRecord; index: number }) {
       >
         {record.actor}
       </span>
-      <span className="min-w-0 flex-1 text-sm">
+      {/* `basis-full` below `sm`: the summary and the agent turn under it are
+          the only parts of this row whose width is decided by data, and on a
+          phone there is no useful width left for them after a timestamp, a
+          badge and an actor. Given their own line they have the full row and
+          nothing has to overflow to fit. `break-words` because a model id or an
+          entity key inside the turn is one unbreakable token. */}
+      {/* A `div`, not a `span`. `AgentTurn` renders a `<details>`, which is
+          flow content and is invalid inside a `span` — the parser relocates it
+          during hydration and React reports #418. Seven of them were nested
+          this way on every incident page.
+          Nobody had seen it because `verifyui` did not check incident detail
+          pages until R63 added one, which is the same reason the 46px overflow
+          below it survived: the page rendering the most data was the page
+          nothing swept. */}
+      <div className="min-w-0 basis-full break-words text-sm sm:flex-1 sm:basis-0">
         {record.summary}
         <AgentTurn record={record} />
-      </span>
+      </div>
     </li>
   );
 }

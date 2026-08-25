@@ -78,7 +78,12 @@ export function AccessMap({
   const arrow = `${idPrefix}-arrow`;
 
   return (
-    <div className="overflow-x-auto">
+    // `max-w-full` and `min-w-0` alongside the scroller, not instead of it.
+    // `overflow-x-auto` only scrolls a box that is *narrower than its content*,
+    // and this box had no width limit — so it grew to the SVG's intrinsic 954px
+    // and pushed the whole document sideways at 375px, with the scroller
+    // present and inert the entire time.
+    <div className="min-w-0 max-w-full overflow-x-auto">
       <svg
         width={placed.width}
         height={placed.height}

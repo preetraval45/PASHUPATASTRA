@@ -95,10 +95,13 @@ function Row({ record }: { record: AuditRecord }) {
       >
         {record.actor}
       </span>
-      <span className="min-w-0 flex-1 break-words text-sm">
+      {/* `div`, for the same reason as the incident page: `AgentTurn` renders
+          a `<details>`, which is flow content and cannot legally sit inside a
+          `span`. The parser moves it during hydration and React reports #418. */}
+      <div className="min-w-0 basis-full break-words text-sm sm:flex-1 sm:basis-0">
         {record.summary}
         <AgentTurn record={record} />
-      </span>
+      </div>
       {record.incident_ref && (
         <span className="text-xs">
           <Ident>{record.incident_ref}</Ident>

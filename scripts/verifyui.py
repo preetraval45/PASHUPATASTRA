@@ -28,7 +28,11 @@ VIEWPORTS = [
     ("desktop", 1440, 900),
 ]
 
-DEFAULT_ROUTES = ["/", "/how-it-works", "/overview", "/incidents", "/ask", "/observatory",
+# An incident *detail* page is in this list because it was not, and a 46px
+# overflow at 375px lived there unnoticed while every route below passed. The
+# pages that render the most data are the ones a width sweep most needs.
+DEFAULT_ROUTES = ["/", "/how-it-works", "/overview", "/incidents",
+                  "/incidents/INC-2026-0903", "/ask", "/observatory",
                   "/blue-team", "/infrastructure", "/actions", "/audit", "/search"]
 
 

@@ -599,3 +599,35 @@ export async function getSearchIndex(): Promise<SearchItem[]> {
   const data = await get<{ items: SearchItem[] }>("/search/index");
   return data?.items ?? [];
 }
+
+/** Blast radius, in both the forms the page needs.
+ *
+ *  `affected` is authoritative and is what risk scoring uses. `reached` and
+ *  `edges` are the same reach expressed as a walk that refused to cross any
+ *  edge without evidence, so they can legitimately cover *fewer* entities —
+ *  `uncited` is that difference, kept rather than hidden. */
+export interface BlastRadius {
+  origin: string;
+  affected: string[];
+  entity_count: number;
+  estimated_users: number;
+  reached?: {
+    key: string;
+    name: string;
+    kind: string;
+    severity: string | null;
+    estimated_users: number;
+    depth: number;
+  }[];
+  edges?: {
+    source: string;
+    target: string;
+    kind: string;
+    evidence: string[];
+    depth: number;
+  }[];
+  uncited?: string[];
+}
+
+export const getBlastRadius = (entityKey: string) =>
+  get<BlastRadius>(`/topology/blast-radius/${encodeURIComponent(entityKey)}`);

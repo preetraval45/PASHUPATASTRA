@@ -442,12 +442,90 @@ def blast_radius(entity_key: str, max_depth: int = 10) -> dict[str, object]:
     recomputed here — a second implementation would be a second answer.
     """
     radius = GRAPH.blast_radius(entity_key, max_depth=max_depth)
+    reached, edges = _cited_paths(entity_key, set(radius.affected), max_depth)
     return {
         "origin": radius.origin,
         "affected": radius.affected,
         "entity_count": radius.entity_count,
         "estimated_users": radius.estimated_users,
+        # The same reach, expressed as a walk that can be checked.
+        #
+        # `affected` is the authoritative set and comes from the graph function
+        # that risk scoring uses; these two are for drawing it. They are kept
+        # separate rather than merged because the walk refuses to cross an edge
+        # carrying no evidence, so it can legitimately reach *fewer* entities —
+        # and that gap is a fact about how much of the reach is provable, which
+        # is worth showing rather than papering over.
+        "reached": reached,
+        "edges": edges,
+        "uncited": sorted(set(radius.affected) - {r["key"] for r in reached}),
     }
+
+
+def _cited_paths(
+    origin: str, affected: set[str], max_depth: int
+) -> tuple[list[dict], list[dict]]:
+    """Breadth-first from the origin, across edges that carry evidence.
+
+    **An edge with no citation is not traversed.** R50's rule, applied to the
+    walk rather than to the drawing: filtering at render time would leave the
+    node reachable and the reason invisible, which is how a diagram ends up
+    asserting a relationship nobody can check. Refusing the hop is the same rule
+    enforced one layer earlier, where it cannot be forgotten.
+
+    Depth is carried out so the view can be radial — a ring per hop — rather
+    than a shape someone has to infer from the arrows.
+    """
+    snapshot = GRAPH.snapshot(limit=400)
+    outgoing: dict[str, list[dict]] = {}
+    for edge in snapshot.get("edges", []):
+        if not edge.get("evidence"):
+            continue
+        outgoing.setdefault(edge["source"], []).append(edge)
+        # Undirected for reach: a dependency is a path in both directions when
+        # the question is "what does trouble here touch".
+        outgoing.setdefault(edge["target"], []).append(edge)
+
+    names = {node["key"]: node for node in snapshot.get("nodes", [])}
+    reached: list[dict] = []
+    drawn: list[dict] = []
+    seen = {origin}
+    frontier = [origin]
+
+    for depth in range(1, max_depth + 1):
+        following: list[str] = []
+        for key in frontier:
+            for edge in outgoing.get(key, []):
+                other = edge["target"] if edge["source"] == key else edge["source"]
+                if other in seen or other not in affected:
+                    continue
+                seen.add(other)
+                following.append(other)
+                node = names.get(other, {})
+                reached.append(
+                    {
+                        "key": other,
+                        "name": node.get("name") or other.split(":", 1)[-1],
+                        "kind": node.get("kind") or other.split(":", 1)[0],
+                        "severity": node.get("severity"),
+                        "estimated_users": node.get("estimated_users") or 0,
+                        "depth": depth,
+                    }
+                )
+                drawn.append(
+                    {
+                        "source": key,
+                        "target": other,
+                        "kind": edge.get("kind"),
+                        "evidence": edge.get("evidence") or [],
+                        "depth": depth,
+                    }
+                )
+        if not following:
+            break
+        frontier = following
+
+    return reached, drawn
 
 
 @router.get("/topology")

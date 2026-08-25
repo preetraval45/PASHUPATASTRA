@@ -310,9 +310,18 @@ export function KeyValue({ label, children }: { label: string; children: ReactNo
   );
 }
 
-/** Identifiers an operator might paste into a terminal are always monospace. */
+/** Identifiers an operator might paste into a terminal are always monospace.
+ *
+ *  And always allowed to break. Every identifier this renders comes from data —
+ *  an entity key, a tool name, a 56-character subdomain from a feed — and a
+ *  monospace run that cannot wrap is the single most common way this interface
+ *  has pushed a phone-width page sideways. `min-w-0` as well as `break-all`,
+ *  because a flex item will not shrink below its content's minimum contribution
+ *  without it. */
 export function Ident({ children }: { children: ReactNode }) {
-  return <span className="mono text-[rgb(var(--astra))]">{children}</span>;
+  return (
+    <span className="mono min-w-0 break-all text-[rgb(var(--astra))]">{children}</span>
+  );
 }
 
 /**
