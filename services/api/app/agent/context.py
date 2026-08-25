@@ -80,15 +80,33 @@ def incident_evidence(incident: Incident) -> list[Evidence]:
             )
         )
 
-    for hypothesis in incident.hypotheses:
+    # Ranked, so "the leading reading" and "the one that was considered and
+    # dropped" are distinguishable. They were not: every hypothesis went over
+    # under the same ref, `#hypothesis`, which gave two opposite claims one
+    # identifier — a citation that cannot say which of them it means.
+    ranked = sorted(incident.hypotheses, key=lambda h: h.confidence, reverse=True)
+    for index, hypothesis in enumerate(ranked):
+        # `contradicted_by` is the field this console's argument rests on — the
+        # system showing its own doubt — and it was stripped before the agent
+        # saw it. Sati was reasoning from a diagnosis with the doubt removed,
+        # and could not have named what ruled an alternative out because it was
+        # never told there was an alternative.
+        against = (
+            f"\ncontradicted by: {', '.join(hypothesis.contradicted_by)}"
+            if hypothesis.contradicted_by
+            else ""
+        )
         blocks.append(
             Evidence(
-                ref=f"{incident.id}#hypothesis",
+                ref=f"{incident.id}#hypothesis-{index}",
                 source="hypothesis",
                 trusted=True,
                 content=(
-                    f"statement: {hypothesis.statement}\n"
-                    f"confidence: {hypothesis.confidence}"
+                    f"{'leading reading' if index == 0 else 'alternative reading'}: "
+                    f"{hypothesis.statement}\n"
+                    f"confidence: {hypothesis.confidence}\n"
+                    f"supported by: {', '.join(hypothesis.evidence)}"
+                    f"{against}"
                 ),
             )
         )

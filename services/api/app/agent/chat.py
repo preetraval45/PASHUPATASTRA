@@ -70,12 +70,13 @@ it and cite it. If it is not, say plainly that there is no stored advisory for \
 that identifier and that you will not answer from memory — then stop. Do not \
 describe the vulnerability, guess its severity, or say what it affects. \
 "We have nothing on file for that" is a complete and correct answer.
-6. Be brief and concrete. An analyst is reading you mid-incident.
+6. **Say what else the evidence could have meant.** An evidence block headed `alternative reading` is an explanation this incident considered and dropped, and it carries a `contradicted by:` line naming the refs that dropped it. For every such block you are given, put it in `considered` with exactly those refs. This is reading the record, not forming a view — the incident already weighed it. Those refs are verified like any other, so one that does not resolve is discarded. Return an empty list only when no alternative reading was supplied, and never invent a rival explanation in order to knock it down.
+7. Be brief and concrete. An analyst is reading you mid-incident.
 """
 
 PURPOSE = "chat"
 
-PROMPT_VERSION = "4"
+PROMPT_VERSION = "5"
 """Bumped whenever `INSTRUCTIONS` changes in a way that changes answers.
 
 Version 2 added the action-proposal rule (R20); version 3 added the rule that a
@@ -94,6 +95,22 @@ The cause was in this text. The old rule 1 said "if the evidence does not
 contain the answer, set answerable to false" and never mentioned looking.
 `lookup_advisory` is the control that proves it: the one tool with a rule
 pointing at it is the one that got called.
+
+Version 5 added rule 6 (R68): name the readings that were open and what closed
+them. An answer that only states its conclusion is asking to be believed; the
+console's argument is that it can be checked instead.
+
+Rule 6 points at the *shape of an evidence block* rather than at the idea, for
+the reason recorded under version 4: `lookup_advisory` was the one tool with a
+rule pointing directly at it and the one tool that got called. Two drafts were
+measured against the live model before this one. The first described the
+principle; the second added the block shape but left the instruction
+conditional — *when your answer depends on one of those being wrong* — and both
+returned an empty list on the question this incident exists to pose: "could the
+user just be travelling?", with the contradicted alternative sitting in the
+evidence under its own ref. The same model filled the field first time when
+told plainly to. A conditional rule is one the model gets to decide it has
+already satisfied.
 """
 
 
@@ -136,6 +153,20 @@ class ChatAnswer(BaseModel):
     """Refs the model returned that matched nothing retrieved. Surfaced rather
     than swallowed: a model citing sources it did not read is worth seeing."""
 
+    considered: list[dict] = Field(default_factory=list)
+    """Other readings of the evidence, each with the refs that closed it.
+
+    Held to the same standard as a citation and for the same reason: an
+    alternative "ruled out" by a ref nobody can resolve is the appearance of
+    rigour rather than rigour. What survives verification is a rejection a
+    reader can check; what does not is in `dropped_considered`."""
+
+    dropped_considered: list[dict] = Field(default_factory=list)
+    """Alternatives that named nothing resolvable as their reason. Kept for the
+    same reason `dropped_refs` is: a model dismissing readings on evidence it
+    did not read is worth seeing, and deleting it would make the answer look
+    tidier than it was."""
+
     trace: list[dict] = Field(default_factory=list)
     tokens: int = 0
     model: str = ""
@@ -158,6 +189,40 @@ def _verify(refs: list[str], available: set[str]) -> tuple[list[str], list[str]]
     kept, dropped = [], []
     for ref in refs:
         (kept if ref in available else dropped).append(ref)
+    return kept, dropped
+
+
+def _considered(raw, available: set[str]) -> tuple[list[dict], list[dict]]:
+    """Split the weighed alternatives into checkable rejections and the rest.
+
+    An alternative survives only if at least one ref it names as the reason
+    resolves against what was actually retrieved. Two failures are collapsed
+    here deliberately, because they are the same failure: naming no reason at
+    all, and naming a reason that does not exist. Both leave a reader with a
+    rejection they cannot check, which on this console is worth less than no
+    rejection at all — it spends the reader's trust without earning it.
+
+    The refs that did not resolve are kept on the dropped entry rather than
+    discarded, so the record shows what was claimed as well as that it failed.
+    """
+    kept: list[dict] = []
+    dropped: list[dict] = []
+    for item in raw or []:
+        if not isinstance(item, dict):
+            continue
+        reading = str(item.get("reading") or "").strip()
+        if not reading:
+            continue
+        refs = [str(ref) for ref in (item.get("ruled_out_by") or []) if isinstance(ref, str)]
+        resolved = [ref for ref in refs if ref in available]
+        unresolved = [ref for ref in refs if ref not in available]
+        if resolved:
+            entry = {"reading": reading, "ruled_out_by": resolved}
+            if unresolved:
+                entry["dropped_refs"] = unresolved
+            kept.append(entry)
+        else:
+            dropped.append({"reading": reading, "claimed_refs": refs})
     return kept, dropped
 
 
@@ -243,6 +308,7 @@ def answer(
 
     output = response.output
     kept, dropped = _verify(list(output.get("evidence_refs") or []), available)
+    considered, dropped_considered = _considered(output.get("considered"), available)
     answerable = bool(output.get("answerable", True))
 
     result = ChatAnswer(
@@ -254,6 +320,8 @@ def answer(
         # cited nothing — there was nothing to cite, which is the honest case.
         grounded=bool(kept) or not answerable,
         dropped_refs=dropped,
+        considered=considered,
+        dropped_considered=dropped_considered,
         trace=[entry.model_dump(mode="json", exclude_none=True) for entry in response.trace],
         tokens=response.usage.total_tokens,
         model=response.model,

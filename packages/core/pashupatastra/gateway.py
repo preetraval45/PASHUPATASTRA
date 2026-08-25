@@ -650,6 +650,21 @@ class Gateway:
         already said. The added instruction is ours and carries no new
         information — restating the question here would give an attacker's text
         a second, unfenced route into the prompt.
+
+        This path runs more often than it looks like it should. A provider that
+        honours `response_format` when it is answering alone can ignore it
+        entirely once tools are on the request, and then every answer arrives as
+        prose and every answer is reformatted here.
+
+        Which makes what this asks for load-bearing. It used to say only "do not
+        add anything you did not already say" — right, and read as licence to
+        leave every field the prose had not spelled out empty. A structured
+        field that arrives empty is not neutral: it is the answer asserting
+        there was nothing to put there, and on this codebase that assertion
+        reached the screen as "no alternative reading was ruled out" for an
+        incident whose whole point is the alternative it ruled out. The
+        safeguard stays; the fields are now named as part of the answer rather
+        than as decoration on it.
         """
         message, usage = self.provider.converse(
             messages=[
@@ -658,9 +673,12 @@ class Gateway:
                     "role": "user",
                     "content": (
                         "Now return that same answer as JSON matching the "
-                        "required schema. Do not add anything you did not "
-                        "already say, and cite only refs that appeared in the "
-                        "evidence."
+                        "required schema. Every field in the schema is part of "
+                        "the answer: fill each one from what you already said "
+                        "and the evidence you were given, and leave a field "
+                        "empty only when there was genuinely nothing to put in "
+                        "it. Do not add anything you did not already say, and "
+                        "cite only refs that appeared in the evidence."
                     ),
                 },
             ],

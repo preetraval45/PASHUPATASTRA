@@ -2136,7 +2136,7 @@ Every task in this phase is bound by the two rules the rest of the platform is:
 **rule 2** — nothing it drafts is adopted without passing through Dharma and a
 human. Generation is a new output, not a new authority.
 
-- [ ] **R68 — The reasoning trace is visible.** Needs: **R21**.
+- [x] **R68 — The reasoning trace is visible.** Needs: **R21**.
   Show the intermediate steps, not only the answer: which evidence was pulled,
   which hypotheses were considered, which were ruled out and on what. The
   homepage asserts that *diagnoses are challenged by evidence*; this is the
@@ -2145,6 +2145,54 @@ human. Generation is a new output, not a new authority.
   names what rejected it, and the trace is stored with the answer so it can be
   audited later rather than regenerated differently.
   *Highest-leverage task in this phase — it turns a claim into a screen.*
+  Done, and three of the four changes are things that were already broken.
+  **The agent was reasoning from a diagnosis with its doubt removed.** Every
+  hypothesis went into the prompt under the same ref, `#hypothesis`, so two
+  opposite claims shared one identifier — and `contradicted_by`, the field this
+  console's whole argument rests on, was dropped before the agent saw it. Sati
+  could not have named what ruled an alternative out; it was never told there
+  was an alternative. Hypotheses are now ranked, each carries its own ref, and
+  the contradictions go with them.
+  **The trace already knew what each lookup read and the screen never showed
+  it.** `tool_result` has carried `refs` since it was written; the audit view
+  rendered *that* a lookup happened. Both surfaces now name the records, as
+  links, and a lookup that found nothing says so rather than rendering blank.
+  **The reformat retry was silently emptying fields.** This is the finding
+  worth keeping: groq's `gpt-oss-20b` honours `response_format` when answering
+  alone and ignores it the moment tools are on the request, so a tool-carrying
+  turn answers in prose and *every* answer goes through `_finalise`. That retry
+  said only "do not add anything you did not already say" — correct, and read
+  as licence to leave every field the prose had not spelled out empty. An empty
+  structured field is not neutral: it is the answer asserting there was nothing
+  to put there, which reached the screen as "nothing was ruled out" for the
+  incident whose entire point is the alternative it ruled out. The safeguard
+  stays; the fields are now named as part of the answer.
+  **A conditional rule is one the model decides it has already satisfied.**
+  Rule 6 was measured through three drafts against the live model. Describing
+  the principle: empty. Naming the evidence block shape but conditioning on
+  *when your answer depends on one of those being wrong*: empty. Telling it
+  plainly, for every such block, with the reformat fixed: the travelling
+  alternative, with both refs that close it. Prompt version 5.
+  Rejections are held to the citation standard — one whose refs resolve to
+  nothing is dropped into `dropped_considered` and the count is shown, because a
+  rejection a reader cannot check spends trust without earning it. Naming no
+  reason and naming a reason that does not exist are the same failure and are
+  collapsed deliberately.
+  `scripts/verifytrace.py` obtains the answer from the API first and requires
+  the page to match it, so a screen rendering a convincing account of steps
+  nobody took fails. It asks a second question on a second incident purely to
+  force a lookup: a green run with no tool call has not checked the half of this
+  task about naming records, so that case fails rather than passes quietly.
+  Negative-controlled — stripping the refs off the panel fails it.
+  Measured against a live model on 25 August 2026: the travelling alternative
+  with both closing refs, one lookup naming `host:ws-0148`, and the ledger
+  carrying both. The final re-run could not repeat the lookup half — the day's
+  free allowance for `gpt-oss-20b` was spent (198,310 of 200,000 tokens), which
+  the checker reports as a failure naming what it could not measure rather than
+  as a pass. `testagentchat.py` covers the same clause deterministically.
+  Shown open rather than behind a disclosure. A conclusion is already more
+  persuasive than the doubt beside it; putting the doubt one click further away
+  decides which of the two a reader sees.
 
 - [ ] **R69 — Reasoning across incidents.** Needs: **R68**.
   "Are 0901 and 0902 related?", "same actor pattern?" — answered from entity

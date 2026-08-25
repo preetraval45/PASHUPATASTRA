@@ -22,10 +22,12 @@ type TraceEntry = {
   usage?: { input_tokens?: number; output_tokens?: number };
 };
 
+type RuledOut = { reading: string; ruled_out_by: string[]; dropped_refs?: string[] };
+
 /** How each step is described in the trace, in words rather than field names. */
 const STEP: Record<string, string> = {
   tool_call: "looked up",
-  tool_result: "got back",
+  tool_result: "read",
   refusal: "refused a tool it was not given",
   answer: "answered",
   format: "re-asked for the structured form",
@@ -60,6 +62,8 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
     cached?: boolean;
     grounded?: boolean;
     trace?: TraceEntry[];
+    considered?: RuledOut[];
+    dropped_considered?: { reading: string; claimed_refs: string[] }[];
   };
 
   if (!detail?.asked) return null;
@@ -115,6 +119,17 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
                       {String(step.detail.entity_key)}
                     </span>
                   ) : null}
+                  {/* What came back, by id. The trace carried this from the
+                      day it was written and the screen showed only that a
+                      lookup happened — which is the agent narrating itself
+                      rather than a record anyone can check. */}
+                  {Array.isArray(step.detail?.refs) && step.detail.refs.length > 0 ? (
+                    <span className="mono min-w-0 break-all text-[rgb(var(--faint))]">
+                      {(step.detail.refs as string[]).map(short).join(", ")}
+                    </span>
+                  ) : step.kind === "tool_result" ? (
+                    <span className="text-[rgb(var(--faint))]">nothing</span>
+                  ) : null}
                   {step.usage?.output_tokens ? (
                     <span className="text-[rgb(var(--faint))]">
                       {(step.usage.input_tokens ?? 0) + step.usage.output_tokens} tokens
@@ -125,6 +140,28 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
             </ol>
           </div>
         )}
+
+        {detail.considered?.length ? (
+          <div>
+            <p className="break-words text-[rgb(var(--faint))]">ruled out</p>
+            <ul className="mt-1 space-y-1">
+              {detail.considered.map((item) => (
+                <li key={item.reading} className="min-w-0">
+                  <span className="break-words">{item.reading}</span>{" "}
+                  <span className="mono break-all text-[rgb(var(--faint))]">
+                    by {item.ruled_out_by.map(short).join(", ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {detail.dropped_considered?.length ? (
+              <p className="mt-1 break-words text-[rgb(var(--warn))]">
+                {detail.dropped_considered.length} dismissed on evidence that resolved to
+                nothing, and dropped
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {(detail.evidence_refs?.length || detail.dropped_refs?.length) && (
           <div>

@@ -260,6 +260,10 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
         </p>
       )}
 
+      {answer.considered?.length > 0 && <RuledOutList answer={answer} incident={incident} />}
+
+      {answer.trace?.length > 0 && <Steps answer={answer} incident={incident} />}
+
       {answer.proposed_action_id && answer.verdict && (
         <Proposal answer={answer} />
       )}
@@ -283,6 +287,121 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
         )}
       </p>
     </div>
+  );
+}
+
+/**
+ * What else the evidence could have meant, and what closed it.
+ *
+ * Not decoration and not hedging. The site's claim is that diagnoses are
+ * *challenged* by evidence, and an answer that states only its conclusion is
+ * asking to be believed. Each rejection names refs, each ref is a link, and
+ * anything the agent could not support was dropped before it reached here — so
+ * what is on screen is a rejection a reader can go and check.
+ *
+ * Shown open rather than behind a disclosure. A conclusion is more persuasive
+ * than the doubt beside it already; putting the doubt one click further away
+ * decides which of the two a reader sees.
+ */
+function RuledOutList({ answer, incident }: { answer: ChatAnswer; incident: Incident }) {
+  return (
+    <div data-considered className="rounded border border-[rgb(var(--edge))] px-3 py-2">
+      <p className="label">Also possible, and what rules it out</p>
+      <ul className="mt-2 space-y-1.5 text-xs">
+        {answer.considered.map((item) => (
+          <li key={item.reading}>
+            <span className="text-[rgb(var(--muted))]">{item.reading}</span>{" "}
+            <span className="mono text-[rgb(var(--faint))]">
+              ruled out by{" "}
+              {item.ruled_out_by.map((ref, index) => (
+                <span key={ref}>
+                  {index > 0 && ", "}
+                  <Link
+                    href={hrefFor(ref, incident.id)}
+                    className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+                  >
+                    {label(ref, incident.id)}
+                  </Link>
+                </span>
+              ))}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {answer.dropped_considered?.length > 0 && (
+        // Said out loud. An alternative dismissed on evidence that does not
+        // exist is a thing the reader should know the agent tried to do.
+        <p className="mt-2 text-[11px] text-[rgb(var(--warn))]">
+          {answer.dropped_considered.length} more dismissed on evidence that resolved to
+          nothing, and dropped
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** How each trace step reads, in words rather than field names. */
+const STEP: Record<string, string> = {
+  tool_call: "looked up",
+  tool_result: "read",
+  refusal: "reached for a tool it was not given",
+  answer: "answered",
+  format: "re-asked for the structured form",
+  budget_exhausted: "ran out of budget",
+};
+
+/**
+ * The steps, with the records each one read.
+ *
+ * Collapsed, unlike the rejections above: this is the mechanical account, and a
+ * reader wants it when they are already suspicious. What it must never be is a
+ * narration — every lookup names the ids that came back, so "read
+ * `evt-pg-connections`" can be clicked and disagreed with. A step that only
+ * said "read logs" would be the agent describing itself.
+ */
+function Steps({ answer, incident }: { answer: ChatAnswer; incident: Incident }) {
+  const lookups = answer.trace.filter((step) => step.kind !== "answer").length;
+  return (
+    <details data-trace className="text-xs">
+      <summary className="focusable inline-block cursor-pointer rounded text-[11px] text-[rgb(var(--faint))] hover:text-[rgb(var(--ink))]">
+        {lookups > 0
+          ? `how it got there — ${lookups} step${lookups === 1 ? "" : "s"}`
+          : "how it got there"}
+      </summary>
+      <ol className="mt-2 space-y-1 border-l border-[rgb(var(--edge))] pl-3">
+        {answer.trace.map((step, index) => (
+          <li key={index} className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+            <span className="mono shrink-0 text-[rgb(var(--faint))]">{step.hop}</span>
+            <span className="text-[rgb(var(--muted))]">{STEP[step.kind] ?? step.kind}</span>
+            {step.name && <Ident>{step.name}</Ident>}
+            {step.detail?.entity_key && (
+              <span className="mono min-w-0 break-all text-[rgb(var(--faint))]">
+                {step.detail.entity_key}
+              </span>
+            )}
+            {step.detail?.refs?.length ? (
+              <span className="mono min-w-0 break-all text-[rgb(var(--faint))]">
+                {step.detail.refs.map((ref, at) => (
+                  <span key={ref}>
+                    {at > 0 && ", "}
+                    <Link
+                      href={hrefFor(ref, incident.id)}
+                      className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+                    >
+                      {label(ref, incident.id)}
+                    </Link>
+                  </span>
+                ))}
+              </span>
+            ) : step.kind === "tool_result" ? (
+              // A lookup that found nothing is a step too, and saying so is
+              // what stops the absence reading as an omission.
+              <span className="text-[rgb(var(--faint))]">nothing</span>
+            ) : null}
+          </li>
+        ))}
+      </ol>
+    </details>
   );
 }
 

@@ -90,7 +90,13 @@ INJECTION_REPORT_V1: dict[str, Any] = {
 CHAT_ANSWER_V1: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["answer", "evidence_refs", "answerable", "proposed_action_id"],
+    "required": [
+        "answer",
+        "evidence_refs",
+        "answerable",
+        "proposed_action_id",
+        "considered",
+    ],
     "properties": {
         "answer": {
             "type": "string",
@@ -120,6 +126,33 @@ CHAT_ANSWER_V1: dict[str, Any] = {
             "description": "False when the retrieved evidence does not contain "
             "the answer. Saying so is a correct outcome, not a failure — the "
             "alternative is a confident guess nobody can check.",
+        },
+        "considered": {
+            "type": "array",
+            "description": "Other readings of the evidence you weighed and "
+            "rejected. Empty is a correct answer when the evidence admits only "
+            "one reading — this is not a field to fill.",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["reading", "ruled_out_by"],
+                "properties": {
+                    "reading": {
+                        "type": "string",
+                        "description": "The alternative explanation, stated as "
+                        "someone who believed it would state it.",
+                    },
+                    "ruled_out_by": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Refs of the evidence that rules this "
+                        "out. Resolved the same way citations are: an "
+                        "alternative whose refs do not resolve is dropped, "
+                        "because a rejection that cites nothing is an opinion "
+                        "rather than a finding.",
+                    },
+                },
+            },
         },
     },
 }

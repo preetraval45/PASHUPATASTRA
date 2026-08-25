@@ -333,6 +333,24 @@ export function riskBand(risk: number): {
   return { label: "prohibited", className: "text-rose-400 border-rose-500/30 bg-rose-500/10" };
 }
 
+export interface RuledOut {
+  reading: string;
+  ruled_out_by: string[];
+  /** Refs it also claimed that resolved to nothing. Kept beside the ones that
+   *  held, rather than deleted, so the record shows what was claimed. */
+  dropped_refs?: string[];
+}
+
+/** One step the agent took. `refs` on a `tool_result` is what came back — the
+ *  records that step read, which is the half of a trace that makes it
+ *  checkable rather than merely narrated. */
+export interface TraceStep {
+  hop: number;
+  kind: string;
+  name?: string;
+  detail?: { refs?: string[]; entity_key?: string; ok?: boolean; reason?: string };
+}
+
 /** One answer from Sati, plus everything needed to judge how far to trust it. */
 export type ChatAnswer = {
   answer: string;
@@ -343,7 +361,12 @@ export type ChatAnswer = {
   proposed_action_id: string | null;
   verdict: Verdict | null;
   approval_id: string | null;
-  trace: { hop: number; kind: string; name?: string }[];
+  /** Readings the evidence also admitted, each with what closed it. Verified
+   *  like citations: one whose refs resolve to nothing is dropped, because a
+   *  rejection a reader cannot check is worth less than no rejection. */
+  considered: RuledOut[];
+  dropped_considered: { reading: string; claimed_refs: string[] }[];
+  trace: TraceStep[];
   tokens: number;
   model: string;
   provider: string;

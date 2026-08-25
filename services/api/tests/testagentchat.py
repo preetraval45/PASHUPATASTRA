@@ -240,6 +240,121 @@ def test_a_near_miss_citation_does_not_resolve() -> None:
     assert dropped == ["INC-2026-0901#chain-9"]
 
 
+# --- what it ruled out, and on what (R68) --------------------------------------
+
+
+def test_an_alternative_is_kept_only_when_its_reason_resolves() -> None:
+    """The whole point of listing an alternative is that a reader can check the
+    rejection. One "ruled out" by a ref that resolves to nothing is the
+    appearance of rigour, and worth less than saying nothing."""
+    from app.agent.chat import _considered
+
+    kept, dropped = _considered(
+        [
+            {"reading": "The user is travelling.", "ruled_out_by": ["SEC-0001-c"]},
+            {"reading": "Backup software.", "ruled_out_by": ["evt-invented"]},
+        ],
+        {"SEC-0001-c"},
+    )
+    assert kept == [{"reading": "The user is travelling.", "ruled_out_by": ["SEC-0001-c"]}]
+    assert dropped == [{"reading": "Backup software.", "claimed_refs": ["evt-invented"]}]
+
+
+def test_an_alternative_that_names_no_reason_is_not_a_rejection() -> None:
+    """Naming nothing and naming something that does not exist are the same
+    failure: a reader is left with a dismissal they cannot check."""
+    from app.agent.chat import _considered
+
+    kept, dropped = _considered([{"reading": "Just a glitch.", "ruled_out_by": []}], {"SEC-1"})
+    assert kept == []
+    assert dropped == [{"reading": "Just a glitch.", "claimed_refs": []}]
+
+
+def test_a_partly_resolvable_rejection_keeps_the_refs_that_hold() -> None:
+    """It is still a checkable rejection, and the ref that failed is recorded on
+    it rather than quietly deleted — the record shows what was claimed."""
+    from app.agent.chat import _considered
+
+    kept, _ = _considered(
+        [{"reading": "Travelling.", "ruled_out_by": ["SEC-1", "made-up"]}], {"SEC-1"}
+    )
+    assert kept == [
+        {"reading": "Travelling.", "ruled_out_by": ["SEC-1"], "dropped_refs": ["made-up"]}
+    ]
+
+
+def test_no_alternatives_is_a_correct_answer() -> None:
+    """The field must not become one the model feels obliged to fill. An
+    invented rival knocked down on real evidence is worse than silence."""
+    from app.agent.chat import _considered
+
+    assert _considered([], {"SEC-1"}) == ([], [])
+    assert _considered(None, {"SEC-1"}) == ([], [])
+
+
+def test_the_answer_schema_requires_the_alternatives_field() -> None:
+    """Required, so "what else could this have been" is answered explicitly
+    rather than omitted. An empty array is the answer when there was nothing."""
+    from app.engines.providers.schemas import schema_for
+
+    schema = schema_for("chat_answer_v1")
+    assert "considered" in schema["required"]
+    item = schema["properties"]["considered"]["items"]
+    assert item["required"] == ["reading", "ruled_out_by"]
+    assert item["additionalProperties"] is False
+
+
+def test_the_trace_records_which_records_each_lookup_read() -> None:
+    """"Every step names the records it read" is a property of the trace, not of
+    the renderer. A tool result that reports only `ok` leaves the screen with
+    nothing true to show."""
+    gateway, _ = gateway_for(
+        [
+            call_message("read_logs", {"entity_key": "host:ws-0148"}),
+            answer_message("It beaconed.", ["evt-1"]),
+        ]
+    )
+    def dispatch(call: ToolCall) -> ToolOutcome:
+        return ToolOutcome(call=call, ok=True, content="two flows", refs=["evt-1", "evt-2"])
+
+    response = gateway.converse(request_with([TOOL]), dispatch)
+    results = [entry for entry in response.trace if entry.kind == "tool_result"]
+    assert results, "a tool ran and the trace does not say what came back"
+    assert results[0].detail["refs"] == ["evt-1", "evt-2"]
+
+
+def test_the_reformat_asks_for_every_field_the_schema_carries() -> None:
+    """The path that runs whenever a provider ignores `response_format`.
+
+    Groq's `gpt-oss-20b` honours the schema when it answers alone and drops it
+    the moment tools are on the request, so a tool-carrying turn answers in
+    prose and *every* answer arrives through this reformat. The old instruction
+    said only "do not add anything you did not already say", and the model read
+    that as leave-it-empty: the alternative reading it had just discussed in
+    prose came back as an empty list, which on screen is the answer asserting
+    nothing was ruled out.
+    """
+    prose = {"role": "assistant", "content": "**Answer** It was an attack, not travel."}
+    gateway, provider = gateway_for(
+        [
+            prose,
+            answer_message("It was an attack, not travel.", ["evt-1"]),
+        ]
+    )
+
+    def dispatch(call: ToolCall) -> ToolOutcome:
+        return ToolOutcome(call=call, ok=True, content="", refs=[])
+
+    gateway.converse(request_with([TOOL]), dispatch)
+
+    asked = provider.sent[-1]["messages"][-1]["content"].lower()
+    assert "every field in the schema is part of the answer" in asked
+    assert "do not add anything you did not already say" in asked, (
+        "the safeguard against the reformat inventing content must survive"
+    )
+    assert provider.sent[-1]["tools"] in (None, []), "the reformat offers no tools"
+
+
 # --- the cache ----------------------------------------------------------------
 
 

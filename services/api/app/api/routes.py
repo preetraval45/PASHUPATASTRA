@@ -1127,6 +1127,12 @@ def _turn_record(result, incident, message: str) -> AuditRecord:
             "truncated": result.truncated,
             "evidence_refs": result.evidence_refs,
             "dropped_refs": result.dropped_refs,
+            # The readings that were open and what closed them, stored with the
+            # answer rather than regenerated later. Asking the model the same
+            # question next month produces a different trace under a different
+            # prompt; this one is the trace that produced *this* answer.
+            "considered": result.considered,
+            "dropped_considered": result.dropped_considered,
             "proposed_action_id": result.proposed_action_id,
             "answer": result.answer,
             "trace": result.trace,
