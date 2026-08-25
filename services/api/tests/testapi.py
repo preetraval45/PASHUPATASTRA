@@ -49,6 +49,45 @@ def test_unregistered_action_cannot_be_evaluated() -> None:
     assert response.status_code == 404
 
 
+def test_a_draft_is_served_labelled_and_cited(seeded_incident: str = "") -> None:
+    """R70, over the route. Every line has refs and the document says it is a
+    draft — checked here as well as in core, because the shape a browser sees is
+    what a reader is actually held to."""
+    incidents = client.get("/api/v1/incidents").json()
+    if not incidents:
+        pytest.skip("no incidents are seeded in this configuration")
+    incident_id = incidents[0]["id"]
+
+    for kind in ("playbook", "post_incident"):
+        body = client.get(f"/api/v1/incidents/{incident_id}/draft/{kind}").json()
+        assert body["status"] == "draft"
+        assert body["title"].lower().startswith("draft")
+        assert body["adopt_action_id"] in ("adopt_playbook", "adopt_report")
+        lines = [line for section in body["sections"] for line in section["lines"]]
+        assert lines, f"{kind} rendered no lines"
+        for line in lines:
+            assert line["refs"], line["text"]
+
+
+def test_an_unknown_draft_kind_is_a_404_rather_than_an_empty_document() -> None:
+    incidents = client.get("/api/v1/incidents").json()
+    if not incidents:
+        pytest.skip("no incidents are seeded in this configuration")
+    response = client.get(f"/api/v1/incidents/{incidents[0]['id']}/draft/executive_summary")
+    assert response.status_code == 404
+
+
+def test_adopting_a_draft_is_scored_like_any_other_action() -> None:
+    """The clause that matters: there is no adopt path that skips policy. The
+    id resolves in the registry, Dharma scores it, and the tier it lands in is
+    the one that decides who may accept it."""
+    verdict = evaluate("adopt_playbook")
+    assert verdict["tier"] != "autonomous", (
+        "a playbook the team follows next time must not be adoptable without a human"
+    )
+    assert verdict["effective_risk"] > 0
+
+
 def test_a_verdict_carries_the_reasoning_that_produced_its_tier() -> None:
     """R65. The approval panel explains the tier from these, so the route has to
     serve them — a panel with nothing to render falls back to the arithmetic,

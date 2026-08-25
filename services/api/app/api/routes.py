@@ -97,6 +97,47 @@ def get_incident(incident_id: str) -> Incident:
     return incident
 
 
+@router.get("/incidents/{incident_id}/draft/{kind}")
+def incident_draft(incident_id: str, kind: str) -> dict[str, object]:
+    """A drafted playbook or post-incident report, assembled from stored records.
+
+    Assembled on request rather than stored. A saved draft is a document that
+    can go stale against the incident it describes, and the interesting failure
+    is the one nobody notices: a report citing a plan step that has since been
+    re-scored. Built from the incident each time, it cannot disagree with it.
+
+    Every line carries the refs it rests on — enforced in `drafts.Line`, which
+    refuses to construct one that cites nothing — and `adopt_action_id` names
+    the registered action adopting it would require. The route does not evaluate
+    that action: policy is Dharma's to decide, and an endpoint that scored the
+    thing it is offering would be marking its own work.
+    """
+    from pashupatastra.drafts import build_draft
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+    try:
+        draft = build_draft(kind, incident)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return {
+        "kind": draft.kind,
+        "incident_ref": draft.incident_ref,
+        "title": draft.title,
+        "status": draft.status,
+        "adopt_action_id": draft.adopt_action_id,
+        "sections": [
+            {
+                "title": section.title,
+                "lines": [{"text": line.text, "refs": list(line.refs)} for line in section.lines],
+            }
+            for section in draft.sections
+        ],
+    }
+
+
 # --- actions & policy --------------------------------------------------------
 
 

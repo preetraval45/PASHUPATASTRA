@@ -6,6 +6,7 @@ import { VerdictPanel } from "@/components/approval";
 import { AgentTurn } from "@/components/agentturn";
 import { ChatPanel } from "@/components/chat";
 import { BlastPanel } from "@/components/blastpanel";
+import { DraftPanel } from "@/components/drafts";
 import { IncidentGraph } from "@/components/incidentgraph";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
@@ -17,6 +18,7 @@ import {
   getIncident,
   getIncidentAudit,
   getIncidents,
+  getDraft,
   getPolicyModel,
   type AuditRecord,
 } from "@/lib/api";
@@ -64,7 +66,7 @@ export default async function IncidentDetailPage({
   const { id: raw } = await params;
   const id = decodeURIComponent(raw);
 
-  const [incident, actions, audit, all, policy] = await Promise.all([
+  const [incident, actions, audit, all, policy, report, plan] = await Promise.all([
     getIncident(id),
     getActions(),
     getIncidentAudit(id),
@@ -72,6 +74,13 @@ export default async function IncidentDetailPage({
     // The autonomy scale the approval panel draws. Fetched rather than written
     // down, for the reason `getPolicyModel` gives.
     getPolicyModel(),
+    // The written-up version of everything above it. Assembled per request from
+    // the incident, so it cannot describe a plan step that has since changed.
+    getDraft(id, "post_incident"),
+    // And the forward-looking half: what to do the next time this shape of
+    // thing happens. Two documents because they answer different questions,
+    // and merging them would produce one that answers neither well.
+    getDraft(id, "playbook"),
   ]);
 
   // `null` means the API could not be reached; a 404 is handled by the client
@@ -100,6 +109,24 @@ export default async function IncidentDetailPage({
         diagnostic_confidence: incident.hypotheses[0]?.confidence ?? 1,
       })
     : null;
+
+  // What adopting the report would cost, asked of the policy engine rather than
+  // assumed. The page shows the verdict instead of a button, because adopting is
+  // an action and the tier is who has to say yes.
+  const scoreAdoption = (draft: typeof report) =>
+    draft
+      ? evaluatePolicy({
+          action_id: draft.adopt_action_id,
+          incident_ref: incident.id,
+          blast_radius_entities: incident.impact.blast_radius_entities,
+          blast_radius_users: incident.impact.estimated_users_affected,
+          diagnostic_confidence: incident.hypotheses[0]?.confidence ?? 1,
+        })
+      : Promise.resolve(null);
+  const [adoptReport, adoptPlaybook] = await Promise.all([
+    scoreAdoption(report),
+    scoreAdoption(plan),
+  ]);
 
   return (
     <Page
@@ -152,6 +179,10 @@ export default async function IncidentDetailPage({
           rollback={riskiest?.rollback_action_id ?? spec?.rollback_action_id ?? null}
         />
       )}
+
+      {report && <DraftPanel draft={report} verdict={adoptReport} />}
+
+      {plan && <DraftPanel draft={plan} verdict={adoptPlaybook} />}
 
       {/* The way out to the whole trail. R52 delisted Audit as a front door on
           the grounds that it is reached from the incident whose actions it

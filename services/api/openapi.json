@@ -2149,6 +2149,57 @@
         "summary": "Get Incident"
       }
     },
+    "/api/v1/incidents/{incident_id}/draft/{kind}": {
+      "get": {
+        "description": "A drafted playbook or post-incident report, assembled from stored records.\n\nAssembled on request rather than stored. A saved draft is a document that\ncan go stale against the incident it describes, and the interesting failure\nis the one nobody notices: a report citing a plan step that has since been\nre-scored. Built from the incident each time, it cannot disagree with it.\n\nEvery line carries the refs it rests on \u2014 enforced in `drafts.Line`, which\nrefuses to construct one that cites nothing \u2014 and `adopt_action_id` names\nthe registered action adopting it would require. The route does not evaluate\nthat action: policy is Dharma's to decide, and an endpoint that scored the\nthing it is offering would be marking its own work.",
+        "operationId": "incident_draft_api_v1_incidents__incident_id__draft__kind__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Incident Draft Api V1 Incidents  Incident Id  Draft  Kind  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incident Draft"
+      }
+    },
     "/api/v1/incidents/{incident_id}/graph": {
       "get": {
         "description": "The sub-graph this incident's own evidence names.\n\nFiltered here rather than in the browser. The alternative is shipping the\nwhole estate to draw three nodes, which works at eleven entities and stops\nworking at the first real deployment \u2014 and the incident page is the one\nscreen that has to load while somebody is waiting.\n\nAn edge is included only when **both** ends are in the incident. A path from\none of these entities out to something the incident never mentions is real,\nand drawing it here would say the incident reached further than its evidence\nestablishes \u2014 the same rule R50 applied to inventing edges, applied to\nborrowing them.",

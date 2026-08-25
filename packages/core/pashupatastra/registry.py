@@ -212,6 +212,63 @@ def _bootstrap_security() -> None:
             domains=SECURITY,
         )
     )
+    # R70. Adopting a draft is an action, not a save button. A playbook the
+    # team follows next time is a change to how the next incident is handled,
+    # and this codebase has one way to make a change: register it, score it,
+    # route it through Dharma. The risk is not in the writing — it is in a
+    # document nobody approved becoming the procedure.
+    #
+    # Scored at 35, deliberately above the autonomous band rather than at the
+    # 20 these were first given. Twenty put them in the 0-30 band, which in a
+    # dev environment with no blast radius means an agent could adopt its own
+    # draft unattended — the exact outcome the task is named against. The number
+    # is not a dial to reach a tier: 35 is where `disable_deployment` sits, and
+    # this is the same shape of act, changing what happens next without breaking
+    # anything now and fully reversible.
+    #
+    # Adopt and retract carry the same risk on purpose. They are each other's
+    # rollback, and a rollback priced far below the thing it undoes is a rollback
+    # that gets taken lightly during the incident where it matters.
+    register(
+        ActionSpec(
+            id="adopt_playbook",
+            description="Adopt a drafted playbook as the procedure for this class of incident",
+            base_risk=35,
+            expected_post_state={"playbook": "adopted"},
+            rollback_action_id="retract_playbook",
+            domains=BOTH,
+        )
+    )
+    register(
+        ActionSpec(
+            id="retract_playbook",
+            description="Withdraw an adopted playbook",
+            base_risk=35,
+            expected_post_state={"playbook": "withdrawn"},
+            rollback_action_id="adopt_playbook",
+            domains=BOTH,
+        )
+    )
+    register(
+        ActionSpec(
+            id="adopt_report",
+            description="Adopt a drafted post-incident report as the record of what happened",
+            base_risk=35,
+            expected_post_state={"report": "adopted"},
+            rollback_action_id="retract_report",
+            domains=BOTH,
+        )
+    )
+    register(
+        ActionSpec(
+            id="retract_report",
+            description="Withdraw an adopted post-incident report",
+            base_risk=35,
+            expected_post_state={"report": "withdrawn"},
+            rollback_action_id="adopt_report",
+            domains=BOTH,
+        )
+    )
     register(
         ActionSpec(
             id="require_mfa_reauth",

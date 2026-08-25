@@ -650,6 +650,26 @@ export const getIncidentGraph = (id: string) =>
     beyond: string[];
   }>(`/incidents/${encodeURIComponent(id)}/graph`);
 
+/** A drafted playbook or post-incident report.
+ *
+ *  `status` is always "draft" and there is no other value: adopting one is a
+ *  registered action that goes through Dharma, and what comes out the far side
+ *  is an audit record naming a human — never a different rendering of this. */
+export interface Draft {
+  kind: "playbook" | "post_incident";
+  incident_ref: string;
+  title: string;
+  status: "draft";
+  /** The registered action adopting this would require. Named here so the page
+   *  can show what it would cost rather than offering a button that implies
+   *  none. */
+  adopt_action_id: string;
+  sections: { title: string; lines: { text: string; refs: string[] }[] }[];
+}
+
+export const getDraft = (incidentId: string, kind: string) =>
+  get<Draft>(`/incidents/${encodeURIComponent(incidentId)}/draft/${kind}`);
+
 export interface PolicyModel {
   tiers: { tier: Tier; min_risk: number; max_risk: number; approvers: string[] }[];
   escalation: { blast_radius_entities: number; blast_radius_users: number };
