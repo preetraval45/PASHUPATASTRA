@@ -104,6 +104,10 @@ export interface Verdict {
   adjustments: RiskAdjustment[];
   effective_risk: number;
   tier: Tier;
+  /** How the tier was arrived at, emitted by the engine branches that arrived
+   *  at it. Optional because a verdict stored before R65 does not carry it —
+   *  the panel falls back to the arithmetic rather than inventing the steps. */
+  tier_reasons?: TierStep[];
   required_approvers: string[];
   granted_by: string | null;
   expires_at: string | null;
@@ -173,6 +177,37 @@ export interface EntityDetail {
 export interface RiskAdjustment {
   reason: string;
   delta: number;
+  factor?: RiskFactor;
+}
+
+/** The named inputs risk is priced from. The strings are the engine's own — a
+ *  label the dashboard invented would be a second name for one term. */
+export type RiskFactor =
+  | "blast_radius"
+  | "confidence"
+  | "novelty"
+  | "reversibility"
+  | "environment"
+  | "agent_limit";
+
+export const FACTOR_LABEL: Record<RiskFactor, string> = {
+  blast_radius: "blast radius",
+  confidence: "confidence",
+  novelty: "novelty",
+  reversibility: "reversibility",
+  environment: "environment",
+  agent_limit: "agent limit",
+};
+
+/** One rule that fired while the tier was being decided. `from_tier` equal to
+ *  `to_tier` means the rule fired and the tier was already there — an
+ *  independent reason for the outcome, not a step that did nothing. */
+export interface TierStep {
+  rule: string;
+  factor: RiskFactor | null;
+  detail: string;
+  from_tier: Tier;
+  to_tier: Tier;
 }
 
 export interface Health {

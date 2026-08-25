@@ -296,6 +296,9 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
  */
 export function Proposal({ answer }: { answer: ChatAnswer }) {
   const verdict = answer.verdict!;
+  const steps = verdict.tier_reasons ?? [];
+  const last = steps[steps.length - 1];
+  const binding = last && last.rule !== "risk_band" ? last : null;
   return (
     <div className="rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--raised))] px-3 py-2 text-xs">
       <p className="flex flex-wrap items-center gap-2">
@@ -306,6 +309,12 @@ export function Proposal({ answer }: { answer: ChatAnswer }) {
         </Badge>
         <span className="text-[rgb(var(--faint))]">risk {verdict.effective_risk}</span>
       </p>
+      {/* When the tier is not the one the score alone would give, the score is
+          the wrong explanation for it. The binding rule is the last step the
+          engine recorded, so this shows that rather than paraphrasing. */}
+      {binding && (
+        <p className="mt-1 text-[rgb(var(--muted))]">{binding.detail}</p>
+      )}
       <p className="mt-1 text-[rgb(var(--faint))]">
         Queued for a human. Nothing has run &mdash; the assistant has no way to
         execute anything.

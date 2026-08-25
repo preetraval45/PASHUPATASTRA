@@ -49,6 +49,35 @@ def test_unregistered_action_cannot_be_evaluated() -> None:
     assert response.status_code == 404
 
 
+def test_a_verdict_carries_the_reasoning_that_produced_its_tier() -> None:
+    """R65. The approval panel explains the tier from these, so the route has to
+    serve them — a panel with nothing to render falls back to the arithmetic,
+    which is the explanation that does not fit the interesting cases."""
+    verdict = evaluate("force_password_reset")
+    assert verdict["tier"] == "denied"
+    steps = verdict["tier_reasons"]
+    assert steps[0]["rule"] == "risk_band"
+    assert steps[0]["to_tier"] == "autonomous", "the score alone would have allowed this"
+    assert steps[-1]["to_tier"] == verdict["tier"]
+    assert steps[-1]["factor"] == "reversibility"
+
+
+def test_a_verdict_posted_back_without_its_reasoning_is_still_accepted() -> None:
+    """A client that has not been redeployed yet still holds older verdicts.
+
+    Refusing them would make the approval path fail during the window between
+    the API rolling out and the dashboard following it — the one moment an
+    operator is most likely to be approving something.
+    """
+    verdict = evaluate("restart_service")
+    del verdict["tier_reasons"]
+    result = client.post(
+        "/api/v1/actions/execute",
+        json={"action_id": "restart_service", "verdict": verdict},
+    )
+    assert result.status_code == 200
+
+
 def test_autonomous_action_executes() -> None:
     verdict = evaluate("restart_service")
     assert verdict["tier"] == "autonomous"

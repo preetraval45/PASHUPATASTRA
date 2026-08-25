@@ -1984,7 +1984,7 @@ R65 are the two that change how the product feels; the rest are additive.
   proves only that a panel nobody renders is not rendered.
   36/36 responsive, AA contrast in both themes, 1004 tests.
 
-- [ ] **R65 — Approving something should feel like a decision.** Needs: **R20**.
+- [x] **R65 — Approving something should feel like a decision.** Needs: **R20**.
   A proposed action awaiting approval currently reads as a form submit. Give the
   risk score visual weight through the existing `● ◆ ▲` tiers, and a *why this
   tier* explanation drawn from the registry's own factors — blast radius,
@@ -1992,6 +1992,40 @@ R65 are the two that change how the product feels; the rest are additive.
   **Done when:** the explanation is generated from the same numbers the tier is
   computed from, so it cannot disagree with it, and the tier is distinguishable
   without colour.
+  Done. The verdict now carries `tier_reasons` — one record per rule that fired
+  while the tier was being decided, emitted by the branch that fired it.
+  **The explanation is written by the engine, not the dashboard.** "Generated
+  from the same numbers" cannot be achieved by handing the panel the numbers and
+  trusting it to reach the same conclusion; that is a second implementation of
+  the policy, and the day the two disagree the wrong one is the one an operator
+  is reading while deciding. So `evaluate` moves the tier only through a small
+  ladder object that records each move, which makes changing the tier without
+  saying why something the code cannot express.
+  The case that justifies the whole task is a tier the arithmetic does not
+  account for: `force_password_reset` scores 20 — squarely autonomous — and is
+  denied, because it cannot be undone. The old panel showed 20 and a red badge,
+  which reads as a bug in the arithmetic. It now shows *autonomous → never
+  autonomous*, and the reason.
+  A rule that fires without moving the tier is recorded as **held**, not
+  dropped. `delete_infrastructure` is already denied by its score when the
+  irreversibility rule reaches it; listing only movements would explain that
+  denial as a high number when the real reason is that there is no way back.
+  The tier is drawn as the four-step autonomy scale rather than named, marking
+  both where the action landed and where its score alone would have put it — the
+  gap is the point. The scale's order and bands come from `/policy/model`, for
+  the same reason R54 does. It is legible with colour removed: `▲` is shared by
+  senior and denied, so position, name, marker and border weight carry it, and
+  `verifyapproval.py` measures that through a grayscale filter rather than by
+  reading class names.
+  Two AA failures found by measuring: `--faint` on the marked cell's tinted
+  background lands at 4.25:1. The range text lifts to `--muted` in that cell.
+  `scripts/verifyapproval.py` compares the panel against a verdict it obtains
+  from the API itself, over a matrix of contexts that reaches every tier by every
+  route — the demo incidents alone never produce a tier the score cannot explain,
+  so a checker that only looked at them would report green on a panel that had
+  never had to explain anything. Negative-controlled: paraphrasing one step and
+  thinning the marked border both fail it.
+  36/36 responsive, AA contrast in both themes, 1032 tests passing.
 
 - [ ] **R66 — Keyboard triage.** Needs: **R60**.
   `j`/`k` between incidents, `Enter` to open, `?` for the shortcut list. Matches

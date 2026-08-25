@@ -109,9 +109,46 @@ class RiskContext(BaseModel):
     dry_run: bool = True
 
 
+class RiskFactor(StrEnum):
+    """The named inputs risk is priced from.
+
+    Every adjustment and every tier escalation carries one, so the arithmetic
+    and the explanation of it share a vocabulary rather than each inventing
+    their own words for the same term.
+    """
+
+    BLAST_RADIUS = "blast_radius"
+    CONFIDENCE = "confidence"
+    NOVELTY = "novelty"
+    """Whether this action has been run here, and how it went when it was."""
+
+    REVERSIBILITY = "reversibility"
+    ENVIRONMENT = "environment"
+    AGENT_LIMIT = "agent_limit"
+
+
 class RiskAdjustment(BaseModel):
     reason: str
     delta: int
+    factor: RiskFactor
+
+
+class TierStep(BaseModel):
+    """One rule that fired while the tier was being decided.
+
+    The first step is always the risk band; the rest are the hard overrides, in
+    the order `evaluate` applies them. `from_tier` equal to `to_tier` means the
+    rule fired and the tier was already there — an independent reason for the
+    outcome, not a step that did nothing.
+    """
+
+    rule: str
+    factor: RiskFactor | None = None
+    """None for the risk band, which is the score rather than any one factor."""
+
+    detail: str
+    from_tier: Tier
+    to_tier: Tier
 
 
 class Verdict(BaseModel):
@@ -123,6 +160,16 @@ class Verdict(BaseModel):
     adjustments: list[RiskAdjustment]
     effective_risk: int
     tier: Tier
+    tier_reasons: list[TierStep] = Field(default_factory=list)
+    """How this tier was arrived at, emitted by the branches that arrived at it.
+
+    An approval surface has to answer "why does this need me?", and the honest
+    answer is often not the score: an action of risk 12 with no tested rollback
+    needs an operator, and a panel showing only the arithmetic leaves that
+    looking like a bug. Restating the rules in the dashboard would fix the
+    display and introduce a second answer, so the engine says it instead.
+    """
+
     required_approvers: list[str]
     granted_by: str | None = None
     granted_at: datetime | None = None
@@ -191,16 +238,46 @@ def policy_model() -> dict[str, object]:
     }
 
 
-def _tier_for(risk: int) -> Tier:
+def _band(risk: int) -> tuple[int, int, Tier]:
+    """The band a score falls in: its floor, its ceiling, and its tier."""
+    floor = 0
     for ceiling, tier in _TIERS:
         if risk <= ceiling:
-            return tier
-    return Tier.DENIED
+            return floor, ceiling, tier
+        floor = ceiling + 1
+    return floor, 100, Tier.DENIED
+
+
+def _tier_for(risk: int) -> Tier:
+    return _band(risk)[2]
 
 
 def _escalate(tier: Tier) -> Tier:
     order = [Tier.AUTONOMOUS, Tier.APPROVAL, Tier.SENIOR, Tier.DENIED]
     return order[min(order.index(tier) + 1, len(order) - 1)]
+
+
+class _Ladder:
+    """The tier and the record of how it got there, moved together.
+
+    Kept as a class so that changing the tier without saying why is not
+    something `evaluate` can express. The alternative — assigning to a local and
+    building the explanation afterwards from the same conditions — is two
+    implementations of one decision, and the day they disagree the panel tells
+    an operator the wrong reason for the request in front of them.
+    """
+
+    def __init__(self, tier: Tier, detail: str) -> None:
+        self.tier = tier
+        self.steps = [
+            TierStep(rule="risk_band", factor=None, detail=detail, from_tier=tier, to_tier=tier)
+        ]
+
+    def apply(self, tier: Tier, *, rule: str, factor: RiskFactor, detail: str) -> None:
+        self.steps.append(
+            TierStep(rule=rule, factor=factor, detail=detail, from_tier=self.tier, to_tier=tier)
+        )
+        self.tier = tier
 
 
 def score(action: ActionSpec, context: RiskContext) -> tuple[int, list[RiskAdjustment]]:
@@ -212,6 +289,7 @@ def score(action: ActionSpec, context: RiskContext) -> tuple[int, list[RiskAdjus
             RiskAdjustment(
                 reason=f"blast radius: {context.blast_radius_entities} entities",
                 delta=min(context.blast_radius_entities * 3, 20),
+                factor=RiskFactor.BLAST_RADIUS,
             )
         )
     if context.blast_radius_users > 100:
@@ -219,22 +297,32 @@ def score(action: ActionSpec, context: RiskContext) -> tuple[int, list[RiskAdjus
             RiskAdjustment(
                 reason=f"blast radius: ~{context.blast_radius_users} users",
                 delta=min(context.blast_radius_users // 200, 15),
+                factor=RiskFactor.BLAST_RADIUS,
             )
         )
     if context.environment is Environment.PROD:
-        adjustments.append(RiskAdjustment(reason="production environment", delta=15))
+        adjustments.append(
+            RiskAdjustment(reason="production environment", delta=15, factor=RiskFactor.ENVIRONMENT)
+        )
     elif context.environment is Environment.STAGING:
-        adjustments.append(RiskAdjustment(reason="staging environment", delta=5))
+        adjustments.append(
+            RiskAdjustment(reason="staging environment", delta=5, factor=RiskFactor.ENVIRONMENT)
+        )
 
     if context.diagnostic_confidence < 0.8:
         adjustments.append(
             RiskAdjustment(
                 reason=f"low diagnostic confidence ({context.diagnostic_confidence:.2f})",
                 delta=int((0.8 - context.diagnostic_confidence) * 50),
+                factor=RiskFactor.CONFIDENCE,
             )
         )
     if not context.executed_here_before:
-        adjustments.append(RiskAdjustment(reason="never executed in this environment", delta=10))
+        adjustments.append(
+            RiskAdjustment(
+                reason="never executed in this environment", delta=10, factor=RiskFactor.NOVELTY
+            )
+        )
     if context.failed_here_before:
         # Capped so a run of failures cannot on its own push an action to DENIED
         # — that call belongs to the tier thresholds, not to this term.
@@ -242,6 +330,7 @@ def score(action: ActionSpec, context: RiskContext) -> tuple[int, list[RiskAdjus
             RiskAdjustment(
                 reason=f"failed here {context.failed_here_before}× before",
                 delta=min(context.failed_here_before * 8, 24),
+                factor=RiskFactor.NOVELTY,
             )
         )
 
@@ -257,30 +346,67 @@ def evaluate(
 ) -> Verdict:
     """Issue a verdict. This is the only way to obtain authorization to execute."""
     effective, adjustments = score(action, context)
-    tier = _tier_for(effective)
+    floor, ceiling, band = _band(effective)
+    ladder = _Ladder(band, f"effective risk {effective} falls in the {floor}–{ceiling} band")
     denial: str | None = None
 
     # Hard overrides — applied regardless of the computed score.
     if action.irreversible:
-        tier, denial = Tier.DENIED, "irreversible actions are never autonomous"
+        ladder.apply(
+            Tier.DENIED,
+            rule="irreversible",
+            factor=RiskFactor.REVERSIBILITY,
+            detail=f"{action.id} is declared irreversible, so no score puts it "
+            "within reach of automation",
+        )
+        denial = "irreversible actions are never autonomous"
     elif not action.has_tested_rollback and not action.changes_nothing:
         # "No tested rollback cannot be autonomous" is a rule about actions that
         # change something. Reading a log changes nothing, so there is nothing
         # to undo and nothing to verify, and demanding an undo it cannot have
         # made the whole 0-30 band unreachable for every read-only action —
         # which is to say, made diagnosis itself require an approval.
-        tier = _escalate(tier)
-        if tier is Tier.AUTONOMOUS:
-            tier = Tier.APPROVAL
-    if tier is not Tier.DENIED and (
+        ladder.apply(
+            _escalate(ladder.tier),
+            rule="no_tested_rollback",
+            factor=RiskFactor.REVERSIBILITY,
+            detail=f"{action.id} changes state and declares no tested rollback",
+        )
+    if ladder.tier is not Tier.DENIED and (
         context.blast_radius_entities >= BLAST_RADIUS_ESCALATION_ENTITIES
         or context.blast_radius_users >= BLAST_RADIUS_ESCALATION_USERS
     ):
-        tier = _escalate(tier)
-    if agent_risk_limit is not None and effective > agent_risk_limit and tier is not Tier.DENIED:
-        tier = Tier.DENIED
+        reach = []
+        if context.blast_radius_entities >= BLAST_RADIUS_ESCALATION_ENTITIES:
+            reach.append(
+                f"{context.blast_radius_entities} entities "
+                f"(escalates at {BLAST_RADIUS_ESCALATION_ENTITIES})"
+            )
+        if context.blast_radius_users >= BLAST_RADIUS_ESCALATION_USERS:
+            reach.append(
+                f"~{context.blast_radius_users} users "
+                f"(escalates at {BLAST_RADIUS_ESCALATION_USERS})"
+            )
+        ladder.apply(
+            _escalate(ladder.tier),
+            rule="blast_radius",
+            factor=RiskFactor.BLAST_RADIUS,
+            detail="reaches " + " and ".join(reach),
+        )
+    if (
+        agent_risk_limit is not None
+        and effective > agent_risk_limit
+        and ladder.tier is not Tier.DENIED
+    ):
         denial = f"effective risk {effective} exceeds agent risk limit {agent_risk_limit}"
+        ladder.apply(
+            Tier.DENIED,
+            rule="agent_risk_limit",
+            factor=RiskFactor.AGENT_LIMIT,
+            detail=denial,
+        )
 
+    tier = ladder.tier
     approvers = APPROVERS[tier]
 
     now = datetime.now().astimezone()
@@ -291,6 +417,7 @@ def evaluate(
         adjustments=adjustments,
         effective_risk=effective,
         tier=tier,
+        tier_reasons=ladder.steps,
         required_approvers=list(approvers),
         granted_by="dharma" if tier is Tier.AUTONOMOUS else None,
         granted_at=now if tier is Tier.AUTONOMOUS else None,

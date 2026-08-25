@@ -17,6 +17,7 @@ import {
   getIncident,
   getIncidentAudit,
   getIncidents,
+  getPolicyModel,
   type AuditRecord,
 } from "@/lib/api";
 
@@ -63,11 +64,14 @@ export default async function IncidentDetailPage({
   const { id: raw } = await params;
   const id = decodeURIComponent(raw);
 
-  const [incident, actions, audit, all] = await Promise.all([
+  const [incident, actions, audit, all, policy] = await Promise.all([
     getIncident(id),
     getActions(),
     getIncidentAudit(id),
     getIncidents(),
+    // The autonomy scale the approval panel draws. Fetched rather than written
+    // down, for the reason `getPolicyModel` gives.
+    getPolicyModel(),
   ]);
 
   // `null` means the API could not be reached; a 404 is handled by the client
@@ -141,6 +145,7 @@ export default async function IncidentDetailPage({
       {verdict && (
         <VerdictPanel
           verdict={verdict}
+          tiers={policy?.tiers}
           blastRadius={incident.impact.blast_radius_entities}
           affectedUsers={incident.impact.estimated_users_affected}
           expectedPostState={riskiest?.expected_post_state}
