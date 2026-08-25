@@ -1941,13 +1941,48 @@ R65 are the two that change how the product feels; the rest are additive.
   36/36 responsive combinations, AA contrast in both themes, 58 pages crawl
   clean with no browser errors, 997 tests.
 
-- [ ] **R64 — The debrief is the payoff.** Needs: **R27**.
+- [x] **R64 — The debrief is the payoff.** Needs: **R27**.
   After a Blue Team scenario, a score breakdown across diagnosis, response and
   investigation, naming the specific evidence the player opened and the specific
   evidence they did not. The training value is entirely here and the current
   screen spends it on a number.
   **Done when:** every point gained or lost traces to a named piece of evidence
   or a named decision, and the unopened evidence is listed by name.
+  Done. Each breakdown line now carries what it was judged against: the two that
+  rest on evidence cite refs (`rests on: SEC-0003-a, …`, and when the diagnosis
+  is wrong, `ruled out by:`), and the one that rests on a decision names it —
+  *you chose `read_logs` · the plan called for `isolate_host`, `block_ip`*.
+  A number with a sentence beside it is still a number.
+  The new panel is the **whole board**, not a highlight reel: every entity in the
+  exercise appears in exactly one of *opened* and *not opened*, each with the
+  evidence it held, and the ones that carried the observation ruling out the
+  decoy are marked decisive. Showing only the decisive miss would let a player
+  conclude they had covered everything else, which is the opposite of what a
+  debrief is for.
+  Tested in `testdebrief.py`, on a hand-built incident and a stub graph.
+  `testgame.py` skips its entire file when the demo scenarios are not seeded —
+  *"demo scenarios are not seeded in this configuration"* — so R64's rule would
+  otherwise have been checked only in configurations nobody runs locally. That is
+  the third suite in this repository gated behind something usually missing, and
+  a test that silently does not run reports green.
+  The sharpest test is `test_being_right_by_luck_is_distinguishable_from_being_right`:
+  the same correct diagnosis, scored differently depending on whether the player
+  opened the thing that rules out the alternative. That distinction is the entire
+  reason the investigation category exists.
+  Verified against the deployed site by `scripts/verifydebrief.py`, which builds
+  the board from the **briefing's own** entity list rather than from anything it
+  believes about the scenario — an earlier checker here decided the right answer
+  and then graded the site on it, which measured the checker. It opens exactly
+  one entity so there is always something to miss, and requires opened ∪ missed
+  to equal the board with no overlap.
+  Its own browser check was wrong at first in a way worth recording: panel titles
+  are uppercased by CSS and `inner_text` returns *rendered* text, so a lowercase
+  substring search matched nothing and the "not shown before an attempt"
+  assertion passed while measuring nothing — the same mistake `verifybuild.py`
+  made in R57. It now reads headings and compares case-insensitively, and
+  requires the panel to **appear after an attempt**, without which the first half
+  proves only that a panel nobody renders is not rendered.
+  36/36 responsive, AA contrast in both themes, 1004 tests.
 
 - [ ] **R65 — Approving something should feel like a decision.** Needs: **R20**.
   A proposed action awaiting approval currently reads as a form submit. Give the

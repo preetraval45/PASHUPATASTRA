@@ -485,10 +485,39 @@ export interface Investigation {
   }[];
 }
 
+export interface DebriefEntity {
+  entity_key: string;
+  evidence: string[];
+  /** Held an observation that rules out the plausible-but-wrong explanation —
+   *  the difference between being right and being right by luck. */
+  decisive: boolean;
+  decisive_evidence: string[];
+}
+
 export interface Verdict2 {
   total: number;
   grade: "clean" | "sound" | "shaky" | "missed";
-  breakdown: { name: string; points: number; of: number; note: string }[];
+  /** Each line carries what it was judged against — refs for the categories
+   *  resting on evidence, action ids for the one resting on a decision. R64's
+   *  rule: a point gained or lost traces to a named thing. */
+  breakdown: {
+    name: string;
+    points: number;
+    of: number;
+    note: string;
+    evidence?: string[];
+    contradicted_by?: string[];
+    on_entities?: string[];
+    opened?: string[];
+    chose_action?: string;
+    plan_actions?: string[];
+  }[];
+  /** The full board: every entity in the exercise, in exactly one list. */
+  debrief?: {
+    opened: DebriefEntity[];
+    missed: DebriefEntity[];
+    decisive_evidence: string[];
+  };
   chose: string | null;
   /** Filled in when an attempt carried a player token. The score is computed
    *  server-side from the choices — the client sends no number. */

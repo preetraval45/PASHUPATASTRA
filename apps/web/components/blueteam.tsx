@@ -21,6 +21,7 @@ import {
   submitAttempt,
   type Briefing,
   type Investigation,
+  type DebriefEntity,
   type Verdict2,
 } from "@/lib/api";
 import { ensurePlayer } from "@/lib/player";
@@ -373,11 +374,35 @@ function Marked({
               </dd>
               <dd className="min-w-0 flex-1 text-sm text-[rgb(var(--muted))]">
                 {part.note}
+                {/* What the line was judged against. R64's rule is that a point
+                    traces to a named thing — without this the sentence above is
+                    a verdict a player has to take on trust, which is the
+                    opposite of what a training exercise is for. */}
+                <Cited label="rests on" refs={part.evidence} />
+                <Cited label="ruled out by" refs={part.contradicted_by} warn />
+                {part.chose_action && (
+                  <span className="mt-1 block text-[11px] text-[rgb(var(--faint))]">
+                    you chose <Ident>{part.chose_action}</Ident>
+                    {part.plan_actions?.length ? (
+                      <>
+                        {" · "}the plan called for{" "}
+                        {part.plan_actions.map((id, index) => (
+                          <span key={id}>
+                            {index > 0 && ", "}
+                            <Ident>{id}</Ident>
+                          </span>
+                        ))}
+                      </>
+                    ) : null}
+                  </span>
+                )}
               </dd>
             </div>
           ))}
         </dl>
       </Panel>
+
+      {verdict.debrief && <Debrief debrief={verdict.debrief} />}
 
       <Panel title="What actually happened">
         <p className="mb-4 text-sm leading-relaxed">{answer.diagnosis}</p>
@@ -447,5 +472,120 @@ function Marked({
         </Link>
       </div>
     </>
+  );
+}
+
+
+/** Refs under a breakdown line. Absent rather than empty when there are none —
+ *  an empty "rests on:" label reads as missing data. */
+function Cited({
+  label,
+  refs,
+  warn = false,
+}: {
+  label: string;
+  refs?: string[];
+  warn?: boolean;
+}) {
+  if (!refs?.length) return null;
+  return (
+    <span
+      className={`mono mt-1 block text-[11px] ${
+        warn ? "text-[rgb(var(--warn))]" : "text-[rgb(var(--faint))]"
+      }`}
+    >
+      {label}: {refs.join(", ")}
+    </span>
+  );
+}
+
+/**
+ * The full board — what was opened, and what was not.
+ *
+ * The missed half comes first and is the point. R64's complaint is that the
+ * screen spends the training value on a number: "you scored 60" teaches
+ * nothing, and "you never opened host:fs-9, where the observation that rules
+ * out the backup-job explanation was recorded" teaches the whole lesson.
+ *
+ * Both lists are shown rather than only the misses, because a debrief that
+ * named only what went wrong would let a player conclude they had covered
+ * everything else.
+ */
+function Debrief({
+  debrief,
+}: {
+  debrief: NonNullable<Verdict2["debrief"]>;
+}) {
+  const decisiveMissed = debrief.missed.filter((row) => row.decisive);
+
+  return (
+    <Panel
+      title="What you looked at"
+      aside={`${debrief.opened.length} opened · ${debrief.missed.length} not`}
+    >
+      {decisiveMissed.length > 0 && (
+        <p className="mb-4 text-sm leading-relaxed text-[rgb(var(--warn))]">
+          <span aria-hidden="true">◆</span> The evidence that rules out the
+          plausible alternative was on{" "}
+          {decisiveMissed.map((row, index) => (
+            <span key={row.entity_key}>
+              {index > 0 && ", "}
+              <Ident>{row.entity_key}</Ident>
+            </span>
+          ))}
+          , which you did not open.
+        </p>
+      )}
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Half title="Not opened" rows={debrief.missed} tone="warn" />
+        <Half title="Opened" rows={debrief.opened} tone="muted" />
+      </div>
+    </Panel>
+  );
+}
+
+function Half({
+  title,
+  rows,
+  tone,
+}: {
+  title: string;
+  rows: DebriefEntity[];
+  tone: "warn" | "muted";
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="label mb-2">{title}</p>
+      {rows.length === 0 ? (
+        <p className="text-xs text-[rgb(var(--faint))]">
+          {title === "Not opened" ? "You opened everything." : "Nothing."}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((row) => (
+            <li key={row.entity_key} className="min-w-0 text-xs">
+              <span className="flex flex-wrap items-baseline gap-x-2">
+                <Ident>{row.entity_key}</Ident>
+                {row.decisive && (
+                  <span className="text-[rgb(var(--warn))]">decisive</span>
+                )}
+              </span>
+              <span
+                className={`mono mt-0.5 block break-all text-[11px] ${
+                  tone === "warn"
+                    ? "text-[rgb(var(--faint))]"
+                    : "text-[rgb(var(--faint))]"
+                }`}
+              >
+                {row.evidence.length
+                  ? row.evidence.join(", ")
+                  : "no evidence recorded"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

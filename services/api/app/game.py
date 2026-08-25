@@ -284,6 +284,46 @@ def _response_score(incident: Incident, action_id: str) -> tuple[int, str]:
     )
 
 
+
+def _debrief(incident: Incident, graph, looked_at: set[str], decisive: set[str]) -> dict:
+    """What the player opened, what they did not, and what was in each.
+
+    R64's point, and the reason a total is not a debrief: *"you scored 60"*
+    teaches nothing, and *"you never opened `host:app-07`, which is where the
+    scheduled task was recorded"* teaches the whole lesson. The training value
+    is entirely in naming the thing that was missed.
+
+    Every entity in the exercise appears in exactly one of the two lists, so the
+    lists together are the full board rather than a highlight reel — a debrief
+    that showed only the decisive miss would let a player conclude they had
+    covered everything else.
+    """
+    opened: list[dict] = []
+    missed: list[dict] = []
+
+    for key in investigable(incident):
+        rows = graph.entity_events(key, limit=8) or []
+        refs = [row["id"] for row in rows if row.get("id")]
+        held = sorted(set(refs) & decisive)
+        entry = {
+            "entity_key": key,
+            "evidence": refs,
+            # Decisive means: this entity held one of the observations that rule
+            # out the plausible-but-wrong explanation. It is the difference
+            # between being right and being right by luck.
+            "decisive": bool(held),
+            "decisive_evidence": held,
+        }
+        (opened if key in looked_at else missed).append(entry)
+
+    return {
+        "opened": opened,
+        "missed": missed,
+        # Named separately because it is the one list a player should re-read.
+        "decisive_evidence": sorted(decisive),
+    }
+
+
 def score(
     incident: Incident,
     graph,
@@ -327,9 +367,21 @@ def score(
     investigation_points = INVESTIGATION_POINTS if found_proof else 0
 
     total = diagnosis_points + response_points + investigation_points
+
+    # Every line of the breakdown carries what it was judged against: refs for
+    # the two that rest on evidence, action ids for the one that rests on a
+    # decision. R64's rule is that a point gained or lost has to trace to a
+    # named thing — a number with a sentence beside it is still a number.
+    supporting = sorted(set(correct.evidence)) if correct else []
+    against_choice = (
+        sorted(set(chosen.contradicted_by)) if chosen is not None and not right else []
+    )
+    debrief = _debrief(incident, graph, looked_at, contradicting)
+
     return {
         "total": total,
         "grade": _grade(total),
+        "debrief": debrief,
         "breakdown": [
             {
                 "name": "Diagnosis",
@@ -340,12 +392,21 @@ def score(
                     if right
                     else "That is not what the evidence supports."
                 ),
+                # What the correct diagnosis rests on, and — when the player
+                # chose otherwise — what rules their choice out. Named, so the
+                # sentence above can be checked rather than believed.
+                "evidence": supporting,
+                "contradicted_by": against_choice,
             },
             {
                 "name": "Response",
                 "points": response_points,
                 "of": RESPONSE_POINTS,
                 "note": response_note,
+                # A decision, not a citation: what they chose, against what the
+                # plan called for.
+                "chose_action": action_id,
+                "plan_actions": [step.action_id for step in incident.plan],
             },
             {
                 "name": "Investigation",
@@ -360,6 +421,9 @@ def score(
                     + (", ".join(sorted(entities_with_proof)) or "another entity")
                     + "."
                 ),
+                "evidence": sorted(contradicting),
+                "on_entities": sorted(entities_with_proof),
+                "opened": sorted(looked_at),
             },
         ],
         "chose": chosen.statement if chosen else None,
