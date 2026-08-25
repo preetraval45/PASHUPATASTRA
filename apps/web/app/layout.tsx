@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { Attribution } from "@/components/attribution";
+import { ShortcutsButton, ShortcutsProvider } from "@/components/keys";
 import { Nav } from "@/components/nav";
 import { CommandPalette } from "@/components/palette";
 import { Search } from "@/components/search";
@@ -110,69 +111,77 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen antialiased">
-        {/* Keyboard operators are faster than mouse operators during an
-            incident, and this is the first thing they reach for. */}
-        {/* Rendered on every page, so Ctrl-K works from every page. Returns
-            null until opened, so it costs nothing until it is wanted. */}
-        <CommandPalette index={searchIndex} />
+        {/* Wraps everything, because the shortcut list has to be able to say
+            what is bound on the page the reader is actually looking at. */}
+        <ShortcutsProvider>
+          {/* Keyboard operators are faster than mouse operators during an
+              incident, and this is the first thing they reach for. */}
+          {/* Rendered on every page, so Ctrl-K works from every page. Returns
+              null until opened, so it costs nothing until it is wanted. */}
+          <CommandPalette index={searchIndex} />
 
-        <a
-          href="#main"
-          className="focusable sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-[rgb(var(--raised))] focus:px-3 focus:py-2 focus:text-sm"
-        >
-          Skip to content
-        </a>
+          <a
+            href="#main"
+            className="focusable sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-[rgb(var(--raised))] focus:px-3 focus:py-2 focus:text-sm"
+          >
+            Skip to content
+          </a>
 
-        <header className="sticky top-0 z-40 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/95 backdrop-blur">
-          {/* One row at every width. The previous version wrapped below `xl`
-              and gave the nav an `overflow-x-auto` strip with the scrollbar
-              hidden — which put five links behind a gesture nobody could see,
-              and left a mouse user at 768px unable to reach Incidents at all.
+          <header className="sticky top-0 z-40 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/95 backdrop-blur">
+            {/* One row at every width. The previous version wrapped below `xl`
+                and gave the nav an `overflow-x-auto` strip with the scrollbar
+                hidden — which put five links behind a gesture nobody could see,
+                and left a mouse user at 768px unable to reach Incidents at all.
 
-              Now the row never wraps and each group has a width where it steps
-              aside instead: the links become a menu below `lg`, the search
-              becomes an icon below `sm`, and the freshness clock drops at `xl`.
-              Navigation and execution mode are the two things that never
-              disappear — they move into the menu, which is a place, rather than
-              into an overflow, which is not. */}
-          <div className="relative mx-auto flex max-w-[100rem] items-center gap-x-3 px-4 py-2.5 sm:gap-x-4 sm:px-6 sm:py-3">
-            <Link href="/" className="focusable shrink-0 rounded">
-              <Sigil />
-            </Link>
+                Now the row never wraps and each group has a width where it steps
+                aside instead: the links become a menu below `lg`, the search
+                becomes an icon below `sm`, and the freshness clock drops at `xl`.
+                Navigation and execution mode are the two things that never
+                disappear — they move into the menu, which is a place, rather than
+                into an overflow, which is not. */}
+            <div className="relative mx-auto flex max-w-[100rem] items-center gap-x-3 px-4 py-2.5 sm:gap-x-4 sm:px-6 sm:py-3">
+              <Link href="/" className="focusable shrink-0 rounded">
+                <Sigil />
+              </Link>
 
-            <Nav status={<ModeIndicator health={health} />} />
+              <Nav status={<ModeIndicator health={health} />} />
 
-            {/* `ml-auto` here and on the menu button, so exactly one of them
-                claims the gap depending on which is showing. */}
-            <div className="ml-auto flex min-w-0 items-center gap-x-3">
-              <Suspense fallback={null}>
-                <Search />
-              </Suspense>
-              <div className="hidden lg:flex lg:items-center lg:gap-x-3">
-                <ModeIndicator health={health} />
+              {/* `ml-auto` here and on the menu button, so exactly one of them
+                  claims the gap depending on which is showing. */}
+              <div className="ml-auto flex min-w-0 items-center gap-x-3">
+                <Suspense fallback={null}>
+                  <Search />
+                </Suspense>
+                <div className="hidden lg:flex lg:items-center lg:gap-x-3">
+                  <ModeIndicator health={health} />
+                </div>
+                <ThemeToggle />
               </div>
-              <ThemeToggle />
             </div>
-          </div>
-        </header>
+          </header>
 
-        <main id="main" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-          {children}
-        </main>
+          <main id="main" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+            {children}
+          </main>
 
-        <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-[rgb(var(--faint))] sm:px-6">
-          <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span>Observe. Reason. Act. Verify.</span>
-            {/* Reachable from anywhere without taking a navigation slot. R52's
-                rule is that a tab is for something a visitor goes looking for;
-                "how it works" is something they go looking for *after* a claim,
-                which is here and on the landing page. */}
-            <Link href="/how-it-works" className="focusable rounded hover:text-[rgb(var(--muted))]">
-              How it works
-            </Link>
-            <Attribution />
-          </span>
-        </footer>
+          <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-[rgb(var(--faint))] sm:px-6">
+            <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span>Observe. Reason. Act. Verify.</span>
+              {/* Reachable from anywhere without taking a navigation slot. R52's
+                  rule is that a tab is for something a visitor goes looking for;
+                  "how it works" is something they go looking for *after* a claim,
+                  which is here and on the landing page. */}
+              <Link href="/how-it-works" className="focusable rounded hover:text-[rgb(var(--muted))]">
+                How it works
+              </Link>
+              {/* The only place `?` is advertised. A shortcut nobody can find is
+                  the same as no shortcut, and this is also its mouse equivalent —
+                  the list opens by click as well as by key. */}
+              <ShortcutsButton />
+              <Attribution />
+            </span>
+          </footer>
+        </ShortcutsProvider>
       </body>
     </html>
   );

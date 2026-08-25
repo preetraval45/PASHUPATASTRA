@@ -172,8 +172,10 @@ export function CommandPalette({ index }: { index: SearchItem[] }) {
     [close, router],
   );
 
-  // Open. Bound on the window so it works from any page, and ignored while
-  // someone is typing into a field so Ctrl-K in the chat box is not stolen.
+  // Open. Bound on the window so it works from any page, and deliberately not
+  // stood down while a field has focus: `Ctrl-K` does nothing native in a text
+  // box, so claiming it there costs nobody a keystroke. The single-letter
+  // shortcuts are the ones that have to defer — see `isTypingIn`.
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {

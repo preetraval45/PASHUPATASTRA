@@ -1,5 +1,6 @@
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
+import { TriageItem, TriageList } from "@/components/triage";
 import { Empty, Offline, Page } from "@/components/ui";
 import { getActions, getIncidents } from "@/lib/api";
 
@@ -33,9 +34,22 @@ export default async function IncidentsPage() {
       ) : (
         <>
           <Scenarios incidents={incidents} />
-          {incidents.map((incident) => (
-            <IncidentView key={incident.id} incident={incident} risk={risk} linkToDetail />
-          ))}
+          {/* Each card is a screen tall, so this list is the one place on the
+              site where reaching the next incident costs a scroll — which is
+              what `j`/`k` are for. The compact list on the overview is not
+              wrapped: every row there is one link and Tab already reaches it,
+              so a second way to move would be a duplicate, not an accelerant. */}
+          <TriageList>
+            {incidents.map((incident, index) => (
+              <TriageItem
+                key={incident.id}
+                index={index}
+                href={`/incidents/${encodeURIComponent(incident.id)}`}
+              >
+                <IncidentView incident={incident} risk={risk} linkToDetail />
+              </TriageItem>
+            ))}
+          </TriageList>
         </>
       )}
     </Page>

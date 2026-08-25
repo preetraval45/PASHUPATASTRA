@@ -135,6 +135,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("url", nargs="?", default=DEFAULT_URL)
     parser.add_argument("--routes", default=",".join(ROUTES))
+    parser.add_argument(
+        "--press",
+        default=None,
+        help=(
+            "A key to press after each page loads. Anything that only exists once a "
+            "dialog is open — the command palette, the shortcut list — is otherwise "
+            "never measured, and 'it is not on screen by default' is not a contrast "
+            "exemption."
+        ),
+    )
     args = parser.parse_args()
 
     from playwright.sync_api import sync_playwright
@@ -158,6 +168,9 @@ def main() -> int:
                     f"document.documentElement.setAttribute('data-theme', '{theme}')"
                 )
                 page.wait_for_timeout(150)
+                if args.press:
+                    page.keyboard.press(args.press)
+                    page.wait_for_timeout(250)
                 for row in page.evaluate(MEASURE):
                     checked += 1
                     need = threshold(row["size"], row["bold"])

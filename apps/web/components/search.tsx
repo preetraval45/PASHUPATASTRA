@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { isTypingIn } from "@/components/keys";
+
 /**
  * Header search.
  *
@@ -25,12 +27,10 @@ export function Search() {
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      const typing =
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target?.isContentEditable;
-      if (event.key === "/" && !typing) {
+      // The one implementation of "is somebody typing", shared with `j`/`k`
+      // and `?`. Four copies of this check is four chances to forget
+      // `isContentEditable`.
+      if (event.key === "/" && !isTypingIn(event.target)) {
         event.preventDefault();
         input.current?.focus();
       }

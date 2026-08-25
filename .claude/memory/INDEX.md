@@ -27,3 +27,4 @@ Protocol: before every push, write a topic-named file from
 - [BuildAttribution](BuildAttribution.md) — R57: why the stack belongs on one page and attribution on all of them
 - [RealAttackData](RealAttackData.md) — Phase R: real world attacks replace the scripted scenarios; why reported attacks get no causal chain
 - [ApprovalReasoning](ApprovalReasoning.md) — R65: the verdict explains its own tier; why the ladder is a class and not a variable
+- [KeyboardTriage](KeyboardTriage.md) — R66: j/k/Enter and a ? sheet built from a registry, so the help cannot outlive the shortcut

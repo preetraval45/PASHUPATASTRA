@@ -2027,12 +2027,44 @@ R65 are the two that change how the product feels; the rest are additive.
   thinning the marked border both fail it.
   36/36 responsive, AA contrast in both themes, 1032 tests passing.
 
-- [ ] **R66 — Keyboard triage.** Needs: **R60**.
+- [x] **R66 — Keyboard triage.** Needs: **R60**.
   `j`/`k` between incidents, `Enter` to open, `?` for the shortcut list. Matches
   the identity the rest of the site already claims.
   **Done when:** shortcuts do not fire while a text input has focus, every one
   of them has a mouse equivalent, and the list is discoverable without reading
   the source.
+  Done. `components/keys.tsx` holds the one answer to *is somebody typing* —
+  `Ctrl-K`, `/`, `?` and `j`/`k` all defer to it, where three of them previously
+  each had their own opinion or none. `components/triage.tsx` is the list.
+  **The help sheet is a registry, not a written list.** `j`/`k` are bound on the
+  incident list and nowhere else, so the sheet is assembled from what the
+  mounted page actually registered plus the four globals. A help screen that
+  told a reader on the audit page that `j` moves to the next incident would be
+  worse than no help screen.
+  The globals were already there and undocumented: `/` has focused the search
+  field since R15 and `Ctrl-K` since R60, and a shortcut list containing only
+  the shortcuts added most recently is a list that teaches the wrong thing.
+  Order comes from the page as an explicit index per card, not from the order
+  items happen to mount in — React does not promise mount order matches document
+  order, and a triage list that walks the page in the wrong order looks like it
+  worked.
+  Not applied to the overview's compact incident list: every row there is a
+  single link that Tab already reaches, so `j`/`k` would duplicate a key that
+  already works rather than accelerate anything.
+  **Two bugs the browser found and reading would not have.** `useEffect(() =>
+  bind(show))` returns `show` as its cleanup, so the first registry change had
+  React "clean up" by calling it — the shortcut sheet opened itself on load.
+  And the first checker shared one page between probes, so `k` was measured from
+  wherever the previous probe had left the cursor.
+  `scripts/verifykeys.py` takes the sheet as its **input**: it reads the rendered
+  rows and demands each be demonstrated, so a key listed but unbound fails, and
+  a key bound but unlisted fails too. A row naming a shortcut the checker has no
+  probe for is a failure rather than a skip — that is the drift this guards.
+  Negative-controlled: a fake row and a removed typing guard each fail it.
+  `verifycontrast.py` gained `--press`, because everything inside a dialog was
+  being skipped by every contrast run the site has ever done — "it is not on
+  screen by default" is not an exemption. The sheet measures AA in both themes.
+  36/36 responsive, 58 pages crawl clean, 1032 tests passing.
 
 - [ ] **R67 — Deploy Phase 5B and review.** Needs: **R60–R66**.
   **Done when:** the palette, the chain reveal and the blast-radius graph each
