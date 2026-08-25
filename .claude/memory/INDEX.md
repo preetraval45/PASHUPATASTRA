@@ -28,3 +28,4 @@ Protocol: before every push, write a topic-named file from
 - [RealAttackData](RealAttackData.md) — Phase R: real world attacks replace the scripted scenarios; why reported attacks get no causal chain
 - [ApprovalReasoning](ApprovalReasoning.md) — R65: the verdict explains its own tier; why the ladder is a class and not a variable
 - [KeyboardTriage](KeyboardTriage.md) — R66: j/k/Enter and a ? sheet built from a registry, so the help cannot outlive the shortcut
+- [Phase5BDeployed](Phase5BDeployed.md) — R67: deployed and reviewed; a nav link can be covered without anything overflowing, and R94 reopened

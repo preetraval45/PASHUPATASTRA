@@ -3,12 +3,16 @@
 /**
  * Primary navigation.
  *
- * Five links do not fit beside a search box and a status group on anything
- * narrower than a laptop, and the previous attempt to make them fit was an
- * `overflow-x-auto` strip with the scrollbar hidden. Nothing was missing from
- * the DOM, which is why the layout checks passed — but at 768px only "Overview"
- * was on screen, with no scrollbar, no fade, and no affordance of any kind. A
- * visitor with a mouse simply could not reach Incidents.
+ * The labels do not fit beside a search box and a status group on anything
+ * narrower than the `nav` breakpoint, and the first attempt to make them fit
+ * was an `overflow-x-auto` strip with the scrollbar hidden. Nothing was missing
+ * from the DOM, which is why the layout checks passed — but at 768px only
+ * "Overview" was on screen, with no scrollbar, no fade, and no affordance of
+ * any kind. A visitor with a mouse simply could not reach Incidents.
+ *
+ * The same shape returned when Home made a seventh label: at 1024px "Actions"
+ * was underneath the search field, on the page and unclickable, and every check
+ * still passed. The breakpoint is measured now and the checker hit-tests.
  *
  * So the links are a row when there is room for a row, and a menu when there is
  * not. A menu is more clicks; unreachable navigation is infinite clicks.
@@ -39,6 +43,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
  * sections for arithmetic.
  */
 const NAV = [
+  // The landing page, as a tab as well as through the wordmark. A logo that
+  // goes home is a convention people who build sites know and people who use
+  // them guess at; a labelled tab is the version nobody has to guess.
+  { href: "/", label: "Home" },
   { href: "/overview", label: "Overview" },
   { href: "/incidents", label: "Incidents" },
   { href: "/ask", label: "Ask" },
@@ -51,9 +59,9 @@ const NAV = [
 /** Exact for the root, prefix elsewhere, so a detail page still shows its
  *  section as current. */
 function isCurrent(href: string, pathname: string): boolean {
-  // No `/` special case any more: the root is the landing page and is reached
-  // through the wordmark, not through a tab. The exact-match branch existed
-  // only because a prefix match on "/" matches everything.
+  // The root is exact because a prefix match on "/" matches every page, and
+  // Home would be marked current everywhere on the site.
+  if (href === "/") return pathname === "/";
   return pathname.startsWith(href);
 }
 
@@ -94,9 +102,13 @@ export function Nav({ status }: { status?: ReactNode }) {
 
   return (
     <>
-      {/* The row. `lg` is where five labels, a search box and the status group
-          stop colliding — measured, not guessed. */}
-      <nav aria-label="Primary" className="hidden min-w-0 gap-1 text-sm lg:flex">
+      {/* The row, above the `nav` breakpoint — the measured width where seven
+          labels, a search box and the status group stop colliding. It was `lg`
+          until Home made a seventh label, at which point "Actions" sat
+          underneath the search field at exactly 1024 and `verifyui.py` passed,
+          because nothing overflowed: it was covered. R21b's lesson from the
+          other direction. The checker hit-tests the header now. */}
+      <nav aria-label="Primary" className="hidden min-w-0 gap-1 text-sm nav:flex">
         {NAV.map((item) => (
           <NavLink key={item.href} {...item} current={isCurrent(item.href, pathname)} />
         ))}
@@ -112,7 +124,7 @@ export function Nav({ status }: { status?: ReactNode }) {
         // controls group claimed the gap, and the first one in source order won
         // — which left the menu button stranded in the middle of the header,
         // between the wordmark and the search icon.
-        className="focusable order-last inline-flex h-9 w-9 shrink-0 items-center justify-center rounded border border-[rgb(var(--edge))] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))] lg:hidden"
+        className="focusable order-last inline-flex h-9 w-9 shrink-0 items-center justify-center rounded border border-[rgb(var(--edge))] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))] nav:hidden"
       >
         <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
         {/* Two bars rather than the usual three. The mark beside it is already
@@ -136,7 +148,7 @@ export function Nav({ status }: { status?: ReactNode }) {
         <div
           ref={panel}
           id="primary-menu"
-          className="rise absolute left-0 right-0 top-full z-50 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))] px-4 pb-4 pt-2 shadow-lg sm:px-6 lg:hidden"
+          className="rise absolute left-0 right-0 top-full z-50 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))] px-4 pb-4 pt-2 shadow-lg sm:px-6 nav:hidden"
         >
           <nav aria-label="Primary" className="flex flex-col">
             {NAV.map((item) => (

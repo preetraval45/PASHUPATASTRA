@@ -60,6 +60,7 @@ const JUMPS: SearchItem[] = [
 ];
 
 const PAGES: SearchItem[] = [
+  { kind: "page", label: "Home", hint: "what this is", href: "/" },
   { kind: "page", label: "Overview", hint: "the console", href: "/overview" },
   { kind: "page", label: "Incidents", hint: "all of them", href: "/incidents" },
   { kind: "page", label: "Observatory", hint: "real attacks, polled hourly", href: "/observatory" },

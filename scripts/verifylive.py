@@ -63,6 +63,21 @@ def age_on_page(text: str) -> int | None:
     return 0
 
 
+def synced_at() -> str:
+    """When the feeds themselves say they last synced.
+
+    The page's age is derived from this, so it is the thing that has to hold
+    still for the age to be expected to grow.
+    """
+    status = json.loads(
+        urllib.request.urlopen(
+            urllib.request.Request(API + "/intel/status", headers={"User-Agent": "verify"}),
+            timeout=45,
+        ).read()
+    )
+    return max((feed.get("synced_at") or "") for feed in status["feeds"].values())
+
+
 def main() -> int:
     failures: list[str] = []
 
@@ -85,25 +100,47 @@ def main() -> int:
             failures.append("rows carry no data-entry-at for the highlight to match on")
 
         # --- the age is from the record, not the render ----------------------
-        page.goto(PAGE, wait_until="networkidle")
-        first_text = page.locator("main").inner_text()
-        first = age_on_page(first_text)
-        if first is None:
-            failures.append("no 'last synced' on the page at all")
-        else:
+        #
+        # Retried once, because the feeds poll hourly and a poll that lands
+        # inside the window resets the age legitimately — the page is then
+        # right and the check is wrong. Told apart by the record's own
+        # timestamp rather than guessed at from the number falling: this failed
+        # against production on 25 August 2026 at the 59-minute mark, which is
+        # a checker that cries wolf once an hour and is therefore a checker
+        # people learn to re-run.
+        for attempt in (1, 2):
+            before = synced_at()
+            page.goto(PAGE, wait_until="networkidle")
+            first = age_on_page(page.locator("main").inner_text())
+            if first is None:
+                failures.append("no 'last synced' on the page at all")
+                break
             print(f"load 1: last synced {first}s ago — waiting {WAIT}s")
             time.sleep(WAIT)
             page.goto(PAGE, wait_until="networkidle")
             second = age_on_page(page.locator("main").inner_text())
+            after = synced_at()
             if second is None:
                 failures.append("'last synced' vanished on the second load")
-            elif second <= first:
+                break
+            if after != before:
+                print(f"a feed synced during the window ({before} → {after})")
+                if attempt == 1:
+                    continue
                 failures.append(
-                    f"the age did not grow across {WAIT}s ({first}s then {second}s) — "
-                    "it is being derived from page load, not from the record"
+                    "a sync landed inside the window twice — the age could not be "
+                    "measured against a record that held still"
                 )
-            else:
-                print(f"load 2: last synced {second}s ago — grew by {second - first}s")
+                break
+            if second <= first:
+                failures.append(
+                    f"the age did not grow across {WAIT}s ({first}s then {second}s) "
+                    f"while the record held at {before} — it is being derived from "
+                    "page load, not from the record"
+                )
+                break
+            print(f"load 2: last synced {second}s ago — grew by {second - first}s")
+            break
 
         # --- the stale branch's contract still holds -------------------------
         #

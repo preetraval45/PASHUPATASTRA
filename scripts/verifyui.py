@@ -25,6 +25,12 @@ DEFAULT_URL = "https://pashupatastra.vercel.app"
 VIEWPORTS = [
     ("mobile", 375, 812),
     ("tablet", 768, 1024),
+    # Both sides of the `nav` breakpoint. 1024 is where the header row used to
+    # turn on, and where a seventh label was found sitting underneath the search
+    # box; 1160 is where it turns on now. A breakpoint checked only from one
+    # side is a breakpoint whose whole purpose is untested.
+    ("laptop", 1024, 800),
+    ("wide-laptop", 1160, 800),
     ("desktop", 1440, 900),
 ]
 
@@ -124,6 +130,45 @@ def check(page, url: str, route: str, label: str, width: int) -> list[str]:
         failures.append(
             f"{label} {route}: {overflow}px horizontal overflow at {width}px "
             f"(widest: {widest['tag']} to {widest['width']}px)"
+        )
+
+    # Overflow is not the only way to lose a link. Nothing scrolled sideways
+    # when a seventh nav label slid underneath the search box at 1024px — the
+    # element was the right size, in the right place, and covered. So every
+    # header link is hit-tested: if a point belongs to something else, a
+    # visitor clicking there does not get this link.
+    #
+    # Three points across the width, not one. The centre alone accepted a
+    # breakpoint where the search field overlapped the last label by 7px, which
+    # is a collision that grows the moment a font renders a little wider.
+    for hidden in page.evaluate(
+        """() => {
+             const out = [];
+             for (const a of document.querySelectorAll('header a, header button')) {
+               const box = a.getBoundingClientRect();
+               if (box.width === 0 || box.height === 0) continue;
+               const y = box.top + box.height / 2;
+               if (y < 0 || y > innerHeight) continue;
+               let covered = null;
+               for (const x of [box.left + 2, box.left + box.width / 2, box.right - 2]) {
+                 if (x < 0 || x > innerWidth) continue;
+                 const hit = document.elementFromPoint(x, y);
+                 if (hit && (hit === a || a.contains(hit) || hit.contains(a))) continue;
+                 covered = hit;
+                 break;
+               }
+               if (covered === null) continue;
+               out.push({
+                 name: (a.textContent || a.getAttribute('aria-label') || a.tagName).trim().slice(0, 30),
+                 over: (covered ? covered.tagName + '.' + (covered.className || '').toString().slice(0, 40) : 'nothing'),
+               });
+             }
+             return out;
+           }"""
+    ):
+        failures.append(
+            f"{label} {route}: header item {hidden['name']!r} is covered by "
+            f"{hidden['over']} — it is on the page and cannot be clicked"
         )
 
     for error in errors:

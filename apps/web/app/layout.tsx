@@ -152,7 +152,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <Suspense fallback={null}>
                   <Search />
                 </Suspense>
-                <div className="hidden lg:flex lg:items-center lg:gap-x-3">
+                <div className="hidden nav:flex nav:items-center nav:gap-x-3">
                   <ModeIndicator health={health} />
                 </div>
                 <ThemeToggle />

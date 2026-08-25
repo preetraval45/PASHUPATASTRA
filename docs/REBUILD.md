@@ -2066,11 +2066,57 @@ R65 are the two that change how the product feels; the rest are additive.
   screen by default" is not an exemption. The sheet measures AA in both themes.
   36/36 responsive, 58 pages crawl clean, 1032 tests passing.
 
-- [ ] **R67 — Deploy Phase 5B and review.** Needs: **R60–R66**.
+- [x] **R67 — Deploy Phase 5B and review.** Needs: **R60–R66**.
   **Done when:** the palette, the chain reveal and the blast-radius graph each
   work on a phone or are absent there by design rather than by accident, and
   `verifyui.py` passes at every breakpoint it checks.
   **Stop here for review.**
+  Deployed. Lambda carries `tier_reasons` and reports `ok · dynamodb` with the
+  model key intact; Vercel is aliased to the branch. 60/60 responsive
+  combinations, 58 pages crawl clean, AA in both themes, every delisted route
+  still reachable by clicking.
+  The three named surfaces on a phone: the palette **degrades by design** —
+  `Ctrl-K` is unavailable and the header keeps a visible search affordance,
+  measured at 390x844 with touch. The blast-radius graph renders at 375px with
+  no overflow and its list survives beside it. The chain reveal works, and *had
+  never been measured at a phone width at all* — `verifychain.py` sampled only
+  1280x1000, the width the animation was designed at. It now samples both.
+  **What the pass found, which is the point of having one.**
+  *A link can be lost without anything overflowing.* A seventh nav label —
+  Home, added during this phase — sat underneath the search field at exactly
+  1024px, and every check passed: nothing scrolled sideways, nothing was missing
+  from the DOM, the element was the right size in the right place and simply
+  covered. R21b's lesson arriving from the other direction. `verifyui.py` now
+  hit-tests every header item at three points across its width, and the row's
+  breakpoint moved from `lg` to a measured 1160px — the gap between the last
+  label and the search box is -7px at 1100, +5px at 1120, +38px at 1160, and
+  five pixels is not clearance, it is the same collision waiting for a font to
+  render slightly wider. A centre-only hit test accepted the -7px case; three
+  points do not.
+  *A breakpoint was only ever checked from one side.* The viewport list held
+  375, 768 and 1440 — nothing at 1024, where the header row turns on. The width
+  whose entire purpose is to switch behaviour was the width nothing visited.
+  Both sides of it are checked now.
+  *A checker that cries wolf once an hour is one people learn to re-run.*
+  `verifylive.py` compares the "last synced" age across a 70-second window and
+  failed against production at the 59-minute mark, because the hourly feed poll
+  landed inside the window and reset the age legitimately. It now reads the
+  record's own timestamp to tell a real sync from a page deriving its age from
+  load, and retries once. Negative-controlled.
+  *Nothing inside a dialog had ever been measured for contrast.* Every run this
+  site has done measured the page and stopped; the palette and the shortcut
+  sheet were exempt by accident. `verifycontrast.py --press` fixes that and both
+  pass AA in both themes.
+  **Two findings left open deliberately, because they are not Phase 5B's.**
+  `verifyagent.py` fails on the deployed agent: asked which hosts `ws-0148`
+  opened SMB to, Sati declines at hop 0 **with no tool call** — the exact
+  behaviour R94 was written to fix, and its own worked example. Reproducible
+  across runs today while other questions do call tools. R94 is marked partial
+  rather than quietly left ticked.
+  `verifychat.py` reports a problem when the free model allowance is exhausted,
+  which is the site behaving honestly rather than failing. Not auto-skipped on
+  that message: a checker that passes when the page says a particular sentence
+  is a checker the page can switch off.
 
   *Deliberately not planned: an easter egg. The prompt offers one and says to
   skip it if it risks the tone. It does — the site's whole register is "this is
@@ -2596,7 +2642,17 @@ than at memory, and the engines for it already exist unused: `Smriti` carries
 Order is not negotiable. Memory is worth little without a loop to inform, and
 learning is meaningless without an outcome to learn from.
 
-- [x] **R94 — Planning: reach for the tool before giving up.** Needs: **R26**.
+- [~] **R94 — Planning: reach for the tool before giving up.** Needs: **R26**.
+  **Reopened by R67's review.** `verifyagent.py` against the deployed agent on
+  25 August 2026: *"Which hosts did ws-0148 open SMB to, and what is the blast
+  radius of the busiest one?"* is declined at hop 0 with **no tool call**, twice
+  in a row, while two other questions in the same battery do call tools. That is
+  the behaviour this task exists to remove, on the question this task is written
+  around. What remains is to find out whether the prompt change stopped holding,
+  the model drifted — it is a free tier and non-deterministic — or the battery
+  is asking something the tools genuinely cannot start on. The note below about
+  the corrected expectation still stands: declining *after looking* is right,
+  and no tool call is not looking.
   **Corrected after reading the gateway rather than assuming.** The investigate
   loop already exists: `gateway.py` runs `for hop in range(max_hops + 1)` with a
   token budget, a per-hop trace, and `chat_max_tool_hops = 4`; the last hop is
