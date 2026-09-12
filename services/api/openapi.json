@@ -132,7 +132,7 @@
             "title": "Presented At"
           },
           "verdict": {
-            "$ref": "#/components/schemas/Verdict-Input"
+            "$ref": "#/components/schemas/Verdict"
           }
         },
         "required": [
@@ -302,7 +302,7 @@
             "type": "string"
           },
           "verdict": {
-            "$ref": "#/components/schemas/Verdict-Input"
+            "$ref": "#/components/schemas/Verdict"
           }
         },
         "required": [
@@ -478,7 +478,7 @@
             "type": "object"
           },
           "verdict": {
-            "$ref": "#/components/schemas/Verdict-Input"
+            "$ref": "#/components/schemas/Verdict"
           }
         },
         "required": [
@@ -538,7 +538,7 @@
             "title": "Succeeded"
           },
           "verdict_snapshot": {
-            "$ref": "#/components/schemas/Verdict-Output"
+            "$ref": "#/components/schemas/Verdict"
           }
         },
         "required": [
@@ -849,7 +849,7 @@
           "verdict": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Verdict-Output"
+                "$ref": "#/components/schemas/Verdict"
               },
               {
                 "type": "null"
@@ -972,7 +972,7 @@
             "type": "string"
           },
           "verdict": {
-            "$ref": "#/components/schemas/Verdict-Input"
+            "$ref": "#/components/schemas/Verdict"
           }
         },
         "required": [
@@ -1190,123 +1190,7 @@
         "title": "ValidationError",
         "type": "object"
       },
-      "Verdict-Input": {
-        "description": "Required argument to any execution. Carries its own reasoning.",
-        "properties": {
-          "action_id": {
-            "title": "Action Id",
-            "type": "string"
-          },
-          "adjustments": {
-            "items": {
-              "$ref": "#/components/schemas/RiskAdjustment"
-            },
-            "title": "Adjustments",
-            "type": "array"
-          },
-          "base_risk": {
-            "title": "Base Risk",
-            "type": "integer"
-          },
-          "constraints": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "title": "Constraints",
-            "type": "object"
-          },
-          "denial_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Denial Reason"
-          },
-          "effective_risk": {
-            "title": "Effective Risk",
-            "type": "integer"
-          },
-          "expires_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expires At"
-          },
-          "granted_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Granted At"
-          },
-          "granted_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Granted By"
-          },
-          "incident_ref": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Incident Ref"
-          },
-          "required_approvers": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Required Approvers",
-            "type": "array"
-          },
-          "tier": {
-            "$ref": "#/components/schemas/Tier"
-          },
-          "tier_reasons": {
-            "items": {
-              "$ref": "#/components/schemas/TierStep"
-            },
-            "title": "Tier Reasons",
-            "type": "array"
-          }
-        },
-        "required": [
-          "action_id",
-          "incident_ref",
-          "base_risk",
-          "adjustments",
-          "effective_risk",
-          "tier",
-          "required_approvers"
-        ],
-        "title": "Verdict",
-        "type": "object"
-      },
-      "Verdict-Output": {
+      "Verdict": {
         "description": "Required argument to any execution. Carries its own reasoning.",
         "properties": {
           "action_id": {
@@ -2149,6 +2033,201 @@
         "summary": "Get Incident"
       }
     },
+    "/api/v1/incidents/{incident_id}/contest": {
+      "get": {
+        "description": "The case for the other explanation, and what answers it (R73).\n\nThe Blue Team rubric tells a player that one of the explanations is\nplausible and wrong and scores them on opening the evidence that rules it\nout. This holds the agent to the same standard on the same incidents.\n\nA refusal is a 422. \"There is no rival here worth arguing\" is a correct\nanswer about the records \u2014 an incident with one hypothesis, or with two that\nare one claim written twice \u2014 and manufacturing a contest to avoid an empty\npanel is the rigour-shaped version of having none.",
+        "operationId": "incident_contest_api_v1_incidents__incident_id__contest_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Incident Contest Api V1 Incidents  Incident Id  Contest Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incident Contest"
+      }
+    },
+    "/api/v1/incidents/{incident_id}/counterfactual": {
+      "get": {
+        "description": "What acting on that entity at that moment would have prevented (R72).\n\nA refusal is a 422. \"The timeline does not support that question\" is a\ncorrect answer about the records \u2014 most often because the moment asked about\nprecedes anything that would have justified acting \u2014 and returning it as a\nserver error would file the system's honesty as a malfunction.\n\nThe reach is walked here and the judgement is made in `packages/core`, which\nholds no store. What that split protects is that a laptop and a deployment\ncannot disagree about what a timeline and a set of edges mean together.",
+        "operationId": "incident_counterfactual_api_v1_incidents__incident_id__counterfactual_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "entity_key",
+            "required": true,
+            "schema": {
+              "title": "Entity Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "at",
+            "required": true,
+            "schema": {
+              "title": "At",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Incident Counterfactual Api V1 Incidents  Incident Id  Counterfactual Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incident Counterfactual"
+      }
+    },
+    "/api/v1/incidents/{incident_id}/detection-rule": {
+      "get": {
+        "description": "Which rules could be drafted from this incident, and for what.\n\nA list rather than one rule, because an incident is a sequence of techniques\nand a Sigma rule detects one thing. Fusing a C2 beacon and a scheduled task\ninto a single selection produces a rule that fires only when all of it is\npresent at once, which is after the intrusion has finished.",
+        "operationId": "incident_detection_rules_api_v1_incidents__incident_id__detection_rule_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Incident Detection Rules Api V1 Incidents  Incident Id  Detection Rule Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incident Detection Rules"
+      }
+    },
+    "/api/v1/incidents/{incident_id}/detection-rule/{technique_id}": {
+      "get": {
+        "description": "A Sigma rule drafted from one step of this incident (R71).\n\nThe events are fetched by the ids the causal step cites, so the rule rests\non exactly the records the chain says established that step. Fetched rather\nthan trusted: a step citing an id the store no longer holds yields fewer\nevents, and `draft_rule` refuses rather than drafting from records it did\nnot read.\n\nA refusal is a 422 and not a 500. \"This step's telemetry carries no field\nSigma has a name for\" is a correct answer about the data, and returning it\nas a server error would file the system's honesty as a malfunction.",
+        "operationId": "incident_detection_rule_api_v1_incidents__incident_id__detection_rule__technique_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "technique_id",
+            "required": true,
+            "schema": {
+              "title": "Technique Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Incident Detection Rule Api V1 Incidents  Incident Id  Detection Rule  Technique Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incident Detection Rule"
+      }
+    },
     "/api/v1/incidents/{incident_id}/draft/{kind}": {
       "get": {
         "description": "A drafted playbook or post-incident report, assembled from stored records.\n\nAssembled on request rather than stored. A saved draft is a document that\ncan go stale against the incident it describes, and the interesting failure\nis the one nobody notices: a report citing a plan step that has since been\nre-scored. Built from the incident each time, it cannot disagree with it.\n\nEvery line carries the refs it rests on \u2014 enforced in `drafts.Line`, which\nrefuses to construct one that cites nothing \u2014 and `adopt_action_id` names\nthe registered action adopting it would require. The route does not evaluate\nthat action: policy is Dharma's to decide, and an endpoint that scored the\nthing it is offering would be marking its own work.",
@@ -2240,6 +2319,48 @@
           }
         },
         "summary": "Incident Graph"
+      }
+    },
+    "/api/v1/incidents/{incident_id}/timeline": {
+      "get": {
+        "description": "The causal chain placed in time, and the moments worth asking about.\n\nOffered rather than left free-form. The interesting counterfactuals sit at\nthe boundaries between steps, and a caller made to invent a timestamp will\ninvent one the records do not support \u2014 then get a refusal it reads as the\nfeature being broken.",
+        "operationId": "incident_timeline_api_v1_incidents__incident_id__timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Incident Timeline Api V1 Incidents  Incident Id  Timeline Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incident Timeline"
       }
     },
     "/api/v1/ingest/otlp": {
@@ -2404,7 +2525,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Verdict-Output"
+                  "$ref": "#/components/schemas/Verdict"
                 }
               }
             },
@@ -2443,7 +2564,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Verdict-Output"
+                  "$ref": "#/components/schemas/Verdict"
                 }
               }
             },
@@ -2482,7 +2603,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Verdict-Output"
+                  "$ref": "#/components/schemas/Verdict"
                 }
               }
             },

@@ -6,6 +6,9 @@ import { VerdictPanel } from "@/components/approval";
 import { AgentTurn } from "@/components/agentturn";
 import { ChatPanel } from "@/components/chat";
 import { BlastPanel } from "@/components/blastpanel";
+import { ContestPanel } from "@/components/contest";
+import { CounterfactualPanel } from "@/components/counterfactual";
+import { DetectionRulePanel } from "@/components/detectionrule";
 import { DraftPanel } from "@/components/drafts";
 import { IncidentGraph } from "@/components/incidentgraph";
 import { IncidentView } from "@/components/incident";
@@ -18,7 +21,12 @@ import {
   getIncident,
   getIncidentAudit,
   getIncidents,
+  getContest,
+  getCounterfactual,
+  getDetectionRule,
+  getDetectionRules,
   getDraft,
+  getTimeline,
   getPolicyModel,
   type AuditRecord,
 } from "@/lib/api";
@@ -66,7 +74,8 @@ export default async function IncidentDetailPage({
   const { id: raw } = await params;
   const id = decodeURIComponent(raw);
 
-  const [incident, actions, audit, all, policy, report, plan] = await Promise.all([
+  const [incident, actions, audit, all, policy, report, plan, ruleIndex, timeline, contest] =
+    await Promise.all([
     getIncident(id),
     getActions(),
     getIncidentAudit(id),
@@ -81,6 +90,19 @@ export default async function IncidentDetailPage({
     // thing happens. Two documents because they answer different questions,
     // and merging them would produce one that answers neither well.
     getDraft(id, "playbook"),
+    // Which techniques this incident's chain carries, and so which rules could
+    // be drafted at all. A list rather than one rule: a Sigma rule detects one
+    // thing, and fusing a beacon with a scheduled task gives a rule that fires
+    // only once the intrusion has finished.
+    getDetectionRules(id),
+    // The chain placed in time, and the entities an intervention could have
+    // been applied to. Needed before the counterfactual can be asked, because
+    // the moment worth asking about is the first one the records support.
+    getTimeline(id),
+    // The plausible-and-wrong explanation, argued and answered. Refuses with a
+    // 422 where the incident records no rival worth arguing, which arrives here
+    // as null — no panel rather than a manufactured contest.
+    getContest(id),
   ]);
 
   // `null` means the API could not be reached; a 404 is handled by the client
@@ -90,6 +112,24 @@ export default async function IncidentDetailPage({
     if (stillUp === null) return <Offline />;
     notFound();
   }
+
+  // Fetched after the index rather than guessed from the chain, because which
+  // techniques can actually be drafted is the API's answer: a step whose events
+  // carry no mappable field is refused with a 422, which arrives here as null
+  // and is filtered out. A panel for every technique in the chain would promise
+  // rules that do not exist.
+  const rules = (
+    await Promise.all(
+      (ruleIndex?.techniques ?? []).map((technique) => getDetectionRule(id, technique.id)),
+    )
+  ).filter((rule) => rule !== null);
+
+  // Asked at the first step's own moment, which is the earliest the records
+  // would have justified acting on it. Anything earlier is refused — it would
+  // be asking what we would have done knowing something nobody had observed —
+  // and a refusal arrives as null, so no panel rather than an empty one.
+  const first = timeline?.steps?.[0] ?? null;
+  const cf = first ? await getCounterfactual(id, first.entity_key, first.at) : null;
 
   const risk = new Map((actions ?? []).map((a) => [a.id, a.base_risk]));
 
@@ -183,6 +223,18 @@ export default async function IncidentDetailPage({
       {report && <DraftPanel draft={report} verdict={adoptReport} />}
 
       {plan && <DraftPanel draft={plan} verdict={adoptPlaybook} />}
+
+      {/* One panel per technique the chain carries. A step whose telemetry maps
+          to no Sigma field at all comes back null — `draft_rule` refuses rather
+          than inventing a field, and the honest outcome of that refusal is no
+          panel rather than an empty one claiming a rule exists. */}
+      {contest && <ContestPanel contest={contest} />}
+
+      {cf && <CounterfactualPanel result={cf} />}
+
+      {rules.map((rule) => (
+        <DetectionRulePanel key={rule.rule_id} rule={rule} />
+      ))}
 
       {/* The way out to the whole trail. R52 delisted Audit as a front door on
           the grounds that it is reached from the incident whose actions it

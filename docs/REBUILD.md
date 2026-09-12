@@ -2239,15 +2239,71 @@ human. Generation is a new output, not a new authority.
   answering a relation question from its own reading. Given rules 5 and 6 each
   needed a measurement to get right, assume this one does too until it is run.
 
-- [ ] **R70 — Drafts, not decisions.** Needs: **R68**.
+- [x] **R70 — Drafts, not decisions.** Needs: **R68**.
   A draft playbook and a draft post-incident report, written from an incident's
   evidence. Text output, human review, and the same approval path before
   anything is adopted.
   **Done when:** every assertion in a draft carries its evidence reference, the
   draft is labelled a draft everywhere it appears, and adopting one is an action
   that goes through Dharma like any other.
+  Done. `packages/core/pashupatastra/drafts.py` assembles both documents from
+  stored records, `/incidents/{id}/draft/{kind}` serves them, and
+  `components/drafts.tsx` renders them.
+  **The citation rule is enforced at the constructor, not checked afterwards.**
+  `Line` refuses to be built with empty `refs`, the way `Hypothesis` refuses
+  empty evidence. Assembling freely and validating after leaves the uncited
+  sentence written, reviewed and one deletion away from shipping; refusing to
+  construct one tests the builder anybody writes next, not just this one.
+  **Assembled on request, never stored.** A saved draft goes stale against the
+  incident it describes, and the interesting failure is the silent one — a
+  report citing a plan step that has since been re-scored. Built from the
+  incident each time, it cannot disagree with it.
+  **Labelled a draft three times** — panel title, badge, and the document's own
+  title. Not redundancy: this is written to be copied out of a browser, and the
+  failure it must not have is a paragraph arriving somewhere else with the word
+  "draft" left behind on the page it came from.
+  **Adopting is priced at 35 because of the band, not the number.** The first
+  scoring of 20 put these in the 0–30 autonomous band, which in an environment
+  with no blast radius means the agent could adopt its own draft unattended —
+  the exact outcome the task is named against. 35 is where `disable_deployment`
+  sits, and this is the same shape of act: it changes what happens next without
+  breaking anything now, and it is fully reversible. Adopt and retract carry the
+  same risk deliberately, being each other's rollback; a rollback priced far
+  below the thing it undoes is one that gets taken lightly during the incident
+  where it matters.
+  **There is no adopt button.** The panel shows the verdict for the adopt action
+  instead — what it would need, and from whom. A button implying one click
+  finishes it would be the lie the task is named against.
+  **Absence is stated rather than omitted.** A report with no "what was verified"
+  section reads as an author who forgot; one saying nothing was verified, and
+  citing the incident, makes a claim a reader can check. Empty sections are the
+  interesting half of a report and are kept.
+  Fourteen tests in `testdrafts.py` — the strongest being the one that tries to
+  build an uncited line and cannot — and three over the route. `verifydraft.py`
+  resolves every ref against the store rather than pattern-matching it, because
+  "every line has refs" is satisfied by a line citing `evt-imaginary`, and it
+  asks `/policy/evaluate` what adopting costs rather than trusting the page's
+  sentence about it.
+  Measured on 25 August 2026 against a local API in the deployed configuration
+  (security domain, demo seed): all three incidents, both kinds, every line cited
+  and every ref resolving, both drafts landing on `approval` and neither
+  `autonomous`. Core suite 544 passing, API suite 377, web typecheck and build
+  clean.
+  **Not measured through a browser.** The page half of `verifydraft.py` needs
+  playwright and a running site, and Phase 5C is not deployed until R74 — the
+  live endpoint still 404s. The badge count, the citation links and the overflow
+  check run there rather than being claimed here.
+  **One configuration where the citations do not resolve.** With the action
+  domain left unset, the store falls back to the infrastructure incident
+  `INC-2026-0810`, whose evidence names `evt-deploy-421` and three siblings that
+  are never written to the entity store — so both drafts render thirteen links
+  that 404, which is R59's rule broken on a supported path. It predates this
+  task and the deployed security configuration never takes it, but R70 is the
+  surface that invites a reviewer to click them. Either seed those events or
+  give the fallback incident refs that exist; not fixed here because the fixture
+  is not this task's to change.
 
-- [ ] **R71 — Natural language to a detection rule.** Needs: **R70**.
+- [x] **R71 — Natural language to a detection rule.** Needs: **R70**.
   *"Write a Sigma rule that would have caught the SMB lateral movement in
   0903"* — the agent drafts it, states which telemetry field maps to which rule
   field, and flags what it is unsure of. An LLM generating something, held to
@@ -2255,8 +2311,77 @@ human. Generation is a new output, not a new authority.
   **Done when:** the output parses as valid Sigma, each mapping names the source
   field it came from, and uncertainty is stated in the output rather than
   smoothed away.
+  Done. `packages/core/pashupatastra/sigma.py` builds the rule,
+  `/incidents/{id}/detection-rule/{technique}` serves it,
+  `components/detectionrule.tsx` renders it, and `draft_detection_rule` is the
+  tool. Prompt rule 8, version 7.
+  **The generation is deterministic and the model is kept out of it**, as in
+  R69. Which telemetry field corresponds to which Sigma field is a fact about
+  our event model, not a judgement. Asked directly, a model produces
+  `EventID: 5145` and `ShareName: ADMIN$` because that is the shape such rules
+  have — and every line would be fabricated, because no event in this store
+  carries a Windows event id or a share name. It would parse, review well,
+  deploy, and never fire. That is the failure this task is really about, and it
+  is not one a citation check downstream can catch: the fields are real Sigma
+  fields, the YAML is valid, and only someone who knows this platform's event
+  model can see that not one of them is populated here.
+  **Mapping is typed, because the plausible mistake is a category error.**
+  `SecurityPayload.principal` is set to the subject of the detection, so on a
+  host-scoped detection it holds a hostname. `principal` maps to an identity
+  field only where the entity is an account; elsewhere the refusal is reported
+  rather than the mapping made. A hostname sitting in `SubjectUserName` parses,
+  cites a real stored value, and is wrong in a way no reviewer would catch.
+  **An indicator match is not a behavioural detection**, and the difference is
+  recorded per field. The honest answer to the task's own example question is
+  uncomfortable and is the point: the SMB step's telemetry supports exactly one
+  Sigma field, `Computer: ws-0148`. That rule would have caught 0903 and will
+  never catch anything else, so the document says so — in `x-warning`, in the
+  comment header, and in `falsepositives`. Of the six rules drafted across the
+  three demo incidents, exactly one generalises.
+  **Uncertainty travels inside the artefact.** The gaps, the provenance table
+  and the experimental status are keys in the YAML, not fields beside it. A rule
+  is written to be pasted into a detection repository and the panel that
+  carefully explained its limitations does not make that journey — R70's
+  argument about the word "draft" appearing three times, applied to the thing
+  that argument implies. The header is ASCII for the same reason.
+  **Gaps are not false positives.** They were briefly emitted as
+  `falsepositives`, which misreports both to every tool that reads the document;
+  `falsepositives` now states the rule's actual weakness, derived from its shape.
+  **A step that maps to nothing is refused, not filled.** Three of the nine
+  technique steps across the demo incidents cite only events carrying no field
+  Sigma has a name for, and each returns a 422 saying so. A
+  refusal is a correct answer about the data; returning it as a 500 would file
+  the system's honesty as a malfunction.
+  **The model is never handed the rule text.** The tool returns the mapping
+  table and the gaps; the YAML reaches the reader by the path that generated it.
+  A model that retypes a machine-readable artefact will eventually retype it
+  wrong, one dropped character is a rule that does not parse, and nothing in the
+  loop could catch it.
+  Thirty-five tests in `testsigma.py`, seven over the route, nine over the tool.
+  **The parse clause is checked by pySigma, not by us** — our own `validate` is
+  the same author marking their own work and would accept a rule wrong in
+  exactly the way we misread the spec. It is a dev dependency of
+  `packages/core`, so CI runs it.
+  `scripts/verifysigma.py` resolves each mapping against the event it cites and
+  reads the *claimed source field* rather than searching the record, because a
+  value that appears somewhere in an event proves nothing about the field it was
+  attributed to. Negative-controlled: mis-attributing `Computer` to
+  `payload.source_address` fails it with that sentence.
+  Measured on 4 September 2026 against a local API in the deployed configuration
+  — six rules across three incidents, every one parsing under pySigma with zero
+  errors, every field resolving to the source field it names, three steps
+  refused.
+  Core suite 579, API 393, web typecheck and build clean.
+  **Not measured through a browser or against a live model.** The page half of
+  `verifysigma.py` needs playwright and a running site, and Phase 5C does not
+  deploy until R74. Whether the model actually calls the tool rather than
+  writing Sigma from memory is the one clause only a live run settles, and given
+  rules 5 and 6 each needed a measurement to get right, assume this one does too.
+  **`openapi.json` was regenerated** for the two new routes, which also carried
+  the pre-existing `Verdict-Input`/`Verdict-Output` collapse noted under R70 —
+  a dependency-drift artefact, not an API change.
 
-- [ ] **R72 — Counterfactuals.** Needs: **R68**.
+- [x] **R72 — Counterfactuals.** Needs: **R68**.
   *"What if we had blocked the ASN at 09:14 instead of 10:31?"* — reasoned over
   the causal chain timeline already stored per incident, estimating the blast
   radius that would not have happened. Ties to the *cost of the gap* framing R53
@@ -2264,8 +2389,77 @@ human. Generation is a new output, not a new authority.
   **Done when:** the estimate is derived from stored timeline and graph records,
   is presented as an estimate with its basis stated, and refuses rather than
   guesses where the timeline does not support the question.
+  Done. `packages/core/pashupatastra/counterfactual.py` decides it,
+  `/incidents/{id}/timeline` and `/incidents/{id}/counterfactual` serve it,
+  `components/counterfactual.tsx` renders it, `what_if_we_had_acted` is the
+  tool. Prompt rule 9, version 8.
+  **Later is not the same as caused by, and this is the third layer to say so.**
+  The tempting implementation counts every step after the intervention. That is
+  post hoc reasoning wearing an estimate's clothes, and it inflates the single
+  most quotable number this console can emit — the one that ends up in a slide
+  where nobody can check it. A step is pre-empted only where it is both later
+  *and* reachable from the entity removed, through access edges that cite their
+  own evidence. `relations.py` refuses the same conflation one layer up and the
+  correlator's adjacency gate refuses it one layer down; it would be strange for
+  the counterfactual to be the place where "afterwards" means "because".
+  **An intervention cannot precede the evidence that would have justified it.**
+  This is the constraint that separates an estimate from a wish, and it is the
+  task's own example that exposes it: asked about 09:14 when the first record of
+  that address is 10:27, the honest answer is that the question is about
+  clairvoyance rather than response time. A system without the rule answers
+  happily, with a large avoided-impact number no amount of faster operating
+  could ever have delivered. The earliest defensible moment is the first record
+  naming the entity, and anything before it is a 422.
+  **The remainder is rendered with equal weight.** Steps that came later and
+  were never downstream would have happened anyway; they are reported as
+  `unavoidable` rather than dropped, on screen as well as in the API. An
+  estimate that shows only its winnings is an advertisement. INC-2026-0902
+  exercises this for real — one step pre-empted, one that would have happened
+  regardless.
+  **The two assumptions the records cannot settle travel with every answer**: the
+  block would have worked immediately and completely, and the attacker would not
+  simply have taken another route. They are in `basis`, rendered under the
+  number rather than in a tooltip, and they are the first things a retelling
+  drops. A step that could not be placed in time is excluded and named, because
+  assumed early it inflates the estimate and assumed late it deflates it.
+  **The avoided set is counted from the chain, not from the reach.**
+  Reachability says what could have been touched; the chain says what was.
+  Reporting the larger would credit the intervention with harm that never
+  happened.
+  Sixteen tests in `testcounterfactual.py`, eight over the routes, ten over the
+  tool. `scripts/verifycounterfactual.py` re-derives every pre-empted step: it
+  resolves the step's refs, compares each event's own `occurred_at` against the
+  moment intervened at, and takes an **independent** blast-radius walk through
+  `/entities/` rather than reading back the walk the answer used. It then asks a
+  question the timeline cannot support and requires the refusal.
+  Negative-controlled: making the engine count everything after the intervention
+  fails it with *later is not the same as caused by*.
+  **A bug in the checker, worth recording because it is the failure this project
+  keeps naming.** The first run reported six fabrications. The independent walk
+  was reading `/entity/` — the route is `/entities/{key:path}` — and a 404 was
+  being turned silently into an empty reach, so every genuinely downstream step
+  looked invented. A checker reporting its own blind spot as the system lying is
+  worse than one that does not check: it cannot be distinguished from a real
+  finding. It now separates "nothing depends on this" from "the check could not
+  be made" and fails loudly on the second.
+  **`ToolBox` took its topology from the entity store, which is wrong on one
+  backend.** `blast_radius` lives on `MemoryGraph` and `DynamoStore` but not on
+  `PostgresStore`, so the existing `blast_radius` tool worked in tests and on the
+  deployment and would raise on Postgres — right in the two places it is usually
+  exercised and absent in the third. Topology now comes from `GraphStore`, which
+  answers on all three. Found while wiring R72; fixed here because leaving two
+  topology sources in one class is worse than either.
+  Measured on 4 September 2026 against a local API in the deployed
+  configuration: three incidents, gaps of 11, 30 and 90 minutes, every
+  pre-empted step re-derived and every clairvoyant question refused. Core suite
+  595, API 410, web typecheck and build clean.
+  **Not measured through a browser or against a live model.** The page half of
+  `verifycounterfactual.py` needs playwright and a running site, and Phase 5C
+  does not deploy until R74; whether the model calls the tool rather than
+  estimating is the clause only a live run settles.
+  `openapi.json` regenerated for the two new routes.
 
-- [ ] **R73 — Argue the other side.** Needs: **R68**.
+- [x] **R73 — Argue the other side.** Needs: **R68**.
   Before finalising a diagnosis, a second pass arguing the alternative
   explanation and then saying why it was rejected — surfaced as *the
   plausible-and-wrong explanation*, which is language the Blue Team rubric
@@ -2273,6 +2467,69 @@ human. Generation is a new output, not a new authority.
   **Done when:** the alternative is a real competing hypothesis rather than a
   restatement, the rejection cites evidence, and a case where the alternative
   *wins* is possible and is tested.
+  Done. `packages/core/pashupatastra/contest.py` adjudicates,
+  `/incidents/{id}/contest` serves it, `components/contest.tsx` renders it under
+  the rubric's own heading, `argue_the_other_side` is the tool. Prompt rule 10,
+  version 9.
+  **A ranking is not a refutation, and that is the whole module.** The tempting
+  implementation reads 0.86 against 0.09 and reports the alternative rejected —
+  but the incident asserting its own diagnosis is likelier is the claim under
+  examination, not evidence for it. The verdict turns on one thing: whether
+  something stored and resolvable contradicts the rival. Where nothing does, the
+  answer is `unrefuted` — the diagnosis has not beaten it, it has ranked it
+  below. That is the case where the alternative wins, and it is the one an
+  implementation reading confidences can never produce.
+  **`unrefuted` is an open question, not a rival conclusion.** It never says the
+  alternative is right, only that the diagnosis has not earned its place over
+  it. The distinction is easy to lose in a badge, so the panel and the tool both
+  say it in a sentence rather than relying on the word.
+  **A restatement is not a rival.** Two hypotheses on the same records with
+  nothing to tell them apart are one claim written twice, and adjudicating
+  between them is theatre that produces a confident-looking verdict about
+  nothing. A real rival must share ground — explain at least one of the same
+  observations, or it is answering a different question — and must diverge,
+  through the leader citing something it does not or through something
+  contradicting it. Where neither holds this refuses.
+  **Text is never compared.** Deciding "these say the same thing" by wording
+  would be the resemblance-matching R69 refuses and Smriti marks as a text match
+  rather than a precedent. Two hypotheses can be worded alike and rest on
+  different records, or worded differently and rest on the same ones. Only the
+  records decide.
+  **The rival is credited with what the diagnosis does not explain** — records it
+  accounts for and the leader does not cite. It is the point a confident
+  diagnosis is least likely to make about its own alternative.
+  Sixteen tests in `testcontest.py`, six over the route, six over the tool.
+  **Both verdicts are seeded rather than hoped for**: all three demo incidents
+  rule their alternative out, so the case that matters most would otherwise
+  never be exercised, and a skip would have reported three clauses green while
+  measuring none. The fallback infrastructure incident refuses, because its
+  hypotheses cite events that were never stored — the R70 fixture problem
+  surfacing again.
+  `scripts/verifycontest.py` re-derives the shared observations and the
+  separators from the incident's own hypotheses rather than reading them back
+  from the answer, resolves every ref named as ruling the rival out, and fails
+  an `upheld` verdict that cites nothing — because the only thing left deciding
+  such a verdict is the confidence gap. Negative-controlled: making confidence
+  decide fails all three incidents with that sentence.
+  **The prompt rule guards a different failure from rules 8 and 9.** Those
+  compete with the model not having the facts; this one competes with the model
+  always being able to produce the *shape*. A counterargument followed by a
+  rebuttal is a form it can write about anything, it reads like reasoning from
+  outside, and it has a direction — agreeing with the document in front of it is
+  the easier continuation. So a model asked to challenge a diagnosis will nearly
+  always conclude the diagnosis survives, which is the one outcome that makes
+  the feature worthless. Rule 10 names the `unrefuted` verdict explicitly and
+  says what to do when it appears.
+  Measured on 4 September 2026 against a local API in the deployed
+  configuration: three incidents, each sharing exactly one observation with its
+  rival and each rejection resolving. Core suite 611, API 421, web typecheck and
+  build clean.
+  **Not measured through a browser or against a live model.** The page half of
+  `verifycontest.py` needs playwright and a running site, and Phase 5C does not
+  deploy until R74; whether the model reports an `unrefuted` verdict faithfully
+  — against the document it just read — is the clause only a live run settles,
+  and it is the one most likely to fail.
+  `openapi.json` regenerated for the new route.
 
 - [ ] **R74 — Deploy Phase 5C and review.** Needs: **R68–R73**.
   **Done when:** every new output is cited, no generated artefact can be adopted

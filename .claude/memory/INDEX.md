@@ -31,3 +31,7 @@ Protocol: before every push, write a topic-named file from
 - [Phase5BDeployed](Phase5BDeployed.md) — R67: deployed and reviewed; a nav link can be covered without anything overflowing, and R94 reopened
 - [ReasoningTrace](ReasoningTrace.md) — R68: what Sati ruled out and on what; why an empty structured field is a claim and how the reformat was emptying them
 - [IncidentRelations](IncidentRelations.md) — R69: relation is overlap, not resemblance; why time never decides and a "no" says what it compared
+- [DraftDocuments](DraftDocuments.md) — R70: a draft is a draft in three places; why adopting is priced at 35 and assembled drafts are never stored
+- [DetectionRules](DetectionRules.md) — R71: Sigma from telemetry, not from memory; why the honest rule is one field and says so
+- [Counterfactuals](Counterfactuals.md) — R72: what acting earlier would have prevented; why later is not downstream and you cannot act on what you had not seen
+- [ArgueTheOtherSide](ArgueTheOtherSide.md) — R73: the plausible-and-wrong explanation; why a confidence ranking is not a refutation

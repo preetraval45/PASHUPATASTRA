@@ -27,7 +27,7 @@ from ..config import get_settings
 from ..engines import astra, loop as loop_engine, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
 from ..engines.buddhi import model_health
-from ..graph import GraphStore, entitystore
+from ..graph import GraphStore, chain_times, entitystore, events_by_id
 from .. import progress as progress_module
 from ..progress import PROGRESS
 from ..store import STORE
@@ -135,6 +135,277 @@ def incident_draft(incident_id: str, kind: str) -> dict[str, object]:
             }
             for section in draft.sections
         ],
+    }
+
+
+@router.get("/incidents/{incident_id}/detection-rule")
+def incident_detection_rules(incident_id: str) -> dict[str, object]:
+    """Which rules could be drafted from this incident, and for what.
+
+    A list rather than one rule, because an incident is a sequence of techniques
+    and a Sigma rule detects one thing. Fusing a C2 beacon and a scheduled task
+    into a single selection produces a rule that fires only when all of it is
+    present at once, which is after the intrusion has finished.
+    """
+    from pashupatastra.sigma import rule_techniques
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+    return {
+        "incident_ref": incident.id,
+        "techniques": [
+            {"id": t.id, "name": t.name, "tactic": t.tactic} for t in rule_techniques(incident)
+        ],
+    }
+
+
+@router.get("/incidents/{incident_id}/detection-rule/{technique_id}")
+def incident_detection_rule(incident_id: str, technique_id: str) -> dict[str, object]:
+    """A Sigma rule drafted from one step of this incident (R71).
+
+    The events are fetched by the ids the causal step cites, so the rule rests
+    on exactly the records the chain says established that step. Fetched rather
+    than trusted: a step citing an id the store no longer holds yields fewer
+    events, and `draft_rule` refuses rather than drafting from records it did
+    not read.
+
+    A refusal is a 422 and not a 500. "This step's telemetry carries no field
+    Sigma has a name for" is a correct answer about the data, and returning it
+    as a server error would file the system's honesty as a malfunction.
+    """
+    from pashupatastra.sigma import SigmaError, draft_rule, validate
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+
+    cited = [
+        ref
+        for link in incident.causal_chain
+        if link.attack_technique is not None and link.attack_technique.id == technique_id
+        for ref in link.evidence
+    ]
+    events = events_by_id(entitystore(), cited)
+
+    try:
+        rule = draft_rule(incident, events, technique_id)
+    except SigmaError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    text = rule.to_yaml(date=incident.opened_at.strftime("%Y/%m/%d"))
+    problems = validate(text)
+    return {
+        "incident_ref": rule.incident_ref,
+        "technique": (
+            {
+                "id": rule.technique.id,
+                "name": rule.technique.name,
+                "tactic": rule.technique.tactic,
+            }
+            if rule.technique
+            else None
+        ),
+        "title": rule.title,
+        "status": rule.status,
+        "rule_id": rule.rule_id,
+        "behavioural": rule.behavioural,
+        "yaml": text,
+        # Reported by the route rather than asserted by it. The clause R71 is
+        # measured on is that this parses as Sigma, and a route claiming so
+        # without reading its own output back would be marking its own work.
+        "valid": problems == [],
+        "problems": problems,
+        "mappings": [
+            {
+                "sigma_field": m.sigma_field,
+                "source_field": m.source_field,
+                "value": str(m.value),
+                "refs": list(m.refs),
+                "generalises": m.generalises,
+            }
+            for m in rule.mappings
+        ],
+        "gaps": [{"sigma_field": g.sigma_field, "reason": g.reason} for g in rule.gaps],
+        "not_mapped": [
+            {"sigma_field": g.sigma_field, "reason": g.reason} for g in rule.unmapped
+        ],
+        "refs": rule.refs,
+    }
+
+
+@router.get("/incidents/{incident_id}/timeline")
+def incident_timeline(incident_id: str) -> dict[str, object]:
+    """The causal chain placed in time, and the moments worth asking about.
+
+    Offered rather than left free-form. The interesting counterfactuals sit at
+    the boundaries between steps, and a caller made to invent a timestamp will
+    invent one the records do not support — then get a refusal it reads as the
+    feature being broken.
+    """
+    from pashupatastra.counterfactual import moments
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+
+    steps = moments(incident, chain_times(entitystore(), incident))
+    return {
+        "incident_ref": incident.id,
+        "steps": [
+            {
+                "index": step.index,
+                "entity_key": step.entity_key,
+                "transition": step.transition,
+                "at": step.at.isoformat(),
+                "refs": list(step.refs),
+            }
+            for step in steps
+        ],
+        # One entity per step, because those are the things an intervention
+        # could have been applied to. Entities the incident merely mentions are
+        # excluded: what blocking something it never recorded would have done is
+        # not a question its records can answer.
+        "askable": sorted({step.entity_key for step in steps}),
+    }
+
+
+@router.get("/incidents/{incident_id}/counterfactual")
+def incident_counterfactual(incident_id: str, entity_key: str, at: str) -> dict[str, object]:
+    """What acting on that entity at that moment would have prevented (R72).
+
+    A refusal is a 422. "The timeline does not support that question" is a
+    correct answer about the records — most often because the moment asked about
+    precedes anything that would have justified acting — and returning it as a
+    server error would file the system's honesty as a malfunction.
+
+    The reach is walked here and the judgement is made in `packages/core`, which
+    holds no store. What that split protects is that a laptop and a deployment
+    cannot disagree about what a timeline and a set of edges mean together.
+    """
+    from pashupatastra.counterfactual import CounterfactualRefused, Intervention, counterfactual
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+    try:
+        moment = datetime.fromisoformat(at)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=f"{at!r} is not an ISO timestamp") from exc
+
+    reach = GRAPH.blast_radius(entity_key).affected
+    try:
+        result = counterfactual(
+            incident,
+            Intervention(entity_key=entity_key, at=moment),
+            chain_times(entitystore(), incident),
+            reach,
+        )
+    except CounterfactualRefused as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    store = entitystore()
+    users = 0
+    for key in result.avoided_entities:
+        row = store.entity(key)
+        if row is not None:
+            users += int(row.get("estimated_users") or 0)
+
+    def _step(step) -> dict[str, object]:
+        return {
+            "index": step.index,
+            "entity_key": step.entity_key,
+            "transition": step.transition,
+            "at": step.at.isoformat(),
+            "refs": list(step.refs),
+        }
+
+    return {
+        "incident_ref": result.incident_ref,
+        "entity_key": entity_key,
+        "at": moment.isoformat(),
+        "earliest_defensible": result.earliest_defensible.isoformat(),
+        "summary": result.describe(),
+        "prevented": [_step(s) for s in result.prevented],
+        "unavoidable": [_step(s) for s in result.unavoidable],
+        "already_happened": [_step(s) for s in result.already_happened],
+        "untimed": [
+            {"index": u.index, "entity_key": u.entity_key, "reason": u.reason}
+            for u in result.untimed
+        ],
+        "avoided_entities": result.avoided_entities,
+        # Counted from the entities the prevented steps actually touched, not
+        # from everything reachable. Reachability says what could have been
+        # affected; crediting the intervention with all of it would report harm
+        # that never happened as harm avoided.
+        "avoided_users": users,
+        "gap_seconds": result.gap_seconds,
+        "basis": list(result.basis),
+        "reach": list(result.reach),
+        "refs": result.refs,
+    }
+
+
+def _resolvable(incident) -> set[str]:
+    """Which of this incident's cited refs resolve to a stored record.
+
+    Every ref any hypothesis names, checked against the store. This is what
+    turns "the incident says the alternative was ruled out" into "something
+    stored rules it out" — the difference the whole adjudication turns on.
+    """
+    store = entitystore()
+    claimed = {
+        ref
+        for hypothesis in incident.hypotheses
+        for ref in (*hypothesis.evidence, *hypothesis.contradicted_by)
+    }
+    return {ref for ref in claimed if store.event(ref) is not None}
+
+
+@router.get("/incidents/{incident_id}/contest")
+def incident_contest(incident_id: str) -> dict[str, object]:
+    """The case for the other explanation, and what answers it (R73).
+
+    The Blue Team rubric tells a player that one of the explanations is
+    plausible and wrong and scores them on opening the evidence that rules it
+    out. This holds the agent to the same standard on the same incidents.
+
+    A refusal is a 422. "There is no rival here worth arguing" is a correct
+    answer about the records — an incident with one hypothesis, or with two that
+    are one claim written twice — and manufacturing a contest to avoid an empty
+    panel is the rigour-shaped version of having none.
+    """
+    from pashupatastra.contest import ContestRefused, contest
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+    try:
+        result = contest(incident, _resolvable(incident))
+    except ContestRefused as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    def _case(case) -> dict[str, object]:
+        return {
+            "ref": case.ref,
+            "statement": case.statement,
+            "confidence": case.confidence,
+            "supported_by": list(case.supported_by),
+            "uncited": list(case.uncited),
+        }
+
+    return {
+        "incident_ref": result.incident_ref,
+        "verdict": result.verdict.value,
+        "leader": _case(result.leader),
+        "rival": _case(result.rival),
+        "argument": result.describe(),
+        "ruled_out_by": list(result.ruled_out_by),
+        "unresolved_rejection": list(result.unresolved_rejection),
+        "shared": list(result.shared),
+        "separators": list(result.separators),
+        "unexplained_by_leader": list(result.unexplained_by_leader),
+        "refs": result.refs,
     }
 
 

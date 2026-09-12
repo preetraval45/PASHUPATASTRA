@@ -30,6 +30,19 @@ from pashupatastra.registry import all_actions
 MAX_ROWS = 8
 
 
+def _topology(graph):
+    """Whatever can walk dependencies here.
+
+    Prefers a graph the caller supplied that can already walk — which is what
+    the tests inject — and otherwise builds the `GraphStore` whose job this is.
+    """
+    if graph is not None and hasattr(graph, "blast_radius"):
+        return graph
+    from ..graph import GraphStore
+
+    return GraphStore()
+
+
 def _entity_key_schema(description: str) -> dict[str, Any]:
     return {
         "type": "object",
@@ -55,6 +68,7 @@ class ToolBox:
         graph,
         domain: ActionDomain | None = None,
         spec=None,
+        topology=None,
     ) -> None:
         from .roles import ANALYST
 
@@ -63,6 +77,14 @@ class ToolBox:
         self.graph = graph
         self.domain = domain
         self.spec = spec or ANALYST
+        # Topology comes from `GraphStore`, not from the entity store. They are
+        # different stores with different jobs — one holds events, the other
+        # holds edges — and only `GraphStore` answers a blast-radius walk on
+        # every backend. `PostgresStore` has no `blast_radius` at all, so
+        # reaching for it through `graph` works in memory and on DynamoDB and
+        # raises on a Postgres deployment: a walk that is right in the two
+        # places it is usually tested and absent in the third.
+        self.topology = topology if topology is not None else _topology(graph)
         self._scope = {e.key() for e in incident.affected_entities}
         self._scope |= {link.entity.key() for link in incident.causal_chain}
 
@@ -148,6 +170,91 @@ class ToolBox:
             )
         )
 
+        offered.append(
+            ToolSpec(
+                name="draft_detection_rule",
+                description=(
+                    "Draft a Sigma detection rule from one step of this "
+                    "incident, for a MITRE technique id such as T1021.002. "
+                    "Returns which telemetry field became which rule field, "
+                    "which fields this telemetry could not supply, and whether "
+                    "the result generalises beyond this incident. The rule "
+                    "itself is rendered on the incident page — report what this "
+                    "returns, do not retype the rule."
+                ),
+                parameters={
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["technique_id"],
+                    "properties": {
+                        "technique_id": {
+                            "type": "string",
+                            "description": (
+                                "A MITRE ATT&CK technique id carried by this "
+                                "incident's causal chain, e.g. T1021.002."
+                            ),
+                        }
+                    },
+                },
+            )
+        )
+
+        offered.append(
+            ToolSpec(
+                name="what_if_we_had_acted",
+                description=(
+                    "Estimate what acting on one of this incident's entities "
+                    "earlier would have prevented, from the stored timeline and "
+                    "the access graph. Defaults to the earliest moment the "
+                    "records would have justified acting. Returns the steps it "
+                    "would have pre-empted, the ones that would have happened "
+                    "anyway, and the assumptions the estimate rests on. Refuses "
+                    "a moment earlier than the first observation of that entity."
+                ),
+                parameters={
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["entity_key"],
+                    "properties": {
+                        "entity_key": {
+                            "type": "string",
+                            "description": (
+                                "An entity on this incident's causal chain, e.g. "
+                                "host:ws-0148."
+                            ),
+                        },
+                        "at": {
+                            "type": "string",
+                            "description": (
+                                "Optional ISO timestamp to act at. Omit for the "
+                                "earliest moment the records support, which is "
+                                "the question worth asking."
+                            ),
+                        },
+                    },
+                },
+            )
+        )
+
+        offered.append(
+            ToolSpec(
+                name="argue_the_other_side",
+                description=(
+                    "State the case for this incident's leading alternative "
+                    "explanation, then report what rules it out — or that "
+                    "nothing does. Takes no arguments; it reads the hypotheses "
+                    "already recorded. Refuses where the incident has no rival "
+                    "worth arguing rather than manufacturing one."
+                ),
+                parameters={
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": [],
+                    "properties": {},
+                },
+            )
+        )
+
         available = set(self.read_only_action_ids())
         if "read_logs" in available:
             offered.append(
@@ -175,6 +282,9 @@ class ToolBox:
             "read_logs": self._read_logs,
             "lookup_advisory": self._lookup_advisory,
             "related_incidents": self._related_incidents,
+            "draft_detection_rule": self._draft_detection_rule,
+            "what_if_we_had_acted": self._what_if_we_had_acted,
+            "argue_the_other_side": self._argue_the_other_side,
         }
         if not self.spec.may_use(call.name):
             return ToolOutcome(
@@ -302,6 +412,268 @@ class ToolBox:
             refs=relation.refs,
         )
 
+    def _draft_detection_rule(self, call: ToolCall) -> ToolOutcome:
+        """Draft a Sigma rule for one step of this incident (R71).
+
+        Deterministic like `related_incidents`, and for the same reason. Which
+        telemetry field corresponds to which Sigma field is a fact about our
+        event model, not a judgement, and a model asked to make the mapping
+        would produce `EventID: 5145` — the shape such rules have — from a store
+        that holds no Windows event ids at all.
+
+        **The rule text is deliberately not returned.** What comes back is the
+        mapping table and the gaps; the YAML is served by
+        `/incidents/{id}/detection-rule/{technique}` and rendered on the page.
+        Two reasons, and the second is the important one:
+
+        - A Sigma rule is several hundred tokens, and answers here are bounded
+          at 800 against a per-minute allowance (R19).
+        - A model that retypes a machine-readable artefact will eventually
+          retype it wrong, and one dropped character is a rule that does not
+          parse. Nothing in the loop could catch it: the model cannot re-read
+          what it just emitted, and the reader sees a rule that looks fine.
+          An artefact should reach a reader by the path that generated it.
+
+        Scoped to this incident's own techniques. The argument is checked
+        against the causal chain rather than passed through, so this cannot be
+        used to ask the console about a technique the incident never carried.
+        """
+        from pashupatastra.sigma import SigmaError, draft_rule, rule_techniques
+
+        raw = str(call.arguments.get("technique_id") or "").strip()
+        available = rule_techniques(self.incident)
+        if not available:
+            return ToolOutcome(
+                call=call,
+                ok=True,
+                content=(
+                    f"{self.incident.id} has no causal step carrying an attack "
+                    "technique, so there is no adversary behaviour here to write a "
+                    "detection rule for."
+                ),
+            )
+
+        names = ", ".join(f"{t.id} ({t.name})" for t in available)
+        if not raw:
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content=f"technique_id is required. This incident carries: {names}.",
+                refused="missing argument",
+            )
+        if raw not in {t.id for t in available}:
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content=f"{raw} is not a technique in this incident. It carries: {names}.",
+                refused="not in this incident",
+            )
+
+        from ..graph import events_by_id
+
+        cited = [
+            ref
+            for link in self.incident.causal_chain
+            if link.attack_technique is not None and link.attack_technique.id == raw
+            for ref in link.evidence
+        ]
+        events = events_by_id(self.graph, cited)
+
+        try:
+            rule = draft_rule(self.incident, events, raw)
+        except SigmaError as exc:
+            # A refusal is an answer here, not a failure. "This step's telemetry
+            # carries no field Sigma has a name for" is the honest result and
+            # the model should report it rather than trying another technique.
+            return ToolOutcome(call=call, ok=True, content=str(exc), refs=cited)
+
+        lines = [
+            (
+                f"Drafted a Sigma rule for {rule.technique.id} ({rule.technique.name}) "
+                f"from {rule.incident_ref}. It is shown on the incident page; do not "
+                "retype it."
+            ),
+            "",
+            "Telemetry field -> Sigma field:",
+        ]
+        lines += [f"  {m.describe()}" for m in rule.mappings]
+        if rule.gaps:
+            lines += ["", "Fields this telemetry could not supply:"]
+            lines += [f"  {g.sigma_field}: {g.reason}" for g in rule.gaps]
+        if rule.unmapped:
+            lines += ["", "Held and deliberately not mapped:"]
+            lines += [f"  {g.sigma_field}: {g.reason}" for g in rule.unmapped]
+        if not rule.behavioural:
+            lines += [
+                "",
+                (
+                    "Every field is an instance value from this incident, so this would "
+                    "have matched this occurrence and will not match another. It is an "
+                    "indicator match rather than a detection for the technique, and "
+                    "that is stated in the rule itself."
+                ),
+            ]
+        return ToolOutcome(call=call, ok=True, content="\n".join(lines), refs=rule.refs)
+
+    def _what_if_we_had_acted(self, call: ToolCall) -> ToolOutcome:
+        """What acting earlier would have prevented (R72).
+
+        Deterministic, like the two tools before it. "How much of this would not
+        have happened" is a walk over a stored timeline and stored access edges,
+        and a model asked to estimate it produces a plausible number nobody can
+        check — on the one question where a plausible number is most likely to
+        be repeated in a slide.
+
+        The moment defaults to the earliest the records would have justified
+        acting. That is both the interesting question — it is what the
+        homepage's cost-of-the-gap framing is about — and the one a model can
+        ask without inventing a timestamp, which it would otherwise place before
+        anything was observed and get a refusal it would read as a broken tool.
+        """
+        from datetime import datetime
+
+        from pashupatastra.counterfactual import (
+            CounterfactualRefused,
+            Intervention,
+            counterfactual,
+            earliest_defensible,
+            moments,
+        )
+
+        from ..graph import chain_times
+
+        key = str(call.arguments.get("entity_key") or "").strip()
+        chain_entities = {link.entity.key() for link in self.incident.causal_chain}
+        if not key:
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content="entity_key is required. Give one of: "
+                + ", ".join(sorted(chain_entities)),
+                refused="missing argument",
+            )
+        if key not in chain_entities:
+            return ToolOutcome(
+                call=call,
+                ok=False,
+                content=(
+                    f"{key} is not on this incident's causal chain. Entities on it: "
+                    + ", ".join(sorted(chain_entities))
+                ),
+                refused="not on the chain",
+            )
+
+        observed = chain_times(self.graph, self.incident)
+        timeline = moments(self.incident, observed)
+        if not timeline:
+            return ToolOutcome(
+                call=call,
+                ok=True,
+                content=(
+                    f"No step of {self.incident.id} resolves to a stored event, so there "
+                    "is no timeline to reason about and no 'earlier' to estimate against."
+                ),
+            )
+
+        raw = str(call.arguments.get("at") or "").strip()
+        if raw:
+            try:
+                moment = datetime.fromisoformat(raw)
+            except ValueError:
+                return ToolOutcome(
+                    call=call,
+                    ok=False,
+                    content=f"{raw!r} is not an ISO timestamp.",
+                    refused="bad timestamp",
+                )
+        else:
+            moment = earliest_defensible(self.incident, key, observed)
+            if moment is None:
+                return ToolOutcome(
+                    call=call,
+                    ok=True,
+                    content=(
+                        f"Nothing stored places {key} in time, so there is no moment "
+                        "from which acting on it would have been possible."
+                    ),
+                )
+
+        reach = self.topology.blast_radius(key).affected
+        try:
+            result = counterfactual(
+                self.incident, Intervention(entity_key=key, at=moment), observed, reach
+            )
+        except CounterfactualRefused as exc:
+            # A refusal is the answer, not a failure. Most often it is the
+            # clairvoyance rule, and the model reporting *that* is more valuable
+            # than any number it could have been given instead.
+            return ToolOutcome(call=call, ok=True, content=str(exc))
+
+        lines = [result.describe(), "", "This estimate rests on:"]
+        lines += [f"  - {line}" for line in result.basis]
+        if result.untimed:
+            lines += ["", "Steps that could not be placed in time:"]
+            lines += [f"  - {u.entity_key}: {u.reason}" for u in result.untimed]
+        return ToolOutcome(call=call, ok=True, content="\n".join(lines), refs=result.refs)
+
+    def _argue_the_other_side(self, call: ToolCall) -> ToolOutcome:
+        """The rival explanation's case, and what answers it (R73).
+
+        Deterministic, and this is the tool where that matters most. Asked to
+        argue against a diagnosis, a model will produce a fluent counterargument
+        and then a fluent rebuttal of it, because that is a shape it can always
+        write — and the result reads exactly like reasoning while resting on
+        nothing. Worse, it will almost always conclude that the diagnosis
+        survives, because agreeing with the material in front of it is the
+        likelier continuation. A challenge that cannot come out the other way is
+        not a challenge.
+
+        So the verdict is computed from the records: the rival is beaten only
+        where something stored and resolvable contradicts it, and the confidence
+        gap never counts. What the model does with this is report it.
+        """
+        from pashupatastra.contest import ContestRefused, contest
+
+        claimed = {
+            ref
+            for hypothesis in self.incident.hypotheses
+            for ref in (*hypothesis.evidence, *hypothesis.contradicted_by)
+        }
+        resolvable = (
+            {ref for ref in claimed if self.graph.event(ref) is not None}
+            if self.graph is not None
+            else set()
+        )
+
+        try:
+            result = contest(self.incident, resolvable)
+        except ContestRefused as exc:
+            # A refusal is the answer. An incident with one hypothesis has no
+            # other side, and inventing one to knock down would be the failure
+            # rule 6 already forbids.
+            return ToolOutcome(call=call, ok=True, content=str(exc))
+
+        lines = [result.describe()]
+        if result.verdict.value == "unrefuted":
+            lines += [
+                "",
+                (
+                    "Report this as an open question rather than as the alternative "
+                    "being correct: it says the diagnosis has not earned its place "
+                    "over the alternative, not that the alternative is right."
+                ),
+            ]
+        if result.rival.uncited or result.leader.uncited:
+            lines += [
+                "",
+                (
+                    f"Evidence claimed and not resolvable: diagnosis "
+                    f"{list(result.leader.uncited)}, alternative "
+                    f"{list(result.rival.uncited)}."
+                ),
+            ]
+        return ToolOutcome(call=call, ok=True, content="\n".join(lines), refs=result.refs)
+
     def _scoped(self, call: ToolCall) -> tuple[str | None, ToolOutcome | None]:
         key = str(call.arguments.get("entity_key") or "").strip()
         if not key:
@@ -339,7 +711,7 @@ class ToolBox:
         key, refusal = self._scoped(call)
         if refusal is not None:
             return refusal
-        radius = self.graph.blast_radius(key)
+        radius = self.topology.blast_radius(key)
         return ToolOutcome(
             call=call,
             ok=True,

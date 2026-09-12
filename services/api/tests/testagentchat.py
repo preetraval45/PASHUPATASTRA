@@ -946,3 +946,533 @@ def test_the_cache_key_survives_a_new_audit_record(monkeypatch) -> None:
     assert keys[0] == keys[1] == keys[2], (
         "three identical questions produced three different cache keys"
     )
+
+
+# --- drafting a detection rule (R71) -------------------------------------------
+
+
+def an_incident_with_smb():
+    """One incident, one technique, and the event its step cites."""
+    from datetime import datetime, timedelta
+
+    from pashupatastra.events import (
+        EntityKind,
+        EntityRef,
+        Event,
+        EventClass,
+        Provenance,
+        SecurityPayload,
+        Severity,
+    )
+    from pashupatastra.incidents import (
+        AttackTechnique,
+        CausalLink,
+        Incident,
+        IncidentSeverity,
+    )
+
+    now = datetime(2026, 8, 25, 12, 0).astimezone()
+    host = EntityRef(kind=EntityKind.HOST, id="ws-0148", name="ws-0148")
+    event = Event(
+        id="SEC-0003-c",
+        event_class=EventClass.SECURITY,
+        source="demo",
+        occurred_at=now - timedelta(minutes=5),
+        observed_at=now - timedelta(minutes=5),
+        entity_ref=host,
+        severity=Severity.CRITICAL,
+        payload=SecurityPayload(
+            detection_type="new_smb_peer", principal="ws-0148", confidence=0.9
+        ),
+        provenance=Provenance(source_system="demo"),
+        labels={"summary": "ws-0148 opened SMB to fs-02 and app-07"},
+    )
+    incident = Incident(
+        id="INC-2026-0903",
+        severity=IncidentSeverity.CRITICAL,
+        opened_at=now,
+        affected_entities=[host],
+        causal_chain=[
+            CausalLink(
+                entity=host,
+                transition="SMB opened to two hosts never previously contacted",
+                evidence=["SEC-0003-c"],
+                attack_technique=AttackTechnique(
+                    id="T1021.002",
+                    name="SMB/Windows Admin Shares",
+                    tactic="Lateral Movement",
+                ),
+            )
+        ],
+    )
+    return incident, event
+
+
+class FakeEventStore:
+    """Just enough of the entity store for `events_by_id` to read."""
+
+    def __init__(self, *events) -> None:
+        self.rows = {
+            event.id: {
+                **event.model_dump(mode="json", exclude={"entity_ref"}),
+                "entity_key": event.entity_ref.key(),
+            }
+            for event in events
+        }
+
+    def event(self, event_id: str):
+        return self.rows.get(event_id)
+
+
+def rule_call(technique_id: str):
+    return ToolCall(
+        id="1", name="draft_detection_rule", arguments={"technique_id": technique_id}
+    )
+
+
+def test_the_tool_reports_the_mapping_and_what_it_could_not_fill() -> None:
+    """R71 over the tool. The model is told which telemetry field became which
+    Sigma field, so its answer can say it rather than invent it."""
+    from app.agent.tools import ToolBox
+
+    incident, event = an_incident_with_smb()
+    box = ToolBox(incident, None, FakeEventStore(event))
+    outcome = box.dispatch(rule_call("T1021.002"))
+
+    assert outcome.ok
+    assert "Computer <- entity_ref.id" in outcome.content
+    assert "could not supply" in outcome.content
+    assert "ShareName" in outcome.content
+    assert outcome.refs == ["SEC-0003-c"]
+
+
+def test_the_tool_does_not_hand_the_model_the_rule_text() -> None:
+    """A model that retypes a machine-readable artefact will eventually retype
+    it wrong, and one dropped character is a rule that does not parse. Nothing
+    downstream could catch it, so the YAML reaches the reader by the path that
+    generated it."""
+    from app.agent.tools import ToolBox
+
+    incident, event = an_incident_with_smb()
+    outcome = ToolBox(incident, None, FakeEventStore(event)).dispatch(rule_call("T1021.002"))
+
+    assert "detection:" not in outcome.content
+    assert "logsource:" not in outcome.content
+    assert "do not retype" in outcome.content.lower()
+
+
+def test_the_tool_says_when_the_rule_would_not_generalise() -> None:
+    """A rule keyed on this incident's hostname would have caught this incident
+    and will never catch another. The model has to be able to say so."""
+    from app.agent.tools import ToolBox
+
+    incident, event = an_incident_with_smb()
+    outcome = ToolBox(incident, None, FakeEventStore(event)).dispatch(rule_call("T1021.002"))
+
+    assert "indicator match" in outcome.content
+
+
+def test_a_hostname_is_reported_as_refused_rather_than_mapped() -> None:
+    from app.agent.tools import ToolBox
+
+    incident, event = an_incident_with_smb()
+    outcome = ToolBox(incident, None, FakeEventStore(event)).dispatch(rule_call("T1021.002"))
+
+    assert "not mapped" in outcome.content.lower()
+    assert "not an account" in outcome.content
+
+
+def test_a_technique_outside_this_incident_is_refused() -> None:
+    """The scope lock. The argument is checked against this incident's own chain
+    so the tool cannot be used to ask about a technique it never carried."""
+    from app.agent.tools import ToolBox
+
+    incident, event = an_incident_with_smb()
+    outcome = ToolBox(incident, None, FakeEventStore(event)).dispatch(rule_call("T1566.001"))
+
+    assert not outcome.ok
+    assert outcome.refused == "not in this incident"
+    assert "T1021.002" in outcome.content, "the refusal does not say what is available"
+
+
+def test_a_missing_technique_argument_is_refused_with_the_options() -> None:
+    from app.agent.tools import ToolBox
+
+    incident, event = an_incident_with_smb()
+    outcome = ToolBox(incident, None, FakeEventStore(event)).dispatch(
+        ToolCall(id="1", name="draft_detection_rule", arguments={})
+    )
+    assert not outcome.ok
+    assert outcome.refused == "missing argument"
+
+
+def test_a_step_whose_records_are_gone_is_refused_not_drafted() -> None:
+    """`draft_rule` refuses to draft from records it did not read, so a citation
+    the store no longer holds cannot become a rule citing it anyway."""
+    from app.agent.tools import ToolBox
+
+    incident, _ = an_incident_with_smb()
+    outcome = ToolBox(incident, None, FakeEventStore()).dispatch(rule_call("T1021.002"))
+
+    assert outcome.ok, "a refusal is an answer here, not a tool failure"
+    assert "none of which is among the events supplied" in outcome.content
+
+
+def test_the_rule_tool_is_offered_and_declared() -> None:
+    """Both locks, as with every other tool."""
+    from app.agent.roles import ANALYST
+    from app.agent.tools import ToolBox
+
+    incident, _ = an_incident_with_smb()
+    offered = {tool.name for tool in ToolBox(incident, None, None).specs()}
+    assert "draft_detection_rule" in offered
+    assert ANALYST.may_use("draft_detection_rule")
+
+
+def test_the_prompt_forbids_writing_a_detection_rule_from_memory() -> None:
+    """R71's rule, as a property of the text that has to cause it. Phrased as a
+    prohibition with the failure named, for the reason rule 5 is: this is a task
+    where the model's training is confidently wrong, and a rule that only says
+    "use the tool" leaves it able to write a creditable `EventID: 5145`."""
+    from app.agent.chat import INSTRUCTIONS
+
+    lowered = INSTRUCTIONS.lower()
+    assert "never write a detection rule yourself" in lowered
+    assert "draft_detection_rule" in lowered
+    assert "eventid" in lowered, "the rule does not name the fabrication it prevents"
+
+
+# --- what acting earlier would have prevented (R72) ----------------------------
+
+
+def a_gap_incident():
+    """Flow at noon, host ninety minutes later, and the event rows to date them."""
+    from datetime import datetime, timedelta
+
+    from pashupatastra.events import (
+        EntityKind,
+        EntityRef,
+        Event,
+        EventClass,
+        Provenance,
+        SecurityPayload,
+        Severity,
+    )
+    from pashupatastra.incidents import CausalLink, Incident, IncidentSeverity
+
+    noon = datetime(2026, 9, 4, 12, 0).astimezone()
+    flow = EntityRef(
+        kind=EntityKind.NETWORK_FLOW, id="ws-0148->198.51.100.74:8443", name="beacon"
+    )
+    host = EntityRef(kind=EntityKind.HOST, id="ws-0148", name="ws-0148")
+
+    def event(event_id, entity, minutes):
+        return Event(
+            id=event_id,
+            event_class=EventClass.SECURITY,
+            source="demo",
+            occurred_at=noon + timedelta(minutes=minutes),
+            observed_at=noon + timedelta(minutes=minutes),
+            entity_ref=entity,
+            severity=Severity.CRITICAL,
+            payload=SecurityPayload(detection_type="rare_destination", confidence=0.9),
+            provenance=Provenance(source_system="demo"),
+        )
+
+    incident = Incident(
+        id="INC-2026-0903",
+        severity=IncidentSeverity.CRITICAL,
+        opened_at=noon,
+        affected_entities=[host],
+        causal_chain=[
+            CausalLink(entity=flow, transition="outbound to a rare destination",
+                       evidence=["G-a"]),
+            CausalLink(entity=host, transition="SMB to two new hosts", evidence=["G-b"]),
+        ],
+    )
+    return incident, [event("G-a", flow, 0), event("G-b", host, 90)], flow.key(), host.key()
+
+
+class FakeTopology:
+    """A blast-radius walker with a fixed answer, so a test controls the reach
+    rather than depending on whatever the process-wide graph happens to hold."""
+
+    def __init__(self, affected) -> None:
+        self.affected = list(affected)
+
+    def blast_radius(self, origin, max_depth: int = 10):
+        from pashupatastra import BlastRadius
+
+        return BlastRadius(origin=origin, affected=self.affected, estimated_users=0)
+
+
+def acted_call(entity_key: str, at: str | None = None):
+    arguments: dict = {"entity_key": entity_key}
+    if at is not None:
+        arguments["at"] = at
+    return ToolCall(id="1", name="what_if_we_had_acted", arguments=arguments)
+
+
+def test_the_tool_estimates_from_the_earliest_defensible_moment_by_default() -> None:
+    """The default is the question worth asking, and the one the model can ask
+    without inventing a timestamp it would place before anything was observed."""
+    from app.agent.tools import ToolBox
+
+    incident, events, flow, host = a_gap_incident()
+    box = ToolBox(
+        incident, None, FakeEventStore(*events), topology=FakeTopology([host])
+    )
+    outcome = box.dispatch(acted_call(flow))
+
+    assert outcome.ok
+    assert outcome.content.startswith("Estimate.")
+    assert "90 minutes" in outcome.content
+    assert outcome.refs == ["G-b"]
+
+
+def test_the_tool_passes_on_the_assumptions_rather_than_smoothing_them() -> None:
+    """The two caveats a summary drops first: that the block works, and that the
+    attacker does not simply take another route."""
+    from app.agent.tools import ToolBox
+
+    incident, events, flow, host = a_gap_incident()
+    outcome = ToolBox(
+        incident, None, FakeEventStore(*events), topology=FakeTopology([host])
+    ).dispatch(acted_call(flow))
+
+    assert "This estimate rests on:" in outcome.content
+    assert "immediate and complete" in outcome.content
+    assert "another route" in outcome.content
+
+
+def test_a_later_step_that_was_not_downstream_is_not_claimed_as_prevented() -> None:
+    """Counting everything after the intervention is post hoc reasoning wearing
+    an estimate's clothes, and it inflates the one quotable number here."""
+    from app.agent.tools import ToolBox
+
+    incident, events, flow, _ = a_gap_incident()
+    outcome = ToolBox(
+        incident, None, FakeEventStore(*events), topology=FakeTopology([])
+    ).dispatch(acted_call(flow))
+
+    assert outcome.ok
+    assert "prevented nothing" in outcome.content
+    assert "would have happened regardless" in outcome.content
+
+
+def test_asking_about_a_moment_before_the_first_record_is_refused_as_an_answer() -> None:
+    """A refusal here is the finding, not a tool failure — so it comes back ok
+    and the model is told to report it."""
+    from app.agent.tools import ToolBox
+
+    incident, events, flow, host = a_gap_incident()
+    outcome = ToolBox(
+        incident, None, FakeEventStore(*events), topology=FakeTopology([host])
+    ).dispatch(acted_call(flow, at="2026-09-04T09:00:00+00:00"))
+
+    assert outcome.ok, "a refusal is an answer, not a failure"
+    assert "clairvoyance" in outcome.content
+
+
+def test_an_entity_off_the_chain_is_refused_with_the_options() -> None:
+    from app.agent.tools import ToolBox
+
+    incident, events, _, _ = a_gap_incident()
+    outcome = ToolBox(
+        incident, None, FakeEventStore(*events), topology=FakeTopology([])
+    ).dispatch(acted_call("host:fs-02"))
+
+    assert not outcome.ok
+    assert outcome.refused == "not on the chain"
+    assert "ws-0148" in outcome.content
+
+
+def test_a_malformed_moment_is_refused() -> None:
+    from app.agent.tools import ToolBox
+
+    incident, events, flow, host = a_gap_incident()
+    outcome = ToolBox(
+        incident, None, FakeEventStore(*events), topology=FakeTopology([host])
+    ).dispatch(acted_call(flow, at="yesterday"))
+
+    assert not outcome.ok
+    assert outcome.refused == "bad timestamp"
+
+
+def test_an_incident_with_no_stored_events_says_there_is_no_timeline() -> None:
+    from app.agent.tools import ToolBox
+
+    incident, _, flow, _ = a_gap_incident()
+    outcome = ToolBox(
+        incident, None, FakeEventStore(), topology=FakeTopology([])
+    ).dispatch(acted_call(flow))
+
+    assert outcome.ok
+    assert "no timeline" in outcome.content
+
+
+def test_the_counterfactual_tool_is_offered_and_declared() -> None:
+    from app.agent.roles import ANALYST
+    from app.agent.tools import ToolBox
+
+    incident, _, _, _ = a_gap_incident()
+    offered = {tool.name for tool in ToolBox(incident, None, None).specs()}
+    assert "what_if_we_had_acted" in offered
+    assert ANALYST.may_use("what_if_we_had_acted")
+
+
+def test_the_prompt_forbids_estimating_the_avoided_impact_from_the_model() -> None:
+    """R72's rule as a property of the text that has to cause it."""
+    from app.agent.chat import INSTRUCTIONS
+
+    lowered = INSTRUCTIONS.lower()
+    assert "never estimate what acting earlier would have saved" in lowered
+    assert "what_if_we_had_acted" in lowered
+    assert "clairvoyance" in lowered
+    assert "another route" in lowered
+
+
+def test_topology_comes_from_a_walker_not_from_the_event_store() -> None:
+    """`PostgresStore` holds events and has no `blast_radius`, so a walk taken
+    through the entity store is right in memory and on DynamoDB and raises on
+    Postgres. `GraphStore` is the one that answers on all three."""
+    from app.agent.tools import ToolBox
+    from app.graph import GraphStore
+
+    class EventsOnly:
+        def event(self, event_id):
+            return None
+
+    box = ToolBox(*a_gap_incident()[:1], None, EventsOnly())
+    assert isinstance(box.topology, GraphStore)
+
+
+# --- arguing the other side (R73) ----------------------------------------------
+
+
+def a_contested_incident(contradicted: list[str] | None = None):
+    """Two explanations of one observation, and the events to resolve them."""
+    from datetime import datetime, timedelta
+
+    from pashupatastra.events import (
+        EntityKind,
+        EntityRef,
+        Event,
+        EventClass,
+        Provenance,
+        SecurityPayload,
+        Severity,
+    )
+    from pashupatastra.incidents import CausalLink, Hypothesis, Incident, IncidentSeverity
+
+    now = datetime(2026, 9, 4, 12, 0).astimezone()
+    host = EntityRef(kind=EntityKind.HOST, id="ws-0148", name="ws-0148")
+
+    def event(event_id):
+        return Event(
+            id=event_id,
+            event_class=EventClass.SECURITY,
+            source="demo",
+            occurred_at=now - timedelta(minutes=5),
+            observed_at=now - timedelta(minutes=5),
+            entity_ref=host,
+            severity=Severity.CRITICAL,
+            payload=SecurityPayload(detection_type="regular_interval", confidence=0.9),
+            provenance=Provenance(source_system="demo"),
+        )
+
+    incident = Incident(
+        id="INC-2026-0903",
+        severity=IncidentSeverity.CRITICAL,
+        opened_at=now,
+        affected_entities=[host],
+        hypotheses=[
+            Hypothesis(statement="Implant beaconing to a C2 host.", confidence=0.86,
+                       evidence=["C-a", "C-b"]),
+            Hypothesis(statement="A backup agent is running on its schedule.",
+                       confidence=0.09, evidence=["C-b"],
+                       contradicted_by=contradicted if contradicted is not None else ["C-c"]),
+        ],
+        causal_chain=[CausalLink(entity=host, transition="beaconed", evidence=["C-a"])],
+    )
+    return incident, [event("C-a"), event("C-b"), event("C-c")]
+
+
+def argue_call():
+    return ToolCall(id="1", name="argue_the_other_side", arguments={})
+
+
+def test_the_tool_states_the_rivals_case_before_answering_it() -> None:
+    """"Argue the other side" means making its case, not only reporting its
+    defeat."""
+    from app.agent.tools import ToolBox
+
+    incident, events = a_contested_incident()
+    outcome = ToolBox(incident, None, FakeEventStore(*events)).dispatch(argue_call())
+
+    assert outcome.ok
+    assert outcome.content.startswith("The case for the alternative")
+    assert outcome.content.index("backup agent") < outcome.content.index("ruled out")
+    assert "C-c" in outcome.refs
+
+
+def test_the_tool_can_report_that_the_diagnosis_did_not_win() -> None:
+    """The outcome a model asked to challenge a diagnosis will almost never
+    reach on its own, because agreeing with the document in front of it is the
+    easier continuation."""
+    from app.agent.tools import ToolBox
+
+    incident, events = a_contested_incident(contradicted=[])
+    outcome = ToolBox(incident, None, FakeEventStore(*events)).dispatch(argue_call())
+
+    assert outcome.ok
+    assert "Nothing stored rules it out" in outcome.content
+    assert "open question rather than as the alternative being correct" in outcome.content
+
+
+def test_a_rejection_citing_a_record_that_is_gone_does_not_count() -> None:
+    from app.agent.tools import ToolBox
+
+    incident, events = a_contested_incident(contradicted=["C-missing"])
+    outcome = ToolBox(incident, None, FakeEventStore(*events)).dispatch(argue_call())
+
+    assert "Nothing stored rules it out" in outcome.content
+    assert "resolve to nothing" in outcome.content
+
+
+def test_an_incident_with_no_rival_is_refused_as_an_answer() -> None:
+    """Inventing a rival to knock down is the failure rule 6 already forbids."""
+    from app.agent.tools import ToolBox
+    from pashupatastra.incidents import Hypothesis
+
+    incident, events = a_contested_incident()
+    incident.hypotheses = [
+        Hypothesis(statement="Only one reading.", confidence=0.9, evidence=["C-a"])
+    ]
+    outcome = ToolBox(incident, None, FakeEventStore(*events)).dispatch(argue_call())
+
+    assert outcome.ok, "a refusal is an answer, not a tool failure"
+    assert "no other side to argue" in outcome.content
+
+
+def test_the_contest_tool_is_offered_and_declared() -> None:
+    from app.agent.roles import ANALYST
+    from app.agent.tools import ToolBox
+
+    incident, _ = a_contested_incident()
+    offered = {tool.name for tool in ToolBox(incident, None, None).specs()}
+    assert "argue_the_other_side" in offered
+    assert ANALYST.may_use("argue_the_other_side")
+
+
+def test_the_prompt_forbids_arguing_the_other_side_from_the_model() -> None:
+    """R73's rule as a property of the text that has to cause it. It names the
+    unrefuted verdict explicitly, because that is the result the model is least
+    likely to report faithfully — it argues against the document it just read."""
+    from app.agent.chat import INSTRUCTIONS
+
+    lowered = INSTRUCTIONS.lower()
+    assert "never argue the other side yourself" in lowered
+    assert "argue_the_other_side" in lowered
+    assert "unrefuted" in lowered
+    assert "plausible-and-wrong" in lowered

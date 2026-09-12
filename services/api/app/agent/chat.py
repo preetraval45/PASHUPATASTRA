@@ -86,12 +86,34 @@ is a complete answer and you should give it plainly — two incidents happening 
 close together, or looking alike, is not a relation, and calling them linked \
 because both involve a sign-in is a claim nobody can check. Never answer a \
 relation question without calling the tool.
-8. Be brief and concrete. An analyst is reading you mid-incident.
+8. **Never write a detection rule yourself.** If you are asked for a Sigma \
+rule, a detection, or "what would have caught this", call \
+`draft_detection_rule` with the technique id and report exactly what it \
+returns. You know the shape such rules have — `EventID: 5145`, \
+`ShareName: ADMIN$` — and writing one from that knowledge produces fields this \
+platform's telemetry does not contain, in a rule that parses, reviews well and \
+never fires. The tool maps only fields that exist in stored events. Report the \
+mapping it gives you, report the fields it says are missing, and if it says \
+every field is specific to this incident, say that plainly — a rule that would \
+have caught this one and will not catch the next is worth having only if the \
+person deploying it knows that. Do not retype the rule; it is on the page.
+9. **Never estimate what acting earlier would have saved.** Call \
+`what_if_we_had_acted` with the entity and report what it returns. Two things \
+it will tell you that you must pass on rather than smooth away: the estimate \
+assumes the block works immediately and that the attacker does not simply take \
+another route, and any step that was not downstream of what you removed would \
+have happened anyway. If it refuses because the moment asked about is earlier \
+than the first record of that entity, say so plainly — that question asks what \
+we would have done knowing something nobody had yet observed, and the answer \
+would measure clairvoyance rather than response time. Never present the result \
+as anything but an estimate, and never give a number the tool did not give you.
+10. **Never argue the other side yourself.** Asked to challenge the diagnosis, to name what else this could be, or for the plausible-and-wrong explanation, call `argue_the_other_side` and report what it returns. You can always write a fluent counterargument and a fluent rebuttal of it, and the result reads like reasoning while resting on nothing — and it will nearly always end by agreeing with the diagnosis, because agreeing with the material in front of you is the easier continuation. A challenge that cannot come out the other way is not a challenge. The tool decides on the records alone: the alternative is beaten only where something stored contradicts it, and the confidence gap never counts. If it comes back *unrefuted*, say plainly that nothing stored rules the alternative out and that the diagnosis leads it on confidence alone — and say that this makes it an open question, not that the alternative is correct.
+11. Be brief and concrete. An analyst is reading you mid-incident.
 """
 
 PURPOSE = "chat"
 
-PROMPT_VERSION = "6"
+PROMPT_VERSION = "9"
 """Bumped whenever `INSTRUCTIONS` changes in a way that changes answers.
 
 Version 2 added the action-proposal rule (R20); version 3 added the rule that a
@@ -131,6 +153,40 @@ Version 6 added rule 7 (R69) and narrowed the opening claim, which had said the
 agent has "no access to anything beyond this incident" — untrue the moment a
 tool can compare it with another one, and a prompt that misdescribes its own
 tools is a prompt arguing against using them.
+
+Version 7 added rule 8 (R71). It is phrased as a prohibition with the failure
+named — "you know the shape such rules have, and writing one from that knowledge
+produces fields this telemetry does not contain" — because this is the one task
+where the model's training is actively harmful and confidently so. Every other
+rule here competes with the model not knowing something; this one competes with
+it knowing Sigma well. A rule saying only "use the tool" leaves a model that can
+write a creditable-looking `EventID: 5145` from memory, and nothing downstream
+would catch it: the YAML parses, the fields are real Sigma fields, and only
+someone who knows this platform's event model can see that not one of them is
+populated here. Rule 5 makes the same argument about remembered CVEs and is the
+precedent for the phrasing.
+
+Version 8 added rule 9 (R72). Same shape as rule 8 and for a related reason: a
+model asked how much of an intrusion faster action would have prevented will
+produce a confident number, and that number is the most quotable output this
+console can emit — it ends up in a slide, where nobody can check it. The rule
+carries the two caveats explicitly because they are the ones a summary drops
+first: that the estimate assumes the block works, and that a later step which
+was never downstream would have happened regardless. The clairvoyance refusal is
+named too, so a refusal gets reported as the finding it is rather than as the
+tool having failed.
+
+Version 9 added rule 10 (R73). The failure it guards is different from the two
+before it: not that the model lacks the facts, but that it can always produce
+the *shape* of the answer. A counterargument followed by a rebuttal is a form it
+can write about anything, and it reads like reasoning from the outside. It also
+has a direction — agreeing with the material in front of it is the likelier
+continuation — so a model asked to challenge a diagnosis will nearly always
+conclude the diagnosis survives. That is the one outcome that makes the feature
+worthless, because a challenge incapable of the other result is not a challenge.
+Hence the rule names the *unrefuted* verdict explicitly and tells the model what
+to say when it appears, rather than trusting it to report a result that argues
+against the document it just read.
 """
 
 

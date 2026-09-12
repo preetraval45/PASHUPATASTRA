@@ -15,6 +15,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from pashupatastra import BlastRadius, Edge, Node
+from pashupatastra.events import Event
 
 from .db import connect
 from .graphmemory import MemoryGraph
@@ -314,3 +315,81 @@ class GraphStore:
             nodes = conn.execute("SELECT count(*) AS n FROM topology_node").fetchone()["n"]
             edges = conn.execute("SELECT count(*) AS n FROM topology_edge").fetchone()["n"]
         return int(nodes), int(edges)
+
+
+def events_by_id(store, event_ids) -> list[Event]:
+    """Stored rows rebuilt into `Event`, for engines that read the typed model.
+
+    The row shape and the domain model differ in one place: a row carries
+    `entity_key` — `host:ws-0148` — where `Event` carries a nested `EntityRef`.
+    Splitting on the first colon is correct rather than convenient, because
+    `EntityRef.key()` is `f"{kind}:{id}"` and a network-flow id contains further
+    colons of its own (`ws-0148->198.51.100.74:8443`); splitting on the last
+    would silently produce a different entity.
+
+    Ids that resolve to nothing are skipped rather than faked. A caller drafting
+    from these has to be able to tell that a record was missing, and an `Event`
+    invented to stand in for one would be indistinguishable from a real read.
+    """
+    from pashupatastra.events import EntityKind, EntityRef
+
+    if store is None:
+        return []
+
+    rebuilt: list[Event] = []
+    for event_id in event_ids:
+        row = store.event(event_id)
+        if row is None:
+            continue
+        key = str(row.get("entity_key") or "")
+        kind, _, identifier = key.partition(":")
+        if not identifier:
+            continue
+        try:
+            ref = EntityRef(kind=EntityKind(kind), id=identifier, name=identifier)
+            rebuilt.append(
+                Event.model_validate(
+                    {
+                        **{k: v for k, v in row.items() if k != "entity_key"},
+                        "entity_ref": ref.model_dump(),
+                    }
+                )
+            )
+        except (ValueError, KeyError):
+            # A row we cannot rebuild is dropped for the same reason it is not
+            # faked. The caller sees fewer events than it cited, which is the
+            # honest signal; a partially-invented one is not.
+            continue
+    return rebuilt
+
+
+def chain_times(store, incident) -> dict[str, datetime]:
+    """When each event the causal chain cites was observed.
+
+    One implementation, shared by the route and the chat tool. Two would be two
+    answers to "when did this step happen", and the counterfactual's entire
+    output is a comparison against those moments — so a drift between them would
+    show up as the page and the agent disagreeing about how much acting earlier
+    would have saved, which is the one number this feature exists to produce.
+
+    An id that resolves to nothing is simply absent. The counterfactual then
+    reports that step as untimed rather than placing it, because a step assumed
+    early inflates the estimate and one assumed late deflates it.
+    """
+    if store is None:
+        return {}
+
+    times: dict[str, datetime] = {}
+    for link in incident.causal_chain:
+        for ref in link.evidence:
+            if ref in times:
+                continue
+            row = store.event(ref)
+            if row is None:
+                continue
+            raw = row.get("occurred_at")
+            if isinstance(raw, datetime):
+                times[ref] = raw
+            elif isinstance(raw, str):
+                times[ref] = datetime.fromisoformat(raw)
+    return times

@@ -670,6 +670,152 @@ export interface Draft {
 export const getDraft = (incidentId: string, kind: string) =>
   get<Draft>(`/incidents/${encodeURIComponent(incidentId)}/draft/${kind}`);
 
+/** A Sigma rule drafted from one step of an incident (R71).
+ *
+ *  `mappings` is the part that makes this reviewable rather than impressive:
+ *  each entry names the telemetry field the Sigma field was read from and the
+ *  events that carried it, so a reader can check the rule against the evidence
+ *  instead of against how plausible it looks.
+ *
+ *  `valid` is the API reading its own output back through a Sigma parser, not a
+ *  claim the page makes on its behalf. */
+export interface DetectionRule {
+  incident_ref: string;
+  technique: { id: string; name: string; tactic: string } | null;
+  title: string;
+  status: "experimental";
+  rule_id: string;
+  /** False when every field is an instance value from this incident — an
+   *  indicator match rather than a detection for the technique. */
+  behavioural: boolean;
+  yaml: string;
+  valid: boolean;
+  problems: string[];
+  mappings: {
+    sigma_field: string;
+    source_field: string;
+    value: string;
+    refs: string[];
+    generalises: boolean;
+  }[];
+  /** Fields this technique's detection usually rests on that the telemetry
+   *  could not supply. */
+  gaps: { sigma_field: string; reason: string }[];
+  /** Fields we hold and deliberately did not map, with the reason. Separate
+   *  from `gaps`: one is a collection problem, the other a translation refused. */
+  not_mapped: { sigma_field: string; reason: string }[];
+  refs: string[];
+}
+
+export interface DetectionRuleIndex {
+  incident_ref: string;
+  techniques: { id: string; name: string; tactic: string }[];
+}
+
+export const getDetectionRules = (incidentId: string) =>
+  get<DetectionRuleIndex>(`/incidents/${encodeURIComponent(incidentId)}/detection-rule`);
+
+export const getDetectionRule = (incidentId: string, techniqueId: string) =>
+  get<DetectionRule>(
+    `/incidents/${encodeURIComponent(incidentId)}/detection-rule/${encodeURIComponent(
+      techniqueId,
+    )}`,
+  );
+
+/** One causal step, placed in time by the records that established it. */
+export interface TimelineStep {
+  index: number;
+  entity_key: string;
+  transition: string;
+  at: string;
+  refs: string[];
+}
+
+export interface Timeline {
+  incident_ref: string;
+  steps: TimelineStep[];
+  /** The entities an intervention could have been applied to — one per step.
+   *  Entities the incident merely mentions are excluded, because what blocking
+   *  something it never recorded would have done is not a question its records
+   *  can answer. */
+  askable: string[];
+}
+
+/** What acting on one entity at one moment would have prevented (R72).
+ *
+ *  `prevented` and `unavoidable` are two different things and the difference is
+ *  the whole point: a step later than the intervention that was never
+ *  downstream of it would have happened anyway, and counting it would inflate
+ *  the one number here anybody would quote.
+ *
+ *  `basis` carries the assumptions the records cannot settle. It is rendered,
+ *  not summarised — it is what makes this an estimate rather than a claim. */
+export interface Counterfactual {
+  incident_ref: string;
+  entity_key: string;
+  at: string;
+  /** The first record naming this entity. Acting earlier is refused. */
+  earliest_defensible: string;
+  summary: string;
+  prevented: TimelineStep[];
+  unavoidable: TimelineStep[];
+  already_happened: TimelineStep[];
+  untimed: { index: number; entity_key: string; reason: string }[];
+  avoided_entities: string[];
+  avoided_users: number;
+  gap_seconds: number;
+  basis: string[];
+  reach: string[];
+  refs: string[];
+}
+
+export const getTimeline = (incidentId: string) =>
+  get<Timeline>(`/incidents/${encodeURIComponent(incidentId)}/timeline`);
+
+/** The case for the leading alternative, and what answers it (R73).
+ *
+ *  `verdict` turns on one thing: whether something stored and resolvable
+ *  contradicts the rival. "unrefuted" does not mean the alternative is right —
+ *  it means the diagnosis has not earned its place over it, which is an open
+ *  question rather than a rival conclusion.
+ *
+ *  The confidence figures are shown but never decide. A confidence is a number
+ *  an author wrote, and the diagnosis asserting its own likelihood is the claim
+ *  under examination rather than evidence for it. */
+export interface Contest {
+  incident_ref: string;
+  verdict: "upheld" | "unrefuted";
+  leader: ContestCase;
+  rival: ContestCase;
+  argument: string;
+  ruled_out_by: string[];
+  /** Contradictions the incident claims that resolve to nothing. */
+  unresolved_rejection: string[];
+  /** Observations both explain — what makes them answers to one question. */
+  shared: string[];
+  separators: string[];
+  /** Records the rival accounts for and the diagnosis does not cite. */
+  unexplained_by_leader: string[];
+  refs: string[];
+}
+
+export interface ContestCase {
+  ref: string;
+  statement: string;
+  confidence: number;
+  supported_by: string[];
+  uncited: string[];
+}
+
+export const getContest = (incidentId: string) =>
+  get<Contest>(`/incidents/${encodeURIComponent(incidentId)}/contest`);
+
+export const getCounterfactual = (incidentId: string, entityKey: string, at: string) =>
+  get<Counterfactual>(
+    `/incidents/${encodeURIComponent(incidentId)}/counterfactual` +
+      `?entity_key=${encodeURIComponent(entityKey)}&at=${encodeURIComponent(at)}`,
+  );
+
 export interface PolicyModel {
   tiers: { tier: Tier; min_risk: number; max_risk: number; approvers: string[] }[];
   escalation: { blast_radius_entities: number; blast_radius_users: number };

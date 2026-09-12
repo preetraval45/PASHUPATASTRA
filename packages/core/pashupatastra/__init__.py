@@ -46,8 +46,11 @@ from .incidents import (
     VerificationCheck,
     incident_id,
 )
+from .contest import Contest, ContestRefused, contest
+from .counterfactual import Counterfactual, CounterfactualRefused, Intervention, counterfactual
 from .drafts import Draft, build_draft
 from .relations import Overlap, Relation, relate
+from .sigma import DetectionRule, SigmaError, draft_rule, rule_techniques
 from .topology import BlastRadius, Edge, Node, TopologyGraph
 
 __version__ = "0.1.0"
@@ -70,8 +73,19 @@ __all__ = [
     "Correlator",
     "STRATEGIES",
     "DetectionStrategy",
+    "Contest",
+    "ContestRefused",
+    "Counterfactual",
+    "CounterfactualRefused",
+    "DetectionRule",
+    "Intervention",
+    "contest",
+    "counterfactual",
     "Detector",
     "Ewma",
+    "SigmaError",
+    "draft_rule",
+    "rule_techniques",
     "Edge",
     "EntityKind",
     "EntityRef",

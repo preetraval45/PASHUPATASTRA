@@ -333,3 +333,491 @@ def test_the_palette_index_stays_small() -> None:
     regression nobody attributes to search."""
     items = client.get("/api/v1/search/index").json()["items"]
     assert all(set(item) <= {"kind", "label", "hint", "href"} for item in items)
+
+
+# --- R71: a drafted detection rule --------------------------------------------
+#
+# These seed their own incident rather than reading whichever one the deployment
+# happens to hold. The seeded infrastructure incident carries no ATT&CK mapping,
+# so every one of these skipped against it — three clauses of R71 reporting green
+# while measuring nothing, which is the failure this codebase keeps naming.
+
+
+@pytest.fixture(scope="module")
+def drafted() -> tuple[str, str]:
+    """An incident with one technique and the events its step cites, stored."""
+    from datetime import datetime, timedelta
+
+    from app.graph import entitystore
+    from app.store import STORE
+    from pashupatastra.events import (
+        EntityKind,
+        EntityRef,
+        Event,
+        EventClass,
+        Provenance,
+        SecurityPayload,
+        Severity,
+    )
+    from pashupatastra.incidents import (
+        AttackTechnique,
+        CausalLink,
+        Hypothesis,
+        Incident,
+        IncidentSeverity,
+    )
+
+    now = datetime.now().astimezone()
+    host = EntityRef(kind=EntityKind.HOST, id="ws-r71", name="ws-r71")
+    event = Event(
+        id="R71-a",
+        event_class=EventClass.SECURITY,
+        source="test",
+        occurred_at=now - timedelta(minutes=5),
+        observed_at=now - timedelta(minutes=5),
+        entity_ref=host,
+        severity=Severity.CRITICAL,
+        payload=SecurityPayload(detection_type="new_smb_peer", principal="ws-r71", confidence=0.9),
+        provenance=Provenance(source_system="test"),
+        labels={"summary": "ws-r71 opened SMB to two hosts never contacted before"},
+    )
+    entitystore().save_events([event])
+    incident = Incident(
+        id="INC-2026-0971",
+        severity=IncidentSeverity.CRITICAL,
+        opened_at=now,
+        affected_entities=[host],
+        hypotheses=[Hypothesis(statement="Lateral movement.", confidence=0.9, evidence=["R71-a"])],
+        causal_chain=[
+            CausalLink(
+                entity=host,
+                transition="SMB opened to two hosts never previously contacted",
+                evidence=["R71-a"],
+                attack_technique=AttackTechnique(
+                    id="T1021.002", name="SMB/Windows Admin Shares", tactic="Lateral Movement"
+                ),
+            )
+        ],
+    )
+    STORE.save(incident)
+    return incident.id, "T1021.002"
+
+
+def test_the_incident_lists_what_could_be_drafted(drafted: tuple[str, str]) -> None:
+    incident_id, technique_id = drafted
+    body = client.get(f"/api/v1/incidents/{incident_id}/detection-rule").json()
+    assert [t["id"] for t in body["techniques"]] == [technique_id]
+
+
+def test_a_drafted_rule_parses_as_sigma_over_the_route(drafted: tuple[str, str]) -> None:
+    """R71's first clause, checked on the shape a browser receives. The route
+    reads its own output back rather than asserting it is valid, so `valid` is
+    a measurement and this asserts the measurement came out clean."""
+    incident_id, technique_id = drafted
+    body = client.get(f"/api/v1/incidents/{incident_id}/detection-rule/{technique_id}").json()
+
+    assert body["valid"] is True, body["problems"]
+    assert body["problems"] == []
+    assert body["status"] == "experimental"
+    assert body["yaml"].lstrip().startswith("#")
+
+
+def test_every_mapped_field_names_its_source_field_and_its_records(
+    drafted: tuple[str, str],
+) -> None:
+    """R71's second clause. A Sigma field whose origin is unstated cannot be
+    told apart from one the writer invented."""
+    incident_id, technique_id = drafted
+    body = client.get(f"/api/v1/incidents/{incident_id}/detection-rule/{technique_id}").json()
+
+    assert body["mappings"], "a rule with no mapped field should not have been served"
+    for mapping in body["mappings"]:
+        assert mapping["source_field"], mapping["sigma_field"]
+        assert mapping["refs"] == ["R71-a"], mapping["sigma_field"]
+
+
+def test_the_uncertainty_is_inside_the_document_not_only_beside_it(
+    drafted: tuple[str, str],
+) -> None:
+    """R71's third clause. The YAML is what gets copied into a detection
+    repository; the JSON fields around it do not travel with it."""
+    incident_id, technique_id = drafted
+    body = client.get(f"/api/v1/incidents/{incident_id}/detection-rule/{technique_id}").json()
+    text = body["yaml"]
+
+    assert "DRAFT" in text
+    assert "x-provenance" in text
+    assert body["gaps"] and "x-gaps" in text
+    assert body["behavioural"] is False
+    assert "x-warning" in text and "WARNING" in text
+
+
+def test_a_hostname_never_reaches_a_username_field_over_the_route(
+    drafted: tuple[str, str],
+) -> None:
+    """The category error, checked where a reader would meet it. `principal` on
+    this event is a hostname, and a rule carrying it as SubjectUserName parses,
+    cites a real value and matches nothing."""
+    incident_id, technique_id = drafted
+    body = client.get(f"/api/v1/incidents/{incident_id}/detection-rule/{technique_id}").json()
+
+    assert "SubjectUserName" not in {m["sigma_field"] for m in body["mappings"]}
+    assert any(
+        g["sigma_field"] == "SubjectUserName" and "not an account" in g["reason"]
+        for g in body["not_mapped"]
+    )
+
+
+def test_a_technique_this_incident_does_not_carry_is_refused(drafted: tuple[str, str]) -> None:
+    incident_id, _ = drafted
+    response = client.get(f"/api/v1/incidents/{incident_id}/detection-rule/T9999")
+    assert response.status_code == 422
+    assert "T9999" in response.json()["detail"]
+
+
+def test_an_unknown_incident_has_no_rules() -> None:
+    assert client.get("/api/v1/incidents/INC-9999-9999/detection-rule").status_code == 404
+    assert (
+        client.get("/api/v1/incidents/INC-9999-9999/detection-rule/T1021.002").status_code == 404
+    )
+
+
+# --- R72: what acting earlier would have prevented -----------------------------
+#
+# Seeds its own incident for the reason the R71 tests do: the counterfactual
+# needs a chain with more than one timed step and an access edge between them,
+# and no seeded incident is guaranteed to have both.
+
+
+@pytest.fixture(scope="module")
+def gap() -> tuple[str, str, str]:
+    """An incident whose chain runs flow -> host over ninety minutes, with the
+    edge that makes the second step depend on the first."""
+    from datetime import datetime, timedelta
+
+    from app.api.routes import GRAPH
+    from app.graph import entitystore
+    from app.store import STORE
+    from pashupatastra import Edge, Node
+    from pashupatastra.events import (
+        EntityKind,
+        EntityRef,
+        Event,
+        EventClass,
+        Provenance,
+        SecurityPayload,
+        Severity,
+    )
+    from pashupatastra.incidents import (
+        CausalLink,
+        Hypothesis,
+        Incident,
+        IncidentSeverity,
+    )
+
+    now = datetime.now().astimezone()
+    flow = EntityRef(
+        kind=EntityKind.NETWORK_FLOW, id="ws-r72->198.51.100.9:8443", name="beacon-r72"
+    )
+    host = EntityRef(kind=EntityKind.HOST, id="ws-r72", name="ws-r72")
+
+    def event(event_id: str, entity: EntityRef, minutes: int) -> Event:
+        return Event(
+            id=event_id,
+            event_class=EventClass.SECURITY,
+            source="test",
+            occurred_at=now - timedelta(minutes=minutes),
+            observed_at=now - timedelta(minutes=minutes),
+            entity_ref=entity,
+            severity=Severity.CRITICAL,
+            payload=SecurityPayload(detection_type="rare_destination", confidence=0.9),
+            provenance=Provenance(source_system="test"),
+        )
+
+    entitystore().save_events([event("R72-a", flow, 120), event("R72-b", host, 30)])
+    GRAPH.upsert_nodes([Node(ref=flow), Node(ref=host)])
+    # The host depends on the flow: cutting the flow reaches the host.
+    GRAPH.upsert_edges(
+        [Edge(source=host.key(), target=flow.key(), kind="controlled_over", evidence=["R72-a"])]
+    )
+
+    incident = Incident(
+        id="INC-2026-0972",
+        severity=IncidentSeverity.CRITICAL,
+        opened_at=now,
+        affected_entities=[host],
+        hypotheses=[Hypothesis(statement="Beaconing.", confidence=0.9, evidence=["R72-a"])],
+        causal_chain=[
+            CausalLink(entity=flow, transition="outbound to a rare destination",
+                       evidence=["R72-a"]),
+            CausalLink(entity=host, transition="SMB to two new hosts", evidence=["R72-b"]),
+        ],
+    )
+    STORE.save(incident)
+    return incident.id, flow.key(), host.key()
+
+
+def test_the_timeline_places_each_step_and_offers_what_can_be_asked(
+    gap: tuple[str, str, str],
+) -> None:
+    incident_id, flow, host = gap
+    body = client.get(f"/api/v1/incidents/{incident_id}/timeline").json()
+
+    assert [s["entity_key"] for s in body["steps"]] == [flow, host]
+    assert body["askable"] == sorted([flow, host])
+    assert all(s["refs"] for s in body["steps"])
+
+
+def test_acting_early_reports_an_estimate_derived_from_the_records(
+    gap: tuple[str, str, str],
+) -> None:
+    """R72's first two clauses over the route: derived from stored timeline and
+    graph, and presented as an estimate with its basis stated."""
+    incident_id, flow, host = gap
+    timeline = client.get(f"/api/v1/incidents/{incident_id}/timeline").json()
+    at = timeline["steps"][0]["at"]
+
+    body = client.get(
+        f"/api/v1/incidents/{incident_id}/counterfactual",
+        params={"entity_key": flow, "at": at},
+    ).json()
+
+    assert body["summary"].startswith("Estimate.")
+    assert [s["entity_key"] for s in body["prevented"]] == [host]
+    assert body["avoided_entities"] == [host]
+    assert body["refs"] == ["R72-b"]
+    assert body["gap_seconds"] > 0
+    joined = " ".join(body["basis"])
+    assert "immediate and complete" in joined
+    assert "another route" in joined
+
+
+def test_acting_before_the_first_record_is_refused(gap: tuple[str, str, str]) -> None:
+    """R72's third clause. The question asks what we would have done knowing
+    something nothing had yet observed, and answering it measures clairvoyance
+    rather than response time."""
+    from datetime import datetime, timedelta
+
+    incident_id, flow, _ = gap
+    timeline = client.get(f"/api/v1/incidents/{incident_id}/timeline").json()
+    too_early = (
+        datetime.fromisoformat(timeline["steps"][0]["at"]) - timedelta(hours=1)
+    ).isoformat()
+
+    response = client.get(
+        f"/api/v1/incidents/{incident_id}/counterfactual",
+        params={"entity_key": flow, "at": too_early},
+    )
+    assert response.status_code == 422
+    assert "clairvoyance" in response.json()["detail"]
+
+
+def test_an_entity_the_incident_never_recorded_is_refused(gap: tuple[str, str, str]) -> None:
+    incident_id, _, _ = gap
+    timeline = client.get(f"/api/v1/incidents/{incident_id}/timeline").json()
+    response = client.get(
+        f"/api/v1/incidents/{incident_id}/counterfactual",
+        params={"entity_key": "host:not-in-this-incident", "at": timeline["steps"][0]["at"]},
+    )
+    assert response.status_code == 422
+    assert "not on" in response.json()["detail"]
+
+
+def test_a_malformed_moment_is_refused_rather_than_guessed(gap: tuple[str, str, str]) -> None:
+    incident_id, flow, _ = gap
+    response = client.get(
+        f"/api/v1/incidents/{incident_id}/counterfactual",
+        params={"entity_key": flow, "at": "yesterday afternoon"},
+    )
+    assert response.status_code == 422
+
+
+def test_acting_last_prevents_nothing_and_says_so(gap: tuple[str, str, str]) -> None:
+    incident_id, flow, _ = gap
+    from datetime import datetime, timedelta
+
+    timeline = client.get(f"/api/v1/incidents/{incident_id}/timeline").json()
+    late = (datetime.fromisoformat(timeline["steps"][-1]["at"]) + timedelta(minutes=5)).isoformat()
+
+    body = client.get(
+        f"/api/v1/incidents/{incident_id}/counterfactual",
+        params={"entity_key": flow, "at": late},
+    ).json()
+    assert body["prevented"] == []
+    assert body["gap_seconds"] == 0
+    assert "prevented nothing" in body["summary"]
+
+
+def test_an_unknown_incident_has_no_timeline() -> None:
+    assert client.get("/api/v1/incidents/INC-9999-9999/timeline").status_code == 404
+
+
+# --- R73: argue the other side -------------------------------------------------
+#
+# Both verdicts are seeded. The demo incidents all rule their alternative out, so
+# the case that matters most — the one where it does not get ruled out — would
+# otherwise never be exercised; and the fallback infrastructure incident cites
+# events that were never stored, so it refuses. A skip here would report three
+# clauses of R73 green while measuring none of them.
+
+
+@pytest.fixture(scope="module")
+def contested() -> tuple[str, str, str]:
+    """One incident whose alternative is beaten, one whose is not, one with no
+    alternative at all."""
+    from datetime import datetime, timedelta
+
+    from app.graph import entitystore
+    from app.store import STORE
+    from pashupatastra.events import (
+        EntityKind,
+        EntityRef,
+        Event,
+        EventClass,
+        Provenance,
+        SecurityPayload,
+        Severity,
+    )
+    from pashupatastra.incidents import (
+        CausalLink,
+        Hypothesis,
+        Incident,
+        IncidentSeverity,
+    )
+
+    now = datetime.now().astimezone()
+    host = EntityRef(kind=EntityKind.HOST, id="ws-r73", name="ws-r73")
+
+    entitystore().save_events(
+        [
+            Event(
+                id=ref,
+                event_class=EventClass.SECURITY,
+                source="test",
+                occurred_at=now - timedelta(minutes=10),
+                observed_at=now - timedelta(minutes=10),
+                entity_ref=host,
+                severity=Severity.WARNING,
+                payload=SecurityPayload(detection_type="regular_interval", confidence=0.8),
+                provenance=Provenance(source_system="test"),
+            )
+            for ref in ("R73-a", "R73-b", "R73-c")
+        ]
+    )
+
+    def incident(incident_id: str, hypotheses: list[Hypothesis]) -> str:
+        STORE.save(
+            Incident(
+                id=incident_id,
+                severity=IncidentSeverity.HIGH,
+                opened_at=now,
+                affected_entities=[host],
+                hypotheses=hypotheses,
+                causal_chain=[
+                    CausalLink(entity=host, transition="beaconed", evidence=["R73-a"])
+                ],
+            )
+        )
+        return incident_id
+
+    upheld = incident(
+        "INC-2026-0975",
+        [
+            Hypothesis(statement="Implant beaconing.", confidence=0.9,
+                       evidence=["R73-a", "R73-b"]),
+            Hypothesis(statement="A backup agent on its schedule.", confidence=0.05,
+                       evidence=["R73-b"], contradicted_by=["R73-c"]),
+        ],
+    )
+    unrefuted = incident(
+        "INC-2026-0973",
+        [
+            Hypothesis(statement="Implant beaconing.", confidence=0.9,
+                       evidence=["R73-a", "R73-b"]),
+            # Ranked far below and contradicted by nothing stored.
+            Hypothesis(statement="A backup agent on its schedule.", confidence=0.05,
+                       evidence=["R73-b"]),
+        ],
+    )
+    alone = incident(
+        "INC-2026-0974",
+        [Hypothesis(statement="Only one reading.", confidence=0.9, evidence=["R73-a"])],
+    )
+    return upheld, unrefuted, alone
+
+
+def _contest(incident_id: str):
+    return client.get(f"/api/v1/incidents/{incident_id}/contest")
+
+
+def test_the_rival_is_argued_and_the_rejection_cites_records(
+    contested: tuple[str, str, str],
+) -> None:
+    """R73's first two clauses over the route: a real competing hypothesis, and
+    a rejection that names the record answering it."""
+    upheld, _, _ = contested
+    body = _contest(upheld).json()
+
+    assert body["verdict"] == "upheld"
+    assert body["argument"].startswith("The case for the alternative")
+    assert body["shared"] == ["R73-b"], "the two explain none of the same observations"
+    assert body["ruled_out_by"] == ["R73-c"]
+    assert body["rival"]["supported_by"] == ["R73-b"]
+
+
+def test_the_alternative_can_win_over_the_route(contested: tuple[str, str, str]) -> None:
+    """R73's third clause. The same two statements as the case above, differing
+    only in whether anything stored contradicts the rival."""
+    _, unrefuted, _ = contested
+    body = _contest(unrefuted).json()
+
+    assert body["verdict"] == "unrefuted"
+    assert body["ruled_out_by"] == []
+    assert "Nothing stored rules it out" in body["argument"]
+    assert "ranked below" in body["argument"]
+
+
+def test_a_confidence_gap_alone_never_upholds_the_diagnosis(
+    contested: tuple[str, str, str],
+) -> None:
+    """The property the module turns on, where a reader meets it: 0.90 against
+    0.05 and the verdict is still that the rival stands."""
+    _, unrefuted, _ = contested
+    body = _contest(unrefuted).json()
+
+    assert body["leader"]["confidence"] > body["rival"]["confidence"] * 10
+    assert body["verdict"] == "unrefuted"
+
+
+def test_an_incident_with_no_rival_is_refused_rather_than_given_one(
+    contested: tuple[str, str, str],
+) -> None:
+    """Manufacturing a contest to avoid an empty panel is the rigour-shaped
+    version of having none."""
+    _, _, alone = contested
+    response = _contest(alone)
+    assert response.status_code == 422
+    assert "no other side" in response.json()["detail"]
+
+
+def test_the_demo_incidents_all_argue_a_rival_that_loses() -> None:
+    """The rubric's own claim, checked against the scenarios the Blue Team game
+    is played on: each has an explanation that is plausible and wrong, and
+    something stored rules it out."""
+    seen = 0
+    for incident in client.get("/api/v1/incidents").json():
+        response = _contest(incident["id"])
+        if response.status_code != 200:
+            continue
+        body = response.json()
+        if not body["incident_ref"].startswith("INC-2026-090"):
+            continue
+        seen += 1
+        assert body["verdict"] == "upheld", body["incident_ref"]
+        assert body["ruled_out_by"], body["incident_ref"]
+    if seen == 0:
+        pytest.skip("the security scenarios are not seeded in this configuration")
+
+
+def test_an_unknown_incident_has_no_contest() -> None:
+    assert _contest("INC-9999-9999").status_code == 404

@@ -392,7 +392,7 @@ def test_the_prompt_forbids_answering_a_cve_from_memory() -> None:
     """The rule that makes the retrieved advisory win over the recollection."""
     from app.agent.chat import INSTRUCTIONS, PROMPT_VERSION
 
-    assert PROMPT_VERSION == "6", "the prompt changed; the version must move with it"
+    assert PROMPT_VERSION == "9", "the prompt changed; the version must move with it"
     lowered = INSTRUCTIONS.lower()
     assert "what you remember does not count" in lowered
     assert "will not answer from memory" in lowered

@@ -30,6 +30,19 @@ ANALYST = AgentSpec(
         # is already public on `/incidents`, so this widens what can be asked
         # without widening what can be enumerated.
         "related_incidents",
+        # R71. Drafts a Sigma rule from one step of *this* incident. The
+        # technique argument is checked against the incident's own causal chain,
+        # so it widens what can be asked about the incident already on screen
+        # and not what can be asked about the estate.
+        "draft_detection_rule",
+        # R72. Walks this incident's own timeline and access edges. Scoped to
+        # entities on its causal chain, so it widens what can be asked about the
+        # incident on screen and not what can be asked about the estate.
+        "what_if_we_had_acted",
+        # R73. Reads only the hypotheses this incident already records and the
+        # store's answer about which of their refs resolve. Takes no argument,
+        # so there is nothing here to scope.
+        "argue_the_other_side",
     ],
     # Zero, and not as a placeholder. `agent_risk_limit` caps what may be
     # authorised without a human, so zero sends every action carrying any risk
@@ -43,6 +56,9 @@ ANALYST = AgentSpec(
     goals=[
         "Explain an incident from stored evidence",
         "Say whether another incident touched the same things, or that none did",
+        "Draft a detection rule from a step's telemetry, and say what it lacks",
+        "Estimate what acting earlier would have prevented, and what it would not",
+        "Argue the alternative explanation, and say what rules it out or that nothing does",
         "Name the action a request would require, and route it to a human",
     ],
 )
