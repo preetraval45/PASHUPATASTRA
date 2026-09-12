@@ -436,9 +436,17 @@ class EvaluateRequest(BaseModel):
     agent_risk_limit: int | None = None
 
 
-@router.post("/policy/evaluate", response_model=Verdict)
-def evaluate_policy(request: EvaluateRequest) -> Verdict:
-    """Dharma. The only way to obtain authorization to execute."""
+PREVIEW_CONSTRAINT = "preview"
+"""Marks a verdict that was computed to be shown, not to authorise anything.
+
+A preview is the same arithmetic as an evaluation with the ledger left alone,
+so the two verdicts are indistinguishable by their numbers. The mark is what
+lets `/policy/approve` refuse one: approving a verdict nobody recorded would put
+an approval in the trail with no evaluation before it.
+"""
+
+
+def _evaluate(request: EvaluateRequest) -> tuple[ActionSpec, Verdict]:
     settings = get_settings()
     try:
         action = get_action(request.action_id)
@@ -458,6 +466,28 @@ def evaluate_policy(request: EvaluateRequest) -> Verdict:
         incident_ref=request.incident_ref,
         agent_risk_limit=request.agent_risk_limit,
     )
+    return action, verdict
+
+
+@router.post("/policy/preview", response_model=Verdict)
+def preview_policy(request: EvaluateRequest) -> Verdict:
+    """Dharma's verdict, for display. Writes nothing.
+
+    Computing a verdict to *show* is not the act of authorising one. The incident
+    page asks what an action would need and from whom; asking that through
+    `/policy/evaluate` appended a record per page view, and 48% of the ledger
+    became renders (R93). Rule 6 audits decisions, approvals and executions —
+    not somebody reading a page.
+    """
+    _, verdict = _evaluate(request)
+    verdict.constraints[PREVIEW_CONSTRAINT] = "not recorded; evaluate before authorising"
+    return verdict
+
+
+@router.post("/policy/evaluate", response_model=Verdict)
+def evaluate_policy(request: EvaluateRequest) -> Verdict:
+    """Dharma. The only way to obtain authorization to execute."""
+    action, verdict = _evaluate(request)
     # Denials are recorded too — they document where autonomy stopped and why.
     AUDIT.append(
         AuditRecord(
@@ -619,6 +649,11 @@ class DenyRequest(BaseModel):
 @router.post("/policy/approve", response_model=Verdict)
 def approve(request: ApproveRequest) -> Verdict:
     verdict = request.verdict
+    if PREVIEW_CONSTRAINT in verdict.constraints:
+        raise HTTPException(
+            status_code=409,
+            detail="preview verdicts cannot be approved; obtain one from /policy/evaluate",
+        )
     if verdict.tier.value == "denied":
         raise HTTPException(status_code=403, detail="denied verdicts cannot be approved")
     if verdict.expires_at is not None and datetime.now().astimezone() > verdict.expires_at:

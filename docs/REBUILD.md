@@ -2692,7 +2692,7 @@ task here that produces its evidence and to the things only the owner can do.
 Needs **R59**. Runs before Phase 6, as Phases 5A–5D did. Nothing here is new
 capability; each task removes a thing a visitor already hit.
 
-- [ ] **R93 — A read must not write to the audit ledger.** Needs: nothing.
+- [x] **R93 — A read must not write to the audit ledger.** Needs: nothing.
   *Moved here from Phase R, where it was found; not renumbered.* The incident
   page's server render POSTs `/policy/evaluate` for the plan's riskiest step
   and twice more to price adopting each draft, and the route appends a record
@@ -2704,6 +2704,22 @@ capability; each task removes a thing a visitor already hit.
   **Done when:** loading an incident page any number of times adds no audit
   records, authorising an action still records exactly one, and a test counts
   the ledger before and after both.
+  Done. `POST /policy/preview` runs `_evaluate` — the same function
+  `/policy/evaluate` now calls — and returns without touching `AUDIT` or
+  `STORE.verdicts`; the incident page's three verdicts come from it.
+  **A preview cannot become an approval.** The two verdicts are the same
+  arithmetic and indistinguishable by their numbers, and `/policy/approve`
+  trusts the verdict in its body, so a previewed verdict posted back would have
+  put an approval in the trail with no evaluation before it. A preview carries
+  a `preview` constraint and approve refuses it with a 409 naming the recording
+  route. The web never approves anything, so nothing on the site changes; the
+  refusal is for whoever calls the API directly.
+  *Evidence: `test_a_preview_leaves_the_ledger_alone_and_an_evaluation_does_not`
+  counts the ledger — ten previews add nothing, one evaluation adds exactly
+  one, and the two verdicts agree on action, risk, tier, approvers and
+  reasons; `test_a_preview_verdict_cannot_be_approved` gets the 409. API suite
+  423 passing, `openapi.json` regenerated for the new route, web typecheck
+  clean. The 144 records already in the deployed ledger are R98's.*
 
 - [ ] **R98 — Fold what is already in the ledger.** Needs: **R93**.
   The 143 records R93 stops adding are still there, and the ledger is
@@ -3227,7 +3243,7 @@ before.
   **Done when:** no incident on the site is scripted, nothing links to a deleted
   id, and the landing page describes the real thing.
 
-- [ ] **R93 — A read must not write to the audit ledger.** Needs: nothing.
+- [x] **R93 — A read must not write to the audit ledger.** Needs: nothing.
   *Moved to Phase 5E on 12 September 2026, where it is the first task; the
   finding is kept here because this is where it was made.*
   Found while answering a question about the audit trail on 24 August 2026:

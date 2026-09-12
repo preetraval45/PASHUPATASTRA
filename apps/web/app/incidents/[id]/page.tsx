@@ -16,7 +16,7 @@ import { Scenarios } from "@/components/scenarios";
 import { Timeline } from "@/components/timeline";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
 import {
-  evaluatePolicy,
+  previewPolicy,
   getActions,
   getIncident,
   getIncidentAudit,
@@ -135,13 +135,15 @@ export default async function IncidentDetailPage({
 
   // Authorization is shown for the plan's riskiest step, evaluated against this
   // incident's real blast radius and confidence. The dashboard asks the policy
-  // engine rather than scoring anything itself.
+  // engine rather than scoring anything itself — and asks for a preview, since
+  // showing a verdict is not making one and a render must not write to the
+  // ledger.
   const riskiest = [...incident.plan].sort(
     (a, b) => (risk.get(b.action_id) ?? 0) - (risk.get(a.action_id) ?? 0),
   )[0];
   const spec = (actions ?? []).find((a) => a.id === riskiest?.action_id);
   const verdict = riskiest
-    ? await evaluatePolicy({
+    ? await previewPolicy({
         action_id: riskiest.action_id,
         incident_ref: incident.id,
         blast_radius_entities: incident.impact.blast_radius_entities,
@@ -155,7 +157,7 @@ export default async function IncidentDetailPage({
   // an action and the tier is who has to say yes.
   const scoreAdoption = (draft: typeof report) =>
     draft
-      ? evaluatePolicy({
+      ? previewPolicy({
           action_id: draft.adopt_action_id,
           incident_ref: incident.id,
           blast_radius_entities: incident.impact.blast_radius_entities,

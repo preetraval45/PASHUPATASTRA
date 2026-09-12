@@ -2644,6 +2644,45 @@
         "summary": "Policy Model Route"
       }
     },
+    "/api/v1/policy/preview": {
+      "post": {
+        "description": "Dharma's verdict, for display. Writes nothing.\n\nComputing a verdict to *show* is not the act of authorising one. The incident\npage asks what an action would need and from whom; asking that through\n`/policy/evaluate` appended a record per page view, and 48% of the ledger\nbecame renders (R93). Rule 6 audits decisions, approvals and executions \u2014\nnot somebody reading a page.",
+        "operationId": "preview_policy_api_v1_policy_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verdict"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Policy"
+      }
+    },
     "/api/v1/search/index": {
       "get": {
         "description": "Everything the command palette can jump to, in one compact list.\n\nBuilt here rather than assembled in the browser from four separate calls,\nbecause the palette's whole claim is that it is faster than the navigation\nit replaces. A palette that fires a request per keystroke is slower than\nclicking a link, and one that fires four on open is slower than the page it\nis opened from.\n\nCompact on purpose: a label, a hint and a href. The palette matches text and\nthen navigates, so anything else on the record is weight sent to every\nvisitor on every page for no reason. Advisories are capped because the feeds\nhold thousands and the palette is for reaching a thing you can name.",

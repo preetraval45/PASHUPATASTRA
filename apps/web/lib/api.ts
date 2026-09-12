@@ -270,14 +270,28 @@ export const getIncidentAudit = (id: string) =>
 /** Evaluate policy for an action. This is the only way to obtain authorization,
  *  and the dashboard never computes risk itself — a second implementation would
  *  be a second, contradictory answer. */
-export async function evaluatePolicy(body: {
+export async function evaluatePolicy(body: PolicyQuestion): Promise<Verdict | null> {
+  return post<Verdict>("/policy/evaluate", body);
+}
+
+export interface PolicyQuestion {
   action_id: string;
   incident_ref?: string | null;
   blast_radius_entities?: number;
   blast_radius_users?: number;
   diagnostic_confidence?: number;
-}): Promise<Verdict | null> {
-  return post<Verdict>("/policy/evaluate", body);
+}
+
+/** The same verdict, computed to be shown. Writes nothing to the audit ledger.
+ *
+ *  A page render is not a decision. `evaluatePolicy` appends a record every
+ *  time it is called, which is right for an operator asking for authorisation
+ *  and wrong for a page asking what authorisation would need — that was three
+ *  records per view of an incident, and one incident accumulated 144 identical
+ *  lines from being read (R93). Anything that renders a verdict uses this; the
+ *  recording call is for the moment somebody actually asks. */
+export async function previewPolicy(body: PolicyQuestion): Promise<Verdict | null> {
+  return post<Verdict>("/policy/preview", body);
 }
 
 export const getEntity = (key: string) =>

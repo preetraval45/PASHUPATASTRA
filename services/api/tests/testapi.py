@@ -183,6 +183,51 @@ def test_policy_denials_are_audited() -> None:
     assert any(r["kind"] == "policy_evaluation" for r in records)
 
 
+def _ledger(incident_ref: str) -> int:
+    return len(client.get("/api/v1/audit", params={"incident_ref": incident_ref}).json())
+
+
+def test_a_preview_leaves_the_ledger_alone_and_an_evaluation_does_not() -> None:
+    """R93. Reading a verdict is not making one.
+
+    The incident page renders a verdict three times per view; through
+    `/policy/evaluate` that was three audit records per page load, and 48% of
+    the ledger was renders. Counted before and after rather than asserted on
+    the route's word, because the bug was a route doing what it was written to
+    do.
+    """
+    ref = "INC-TEST-R93"
+    body = {"action_id": "isolate_host", "incident_ref": ref, "blast_radius_entities": 5}
+    before = _ledger(ref)
+    previews = [client.post("/api/v1/policy/preview", json=body) for _ in range(10)]
+    assert all(r.status_code == 200 for r in previews)
+    assert _ledger(ref) == before, "ten page views wrote to the audit ledger"
+
+    recorded = client.post("/api/v1/policy/evaluate", json=body)
+    assert recorded.status_code == 200
+    assert _ledger(ref) == before + 1, "authorising must still record exactly one"
+
+    # The arithmetic is the same; only the ledger differs.
+    preview, verdict = previews[0].json(), recorded.json()
+    for field in ("action_id", "effective_risk", "tier", "required_approvers", "tier_reasons"):
+        assert preview[field] == verdict[field]
+
+
+def test_a_preview_verdict_cannot_be_approved() -> None:
+    """A verdict nobody recorded must not become an approval with no
+    evaluation before it in the trail — the mark is what makes a preview a
+    preview rather than an evaluation that forgot to write."""
+    preview = client.post(
+        "/api/v1/policy/preview", json={"action_id": "block_ip", "incident_ref": "INC-TEST-R93"}
+    ).json()
+    assert "preview" in preview["constraints"]
+    refused = client.post(
+        "/api/v1/policy/approve", json={"verdict": preview, "approver": "operator"}
+    )
+    assert refused.status_code == 409
+    assert "preview" in refused.json()["detail"]
+
+
 def test_execution_is_audited_before_and_after() -> None:
     verdict = evaluate("restart_service", incident_ref="INC-TEST-0002")
     client.post(
