@@ -18,7 +18,7 @@
  * not. A menu is more clicks; unreachable navigation is infinite clicks.
  */
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
@@ -196,6 +196,30 @@ function NavLink({
       }`}
     >
       {label}
+      <Pending />
     </Link>
+  );
+}
+
+/**
+ * A pending mark beside the link that was clicked, for as long as the next
+ * page's server render is in flight (R100).
+ *
+ * `useLinkStatus` is Next's own; it reads the transition the enclosing `Link`
+ * started and costs no dependency. Without it a click on a `force-dynamic`
+ * route gave the visitor nothing at all until the new page's skeleton streamed
+ * in — two to three seconds that one reviewer read as the site being broken
+ * rather than busy. Announced to assistive tech through the `status` role;
+ * `aria-hidden` on the glyph so it is not read out as punctuation.
+ */
+function Pending() {
+  const { pending } = useLinkStatus();
+  if (!pending) return null;
+  return (
+    <span role="status" aria-label="Loading" className="ml-1.5 inline-block">
+      <span aria-hidden="true" className="inline-block animate-pulse text-[rgb(var(--faint))]">
+        ·
+      </span>
+    </span>
   );
 }

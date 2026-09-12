@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -42,7 +43,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const id = decodeURIComponent((await params).id);
-  const incident = await getIncident(id);
+  const incident = await incidentOnce(id);
   // No suffix here — the root layout's title template appends the site name,
   // and adding it again produced "INC-2026-0901 · Pashupatastra · Pashupatastra".
   return {
@@ -52,6 +53,11 @@ export async function generateMetadata({
     description: incident?.hypotheses[0]?.statement ?? `Incident ${id}.`,
   };
 }
+
+/** One fetch of the incident per request, shared by the metadata and the page.
+ *  Without it the two each asked the API, and the second wait was the first
+ *  of the four sequential round trips R100 removed. */
+const incidentOnce = cache((id: string) => getIncident(id));
 
 const KIND: Record<string, { label: string; status: Status }> = {
   observation: { label: "observed", status: "neutral" },
@@ -75,9 +81,16 @@ export default async function IncidentDetailPage({
   const { id: raw } = await params;
   const id = decodeURIComponent(raw);
 
+  // Two round trips, not six (R100). Everything that needs only the id goes
+  // in the first wave; everything that needs something the first wave returned
+  // — a rule per technique, the counterfactual at the first step's moment, the
+  // three policy previews — goes in the second, together. The old shape was
+  // metadata, then ten calls, then rules, then the counterfactual, then a
+  // verdict, then two more verdicts: the two to three seconds of skeleton a
+  // reviewer measured on every transition was mostly waiting in line.
   const [incident, actions, audit, all, policy, report, plan, ruleIndex, timeline, contest] =
     await Promise.all([
-    getIncident(id),
+    incidentOnce(id),
     getActions(),
     getIncidentAudit(id),
     getIncidents(),
@@ -114,24 +127,6 @@ export default async function IncidentDetailPage({
     notFound();
   }
 
-  // Fetched after the index rather than guessed from the chain, because which
-  // techniques can actually be drafted is the API's answer: a step whose events
-  // carry no mappable field is refused with a 422, which arrives here as null
-  // and is filtered out. A panel for every technique in the chain would promise
-  // rules that do not exist.
-  const rules = (
-    await Promise.all(
-      (ruleIndex?.techniques ?? []).map((technique) => getDetectionRule(id, technique.id)),
-    )
-  ).filter((rule) => rule !== null);
-
-  // Asked at the first step's own moment, which is the earliest the records
-  // would have justified acting on it. Anything earlier is refused — it would
-  // be asking what we would have done knowing something nobody had observed —
-  // and a refusal arrives as null, so no panel rather than an empty one.
-  const first = timeline?.steps?.[0] ?? null;
-  const cf = first ? await getCounterfactual(id, first.entity_key, first.at) : null;
-
   const risk = new Map((actions ?? []).map((a) => [a.id, a.base_risk]));
 
   // Authorization is shown for the plan's riskiest step, evaluated against this
@@ -143,33 +138,39 @@ export default async function IncidentDetailPage({
     (a, b) => (risk.get(b.action_id) ?? 0) - (risk.get(a.action_id) ?? 0),
   )[0];
   const spec = (actions ?? []).find((a) => a.id === riskiest?.action_id);
-  const verdict = riskiest
-    ? await previewPolicy({
-        action_id: riskiest.action_id,
-        incident_ref: incident.id,
-        blast_radius_entities: incident.impact.blast_radius_entities,
-        blast_radius_users: incident.impact.estimated_users_affected,
-        diagnostic_confidence: incident.hypotheses[0]?.confidence ?? 1,
-      })
-    : null;
-
-  // What adopting the report would cost, asked of the policy engine rather than
+  const ask = (action_id: string) =>
+    previewPolicy({
+      action_id,
+      incident_ref: incident.id,
+      blast_radius_entities: incident.impact.blast_radius_entities,
+      blast_radius_users: incident.impact.estimated_users_affected,
+      diagnostic_confidence: incident.hypotheses[0]?.confidence ?? 1,
+    });
+  // What adopting a draft would cost, asked of the policy engine rather than
   // assumed. The page shows the verdict instead of a button, because adopting is
   // an action and the tier is who has to say yes.
   const scoreAdoption = (draft: typeof report) =>
-    draft
-      ? previewPolicy({
-          action_id: draft.adopt_action_id,
-          incident_ref: incident.id,
-          blast_radius_entities: incident.impact.blast_radius_entities,
-          blast_radius_users: incident.impact.estimated_users_affected,
-          diagnostic_confidence: incident.hypotheses[0]?.confidence ?? 1,
-        })
-      : Promise.resolve(null);
-  const [adoptReport, adoptPlaybook] = await Promise.all([
+    draft ? ask(draft.adopt_action_id) : Promise.resolve(null);
+
+  // Asked at the first step's own moment, which is the earliest the records
+  // would have justified acting on it. Anything earlier is refused — it would
+  // be asking what we would have done knowing something nobody had observed —
+  // and a refusal arrives as null, so no panel rather than an empty one.
+  const first = timeline?.steps?.[0] ?? null;
+
+  const [verdict, adoptReport, adoptPlaybook, cf, ...ruleResults] = await Promise.all([
+    riskiest ? ask(riskiest.action_id) : Promise.resolve(null),
     scoreAdoption(report),
     scoreAdoption(plan),
+    first ? getCounterfactual(id, first.entity_key, first.at) : Promise.resolve(null),
+    // Fetched after the index rather than guessed from the chain, because which
+    // techniques can actually be drafted is the API's answer: a step whose
+    // events carry no mappable field is refused with a 422, which arrives here
+    // as null and is filtered out. A panel for every technique in the chain
+    // would promise rules that do not exist.
+    ...(ruleIndex?.techniques ?? []).map((technique) => getDetectionRule(id, technique.id)),
   ]);
+  const rules = ruleResults.filter((rule) => rule !== null);
 
   return (
     <Page

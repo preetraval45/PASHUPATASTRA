@@ -306,3 +306,74 @@ def test_no_read_path_leaks_the_tables_own_keys(store) -> None:
             assert isinstance(row["payload"], dict)
             assert isinstance(row["provenance"], dict)
             assert isinstance(row["labels"], dict)
+
+
+# --- R99: the recent-events index ----------------------------------------------
+
+
+def _entry(n: int, source: str = "urlhaus") -> dict:
+    return {"id": f"{source}-{n:04d}", "occurred_at": f"2026-09-12T{n // 60:02d}:{n % 60:02d}:00+00:00"}
+
+
+def test_the_index_keeps_the_newest_and_drops_the_rest() -> None:
+    from app.dynamo import merge_recent
+
+    existing = [_entry(n) for n in range(300, 0, -1)]
+    fresh = [_entry(n) for n in range(600, 590, -1)]
+    merged = merge_recent(existing, fresh, cap=300)
+    assert len(merged) == 300
+    assert [e["id"] for e in merged[:10]] == [_entry(n)["id"] for n in range(600, 590, -1)]
+    assert merged[-1]["id"] == _entry(11)["id"], "the ten oldest fell off the end"
+
+
+def test_a_re_reported_event_is_indexed_once() -> None:
+    """A feed re-reporting an indicator rewrites the same event id; the index
+    must not list it twice or `recent_events` returns it twice."""
+    from app.dynamo import merge_recent
+
+    older = {"id": "urlhaus-0001", "occurred_at": "2026-09-12T01:00:00+00:00"}
+    newer = {"id": "urlhaus-0001", "occurred_at": "2026-09-12T02:00:00+00:00"}
+    merged = merge_recent([older], [newer])
+    assert merged == [newer]
+
+
+def test_selection_across_sources_is_newest_first_and_bounded() -> None:
+    from app.dynamo import select_recent
+
+    index = {
+        "urlhaus": [_entry(n, "urlhaus") for n in (50, 30, 10)],
+        "cisa-kev": [_entry(n, "cisa-kev") for n in (40, 20)],
+    }
+    chosen = select_recent(index, limit=3)
+    assert [e["id"] for e in chosen] == ["urlhaus-0050", "cisa-kev-0040", "urlhaus-0030"]
+
+
+def test_the_index_is_the_same_order_the_partition_read_gave() -> None:
+    """The old read sorted the whole partition by `occurred_at` descending; a
+    reader must see the same order from the index, or the Observatory's day
+    grouping shifts on deploy."""
+    from app.dynamo import merge_recent, select_recent
+
+    rows = [_entry(n) for n in (5, 1, 9, 3, 7)]
+    partition_order = sorted(rows, key=lambda r: r["occurred_at"], reverse=True)
+    indexed = select_recent({"urlhaus": merge_recent([], rows)}, limit=5)
+    assert [e["id"] for e in indexed] == [e["id"] for e in partition_order]
+
+
+@needs_table
+def test_recent_events_come_from_the_index_and_match_the_partition(store) -> None:
+    """Against a real table: the indexed read returns the same newest rows the
+    partition read did, and never touches `_all` once the index exists."""
+    calls: list[str] = []
+    original = store._all
+
+    def counting(partition: str):
+        calls.append(partition)
+        return original(partition)
+
+    store._all = counting  # type: ignore[method-assign]
+    first = store.recent_events(limit=20)
+    calls.clear()
+    second = store.recent_events(limit=20)
+    assert "EVENT" not in calls, "the second read went back to the partition"
+    assert [r["id"] for r in first] == [r["id"] for r in second]

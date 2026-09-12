@@ -892,3 +892,16 @@ def test_no_calibration_figure_is_invented() -> None:
     in the public surface may carry a field that looks like one."""
     spec = app.openapi()
     assert "calibration" not in str(spec).lower()
+
+
+def test_the_warm_task_primes_the_indexes_and_beats_once() -> None:
+    """R99. The handler's keep-alive: reads the recent-events index so a
+    visitor's first request finds it built, and counts one beat for the day.
+    Against the memory backend there is nothing durable to beat on, and the
+    task says so rather than inventing a count."""
+    from app.tasks import warm
+
+    result = warm()
+    assert result["task"] == "warm"
+    assert "primed" in result
+    assert result["durable"] is False or isinstance(result["beats_today"], int)

@@ -121,12 +121,17 @@ def main() -> int:
                 # interval, so the network never goes idle and a timing taken
                 # that way measures the poll. What the reviewer felt is the
                 # server render, which is time-to-first-byte of the document.
-                response = page.goto(args.site + route, wait_until="load", timeout=90_000)
-                ttfb = page.evaluate(
-                    "() => { const n = performance.getEntriesByType('navigation')[0]; "
-                    "return n ? n.responseStart - n.requestStart : -1; }"
-                )
-                elapsed = ttfb / 1000
+                # `commit` fires when the document's response headers arrive:
+                # the server render is over, the body is streaming. Wall clock
+                # from request to that moment is what a visitor waits with a
+                # blank tab. (`performance.navigation` was tried first and
+                # reported 28 ms for pages that plainly took seconds — the
+                # navigation entry is not what it seems under a soft
+                # navigation, and a number that cannot be right is not kept.)
+                started = time.perf_counter()
+                response = page.goto(args.site + route, wait_until="commit", timeout=90_000)
+                elapsed = time.perf_counter() - started
+                page.wait_for_load_state("load")
                 timings.setdefault(route, []).append(elapsed)
                 status = response.status if response else 0
                 who = (

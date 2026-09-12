@@ -26,22 +26,16 @@ logging.getLogger().setLevel(logging.INFO)
 _http = Mangum(app, lifespan="off")
 
 SCHEDULED_TASK = "ingest_feeds"
+WARM_TASK = "warm"
 
 
 def handler(event, context):
+    # The tasks live in `app/tasks.py`, which imports nothing Lambda-specific,
+    # so they can be tested where `mangum` is not installed.
+    from .tasks import ingest, warm
+
     if isinstance(event, dict) and event.get("task") == SCHEDULED_TASK:
-        return _ingest()
+        return ingest()
+    if isinstance(event, dict) and event.get("task") == WARM_TASK:
+        return warm()
     return _http(event, context)
-
-
-def _ingest() -> dict[str, object]:
-    """Poll the threat feeds. Imported inside the branch so an HTTP request
-    never pays for modules it will not use."""
-    from .backend import durable
-    from .feeds.ingest import cursors_for, run
-    from .graph import entitystore
-
-    backend = durable()
-    summary = run(store=entitystore(), cursors=cursors_for(backend), limit=25)
-    logging.getLogger(__name__).info("feed ingest: %s", summary)
-    return {"task": SCHEDULED_TASK, "feeds": summary, "durable": backend is not None}

@@ -2758,7 +2758,7 @@ capability; each task removes a thing a visitor already hit.
   — in both the timeline and the trail, with `audit-0` through `audit-11`
   each present exactly once. 5/5 node tests, web typecheck clean.*
 
-- [ ] **R99 — Name the 503 before fixing it.** Needs: nothing.
+- [~] **R99 — Name the 503 before fixing it.** Needs: nothing.
   Both reviewers saw an HTTP 503 on the first request of nearly every route,
   followed by a quiet success. Nothing in the app emits a 503 on a read route
   — only `/agent/chat` does, and only when no model answers — and a cold start
@@ -2780,8 +2780,7 @@ capability; each task removes a thing a visitor already hit.
   "API unreachable".
   **Done when:** the fifty-navigation run reports zero responses at or above
   500, twice, an hour apart, and the cause is written here in one sentence.
-
-- [ ] **R100 — One wave, not four.** Needs: **R99**.
+- [~] **R100 — One wave, not four.** Needs: **R99**.
   The incident page makes about fifteen API calls per render in four
   sequential round trips — `generateMetadata` fetches the incident and the page
   fetches it again, then ten calls at once, then a detection rule per
@@ -2796,8 +2795,26 @@ capability; each task removes a thing a visitor already hit.
   **Done when:** a script counts the round trips per render at two or fewer,
   and server render time on the deployed incident page is measured before and
   after and written here.
+  Code done; the before-and-after on the deployed page waits for R106.
+  `incidentOnce = cache(getIncident)` gives the metadata and the page one
+  fetch between them. Wave one is every call that needs only the id; wave
+  two — the verdict preview, the two adoption previews, the counterfactual
+  at the first step's moment, and a rule per technique — is one
+  `Promise.all` after it. Six sequential round trips became two.
+  `lib/waves.test.ts` reads the page's source and holds it to that shape:
+  exactly two `Promise.all` waits, no API call awaited on its own between
+  them (the not-found fallback excepted), and the metadata sharing the
+  page's fetch. Read from the source because the count is a property of how
+  the page is written, and a regression to a solitary `await` is what it
+  would catch.
+  Five routes had no `loading.tsx` — observatory, blue team, how it works,
+  ask, overview — and now do, each shaped like its page. The navigation
+  links show a pending mark through Next's own `useLinkStatus` for as long
+  as the next page's render is in flight, announced through a `status`
+  role; no dependency added.
+  *Evidence: 18 node tests, web typecheck and `next build` clean.*
 
-- [ ] **R101 — Observatory tells the truth about failure.** Needs: **R99**.
+- [x] **R101 — Observatory tells the truth about failure.** Needs: **R99**.
   `No feed named "undefined"` is not a bad query parameter — the filter links
   never serialise one. It is what the page prints when `/intel` fails while
   `/intel/status` succeeds, because the only failure it knows how to name is
@@ -2808,6 +2825,21 @@ capability; each task removes a thing a visitor already hit.
   **Done when:** a test renders the page against a null `/intel` and a healthy
   `/intel/status` and finds the offline state, with the word `undefined`
   nowhere in it.
+  Done, on the client half of R99 landed early: `lib/http.ts` gives every
+  request a typed failure — `missing` for a 404, `unavailable` for a 5xx,
+  `offline` for nothing answering — and one retry after 300 ms on the second
+  two; a 404 is an answer and is never retried. `get` and `post` sit on it, so
+  every page inherited the retry without changing, and `getResult` is the
+  typed form for the pages that must tell an outage from a not-found. The
+  Observatory decision is `lib/observatory.ts`: *unknown source* only when a
+  source was asked for and the API said `missing`; everything else, including
+  a 503 with a source named, is the offline state.
+  *Evidence: `lib/http.test.ts` — a 503 then a 200 is the 200 and the page
+  never learns, a dropped connection is retried once and a second drop is
+  offline, a 404 is never retried, the retry waits; `lib/observatory.test.ts`
+  — a failed `/intel` with no source is offline for all three kinds, a 503
+  with a source is still offline, only a 404 with a source names it. Web
+  typecheck clean.*
 
 - [x] **R102 — The debrief cannot contradict the score.** Needs: **R27, R64**.
   The reviewer scored 100 and read "you opened the evidence that rules out the

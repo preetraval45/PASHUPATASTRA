@@ -70,6 +70,37 @@ def _numbers_to_decimal(value: Any) -> Any:
     return value
 
 
+RECENT_CAP = 300
+"""Newest events remembered per source. Enough for `/intel` (200) and the
+palette index (80) with room to spare, and small enough that the item stays
+well under DynamoDB's 400 KB — about 25 KB at this cap."""
+
+
+def merge_recent(existing: list[dict], fresh: list[dict], cap: int = RECENT_CAP) -> list[dict]:
+    """The newest `cap` entries across what was indexed and what just arrived.
+
+    Deduplicated by id — a feed re-reporting an indicator rewrites the same
+    event, and an index that listed it twice would return it twice. Sorted by
+    `occurred_at` then id, newest first, the same order `recent_events`
+    served when it read the whole partition, so nothing a reader saw changes.
+    """
+    by_id: dict[str, dict] = {}
+    for entry in list(existing) + list(fresh):
+        current = by_id.get(entry["id"])
+        if current is None or entry["occurred_at"] > current["occurred_at"]:
+            by_id[entry["id"]] = {"id": entry["id"], "occurred_at": entry["occurred_at"]}
+    return sorted(by_id.values(), key=lambda e: (e["occurred_at"], e["id"]), reverse=True)[:cap]
+
+
+def select_recent(index: dict[str, list[dict]], limit: int) -> list[dict]:
+    """The newest `limit` entries across several sources' indexes."""
+    return sorted(
+        (entry for rows in index.values() for entry in rows),
+        key=lambda entry: (entry["occurred_at"], entry["id"]),
+        reverse=True,
+    )[:limit]
+
+
 class DynamoStore:
     """Durable store. Mirrors the surface `PostgresStore` and `MemoryGraph` offer."""
 
@@ -250,7 +281,88 @@ class DynamoStore:
                         "labels": json.dumps(dict(event.labels)),
                     }
                 )
+        # The newest-first index per source, kept on the way in. `recent_events`
+        # reads it instead of the partition (R99).
+        by_source: dict[str, list[dict]] = {}
+        for event in events:
+            by_source.setdefault(event.source, []).append(
+                {"id": event.id, "occurred_at": event.occurred_at.isoformat()}
+            )
+        for source, fresh in by_source.items():
+            self._put_recent(source, merge_recent(self._get_recent(source), fresh))
         return len(events)
+
+    # --- the recent-events index ---------------------------------------------
+    #
+    # The EVENT partition is keyed by event id, so "the newest fifty" has no
+    # cheap query: the old `recent_events` read the whole partition and sorted
+    # it in Python. That read grows by every hourly feed poll, and on 12
+    # September 2026 it took 5 to 30 seconds — past API Gateway's limit, which
+    # answers 503. `/search/index` calls it from the layout on every route, so
+    # every page waited on it and the first request of nearly every route was
+    # the 503 both reviewers reported.
+    #
+    # Rather than a second index on the table — the free tier's 25 capacity
+    # units are already spent, and a global secondary index costs more of them
+    # — one small item per source in the META partition lists its newest
+    # `RECENT_CAP` events, maintained by the only writer of feed events. A read
+    # is then a handful of small gets and one batch fetch of exactly the rows
+    # it will return. Missing items (a store from before this existed) are
+    # rebuilt from one full read, once, and never read that way again.
+
+    def _get_recent(self, source: str) -> list[dict]:
+        row = self.table.get_item(
+            Key={"PK": self._pk("META"), "SK": f"RECENT#{source}"}
+        ).get("Item")
+        return json.loads(row["events"]) if row and row.get("events") else []
+
+    def _put_recent(self, source: str, entries: list[dict]) -> None:
+        self.table.put_item(
+            Item={
+                "PK": self._pk("META"),
+                "SK": f"RECENT#{source}",
+                "events": json.dumps(entries),
+                "at": datetime.now().astimezone().isoformat(),
+            }
+        )
+
+    def _all_recent(self) -> dict[str, list[dict]]:
+        from boto3.dynamodb.conditions import Key
+
+        page = self.table.query(
+            KeyConditionExpression=Key("PK").eq(self._pk("META"))
+            & Key("SK").begins_with("RECENT#")
+        )
+        return {
+            row["SK"].removeprefix("RECENT#"): json.loads(row.get("events") or "[]")
+            for row in page.get("Items", [])
+        }
+
+    def _rebuild_recent(self) -> dict[str, list[dict]]:
+        """One full read, to build the index for a store written before it existed."""
+        by_source: dict[str, list[dict]] = {}
+        for row in self._all("EVENT"):
+            by_source.setdefault(str(row.get("source")), []).append(
+                {"id": row["id"], "occurred_at": str(row.get("occurred_at", ""))}
+            )
+        built = {source: merge_recent([], rows) for source, rows in by_source.items()}
+        for source, entries in built.items():
+            self._put_recent(source, entries)
+        return built
+
+    def _fetch_rows(self, ids: list[str]) -> dict[str, dict]:
+        """The stored rows for these event ids, by id, in batches of 100."""
+        rows: dict[str, dict] = {}
+        for start in range(0, len(ids), 100):
+            chunk = ids[start : start + 100]
+            keys = [{"PK": self._pk("EVENT"), "SK": event_id} for event_id in chunk]
+            request = {self.table_name: {"Keys": keys}}
+            while request:
+                page = self.table.meta.client.batch_get_item(RequestItems=request)
+                for row in page.get("Responses", {}).get(self.table_name, []):
+                    rows[row["SK"]] = row
+                request = page.get("UnprocessedKeys") or {}
+        return rows
 
     def quarantine(self, events: list) -> int:
         """Counted, not kept.
@@ -290,6 +402,23 @@ class DynamoStore:
             Limit=limit,
         ).get("Items", [])
         return [self._event_row(row) for row in rows]
+
+    def _entity_rows(self, entity_key: str) -> list[dict]:
+        """Every stored row for one entity, as stored, through the entity index."""
+        from boto3.dynamodb.conditions import Key
+
+        rows: list[dict] = []
+        query: dict[str, Any] = {
+            "IndexName": "ByEntity",
+            "KeyConditionExpression": Key("GSI1PK").eq(f"{self.namespace}#ENTITY#{entity_key}"),
+        }
+        while True:
+            page = self.table.query(**query)
+            rows.extend(page.get("Items", []))
+            last = page.get("LastEvaluatedKey")
+            if not last:
+                return rows
+            query["ExclusiveStartKey"] = last
 
     def count_events(self) -> int:
         from boto3.dynamodb.conditions import Key
@@ -431,7 +560,12 @@ class DynamoStore:
 
         worst: dict[str, str] = {}
         latest: dict[str, str] = {}
-        for row in self._all("EVENT"):
+        # Per node through the entity index, not a read of every event ever
+        # stored: the map has eleven nodes and the partition has every feed
+        # entry since August, and only the first set is on the map (R99).
+        for row in (
+            event for node in self._all("NODE") for event in self._entity_rows(node["SK"])
+        ):
             key = row.get("entity_key")
             if not key:
                 continue
@@ -555,18 +689,57 @@ class DynamoStore:
         which works at twenty-four entries and stops working at the first real
         feed.
         """
-        rows = self._all("EVENT")
         if sources:
-            wanted = set(sources)
-            rows = [row for row in rows if row.get("source") in wanted]
-        rows.sort(key=lambda row: str(row.get("occurred_at", "")), reverse=True)
+            index = {source: self._get_recent(source) for source in sources}
+            if not any(index.values()):
+                # Nothing indexed for any of these: a store from before the
+                # index existed. Build it once from the partition.
+                built = self._rebuild_recent()
+                index = {source: built.get(source, []) for source in sources}
+        else:
+            index = self._all_recent() or self._rebuild_recent()
+        entries = select_recent(index, limit)
+        rows = self._fetch_rows([entry["id"] for entry in entries])
         # `_event_row`, not `_plain`. The row as stored carries the table's own
         # keys and holds payload, provenance and labels as JSON strings; the
         # normaliser is what turns it back into the shape every other read
         # returns. Skipping it published `PK`, `GSI1PK` and the namespace to
         # anyone calling the route, and handed them three fields to parse
         # themselves.
-        return [self._event_row(row) for row in rows[:limit]]
+        return [
+            self._event_row(rows[entry["id"]]) for entry in entries if entry["id"] in rows
+        ]
+
+    # --- heartbeat -------------------------------------------------------------
+
+    def heartbeat(self, day: str) -> int:
+        """Count one beat against `day`, atomically, and return the day's total.
+
+        Written by the warm task (R99). `expected_beats_per_day` beats is a day
+        the function answered every five minutes; fewer is time it did not.
+        """
+        response = self.table.update_item(
+            Key={"PK": self._pk("META"), "SK": f"HEARTBEAT#{day}"},
+            UpdateExpression="ADD beats :one SET #at = :at",
+            ExpressionAttributeNames={"#at": "at"},
+            ExpressionAttributeValues={":one": 1, ":at": datetime.now().astimezone().isoformat()},
+            ReturnValues="ALL_NEW",
+        )
+        return int(response["Attributes"]["beats"])
+
+    def heartbeats(self, days: int = 30) -> dict[str, int]:
+        """Beats per day for the last `days` days that have any."""
+        from boto3.dynamodb.conditions import Key
+
+        page = self.table.query(
+            KeyConditionExpression=Key("PK").eq(self._pk("META")) & Key("SK").begins_with("HEARTBEAT#"),
+            ScanIndexForward=False,
+            Limit=days,
+        )
+        return {
+            row["SK"].removeprefix("HEARTBEAT#"): int(row.get("beats", 0))
+            for row in page.get("Items", [])
+        }
 
     # --- threat feed cursors -------------------------------------------------
 
