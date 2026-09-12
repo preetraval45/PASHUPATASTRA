@@ -75,3 +75,11 @@ def test_a_doi_in_the_file_reaches_both_renderings() -> None:
     rendered = _generator().render({**cff, "doi": "10.5281/zenodo.0000000"})
     assert "doi = {10.5281/zenodo.0000000}" in rendered["bibtex"]
     assert rendered["apa"].endswith("https://doi.org/10.5281/zenodo.0000000")
+
+
+def test_the_readme_carries_the_same_bibtex_as_the_site() -> None:
+    """R111. The README's citation is copied from the generated block, and
+    this is what stops it drifting from the file the block came from."""
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    committed = json.loads(GENERATED.read_text(encoding="utf-8"))
+    assert committed["bibtex"] in readme, "update the Cite section in README.md"

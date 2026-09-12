@@ -3122,7 +3122,7 @@ that cannot survive being checked is worse than none.
   **Done when:** a dry run from two browsers yields a table with n=2, and the
   protocol names what the study can and cannot claim.
 
-- [ ] **R111 — README as a research project page.** Needs: nothing.
+- [x] **R111 — README as a research project page.** Needs: nothing.
   The README does not name the author, link the live site, the paper draft or
   the benchmark, or say how to cite. It reads as a platform scaffold. It should
   read as what the repository now is: author, live URL, paper, benchmark and
@@ -3130,6 +3130,20 @@ that cannot survive being checked is worse than none.
   `buildinfo.py`'s rule that nothing is named a manifest cannot back.
   **Done when:** every link in it resolves and every capability it claims is a
   ticked task in this file.
+  Done. The README opened with *Phase 0 — no runtime code yet*, which stopped
+  being true in August. It now names the author, links the live site, says
+  in one paragraph what is real and what is written, states the three
+  properties the design rests on, carries a status table that points at this
+  file rather than restating it, a research section that links the draft
+  paper with its own admission of what it lacks, the benchmark and the
+  generated tables, instructions that run the API in the deployed
+  configuration, the BibTeX from `CITATION.cff`, and a licence section that
+  says the decision is pending and what that means for a reader. The
+  platform section now separates the target platform from what the demo
+  actually runs on.
+  *Evidence: every relative link resolves (checked by script); the README's
+  BibTeX is held equal to the generated block by a test; every capability
+  named in the status table is a ticked task above.*
 
 - [ ] **R112 — Custom domain.** Needs: **the purchase** — the owner's.
   Plain `.com` if it is free, per the review. The code is already env-driven
