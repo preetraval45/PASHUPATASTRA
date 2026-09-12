@@ -277,6 +277,17 @@ Phase 5D ─ the capability menu           needs R74   ← a menu, not a checkli
   R84 is held behind S2 on purpose — per-user history needs accounts
   whichever were chosen ───────► R87 (deploy + review)
 
+Phase 5E ─ what two reviewers hit        needs R59   ← runs before Phase 6
+  R93 ──► R98      R99 ──► R100 ──► R101
+  R27 ──► R102     R21 ──► R103     R22 ──► R104     R68 ──► R105
+  R93, R98..R105 ─────────────► R106 (deploy + review, carries R74's measurements)
+
+Phase 5F ─ evidence                      needs R106  ← mapped in "O1 visa roadmap.md"
+  R99 ──► R107 ──► R109
+  R108 (licence decision first)     R111     R112 (domain purchase first)
+  R110 ──► (docs/research/STUDY.md)
+  R107..R111 ──────────────────► R113 (deploy + review)
+
 Phase 6 ─ tenancy and identity           needs R18, R59, R55
   S1 ──► S2 ──► S3 ──► S4 ──► S5        the order is not negotiable:
                        S3 ──► S6        tenancy before sign-in, scoping
@@ -301,7 +312,8 @@ continuing the `R` sequence, because they are a different kind of work: `R` is
 stranger can sign up for". The polish pass of 24 August 2026 continues the `R`
 sequence at `R56` and hangs its phases off Phase 5 as **5A–5D**, the way Phase
 2A was inserted after Phase 2 — renumbering Phases 6–8 would have invalidated
-every `S` dependency written against them for the sake of tidier arithmetic.
+every `S` dependency written against them for the sake of tidier arithmetic. The review pass of 12 September 2026 continues at `R98` as
+Phases **5E–5F**, for the same reason; `R93` is not renumbered, it is moved.
 
 ---
 
@@ -2642,6 +2654,283 @@ or per-user persistence belongs to Phase 6, not to this one.
 
 ---
 
+## The review pass, added 12 September 2026
+
+Two people went through the deployed site as a SOC analyst would — every
+section, and deliberately trying to break it — and wrote up what they found.
+The same week an O-1A strategy document arrived that treats the project as the
+centrepiece of an evidence case. All three are folded in here rather than kept
+as separate documents, for the reason the polish pass gave: a second plan is
+how two plans start disagreeing.
+
+**What the reviews got right, and what was stale.** The audit duplication, the
+first-request 503, the Observatory's `No feed named "undefined"`, the Blue Team
+sentence that contradicts its own board, and the ungrounded answer that still
+reads as an answer — all real, all reproduced against the code, and each is a
+task below with its cause named. The second review also reported no author, no
+link preview and no reachable *how it works* page; those shipped at R57, R16
+and R54 and are on every page of the current deployment, so that reviewer was
+reading an older build. Nothing is rebuilt for a finding that is already false.
+And "mobile is an unverified gap" is answered by R14 and R67 — 375, 768, 1024
+and 1280, measured by `verifyui.py` on the deployed site — so it is cited, not
+redone.
+
+**The rule that orders this pass:** the ledger comes first. Every page view of
+an incident has been writing three audit records, and every task after it that
+counts anything in the ledger would be counting page views.
+
+The strategy document's engineering half becomes **Phase 5F**. Its other half —
+paper venue, judging, letters, coverage, a domain, a licence, a DOI — is not
+engineering and does not belong in a delivery plan; it lives in
+[O1 visa roadmap.md](O1%20visa%20roadmap.md), which maps each criterion to the
+task here that produces its evidence and to the things only the owner can do.
+
+---
+
+## Phase 5E — What two reviewers hit
+
+Needs **R59**. Runs before Phase 6, as Phases 5A–5D did. Nothing here is new
+capability; each task removes a thing a visitor already hit.
+
+- [ ] **R93 — A read must not write to the audit ledger.** Needs: nothing.
+  *Moved here from Phase R, where it was found; not renumbered.* The incident
+  page's server render POSTs `/policy/evaluate` for the plan's riskiest step
+  and twice more to price adopting each draft, and the route appends a record
+  unconditionally — so the reviewer's `isolate_host: risk 67 → senior` ×144 is
+  144 page views. The fix is the one R93 already states: computing a verdict to
+  *display* is not the act of authorising one. `POST /policy/preview` runs the
+  same evaluator and records nothing; `/policy/evaluate` keeps recording,
+  because it is the call an approval is made against.
+  **Done when:** loading an incident page any number of times adds no audit
+  records, authorising an action still records exactly one, and a test counts
+  the ledger before and after both.
+
+- [ ] **R98 — Fold what is already in the ledger.** Needs: **R93**.
+  The 143 records R93 stops adding are still there, and the ledger is
+  append-only. Consecutive records with the same kind, summary and actor
+  collapse to one row carrying `×N` and the first and last timestamps, in the
+  loop timeline and the incident's audit panel, with every individual record
+  behind an expander — R56's shape, applied to the trail. A retention sweep
+  that deletes them is *offered*, not done: the fold makes it unnecessary, and
+  the first deletion from an append-only ledger is a precedent worth not
+  setting for tidiness.
+  **Done when:** INC-2026-0903's trail renders one approval row where it
+  rendered 144, a test feeds a fixture with a known run of duplicates and
+  asserts the fold count and that no record id is lost, and every folded
+  record is still reachable by its anchor.
+
+- [ ] **R99 — Name the 503 before fixing it.** Needs: nothing.
+  Both reviewers saw an HTTP 503 on the first request of nearly every route,
+  followed by a quiet success. Nothing in the app emits a 503 on a read route
+  — only `/agent/chat` does, and only when no model answers — and a cold start
+  hits once per container, not once per navigation. So the cause is not
+  readable from the code, and guessing at it would be exactly the invented
+  diagnosis this console refuses elsewhere. `scripts/verify503.py` drives fifty
+  navigations in a real browser and records every response at or above 500
+  with its URL and the headers that say who answered — `x-vercel-error`,
+  `x-vercel-id`, `apigw-requestid`, `server` — beside the API's own CloudWatch
+  `Init Duration` for the window.
+  Then the fix by cause, and both are prepared: if it is Lambda init, an
+  EventBridge `warm` task every five minutes on the existing handler (8,640
+  invocations a month against an always-free million), writing a heartbeat that
+  R107 later reads as uptime; if it is Vercel throttling prefetches of
+  `force-dynamic` pages, a prefetch policy on the navigation links. Either way,
+  `get` and `post` in `lib/api.ts` retry once on a 5xx or a network error with
+  a short backoff, and return a **typed failure** — missing, unavailable,
+  offline — where today every one of those collapses to `null` and renders as
+  "API unreachable".
+  **Done when:** the fifty-navigation run reports zero responses at or above
+  500, twice, an hour apart, and the cause is written here in one sentence.
+
+- [ ] **R100 — One wave, not four.** Needs: **R99**.
+  The incident page makes about fifteen API calls per render in four
+  sequential round trips — `generateMetadata` fetches the incident and the page
+  fetches it again, then ten calls at once, then a detection rule per
+  technique and the counterfactual, then three policy evaluations. That is the
+  two to three seconds of skeleton the reviewer measured on every transition.
+  `React.cache()` makes the metadata and the page share one fetch; everything
+  that needs the incident runs in one `Promise.all` after it. The five routes
+  with no `loading.tsx` — observatory, blue team, how it works, ask, overview —
+  get one shaped like the page (R13's rule), and the navigation links show a
+  pending state through `useLinkStatus`, which Next already provides, so the
+  wait reads as loading rather than as broken and no dependency is added.
+  **Done when:** a script counts the round trips per render at two or fewer,
+  and server render time on the deployed incident page is measured before and
+  after and written here.
+
+- [ ] **R101 — Observatory tells the truth about failure.** Needs: **R99**.
+  `No feed named "undefined"` is not a bad query parameter — the filter links
+  never serialise one. It is what the page prints when `/intel` fails while
+  `/intel/status` succeeds, because the only failure it knows how to name is
+  an unknown source. With R99's typed failure it says "no feed named X" only
+  when a source was asked for and the API said 404, and shows the offline
+  state otherwise. On the one page whose whole claim is that the data is real,
+  a wrong error message is the worst available outcome.
+  **Done when:** a test renders the page against a null `/intel` and a healthy
+  `/intel/status` and finds the offline state, with the word `undefined`
+  nowhere in it.
+
+- [ ] **R102 — The debrief cannot contradict the score.** Needs: **R27, R64**.
+  The reviewer scored 100 and read "you opened the evidence that rules out the
+  plausible alternative" beside a board marking a different piece of decisive
+  evidence as never opened. Both are true, and that is the bug: the score
+  credits opening *any one* entity holding a contradicting record, while the
+  board is built by a second resolver — the entity's eight most recent events
+  — and the sentence about misses ignores whether proof was found elsewhere.
+  One resolver for both. And the sentence is written relative to the score:
+  where proof was found, "it was also on Y, which you did not open"; only where
+  it was not, "you never looked".
+  **Done when:** a test builds a scenario with two decisive entities, opens
+  one, and asserts full investigation marks with a board and a sentence that
+  agree; `verifydebrief.py` plays the same case on the deployed site.
+
+- [ ] **R103 — An answer with no citation is not shown as an answer.** Needs: **R21, R68**.
+  The injection attempt was refused, which is the property that matters. But
+  the mechanism underneath it is weaker than it looks: `grounded: false` is a
+  label attached *after* the prose, and the prose is still returned verbatim.
+  A model that claimed to have flagged and logged something, with nothing to
+  cite, would reach the screen with a warning beside it — and a warning beside
+  a confident sentence is read as the sentence. So an answerable turn that
+  keeps zero refs has its text **withheld**: the visitor sees a fixed sentence
+  saying the model produced an answer it could not cite and it was not shown;
+  the withheld text goes to the audit record, where a reviewer can read it.
+  The schema already carries `answerable` and `evidence_refs`; this makes the
+  two the only path to prose.
+  Then the regression battery the reviewer asked for, as one fixture read by
+  two consumers: `testagentchat.py` with a fake gateway, deterministic, in CI
+  — and `verifyagent.py` against the live model. The battery gains the
+  reviewer's exact injection, isolate-host on an incident with no host entity,
+  and an ambiguous question, beside the four it has. Each case states what must
+  be true of the reply: no proposed action, no execution, and no prose where
+  nothing was cited.
+  **Done when:** the fake-gateway case returning "I have isolated the host"
+  with no refs is withheld and queues nothing, every battery case passes
+  against the live model, and the withheld text is in the ledger.
+
+- [ ] **R104 — Tokens against the allowance.** Needs: **R22**.
+  Every answer already shows its token count and every `agent_turn` record
+  carries `tokens` and `cached`. Rolled up: `GET /usage` — turns and tokens
+  today against the daily allowance, the share answered from cache, and
+  fourteen days of the same — computed from the ledger, not from a counter
+  that could drift from it. Spend is zero and the route says why, because a
+  cost panel reading `$0.00` with no explanation looks like a panel nobody
+  wired. One line on `/ask` in R61's style: *today 48k of 200k tokens · 61%
+  from cache*.
+  **Done when:** a script recomputes every figure from `/audit` and matches
+  the route, and the line on the page equals the route.
+
+- [ ] **R105 — Confidence is labelled for what it is.** Needs: **R68**.
+  "86% confidence" on a scripted scenario is a number the scenario's author
+  typed. That is legitimate for a written scenario and it is not a measured
+  rate, and the reviewer was right that the page lets a reader take it for
+  one. Wherever a hypothesis confidence renders — the incident, the agent's
+  evidence block, the Blue Team reveal — one sentence says which it is.
+  Calibration proper — stated confidence against a human's later verdict —
+  needs outcomes to exist, and none do on this deployment; it lands with
+  **R96**, and nothing here invents a calibration figure to fill the gap.
+  **Done when:** every rendered confidence carries the label, and no
+  `calibration` field exists anywhere in the API.
+
+- [ ] **R106 — Deploy Phase 5E and review.** Needs: **R93, R98–R105**.
+  Carries **R74**'s measurements too: Phase 5C is still undeployed, so the
+  browser halves of `verifycontest`, `verifycounterfactual`, `verifysigma` and
+  `verifyrelation`, and their live-model clauses, run here.
+  **Done when:** R99's run shows zero 5xx, `verifysite.py` crawls clean,
+  `verifyui.py` passes at every breakpoint, and loading the beaconing incident
+  ten times leaves its audit count unchanged — all on the deployed site.
+  **Stop here for review.**
+
+---
+
+## Phase 5F — Evidence
+
+Needs **R106**. Each task here produces something a petition exhibit, a
+citation or a journalist needs, from data the platform already holds. The
+mapping from criterion to task is in
+[O1 visa roadmap.md](O1%20visa%20roadmap.md); the rule that governs every task
+is the site's own — nothing typed, everything recomputable — because evidence
+that cannot survive being checked is worse than none.
+
+- [ ] **R107 — `/impact`.** Needs: **R99**.
+  One page carrying the numbers the strategy document asks for, each naming
+  where it came from: indicators and reports ingested to date and every feed's
+  cursor, from the store; agent turns and Blue Team attempts to date, from the
+  ledger; audit records; **page views**, counted server-side per route per day
+  in DynamoDB with no cookie and no client beacon — reported as views, with a
+  sentence on why unique visitors are refused (uniques need an identifier, and
+  R28 settled that this site does not mint one); stars, forks and contributors
+  from the GitHub API, cached hourly on the server; uptime from R99's
+  heartbeat; and a milestone timeline **generated from git** —
+  `scripts/milestones.py` reads the `(R##)` commit dates, so the timeline
+  cannot list a milestone that did not land.
+  **Done when:** each figure equals an independent recount by a script that
+  reads the underlying source rather than the page.
+
+- [ ] **R108 — Cite this work.** Needs: **a licence** — the owner's decision.
+  `CITATION.cff` at the root, which GitHub renders as *Cite this repository*,
+  validated by `cffconvert`; a cite block on `/how-it-works` and `/impact`
+  carrying BibTeX, APA and the permalink; the DOI read from `NEXT_PUBLIC_DOI`
+  and shown as *no DOI yet* until one exists rather than as a placeholder that
+  looks like one. Zenodo mints a DOI from a GitHub release and requires a
+  licence; README says the licence is pending clearance, so the DOI is blocked
+  on that decision and nothing here pretends otherwise.
+  **Done when:** the BibTeX on the page round-trips from the committed
+  `CITATION.cff`, and the file validates.
+
+- [ ] **R109 — `/press`.** Needs: **R107**.
+  A media kit, built so that someone writing about the project does not have
+  to research it: one plain paragraph, the artwork under BRAND.md's
+  constraints, the live `/impact` numbers, a contact line, and screenshots
+  **captured from the deployed site by `scripts/buildpress.py`** at 1440 — not
+  mockups, and regenerated by one command when the site changes, the way
+  `buildbrand.py` regenerates the icons.
+  **Done when:** every image on the page was captured from the URL it
+  depicts, and nothing overflows at 375.
+
+- [ ] **R110 — The study the console can run.** Needs: **R102**.
+  The strategy document's experiment — ten to thirty people investigating
+  incidents, timed and scored — has its apparatus already built: Blue Team
+  scores investigations on the server. An opt-in study mode adds what a study
+  needs and nothing else: a consent sentence, timings from briefing to first
+  evidence to committed diagnosis, the entities opened, and the score, stored
+  under the anonymous token R28 already issues. No names, no emails.
+  `scripts/studyreport.py` produces tables the way `papertables.py` does, and
+  `docs/research/STUDY.md` states the protocol, the metrics, the target N, and
+  the confound the paper draft already admits — the scenarios are
+  self-authored.
+  **Done when:** a dry run from two browsers yields a table with n=2, and the
+  protocol names what the study can and cannot claim.
+
+- [ ] **R111 — README as a research project page.** Needs: nothing.
+  The README does not name the author, link the live site, the paper draft or
+  the benchmark, or say how to cite. It reads as a platform scaffold. It should
+  read as what the repository now is: author, live URL, paper, benchmark and
+  generated tables, status, citation, how to run — with the stack list held to
+  `buildinfo.py`'s rule that nothing is named a manifest cannot back.
+  **Done when:** every link in it resolves and every capability it claims is a
+  ticked task in this file.
+
+- [ ] **R112 — Custom domain.** Needs: **the purchase** — the owner's.
+  Plain `.com` if it is free, per the review. The code is already env-driven
+  (`NEXT_PUBLIC_SITE_URL`); what remains is setting it, redirecting
+  `pashupatastra.vercel.app` so nothing already shared breaks, and re-verifying
+  canonical, Open Graph, sitemap and `CITATION.cff` against the new host.
+  **Done when:** the old URL redirects, and R16's nine-route metadata check
+  passes on the new one.
+
+- [ ] **R113 — Deploy Phase 5F and review.** Needs: **R107–R111**.
+  **Done when:** `/impact` and `/press` are live, the recount scripts match
+  the deployed figures, and `verifysite.py` and `verifyui.py` pass with the
+  new routes included.
+  **Stop here for review.**
+
+**Held, and stated rather than quietly dropped.** Judging other people's Blue
+Team write-ups needs accounts, so it sits behind **S2** exactly as R84 does.
+Calibration tracking sits behind **R96**. Submitting the paper is the owner's
+call, which ROADMAP.md already records, and nothing here submits it for them.
+
+---
+
 ## Phase 6 — Tenancy and identity *(the floor a SaaS stands on)*
 
 Needs **R18**, **R55** and **R59**. Everything up to here is one console showing one
@@ -2939,6 +3228,8 @@ before.
   id, and the landing page describes the real thing.
 
 - [ ] **R93 — A read must not write to the audit ledger.** Needs: nothing.
+  *Moved to Phase 5E on 12 September 2026, where it is the first task; the
+  finding is kept here because this is where it was made.*
   Found while answering a question about the audit trail on 24 August 2026:
   rendering `/incidents/[id]` POSTs to `/policy/evaluate`, which appends an
   append-only audit record. The page is `force-dynamic`, so **every page view
