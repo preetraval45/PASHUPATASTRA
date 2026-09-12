@@ -5,11 +5,12 @@ import { Fresh } from "@/components/fresh";
 import { IntelGroupRow, sourceAbout, sourceName } from "@/components/intel";
 import { Ago, Empty, Offline, Page, Panel } from "@/components/ui";
 import {
-  getIntel,
+  getIntelResult,
   getIntelStatus,
   type FeedStatus,
   type IntelGroup,
 } from "@/lib/api";
+import { observatoryState } from "@/lib/observatory";
 
 export const metadata: Metadata = {
   title: "Observatory",
@@ -36,21 +37,23 @@ export default async function ObservatoryPage({
 }) {
   const { source } = await searchParams;
 
-  const [intel, status] = await Promise.all([
-    getIntel(LIMIT, source),
+  const [result, status] = await Promise.all([
+    getIntelResult(LIMIT, source),
     getIntelStatus(),
   ]);
 
-  // `null` from an unreachable API and `null` from an unknown source parameter
-  // are the same value, so the pair is disambiguated by asking a second, cheap
-  // question rather than telling a visitor the system is down when they mistyped.
-  if (intel === null) {
-    if (status === null) return <Offline />;
+  // The failure says which thing happened. The old page had only `null`, and
+  // disambiguated by whether `/intel/status` answered — so a transient failure
+  // on `/intel` beside a healthy status printed `No feed named "undefined"`,
+  // naming a source nobody asked for. "No feed named X" is now said only when
+  // a source was asked for and the API said there is no such thing (R101).
+  if (!result.ok) {
+    if (observatoryState(result.failure, source) === "offline") return <Offline />;
     return (
       <Page title="Observatory" description="Recent threat intelligence, as stored.">
         <Panel title="Unknown source">
           <Empty art="ledger" title={`No feed named "${source}".`}>
-            Known feeds: {Object.keys(status.feeds).join(", ")}.{" "}
+            {status && <>Known feeds: {Object.keys(status.feeds).join(", ")}. </>}
             <Link href="/observatory" className="underline decoration-dotted">
               Show everything
             </Link>
@@ -60,6 +63,7 @@ export default async function ObservatoryPage({
       </Page>
     );
   }
+  const intel = result.data;
 
   // Split by whether the thing is still up, because that is the difference
   // between "block this" and "note that this happened". The status came back

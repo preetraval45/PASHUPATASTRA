@@ -6,6 +6,10 @@
  * a second implementation here would be a second source of truth (the Grounding ADR).
  */
 
+import { type Failure, type Result, request } from "@/lib/http";
+
+export type { Failure, Result };
+
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -231,31 +235,22 @@ export interface Health {
   };
 }
 
+/** The typed form: a page that needs to know *which* failure happened —
+ *  missing, unavailable, offline — asks this. Every request, typed or not, is
+ *  retried once on a 5xx or a dropped connection (R99, `lib/http.ts`). */
+export const getResult = <T>(path: string) => request<T>(`${API_BASE}${path}`);
+
 async function post<T>(path: string, body: unknown): Promise<T | null> {
-  try {
-    const response = await fetch(`${API_BASE}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      cache: "no-store",
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  }
+  const result = await request<T>(`${API_BASE}${path}`, { method: "POST", body });
+  return result.ok ? result.data : null;
 }
 
 async function get<T>(path: string): Promise<T | null> {
-  try {
-    const response = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    // The dashboard degrades to an offline state rather than erroring — an
-    // operator who cannot reach the API still needs the page to tell them so.
-    return null;
-  }
+  // The dashboard degrades to an offline state rather than erroring — an
+  // operator who cannot reach the API still needs the page to tell them so.
+  // Callers that must tell a 404 from an outage use `getResult`.
+  const result = await request<T>(`${API_BASE}${path}`);
+  return result.ok ? result.data : null;
 }
 
 export const getHealth = () => get<Health>("/health");
@@ -518,6 +513,21 @@ export interface IntelGroup {
   active: boolean | null;
   history: IntelReport[];
 }
+
+export type Intel = {
+  sources: string[];
+  count: number;
+  reports: number;
+  window_hours: number;
+  groups: IntelGroup[];
+};
+
+/** The Observatory's feed, with the failure kept. An unknown source is a 404
+ *  and an outage is not, and the page said the wrong one for weeks (R101). */
+export const getIntelResult = (limit = 200, source?: string) =>
+  getResult<Intel>(
+    `/intel?limit=${limit}${source ? `&source=${encodeURIComponent(source)}` : ""}`,
+  );
 
 export const getIntel = (limit = 200, source?: string) =>
   get<{
