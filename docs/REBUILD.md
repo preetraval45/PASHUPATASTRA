@@ -3055,6 +3055,15 @@ capability; each task removes a thing a visitor already hit.
   With the install fixed, the api job reached its tests for the first time
   since August and found what the install failure had been hiding — see
   R114. Five of six jobs are green.
+  **The Vercel failure is not this code either.** GitHub's deployment record
+  shows every Git-triggered Vercel build failing — Dependabot's 8 September
+  preview, its one-line bumps today, and both of this phase's pushes — while
+  the CI web job builds the same commits clean on Linux. Every deployment
+  that ever worked came from the CLI (`vercel --prod`, then the alias), and
+  this session's CLI token is expired. The likeliest cause is the project's
+  Root Directory: the CLI uploads `apps/web` as the root, and a Git build
+  that starts at the repository root finds no Next app. Owner's to check in
+  the project settings; until then, deploy from the CLI as before.
 
 - [ ] **R114 — The Postgres-backed suite is order-dependent.** Needs: nothing.
   CI runs the API suite against a Postgres service; locally it runs against
