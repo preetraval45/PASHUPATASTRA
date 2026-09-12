@@ -1459,6 +1459,7 @@ def _turn_record(result, incident, message: str) -> AuditRecord:
             + ("from cache" if result.cached else f"{result.tokens} tokens")
             + (f" · called {', '.join(tools)}" if tools else "")
             + ("" if result.grounded else " · NOT GROUNDED")
+            + (" · WITHHELD" if result.withheld else "")
             + ("" if result.answerable else " · not in the evidence")
         ),
         detail={
@@ -1482,6 +1483,12 @@ def _turn_record(result, incident, message: str) -> AuditRecord:
             "dropped_considered": result.dropped_considered,
             "proposed_action_id": result.proposed_action_id,
             "answer": result.answer,
+            # What the model said when its text was withheld from the visitor.
+            # In the ledger and nowhere else: the visitor saw the sentence in
+            # `answer`, and this is what a reviewer reads to decide whether the
+            # model was inventing a record or claiming to have acted.
+            "withheld": result.withheld,
+            "withheld_answer": result.withheld_text,
             "trace": result.trace,
         },
     )

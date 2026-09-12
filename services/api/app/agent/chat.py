@@ -201,6 +201,12 @@ def prompt_digest() -> str:
     return hashlib.sha256(INSTRUCTIONS.encode("utf-8")).hexdigest()[:12]
 
 
+WITHHELD = (
+    "The assistant produced an answer it could not tie to any stored record, so "
+    "the text is not shown. It is kept in the audit trail, marked as withheld."
+)
+
+
 class ChatAnswer(BaseModel):
     """What one turn produced, including how much of it can be trusted."""
 
@@ -253,6 +259,22 @@ class ChatAnswer(BaseModel):
     cached: bool = False
     """True when this turn cost nothing. Shown rather than hidden — a reader
     deciding how current an answer is should know it was computed earlier."""
+
+    withheld: bool = False
+    """True when the model answered and cited nothing that resolved, so its
+    text was replaced by `WITHHELD` rather than shown.
+
+    `grounded: false` used to be a label beside the prose, and a warning beside
+    a confident sentence is read as the sentence — a model that claimed to have
+    flagged and logged something, with no record behind it, reached the screen
+    (R103). Prose now has exactly one path to the reader: at least one citation
+    that resolved, or an honest `answerable: false`."""
+
+    withheld_text: str | None = Field(default=None, exclude=True)
+    """What the model actually said, for the audit trail and nothing else.
+    Excluded from serialisation so no client can render it as an answer; the
+    route copies it into the ledger explicitly, where a reviewer can read it
+    labelled for what it is."""
 
 
 def _verify(refs: list[str], available: set[str]) -> tuple[list[str], list[str]]:
@@ -387,8 +409,17 @@ def answer(
     considered, dropped_considered = _considered(output.get("considered"), available)
     answerable = bool(output.get("answerable", True))
 
+    text = str(output.get("answer") or "").strip()
+    # An answerable answer that cites nothing resolvable is not shown. The
+    # schema already has the two honest exits — refs that resolve, or
+    # `answerable: false` — and this closes the third one, prose with a warning
+    # attached. The text is kept for the ledger, not thrown away: a model
+    # asserting something it could not cite is worth a reviewer's look.
+    withheld = answerable and not kept and bool(text)
     result = ChatAnswer(
-        answer=str(output.get("answer") or "").strip(),
+        answer=WITHHELD if withheld else text,
+        withheld=withheld,
+        withheld_text=text if withheld else None,
         proposed_action_id=_known_action(output.get("proposed_action_id")),
         evidence_refs=kept,
         answerable=answerable,
@@ -415,4 +446,4 @@ def answer(
     return result
 
 
-__all__ = ["ChatAnswer", "GatewayError", "answer"]
+__all__ = ["WITHHELD", "ChatAnswer", "GatewayError", "answer"]

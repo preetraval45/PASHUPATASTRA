@@ -10,6 +10,20 @@ from pashupatastra import PolicyViolation
 
 client = TestClient(app)
 
+# A few tests assert the *infrastructure* fixture — its action ids and its demo
+# incident. CI also runs this suite in the deployed configuration (security
+# domain, demo scenarios seeded), because that is the only configuration in
+# which the chat battery, the R20 proposal test and the Blue Team tests run at
+# all; a suite whose most important tests skip on every run is green for the
+# wrong reason. These three say which fixture they are about instead of failing.
+from app.config import get_settings as _settings  # noqa: E402
+from pashupatastra.dharma import ActionDomain as _Domain  # noqa: E402
+
+infrastructure_fixture = pytest.mark.skipif(
+    _settings().action_domain not in (None, _Domain.INFRASTRUCTURE),
+    reason="asserts the infrastructure fixture; this run serves the security domain",
+)
+
 
 def evaluate(action_id: str, **kwargs: object) -> dict:
     body: dict[str, object] = {"action_id": action_id}
@@ -37,6 +51,7 @@ def test_health_flags_a_non_durable_audit_trail() -> None:
     assert (body["audit_storage"] == "memory") == (body["status"] == "degraded")
 
 
+@infrastructure_fixture
 def test_action_registry_is_exposed() -> None:
     actions = client.get("/api/v1/actions").json()
     ids = {a["id"] for a in actions}
@@ -262,6 +277,7 @@ def test_missing_observation_fails_verification() -> None:
     assert [c["name"] for c in failed] == ["error_rate"]
 
 
+@infrastructure_fixture
 def test_demo_incident_is_available() -> None:
     """Looked up by id rather than by position: the store also holds incidents
     written by other tests, and ordering is by recency."""
@@ -274,6 +290,7 @@ def test_demo_incident_is_available() -> None:
     assert demo["hypotheses"][0]["evidence"], "hypotheses must cite evidence"
 
 
+@infrastructure_fixture
 def test_incident_detail_keeps_plan_and_causal_chain() -> None:
     """The detail route once returned an incident with an empty plan and no
     causal chain, and rendered without complaint — an empty section looks like

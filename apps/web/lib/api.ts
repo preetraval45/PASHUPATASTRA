@@ -372,6 +372,10 @@ export type ChatAnswer = {
   dropped_refs: string[];
   answerable: boolean;
   grounded: boolean;
+  /** True when the model answered and cited nothing that resolved, so `answer`
+   *  is the fixed sentence saying its text was withheld. The text itself is in
+   *  the audit trail and deliberately not in this response. */
+  withheld: boolean;
   proposed_action_id: string | null;
   verdict: Verdict | null;
   approval_id: string | null;

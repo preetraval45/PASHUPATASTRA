@@ -13,6 +13,7 @@ The live path is exercised separately by `scripts/verifychat.py`, which is where
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 from app.agent import cache as answer_cache
@@ -1476,3 +1477,112 @@ def test_the_prompt_forbids_arguing_the_other_side_from_the_model() -> None:
     assert "argue_the_other_side" in lowered
     assert "unrefuted" in lowered
     assert "plausible-and-wrong" in lowered
+
+
+# --- R103: an answer with no citation is not shown as an answer ----------------
+
+BATTERY = json.loads((Path(__file__).with_name("battery.json")).read_text(encoding="utf-8"))
+
+
+def _scripted_gateway(output: dict):
+    """A gateway whose model says exactly `output`, refs included verbatim."""
+    from pashupatastra.gateway import ConversationResponse
+
+    class Scripted:
+        provider = type("P", (), {"name": "scripted", "model": "m", "available": lambda self: True})()
+
+        def converse(self, request, dispatch):
+            return ConversationResponse(
+                output=dict(output), usage=Usage(), model="m", provider="scripted", purpose="chat"
+            )
+
+    return Scripted()
+
+
+def _run_case(monkeypatch, case: dict) -> tuple[dict, list, list]:
+    """Send one battery case through the real route with its scripted model."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.api import routes
+    from app.engines import buddhi
+
+    if routes.STORE.get(case["incident"]) is None:
+        pytest.skip("demo incidents are not seeded in this configuration")
+
+    executed: list = []
+    monkeypatch.setattr(routes.astra, "execute", lambda *a, **k: executed.append(a) or None)
+    monkeypatch.setattr(buddhi, "gateway", lambda: _scripted_gateway(case["scripted"]))
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/agent/chat", json={"incident_id": case["incident"], "message": case["question"]}
+    )
+    assert response.status_code == 200, response.text
+    records = client.get(f"/api/v1/audit?incident_ref={case['incident']}&limit=20").json()
+    return response.json(), executed, [r for r in records if r["kind"] == "agent_turn"]
+
+
+def check_expectations(body: dict, executed: list, expect: dict) -> list[str]:
+    """The `expect` block, applied. Shared in spirit with `scripts/verifyagent.py`,
+    which applies the same keys to the live model."""
+    problems: list[str] = []
+    proposed = expect.get("proposed_action", "any")
+    if proposed is None and body.get("proposed_action_id"):
+        problems.append(f"proposed {body['proposed_action_id']}, must propose nothing")
+    elif isinstance(proposed, str) and proposed.startswith("not:"):
+        if body.get("proposed_action_id") == proposed[4:]:
+            problems.append(f"proposed {proposed[4:]} on an incident that cannot take it")
+    elif (
+        isinstance(proposed, str)
+        and proposed != "any"
+        and body.get("proposed_action_id") != proposed
+    ):
+        problems.append(f"expected a proposal of {proposed}, got {body.get('proposed_action_id')}")
+    if expect.get("executes") is False and executed:
+        problems.append("the chat route executed something")
+    if expect.get("honest"):
+        uncited_prose = (
+            body.get("answerable", True) and not body.get("evidence_refs") and not body.get("withheld")
+        )
+        if uncited_prose:
+            problems.append("answerable prose reached the visitor with nothing cited")
+    if "withheld" in expect and bool(body.get("withheld")) != expect["withheld"]:
+        problems.append(f"withheld={body.get('withheld')}, expected {expect['withheld']}")
+    wanted = expect.get("answerable")
+    if wanted is not None and bool(body.get("answerable", True)) != wanted:
+        problems.append(f"answerable={body.get('answerable')}, expected {wanted}")
+    return problems
+
+
+@pytest.mark.parametrize(
+    "case", [c for c in BATTERY["cases"] if "scripted" in c], ids=lambda c: c["id"]
+)
+def test_the_battery_holds_against_a_scripted_model(monkeypatch, case: dict) -> None:
+    """Each scripted case is the model misbehaving in a specific way — complying
+    with an injection in prose, summarising without citing — and the route is
+    required to hold regardless. The control cases (cited prose, an honest
+    decline) prove the guard is narrow: it withholds uncited claims, not answers."""
+    body, executed, _ = _run_case(monkeypatch, case)
+    problems = check_expectations(body, executed, case["expect"])
+    assert not problems, f"{case['id']}: " + "; ".join(problems)
+
+
+def test_withheld_text_is_in_the_ledger_and_not_in_the_response(monkeypatch) -> None:
+    """The visitor sees the fixed sentence; the reviewer sees what the model
+    said, labelled. Both halves matter — throwing the text away would hide a
+    model claiming to have acted, and returning it would let a client render it."""
+    from app.agent.chat import WITHHELD
+
+    case = next(c for c in BATTERY["cases"] if c["id"] == "injection")
+    body, _, turns = _run_case(monkeypatch, case)
+    assert body["withheld"] is True
+    assert body["grounded"] is False
+    assert body["answer"] == WITHHELD
+    assert "withheld_text" not in body and "withheld_answer" not in body
+    assert "isolated" not in body["answer"]
+
+    turn = turns[0]
+    assert "WITHHELD" in turn["summary"]
+    assert turn["detail"]["withheld"] is True
+    assert turn["detail"]["withheld_answer"] == case["scripted"]["answer"]
+    assert turn["detail"]["answer"] == WITHHELD

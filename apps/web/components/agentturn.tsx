@@ -61,6 +61,8 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
     proposed_action_id?: string | null;
     cached?: boolean;
     grounded?: boolean;
+    withheld?: boolean;
+    withheld_answer?: string | null;
     trace?: TraceEntry[];
     considered?: RuledOut[];
     dropped_considered?: { reading: string; claimed_refs: string[] }[];
@@ -94,6 +96,21 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
           <div>
             <p className="break-words text-[rgb(var(--faint))]">answered</p>
             <p className="whitespace-pre-wrap break-words">{detail.answer}</p>
+          </div>
+        )}
+
+        {/* The text the visitor did not see. This is the one place it renders,
+            labelled for what it is: a reviewer deciding whether the model
+            invented a record or claimed to have acted needs the words, and a
+            visitor does not. */}
+        {detail.withheld && detail.withheld_answer && (
+          <div>
+            <p className="break-words text-[rgb(var(--warn))]">
+              withheld — the model wrote this and cited nothing that resolved
+            </p>
+            <p className="whitespace-pre-wrap break-words text-[rgb(var(--muted))]">
+              {detail.withheld_answer}
+            </p>
           </div>
         )}
 

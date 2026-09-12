@@ -91,6 +91,17 @@ jobs:
         # skip. A green api job means the schema invariants were exercised.
         working-directory: services/api
         run: pytest -q
+      - name: tests, in the deployed configuration
+        # The security console with its scenarios seeded. The chat battery
+        # (R103), the proposal test (R20) and the Blue Team suites only run
+        # against a seeded store, and only this configuration seeds one — so
+        # without this step the tests that guard the public site skip on every
+        # run and report green.
+        working-directory: services/api
+        env:
+          PASHU_DEMO_SEED: "true"
+          PASHU_ACTION_DOMAIN: security
+        run: pytest -q
       - name: OpenAPI contract is current
         working-directory: services/api
         run: python -m app.exportopenapi --check

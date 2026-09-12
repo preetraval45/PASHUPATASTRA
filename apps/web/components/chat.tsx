@@ -239,7 +239,18 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
     // back as though it were the reply — a check that passed while testing
     // nothing.
     <div data-turn="sati" className="max-w-[95%] space-y-2">
-      <p data-answer className="whitespace-pre-wrap text-sm leading-relaxed">
+      {/* A withheld turn is not an answer and is not set like one. The model
+          said something it could not cite; the visitor gets the sentence saying
+          so, in the register of a notice, and the text is in the audit trail. */}
+      <p
+        data-answer
+        data-withheld={answer.withheld ? "" : undefined}
+        className={
+          answer.withheld
+            ? "rounded-lg border border-dashed border-[rgb(var(--edge))] px-3 py-2 text-sm leading-relaxed text-[rgb(var(--muted))]"
+            : "whitespace-pre-wrap text-sm leading-relaxed"
+        }
+      >
         {answer.answer}
       </p>
 
@@ -272,8 +283,10 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
         {/* Not decoration. An answer nobody can trace is the failure mode this
             whole design is arranged against, so when it happens it is stated
             rather than left for the reader to infer from a missing line. */}
-        {!answer.grounded && (
-          <Badge status="warning">not grounded</Badge>
+        {answer.withheld ? (
+          <Badge status="warning">withheld</Badge>
+        ) : (
+          !answer.grounded && <Badge status="warning">not grounded</Badge>
         )}
         {!answer.answerable && <Badge status="neutral">not in the evidence</Badge>}
         {answer.truncated && <Badge status="neutral">cut short</Badge>}

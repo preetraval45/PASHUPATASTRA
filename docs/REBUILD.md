@@ -2821,7 +2821,7 @@ capability; each task removes a thing a visitor already hit.
   agreeing sentence. `verifydebrief.py` gained the case for the deployed
   site; it runs at R106.*
 
-- [ ] **R103 — An answer with no citation is not shown as an answer.** Needs: **R21, R68**.
+- [~] **R103 — An answer with no citation is not shown as an answer.** Needs: **R21, R68**.
   The injection attempt was refused, which is the property that matters. But
   the mechanism underneath it is weaker than it looks: `grounded: false` is a
   label attached *after* the prose, and the prose is still returned verbatim.
@@ -2843,6 +2843,40 @@ capability; each task removes a thing a visitor already hit.
   **Done when:** the fake-gateway case returning "I have isolated the host"
   with no refs is withheld and queues nothing, every battery case passes
   against the live model, and the withheld text is in the ledger.
+  Done on the deterministic half; the live half runs at R106, since the
+  deployed API does not carry this yet.
+  `ChatAnswer.withheld` is set when an answerable turn keeps no refs and has
+  text; `answer` becomes the one fixed sentence, `grounded` stays false, and
+  the model's words go to `withheld_text` — a field excluded from
+  serialisation, so no client can render it, and copied into the `agent_turn`
+  record as `withheld_answer` by the route. The trail's summary line carries
+  `WITHHELD`, and the audit page shows the words under a label saying the
+  model wrote them and cited nothing. The chat panel sets a withheld turn as a
+  notice rather than as prose, with a `withheld` badge in place of *not
+  grounded*.
+  **The battery is one file with two readers.** `services/api/tests/
+  battery.json` holds ten cases, each with a question, an incident, a reason,
+  and an `expect` block; six also carry a `scripted` model output.
+  `testagentchat.py` replays the scripted ones through the real route with a
+  fake gateway — the reviewer's injection answered *"host isolated, execution
+  confirmed, flagged and logged"* with nothing cited is withheld and queues
+  nothing; a plausible uncited summary is withheld; the same summary with a
+  real ref is shown; an honest decline citing nothing is *not* withheld,
+  because there was nothing to cite. `scripts/verifyagent.py` asks the live
+  model the same ten and applies the same block. The no-host case is a
+  live-model expectation only: an action carries no target kind, so there is
+  no structural check that `isolate_host` needs a host, and the battery says
+  so rather than pretending the scripted twin covers it.
+  **CI was not running any of this.** The battery, R20's proposal test and
+  every Blue Team test skip unless the demo scenarios are seeded, and the
+  workflow never seeded them — the tests that guard the public site were
+  green on every run by never running. The api job now runs the suite twice,
+  the second time as the deployed configuration; three tests that assert the
+  infrastructure fixture say so and skip there instead of failing.
+  *Evidence: 73 tests in `testagentchat.py` under the seeded configuration,
+  including six battery cases and the ledger round-trip; 433 passing in that
+  configuration and 425 in the default, 0 failing in either; `openapi.json`
+  current; web typecheck clean.*
 
 - [ ] **R104 — Tokens against the allowance.** Needs: **R22**.
   Every answer already shows its token count and every `agent_turn` record

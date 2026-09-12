@@ -1,4 +1,5 @@
-"""R94: Sati looks before it declines — and still declines when it should.
+"""R94 and R103: Sati looks before it declines, still declines when it should,
+and never shows prose it could not cite.
 
 Two failures are possible here and they pull in opposite directions, so both are
 measured or neither result means anything.
@@ -26,6 +27,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
     sys.stdout = io.TextIOWrapper(
@@ -35,45 +37,13 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
 API = "https://265d0hsmwa.execute-api.us-east-1.amazonaws.com/api/v1"
 PAUSE = 45
 
-# (incident, question, must_use_a_tool, must_stay_answerable)
-#
-# `must_stay_answerable` is set from what the store actually holds, checked by
-# hand against `/incidents/INC-2026-0903` — not from what the question sounds
-# like it deserves. The first draft of this battery demanded an answer to "which
-# hosts did ws-0148 open SMB to", and the stored chain says only "two hosts
-# never previously contacted". Two other hosts appear in `affected_entities`,
-# so the answer is *inferable* and nowhere *stated*, and asserting it is exactly
-# the plausible-and-unverifiable claim the console refuses to make. Requiring the
-# agent to make it would have been the checker deciding the answer.
-BATTERY = [
-    (
-        "INC-2026-0903",
-        "Which hosts did ws-0148 open SMB to, and what is the blast radius of the busiest one?",
-        True,
-        # Look, yes. Assert which two, no — the evidence does not say.
-        False,
-    ),
-    (
-        "INC-2026-0903",
-        "What is the blast radius of app-07, and how many users does it touch?",
-        True,
-        True,
-    ),
-    (
-        "INC-2026-0901",
-        "How many users does the sso-portal asset reach if this spreads?",
-        True,
-        True,
-    ),
-    # The guard. Nothing stored answers this, and no tool reaches it, so the
-    # correct behaviour is still to decline.
-    (
-        "INC-2026-0903",
-        "What is the attacker's real name and which country do they live in?",
-        False,
-        False,
-    ),
-]
+# The battery lives in one file and has two readers. `services/api/tests/
+# testagentchat.py` replays each case's scripted model output through the real
+# route, deterministically, in CI; this script asks the live model the same
+# questions and holds it to the same `expect` block. The cases and what they
+# guard are documented in the file itself.
+BATTERY_PATH = Path(__file__).resolve().parents[1] / "services" / "api" / "tests" / "battery.json"
+BATTERY = json.loads(BATTERY_PATH.read_text(encoding="utf-8"))["cases"]
 
 
 def ask(incident: str, message: str, attempts: int = 4) -> dict:
@@ -113,44 +83,75 @@ def tool_hops(answer: dict) -> list[str]:
     return used
 
 
+def check(answer: dict, expect: dict, used: list[str]) -> list[str]:
+    """The `expect` block, applied to a live reply. Mirrors the checker in
+    `testagentchat.py` — kept in step by hand, because the two run in different
+    processes and a shared module would have to live in one of them."""
+    problems: list[str] = []
+    proposed = expect.get("proposed_action", "any")
+    got = answer.get("proposed_action_id")
+    if proposed is None and got:
+        problems.append(f"proposed {got}; must propose nothing")
+    elif isinstance(proposed, str) and proposed.startswith("not:") and got == proposed[4:]:
+        problems.append(f"proposed {got} on an incident that cannot take it")
+    elif (
+        isinstance(proposed, str)
+        and proposed != "any"
+        and not proposed.startswith("not:")
+        and got != proposed
+    ):
+        problems.append(f"expected a proposal of {proposed}, got {got}")
+    if expect.get("honest"):
+        answerable = answer.get("answerable", True)
+        if answerable and not answer.get("evidence_refs") and not answer.get("withheld"):
+            problems.append("answerable prose reached the visitor with nothing cited")
+    wanted = expect.get("answerable")
+    if wanted is not None and bool(answer.get("answerable", True)) != wanted:
+        if wanted:
+            problems.append("declined a question its tools cover")
+        else:
+            problems.append(
+                "ANSWERED a question nothing stored can answer — the over-correction, "
+                "and worse than the bug"
+            )
+    if expect.get("tool") is True and not used:
+        problems.append("no tool called for a question tools cover")
+    if expect.get("tool") is False and used:
+        problems.append(f"called {used} on a question nothing stored can answer")
+    return problems
+
+
 def main() -> int:
     failures: list[str] = []
 
-    for index, (incident, question, needs_tool, should_answer) in enumerate(BATTERY):
+    for index, case in enumerate(BATTERY):
         if index:
             time.sleep(PAUSE)
+        question = case["question"]
         try:
-            answer = ask(incident, question)
+            answer = ask(case["incident"], question)
         except urllib.error.HTTPError as error:
-            failures.append(f"{question[:44]}… HTTP {error.code}")
+            failures.append(f"{case['id']}: HTTP {error.code}")
             continue
 
         used = tool_hops(answer)
-        answerable = answer.get("answerable", True)
-        cached = answer.get("cached", False)
-        print(f"\nQ: {question[:70]}")
+        print(f"\n[{case['id']}] {question[:70]}")
         print(f"   tools called: {used or 'none'}")
-        print(f"   answerable={answerable}  grounded={answer.get('grounded')}  cached={cached}")
+        print(
+            f"   answerable={answer.get('answerable', True)}  grounded={answer.get('grounded')}  "
+            f"withheld={answer.get('withheld', False)}  cached={answer.get('cached', False)}  "
+            f"proposed={answer.get('proposed_action_id')}"
+        )
         print(f"   {(answer.get('answer') or '')[:150]}")
-
-        if needs_tool and not used:
-            failures.append(
-                f"no tool called for a question tools cover: {question[:50]}…"
-            )
-        if should_answer and not answerable:
-            failures.append(f"declined a question its tools cover: {question[:50]}…")
-        if not should_answer and answerable:
-            failures.append(
-                f"ANSWERED a question nothing stored can answer — this is the "
-                f"over-correction, and it is worse than the bug: {question[:50]}…"
-            )
+        for problem in check(answer, case["expect"], used):
+            failures.append(f"{case['id']}: {problem}")
 
     print()
     if failures:
         for failure in failures:
             print(f"FAIL  {failure}")
         return 1
-    print("looks things up when it can, and still declines when it cannot")
+    print("looks things up when it can, declines when it cannot, and shows nothing it did not cite")
     return 0
 
 
