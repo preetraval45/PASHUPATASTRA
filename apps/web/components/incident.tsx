@@ -8,7 +8,9 @@ import {
   Evidence,
   Ident,
   KeyValue,
+  CONFIDENCE_IS_STATED,
   Panel,
+  Stated,
   statusForRisk,
   statusForSeverity,
   Technique,
@@ -62,10 +64,16 @@ export function IncidentView({
               {incident.impact.estimated_users_affected.toLocaleString()}
             </span>
           </KeyValue>
-          <KeyValue label="Root cause probability">
-            <span className="tnum">{Math.round((top?.confidence ?? 0) * 100)}%</span>
+          <KeyValue label="Stated confidence">
+            <Stated value={top?.confidence ?? 0} />
           </KeyValue>
         </dl>
+        {/* The sentence, not only the tooltip. This is the page a reader reaches
+            first, and a number that looks measured on a scripted scenario would
+            undo what the rest of the page spends its effort on. */}
+        <p className="mt-4 text-[11px] leading-relaxed text-[rgb(var(--faint))]">
+          {CONFIDENCE_IS_STATED}
+        </p>
       </Panel>
 
       {/* The chain as a chain.
@@ -229,9 +237,7 @@ function Alternative({ hypothesis }: { hypothesis: Hypothesis }) {
   return (
     <li className="text-sm text-[rgb(var(--muted))]">
       <span>{hypothesis.statement}</span>
-      <span className="tnum ml-2 text-[11px]">
-        {Math.round(hypothesis.confidence * 100)}%
-      </span>
+      <Stated value={hypothesis.confidence} className="ml-2 text-[11px]" />
       {hypothesis.contradicted_by.length > 0 && (
         <p className="mono mt-1 text-[11px] text-[rgb(var(--crit))]/80">
           contradicted by: {hypothesis.contradicted_by.join(", ")}

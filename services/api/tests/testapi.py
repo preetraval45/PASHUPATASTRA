@@ -883,3 +883,12 @@ def test_the_demo_incidents_all_argue_a_rival_that_loses() -> None:
 
 def test_an_unknown_incident_has_no_contest() -> None:
     assert _contest("INC-9999-9999").status_code == 404
+
+
+def test_no_calibration_figure_is_invented() -> None:
+    """R105. Hypothesis confidences are numbers a scenario author wrote, and the
+    page says so. Calibration — stated confidence against a human's later
+    verdict — needs outcomes that do not exist on this deployment, so nothing
+    in the public surface may carry a field that looks like one."""
+    spec = app.openapi()
+    assert "calibration" not in str(spec).lower()

@@ -2913,7 +2913,7 @@ capability; each task removes a thing a visitor already hit.
   (0/0/0 — no model locally, so the non-zero case is the test's). Seeded
   suite 434, default 425, `openapi.json` regenerated, web typecheck clean.*
 
-- [ ] **R105 — Confidence is labelled for what it is.** Needs: **R68**.
+- [x] **R105 — Confidence is labelled for what it is.** Needs: **R68**.
   "86% confidence" on a scripted scenario is a number the scenario's author
   typed. That is legitimate for a written scenario and it is not a measured
   rate, and the reviewer was right that the page lets a reader take it for
@@ -2924,6 +2924,19 @@ capability; each task removes a thing a visitor already hit.
   **R96**, and nothing here invents a calibration figure to fill the gap.
   **Done when:** every rendered confidence carries the label, and no
   `calibration` field exists anywhere in the API.
+  Done. `Stated` in `components/ui.tsx` renders `86% stated` with the one
+  sentence — a confidence the scenario's author stated, not a measured rate;
+  calibration arrives with R96 — as its tooltip, and every surface that
+  printed a confidence uses it: the incident header (relabelled from *Root
+  cause probability*, which was the worst of them, with the sentence printed
+  in full beneath the panel), each alternative hypothesis, the overview cards,
+  the loop timeline and the Ask console's diagnosis line. The agent's own
+  evidence block says the same in its `confidence:` line, so the model cannot
+  relay the number as a rate either. The contest panel already carried its own
+  sentence about confidence deciding nothing and is left as it was.
+  *Evidence: no `% confidence` or `Root cause probability` literal remains in
+  the web app; `test_no_calibration_figure_is_invented` asserts the word is
+  absent from the API's own contract; seeded suite 435, web typecheck clean.*
 
 - [ ] **R106 — Deploy Phase 5E and review.** Needs: **R93, R98–R105**.
   Carries **R74**'s measurements too: Phase 5C is still undeployed, so the

@@ -12,6 +12,7 @@ import {
   Page,
   Panel,
   Stat,
+  Stated,
   statusForSeverity,
 } from "@/components/ui";
 import { getAudit, getHealth, getIncidents, getTopology, getTopologyCounts, type Incident } from "@/lib/api";
@@ -178,9 +179,10 @@ export default async function OverviewPage() {
                     <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[rgb(var(--muted))]">
                       <span>
                         confidence{" "}
-                        <span className="tnum text-[rgb(var(--ink))]">
-                          {Math.round((incident.hypotheses[0]?.confidence ?? 0) * 100)}%
-                        </span>
+                        <Stated
+                          value={incident.hypotheses[0]?.confidence ?? 0}
+                          className="text-[rgb(var(--ink))]"
+                        />
                       </span>
                       <span>
                         users{" "}

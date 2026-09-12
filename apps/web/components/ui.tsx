@@ -310,6 +310,36 @@ export function KeyValue({ label, children }: { label: string; children: ReactNo
   );
 }
 
+/** What a hypothesis confidence on this deployment actually is, in one sentence.
+ *
+ *  Exported so every surface that prints a confidence says the same thing. */
+export const CONFIDENCE_IS_STATED =
+  "A confidence the scenario's author stated when writing it — not a measured rate. " +
+  "Nothing here has yet been scored against a human's later verdict; calibration " +
+  "arrives when outcomes exist (R96), and until then no figure is invented for it.";
+
+/** `86% stated` — a hypothesis confidence, labelled for what it is.
+ *
+ *  A reviewer read "86% confidence" on a scripted scenario as a measured rate,
+ *  and the page let them (R105). The number is legitimate for a written scenario
+ *  and it is not the thing it looked like, so the word beside it changes and the
+ *  sentence explaining it travels with every instance rather than living on one
+ *  page. */
+export function Stated({ value, className = "" }: { value: number; className?: string }) {
+  return (
+    <span
+      data-stated
+      title={CONFIDENCE_IS_STATED}
+      className={`tnum ${className}`}
+    >
+      {Math.round(value * 100)}%{" "}
+      <abbr className="no-underline" title={CONFIDENCE_IS_STATED}>
+        stated
+      </abbr>
+    </span>
+  );
+}
+
 /** Identifiers an operator might paste into a terminal are always monospace.
  *
  *  And always allowed to break. Every identifier this renders comes from data —

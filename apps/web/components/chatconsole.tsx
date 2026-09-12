@@ -19,7 +19,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { STARTERS, TurnView, type Turn } from "@/components/chat";
-import { Badge, statusForSeverity } from "@/components/ui";
+import { Badge, Stated, statusForSeverity } from "@/components/ui";
 import { askAgent, type Incident } from "@/lib/api";
 
 export function ChatConsole({ incidents }: { incidents: Incident[] }) {
@@ -228,7 +228,7 @@ function Context({ incident }: { incident: Incident }) {
         </p>
         {top && (
           <p className="mono mt-1 text-xs text-[rgb(var(--faint))]">
-            {Math.round(top.confidence * 100)}% confidence
+            <Stated value={top.confidence} />
           </p>
         )}
       </div>

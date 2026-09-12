@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 
-import { Ago, Badge, Evidence, type Status } from "@/components/ui";
+import { Ago, Badge, Evidence, Stated, type Status } from "@/components/ui";
 import type { AuditRecord, Incident, IncidentState } from "@/lib/api";
 
 export type StageKey =
@@ -256,9 +256,7 @@ function StageDetail({ stageKey, incident }: { stageKey: StageKey; incident: Inc
     return (
       <div className="mt-1.5 text-xs">
         <span>{top.statement}</span>
-        <span className="ml-2 text-[rgb(var(--faint))]">
-          {Math.round(top.confidence * 100)}% confidence
-        </span>
+        <Stated value={top.confidence} className="ml-2 text-[rgb(var(--faint))]" />
         <Evidence refs={top.evidence} />
       </div>
     );

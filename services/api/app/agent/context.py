@@ -104,7 +104,8 @@ def incident_evidence(incident: Incident) -> list[Evidence]:
                 content=(
                     f"{'leading reading' if index == 0 else 'alternative reading'}: "
                     f"{hypothesis.statement}\n"
-                    f"confidence: {hypothesis.confidence}\n"
+                    f"confidence: {hypothesis.confidence} (stated by the incident's "
+                    f"author; not a measured rate)\n"
                     f"supported by: {', '.join(hypothesis.evidence)}"
                     f"{against}"
                 ),
