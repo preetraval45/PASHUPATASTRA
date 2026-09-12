@@ -3052,6 +3052,25 @@ capability; each task removes a thing a visitor already hit.
   `npm audit` at zero. The Vercel production build also failed on that push
   and its log is not reachable from here; a clean clone builds with the
   deployed API URL, so the cause is in Vercel's environment and needs the log.
+  With the install fixed, the api job reached its tests for the first time
+  since August and found what the install failure had been hiding — see
+  R114. Five of six jobs are green.
+
+- [ ] **R114 — The Postgres-backed suite is order-dependent.** Needs: nothing.
+  CI runs the API suite against a Postgres service; locally it runs against
+  memory, so nobody had seen this. Against Postgres, nine `testgame.py` cases
+  fail in the full run and *skip* when run alone on a fresh database: an
+  earlier module leaves the three scenarios in the shared durable store
+  without their events, so the scenario fixture finds an incident and
+  `opening_alert` finds nothing to open. `testgraph.py::test_cycles_terminate`
+  fails the same way, from rows another module left in `topology_edge`.
+  Reproduced at the pre-session commit `1eef514`, so it predates this phase.
+  The shape of the fix is isolation, not assertions: each module that writes
+  to the durable store gets a fixture that clears what it wrote, or the
+  suite gets one database per module. A test that passes only when run alone
+  is the "checker that lies" this file keeps naming.
+  **Done when:** the api job is green with Postgres as a service, and
+  running `testgame.py` alone and in the full suite gives the same result.
   Carries **R74**'s measurements too: Phase 5C is still undeployed, so the
   browser halves of `verifycontest`, `verifycounterfactual`, `verifysigma` and
   `verifyrelation`, and their live-model clauses, run here.

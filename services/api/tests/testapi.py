@@ -904,4 +904,6 @@ def test_the_warm_task_primes_the_indexes_and_beats_once() -> None:
     result = warm()
     assert result["task"] == "warm"
     assert "primed" in result
-    assert result["durable"] is False or isinstance(result["beats_today"], int)
+    # Only the DynamoDB backend keeps a heartbeat; on memory or Postgres the
+    # task reports none rather than a number it did not count.
+    assert result["beats_today"] is None or isinstance(result["beats_today"], int)
