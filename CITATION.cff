@@ -1,0 +1,33 @@
+# Citation metadata, in the Citation File Format GitHub renders as
+# "Cite this repository". `scripts/buildcitation.py` turns it into the BibTeX
+# and APA shown on the site, so the two cannot disagree (R108).
+#
+# No `license` field yet: the licence is an owner decision still pending, and
+# Zenodo will not mint a DOI without one. `doi` is added when it exists — a
+# placeholder that looks like a DOI is worse than none.
+cff-version: 1.2.0
+message: "If you use or refer to this work, please cite it as below."
+type: software
+title: "Pashupatastra: policy-bounded autonomous security operations"
+abstract: >-
+  An AI-native security operations platform that correlates fragmented security
+  telemetry into one intrusion, maps each step to a MITRE ATT&CK technique, and
+  proposes remediation that a deterministic policy engine — not the model —
+  decides whether a human must authorise. Every claim the assistant makes is
+  cited against stored records and verified rather than trusted; every action
+  declares its rollback and expected post-state before it runs.
+authors:
+  - family-names: Raval
+    given-names: Preet
+version: 0.1.0
+date-released: 2026-09-12
+url: "https://pashupatastra.vercel.app"
+repository-code: "https://github.com/preetraval45/PASHUPATASTRA"
+keywords:
+  - security operations
+  - incident response
+  - alert correlation
+  - MITRE ATT&CK
+  - bounded autonomy
+  - LLM grounding
+  - policy engine

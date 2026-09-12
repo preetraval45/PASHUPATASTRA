@@ -901,8 +901,15 @@ export type SearchItem = {
  *  that cannot reach the API should still offer the named jumps and the pages,
  *  which are static and always correct. */
 export async function getSearchIndex(): Promise<SearchItem[]> {
-  const data = await get<{ items: SearchItem[] }>("/search/index");
-  return data?.items ?? [];
+  // Fetched by the layout on every route, so it must never be the thing a
+  // page waits on: one attempt, five seconds, and an empty index if not. On
+  // 12 September 2026 this call was taking thirty seconds on the deployed
+  // site (R99), and every page waited the full thirty for a palette.
+  const result = await request<{ items: SearchItem[] }>(`${API_BASE}/search/index`, {
+    retry: false,
+    timeoutMs: 5_000,
+  });
+  return result.ok ? result.data.items : [];
 }
 
 /** Blast radius, in both the forms the page needs.

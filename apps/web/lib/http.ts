@@ -37,9 +37,19 @@ export function classify(status: number | null): FailureKind {
   return "missing";
 }
 
+/** Per attempt. A read the API cannot answer in ten seconds is unavailable —
+ *  the measured cost of the one slow read (R99) was 5 to 30 seconds, and a
+ *  page that waited the full thirty and then tried again would have spent a
+ *  minute on a palette index before it could show anything. */
+export const TIMEOUT_MS = 10_000;
+
 export interface RequestOptions {
   method?: "GET" | "POST";
   body?: unknown;
+  /** Try once more on a 5xx or a dropped connection. Default true. */
+  retry?: boolean;
+  /** Per-attempt ceiling in milliseconds. Default `TIMEOUT_MS`. */
+  timeoutMs?: number;
   fetchImpl?: typeof fetch;
   pause?: (ms: number) => Promise<void>;
 }
@@ -55,16 +65,24 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     init.body = JSON.stringify(options.body);
   }
 
+  const attempts = options.retry === false ? 1 : 2;
+  const timeoutMs = options.timeoutMs ?? TIMEOUT_MS;
   let last: Failure = { kind: "offline", status: null };
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
     if (attempt > 0) await pause(RETRY_AFTER_MS);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetchImpl(url, init);
+      const response = await fetchImpl(url, { ...init, signal: controller.signal });
       if (response.ok) return { ok: true, data: (await response.json()) as T };
       last = { kind: classify(response.status), status: response.status };
       if (last.kind === "missing") return { ok: false, failure: last };
     } catch {
+      // A timeout and a refused connection are the same thing to the page:
+      // nothing usable answered. Both are `offline`, and both are retried once.
       last = { kind: "offline", status: null };
+    } finally {
+      clearTimeout(timer);
     }
   }
   return { ok: false, failure: last };

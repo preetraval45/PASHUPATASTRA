@@ -60,3 +60,21 @@ test("classify names the three kinds and nothing else", () => {
   assert.equal(classify(404), "missing");
   assert.equal(classify(422), "missing");
 });
+
+test("retry: false asks exactly once", async () => {
+  const { fetchImpl, calls } = scripted([reply(503), reply(200)]);
+  const result = await request("/x", { fetchImpl, pause: noPause, retry: false });
+  assert.equal(calls.length, 1);
+  assert.deepEqual(result, { ok: false, failure: { kind: "unavailable", status: 503 } });
+});
+
+test("a request that outlives its timeout is offline, not a hang", async () => {
+  const fetchImpl = ((_url: string, init: RequestInit) =>
+    new Promise((_, reject) => {
+      init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+    })) as unknown as typeof fetch;
+  const started = Date.now();
+  const result = await request("/x", { fetchImpl, pause: noPause, retry: false, timeoutMs: 20 });
+  assert.deepEqual(result, { ok: false, failure: { kind: "offline", status: null } });
+  assert.ok(Date.now() - started < 1000, "did not wait on the hung request");
+});

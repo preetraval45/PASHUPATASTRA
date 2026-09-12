@@ -3072,7 +3072,7 @@ that cannot survive being checked is worse than none.
   **Done when:** each figure equals an independent recount by a script that
   reads the underlying source rather than the page.
 
-- [ ] **R108 — Cite this work.** Needs: **a licence** — the owner's decision.
+- [~] **R108 — Cite this work.** Needs: **a licence** — the owner's decision.
   `CITATION.cff` at the root, which GitHub renders as *Cite this repository*,
   validated by `cffconvert`; a cite block on `/how-it-works` and `/impact`
   carrying BibTeX, APA and the permalink; the DOI read from `NEXT_PUBLIC_DOI`
@@ -3082,6 +3082,21 @@ that cannot survive being checked is worse than none.
   on that decision and nothing here pretends otherwise.
   **Done when:** the BibTeX on the page round-trips from the committed
   `CITATION.cff`, and the file validates.
+  Done on everything but the DOI, which is blocked exactly as the task said.
+  `CITATION.cff` validates under `cffconvert`; `scripts/buildcitation.py`
+  renders it to `lib/citation.generated.json` and `components/cite.tsx`
+  shows the BibTeX, the APA, the permalink, the source, and *no DOI yet — one
+  is minted from a tagged release once the repository carries a licence*, on
+  `/how-it-works` beside the stack. The version is the package's `0.1.0`,
+  because there are no releases and a number typed to look like one is the
+  invented figure this repository refuses elsewhere; a test holds the two
+  equal. `testcitation.py` regenerates the JSON from the file and requires
+  the committed copy to match, requires no DOI on the page unless the file
+  carries one, and proves a DOI added to the file reaches both renderings.
+  **Owner's next step:** decide the licence, add it to `CITATION.cff` and the
+  repository, tag a release with Zenodo's GitHub integration switched on, then
+  put the minted DOI in the file and run the script.
+  *Evidence: 5 tests; `cffconvert --validate` passes; web typecheck clean.*
 
 - [ ] **R109 — `/press`.** Needs: **R107**.
   A media kit, built so that someone writing about the project does not have

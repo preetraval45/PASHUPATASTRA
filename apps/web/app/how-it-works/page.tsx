@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BuiltWith } from "@/components/builtwith";
+import { Cite } from "@/components/cite";
 import { Badge, Offline, Page, Panel, statusForRisk } from "@/components/ui";
 import { getActions, getHealth, getPolicyModel, tierLabel } from "@/lib/api";
 
@@ -309,6 +310,10 @@ export default async function HowItWorksPage() {
             </span>
           </li>
         </ul>
+      </Panel>
+
+      <Panel title="Cite this work" aside="from CITATION.cff">
+        <Cite />
       </Panel>
 
       <Panel title="Built with" aside="read from the repository">
