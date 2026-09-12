@@ -2786,7 +2786,7 @@ capability; each task removes a thing a visitor already hit.
   `/intel/status` and finds the offline state, with the word `undefined`
   nowhere in it.
 
-- [ ] **R102 — The debrief cannot contradict the score.** Needs: **R27, R64**.
+- [x] **R102 — The debrief cannot contradict the score.** Needs: **R27, R64**.
   The reviewer scored 100 and read "you opened the evidence that rules out the
   plausible alternative" beside a board marking a different piece of decisive
   evidence as never opened. Both are true, and that is the bug: the score
@@ -2799,6 +2799,27 @@ capability; each task removes a thing a visitor already hit.
   **Done when:** a test builds a scenario with two decisive entities, opens
   one, and asserts full investigation marks with a board and a sentence that
   agree; `verifydebrief.py` plays the same case on the deployed site.
+  Done. `decisive_entities()` in `game.py` is the one answer to "which
+  entity holds the record that rules the decoy out", read from each record's
+  own `entity_key`; the score and the board both use it. The old board asked
+  a second way — each entity's eight most recent events intersected with the
+  decisive set — so a decisive record older than eight events was credited by
+  the score and marked *not decisive* by the board. The sentence is now
+  written from the score's own split: *on X* where proof was opened, *it was
+  also on Y, which you did not open* where more of it exists, and *you never
+  looked* only when none was opened. The page's own line under the board says
+  the same thing in the same case, and drops from warning to muted when no
+  marks were lost.
+  **The reviewer's case was reachable on all three scenarios.** Every one has
+  two or three decisive entities — 0903 has three — so opening one always
+  left the board naming the others as misses beside a full-marks line.
+  *Evidence: two tests in `testdebrief.py`, both watched failing on the old
+  code — one opens one of two decisive entities and requires full marks with
+  a board and a line that agree, the other puts the decisive record ninth in
+  an entity's history and requires the board to still mark it. Run against a
+  local API in the deployed configuration, all three scenarios return the
+  agreeing sentence. `verifydebrief.py` gained the case for the deployed
+  site; it runs at R106.*
 
 - [ ] **R103 — An answer with no citation is not shown as an answer.** Needs: **R21, R68**.
   The injection attempt was refused, which is the property that matters. But

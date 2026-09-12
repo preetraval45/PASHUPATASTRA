@@ -517,6 +517,11 @@ function Debrief({
   debrief: NonNullable<Verdict2["debrief"]>;
 }) {
   const decisiveMissed = debrief.missed.filter((row) => row.decisive);
+  // Whether the player already found the proof somewhere else. Opening any one
+  // decisive entity earns the investigation marks, so a miss here is not a lost
+  // point — and a sentence that reads as one, beside a score line saying the
+  // evidence was opened, is the contradiction the reviewer reported (R102).
+  const foundElsewhere = debrief.opened.some((row) => row.decisive);
 
   return (
     <Panel
@@ -524,9 +529,15 @@ function Debrief({
       aside={`${debrief.opened.length} opened · ${debrief.missed.length} not`}
     >
       {decisiveMissed.length > 0 && (
-        <p className="mb-4 text-sm leading-relaxed text-[rgb(var(--warn))]">
-          <span aria-hidden="true">◆</span> The evidence that rules out the
-          plausible alternative was on{" "}
+        <p
+          className={`mb-4 text-sm leading-relaxed ${
+            foundElsewhere ? "text-[rgb(var(--muted))]" : "text-[rgb(var(--warn))]"
+          }`}
+        >
+          <span aria-hidden="true">◆</span>{" "}
+          {foundElsewhere
+            ? "The evidence that rules out the plausible alternative was also on "
+            : "The evidence that rules out the plausible alternative was on "}
           {decisiveMissed.map((row, index) => (
             <span key={row.entity_key}>
               {index > 0 && ", "}
@@ -534,6 +545,7 @@ function Debrief({
             </span>
           ))}
           , which you did not open.
+          {foundElsewhere && " You found it elsewhere, so no marks were lost."}
         </p>
       )}
 

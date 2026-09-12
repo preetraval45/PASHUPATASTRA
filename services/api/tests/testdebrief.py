@@ -181,3 +181,79 @@ def test_opening_everything_leaves_the_missed_list_empty() -> None:
     )
     assert result["debrief"]["missed"] == []
     assert len(result["debrief"]["opened"]) == 2
+
+
+# --- R102: the board and the sentence cannot disagree -------------------------
+
+SECOND = "EV-decisive-2"
+
+
+def a_two_proof_incident() -> Incident:
+    """The decoy is ruled out by two records on two different entities."""
+    incident = an_incident()
+    incident.hypotheses[1].contradicted_by = [DECISIVE, SECOND]
+    return incident
+
+
+class _TwoProofGraph(_Graph):
+    EVENTS = {
+        "host:ws-1": [{"id": "EV-beacon-1"}, {"id": "EV-beacon-2"}, {"id": SECOND}],
+        "host:fs-9": [{"id": DECISIVE}, {"id": "EV-quiet"}],
+    }
+
+
+def _marked_two_proof(graph, investigated: list[str]) -> dict:
+    incident = a_two_proof_incident()
+    from app.game import _choice_id
+
+    chosen = _choice_id(incident.hypotheses[0].statement)
+    return score(
+        incident, graph, diagnosis_id=chosen, action_id="isolate_host", investigated=investigated
+    )
+
+
+def test_opening_one_of_two_decisive_entities_earns_the_marks_and_says_so() -> None:
+    """The reviewer scored 100, read "you opened the evidence that rules out
+    the plausible alternative", and beside it a board marking a different
+    decisive entity as never opened. Both true, read as a contradiction. The
+    marks stand — any one decisive record rules the decoy out — and the
+    sentence now names the other entity as *also* holding it."""
+    verdict = _marked_two_proof(_TwoProofGraph(), investigated=["host:fs-9"])
+    line = next(row for row in verdict["breakdown"] if row["name"] == "Investigation")
+    assert line["points"] == line["of"]
+    assert "on host:fs-9" in line["note"]
+    assert "also on host:ws-1, which you did not open" in line["note"]
+
+    board = verdict["debrief"]
+    opened = {row["entity_key"]: row for row in board["opened"]}
+    missed = {row["entity_key"]: row for row in board["missed"]}
+    assert opened["host:fs-9"]["decisive"] is True
+    assert missed["host:ws-1"]["decisive"] is True
+    assert missed["host:ws-1"]["decisive_evidence"] == [SECOND]
+
+
+def test_the_board_uses_the_same_resolver_as_the_score() -> None:
+    """The old board intersected each entity's eight most recent events with
+    the decisive set; the score read the record's own entity. A decisive record
+    older than eight events was credited by one and denied by the other."""
+
+    class _DeepGraph(_Graph):
+        EVENTS = {
+            "host:ws-1": [{"id": "EV-beacon-1"}, {"id": "EV-beacon-2"}],
+            # The decisive record is the ninth event — outside the window.
+            "host:fs-9": [{"id": f"EV-noise-{i}"} for i in range(8)] + [{"id": DECISIVE}],
+        }
+
+    incident = an_incident()
+    from app.game import _choice_id
+
+    chosen = _choice_id(incident.hypotheses[0].statement)
+    verdict = score(
+        incident, _DeepGraph(), diagnosis_id=chosen, action_id="isolate_host",
+        investigated=["host:fs-9"],
+    )
+    line = next(row for row in verdict["breakdown"] if row["name"] == "Investigation")
+    assert line["points"] == line["of"], "the score credits the opened record"
+    opened = {row["entity_key"]: row for row in verdict["debrief"]["opened"]}
+    assert opened["host:fs-9"]["decisive"] is True, "and so must the board"
+    assert opened["host:fs-9"]["decisive_evidence"] == [DECISIVE]

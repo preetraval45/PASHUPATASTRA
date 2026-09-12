@@ -285,7 +285,34 @@ def _response_score(incident: Incident, action_id: str) -> tuple[int, str]:
 
 
 
-def _debrief(incident: Incident, graph, looked_at: set[str], decisive: set[str]) -> dict:
+def decisive_entities(graph, contradicting: set[str]) -> dict[str, list[str]]:
+    """Which entity holds each observation that rules the decoy out.
+
+    The one resolver for the question, used by the score and by the board. It
+    reads each contradicting record's own `entity_key`, which is authoritative
+    — the record says where it was observed. The board used to answer the same
+    question a second way, by intersecting each entity's eight most recent
+    events with the decisive set, and a decisive record older than eight
+    events made the board say *not decisive* for an entity the score had just
+    credited. Two resolvers for one fact is how a debrief contradicts its own
+    score (R102).
+    """
+    held: dict[str, list[str]] = {}
+    for ref in sorted(contradicting):
+        row = graph.event(ref)
+        entity = row.get("entity_key") if row is not None else None
+        if entity is not None:
+            held.setdefault(entity, []).append(ref)
+    return held
+
+
+def _debrief(
+    incident: Incident,
+    graph,
+    looked_at: set[str],
+    decisive: set[str],
+    holding: dict[str, list[str]],
+) -> dict:
     """What the player opened, what they did not, and what was in each.
 
     R64's point, and the reason a total is not a debrief: *"you scored 60"*
@@ -304,7 +331,7 @@ def _debrief(incident: Incident, graph, looked_at: set[str], decisive: set[str])
     for key in investigable(incident):
         rows = graph.entity_events(key, limit=8) or []
         refs = [row["id"] for row in rows if row.get("id")]
-        held = sorted(set(refs) & decisive)
+        held = holding.get(key, [])
         entry = {
             "entity_key": key,
             "evidence": refs,
@@ -322,6 +349,23 @@ def _debrief(incident: Incident, graph, looked_at: set[str], decisive: set[str])
         # Named separately because it is the one list a player should re-read.
         "decisive_evidence": sorted(decisive),
     }
+
+
+def _investigation_note(proof_opened: list[str], proof_missed: list[str]) -> str:
+    """One sentence that agrees with the board, whichever way the marks went."""
+    if proof_opened:
+        note = (
+            "You opened the evidence that rules out the plausible alternative, on "
+            + ", ".join(proof_opened)
+            + "."
+        )
+        if proof_missed:
+            note += " It was also on " + ", ".join(proof_missed) + ", which you did not open."
+        return note
+    return (
+        "You never looked at what rules out the alternative explanation. On this "
+        "scenario that evidence is on " + (", ".join(proof_missed) or "another entity") + "."
+    )
 
 
 def score(
@@ -357,13 +401,16 @@ def score(
     # never opened it was right by luck.
     contradicting = set(decoy.contradicted_by) if decoy else set()
     looked_at = set(investigated or [])
-    entities_with_proof = {
-        row_entity
-        for ref in contradicting
-        if (row := graph.event(ref)) is not None
-        and (row_entity := row.get("entity_key")) is not None
-    }
-    found_proof = bool(entities_with_proof & looked_at)
+    holding = decisive_entities(graph, contradicting)
+    entities_with_proof = set(holding)
+    proof_opened = sorted(entities_with_proof & looked_at)
+    proof_missed = sorted(entities_with_proof - looked_at)
+    # Opening any one of them is enough: each holds a record that rules the
+    # decoy out on its own. The sentence below still names the others, because
+    # a player told they found the evidence while the board lists more of it
+    # unopened reads the two as a contradiction — which is what the reviewer
+    # reported, and it was (R102).
+    found_proof = bool(proof_opened)
     investigation_points = INVESTIGATION_POINTS if found_proof else 0
 
     total = diagnosis_points + response_points + investigation_points
@@ -376,7 +423,7 @@ def score(
     against_choice = (
         sorted(set(chosen.contradicted_by)) if chosen is not None and not right else []
     )
-    debrief = _debrief(incident, graph, looked_at, contradicting)
+    debrief = _debrief(incident, graph, looked_at, contradicting, holding)
 
     return {
         "total": total,
@@ -412,15 +459,7 @@ def score(
                 "name": "Investigation",
                 "points": investigation_points,
                 "of": INVESTIGATION_POINTS,
-                "note": (
-                    "You opened the evidence that rules out the plausible "
-                    "alternative."
-                    if found_proof
-                    else "You never looked at what rules out the alternative "
-                    "explanation. On this scenario that evidence is on "
-                    + (", ".join(sorted(entities_with_proof)) or "another entity")
-                    + "."
-                ),
+                "note": _investigation_note(proof_opened, proof_missed),
                 "evidence": sorted(contradicting),
                 "on_entities": sorted(entities_with_proof),
                 "opened": sorted(looked_at),

@@ -105,6 +105,40 @@ def main() -> int:
             f"missed {len(missed)}, decisive misses {len(decisive)}"
         )
 
+        # --- R102: the sentence and the board cannot disagree -----------------
+        # Open exactly one *decisive* entity — found from the debrief above
+        # rather than decided here — and require full investigation marks, a
+        # score line naming it, and a board that marks it decisive under
+        # "opened". If a second decisive entity exists, the line must name it
+        # as *also* holding the evidence rather than as a miss.
+        holders = sorted(
+            row["entity_key"] for row in debrief["opened"] + debrief["missed"] if row["decisive"]
+        )
+        if not holders:
+            failures.append(f"{incident_id}: no entity is decisive, nothing to check")
+            continue
+        second = post(
+            f"/game/{incident_id}/answer",
+            {
+                "diagnosis_id": briefing["candidates"][0]["id"],
+                "action_id": briefing["actions"][0]["id"],
+                "investigated": holders[:1],
+                "player_id": "",
+            },
+        )
+        line = next(row for row in second["breakdown"] if row["name"] == "Investigation")
+        opened_rows = {row["entity_key"]: row for row in second["debrief"]["opened"]}
+        if line["points"] != line["of"]:
+            failures.append(f"{incident_id}: opened {holders[0]} and scored {line['points']}")
+        if f"on {holders[0]}" not in line["note"]:
+            failures.append(f"{incident_id}: score line does not name {holders[0]}")
+        if not opened_rows.get(holders[0], {}).get("decisive"):
+            failures.append(f"{incident_id}: board does not mark {holders[0]} decisive")
+        for other in holders[1:]:
+            if "also on" not in line["note"] or other not in line["note"]:
+                failures.append(f"{incident_id}: {other} also holds proof and the line hides it")
+        print(f"  {incident_id}: decisive on {holders}; opened {holders[0]}: {line['note']}")
+
     # --- the misses reach the screen ---------------------------------------
     with sync_playwright() as play:
         browser = play.chromium.launch()
