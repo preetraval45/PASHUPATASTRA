@@ -13,7 +13,7 @@
         {
           "name": "Next.js",
           "package": "next",
-          "version": "15.5.23",
+          "version": "15.5.25",
           "manifest": "apps/web/package.json"
         },
         {
@@ -100,7 +100,7 @@
         {
           "name": "ruff",
           "package": "ruff",
-          "version": ">=0.5",
+          "version": ">=0.5,<0.13",
           "manifest": "services/api/pyproject.toml"
         },
         {
@@ -112,5 +112,5 @@
       ]
     }
   ],
-  "generated_at_commit": "c7eb3e7"
+  "generated_at_commit": "9473605"
 }

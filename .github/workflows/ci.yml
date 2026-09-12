@@ -82,7 +82,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e packages/core -e "services/api[dev]"
+      # All three editable installs in one resolve: the API depends on
+      # `pashupatastra-connectors` (R88), and a line that omitted it went to
+      # PyPI for a package that is only ever installed from this repository.
+      # Every api run since 24 August failed on this step before a test ran.
+      - run: pip install -e packages/core -e packages/connectors -e "services/api[dev]"
       - name: apply migrations
         working-directory: services/api
         run: python -m app.migrate

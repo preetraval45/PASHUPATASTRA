@@ -21,7 +21,7 @@ dependencies = [
 # the claim falsifiable, so it belongs in the test environment and nowhere near
 # `packages/core`'s runtime dependencies, which have to stay small enough to run
 # on a laptop.
-dev = ["pytest>=8.0", "ruff>=0.5", "mypy>=1.10", "pysigma>=0.11"]
+dev = ["pytest>=8.0", "ruff>=0.5,<0.13", "mypy>=1.10", "pysigma>=0.11"]
 
 [build-system]
 requires = ["hatchling"]

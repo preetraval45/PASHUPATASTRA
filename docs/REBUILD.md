@@ -3038,6 +3038,20 @@ capability; each task removes a thing a visitor already hit.
   absent from the API's own contract; seeded suite 435, web typecheck clean.*
 
 - [ ] **R106 — Deploy Phase 5E and review.** Needs: **R93, R98–R105**.
+  **Found on the first push of this phase: CI had been red since 24 August
+  and nobody was looking.** The api job's install line never named
+  `packages/connectors`, which the API has depended on since R88, so pip went
+  to PyPI for a package that only exists here and every api run died before
+  a test ran. The lint jobs installed whichever ruff was newest — `>=0.5` —
+  and 0.16 added rules the code was never written against; 0.12 passes all
+  three packages clean. And the dependency audit turned red on its own the
+  same day, correctly: Next 15.5.23 received a critical advisory after the
+  last push, and Dependabot had the bump waiting. All three fixed in one
+  commit — the install line, `ruff>=0.5,<0.13` in the three manifests until
+  the new rules are adopted deliberately, Next 15.5.25 and sharp 0.35.4 with
+  `npm audit` at zero. The Vercel production build also failed on that push
+  and its log is not reachable from here; a clean clone builds with the
+  deployed API URL, so the cause is in Vercel's environment and needs the log.
   Carries **R74**'s measurements too: Phase 5C is still undeployed, so the
   browser halves of `verifycontest`, `verifycounterfactual`, `verifysigma` and
   `verifyrelation`, and their live-model clauses, run here.
