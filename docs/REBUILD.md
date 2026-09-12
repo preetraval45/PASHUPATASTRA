@@ -2780,6 +2780,50 @@ capability; each task removes a thing a visitor already hit.
   "API unreachable".
   **Done when:** the fifty-navigation run reports zero responses at or above
   500, twice, an hour apart, and the cause is written here in one sentence.
+  **The cause, in one sentence:** `recent_events` read every feed event ever
+  stored and sorted it in Python, the layout called it through
+  `/search/index` on every route, and by 12 September that read took 5 to 30
+  seconds — past API Gateway's 30-second limit, which answers 503.
+  Measured, not inferred: `scripts/verify503.py` asked the API directly and
+  got `/intel?limit=5` in 4.9 s, 7.8 s, 20.9 s and then a **503 at 30.09 s**
+  carrying only `apigw-requestid` — no Vercel header, no Lambda error, the
+  gateway giving up on an integration that was still running. Not a cold
+  start: `/incidents/{id}` answered in 112 ms on the same container. The
+  partition grows by every hourly poll, so the reviewers on 11 September saw
+  it at the edge of the limit and today it is past it.
+  **Three changes, none a second index on the table** — the free tier's 25
+  capacity units are already spent and a global secondary index would cost
+  more of them:
+  - **A recent-events index per source**, one small META item listing its
+    newest 300 events, maintained by `save_events` — the only writer — and
+    rebuilt once from a full read if a store predates it. `recent_events`
+    is now a few small gets and one batch fetch of exactly the rows it
+    returns. `merge_recent` and `select_recent` are pure and tested: the
+    newest survive and the rest fall off, a re-reported event is indexed
+    once, and the order is the order the partition read gave, so nothing a
+    reader saw changes.
+  - **`snapshot` queries per node through the entity index** instead of
+    reading every event; the map has eleven nodes and the partition has
+    every feed entry since August.
+  - **A `warm` task** on the handler, for EventBridge every five minutes
+    (`scripts/schedulefeeds.py --task warm --name pashupatastra-warm --rate
+    "5 minutes"`, flexible window off): reads the index so the first real
+    request finds it built, and counts one heartbeat per UTC day that R107
+    reads as uptime. The tasks moved to `app/tasks.py`, which imports no
+    Lambda-only module, so they are tested where `mangum` is not installed.
+  The client half — a typed failure and one retry in `lib/http.ts` — landed
+  under R101.
+  **What remains, and why:** the Lambda is not redeployed and the warm
+  schedule not created, because this session holds no AWS credentials; the
+  second zero-5xx run an hour after the first is R106's. Until then the
+  deployed API still scans, and the 503 is still there for a visitor.
+  *Evidence so far: the measurement above; 4 tests on the index in
+  `testdynamo.py` plus one against a real table that asserts the second
+  read never touches the partition, gated on a table being reachable;
+  `test_the_warm_task_primes_the_indexes_and_beats_once`; seeded suite 440,
+  default 431.*
+
+
 - [~] **R100 — One wave, not four.** Needs: **R99**.
   The incident page makes about fifteen API calls per render in four
   sequential round trips — `generateMetadata` fetches the incident and the page
