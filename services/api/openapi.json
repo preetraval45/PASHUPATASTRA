@@ -2843,6 +2843,27 @@
         "summary": "Topology Graph"
       }
     },
+    "/api/v1/usage": {
+      "get": {
+        "description": "Tokens against the allowance, by day, from the ledger.\n\nEvery figure is recomputable from `/audit` \u2014 `scripts/verifyusage.py` does\nexactly that and compares. Reported, not enforced: the provider enforces\nits own limit and a 429 already reaches the visitor as a plain sentence.",
+        "operationId": "usage_api_v1_usage_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Usage Api V1 Usage Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Usage"
+      }
+    },
     "/api/v1/verification/observe": {
       "post": {
         "operationId": "observe_api_v1_verification_observe_post",

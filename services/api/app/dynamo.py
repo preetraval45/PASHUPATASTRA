@@ -29,7 +29,7 @@ dashboard renders `"0.94"` where it expected `0.94`.
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Iterable
 
@@ -166,6 +166,41 @@ class DynamoStore:
             query["Limit"] = max(limit * 10, 100)
 
         rows = self.table.query(**query).get("Items", [])[:limit]
+        return [
+            AuditRecord(
+                at=datetime.fromisoformat(row["at"]),
+                kind=AuditKind(row["kind"]),
+                actor=row["actor"],
+                incident_ref=row.get("incident_ref") or None,
+                summary=row["summary"],
+                detail=json.loads(row.get("detail") or "{}"),
+            )
+            for row in rows
+        ]
+
+    def audit_since(self, when: datetime) -> list[AuditRecord]:
+        """Records at or after `when`, newest first.
+
+        The sort key starts with the record's ISO timestamp, so a range on it
+        does the work — with a day of slack, because a key written under a
+        different UTC offset compares out of order at the boundary. The caller
+        filters on `at` precisely; this only bounds the read.
+        """
+        from boto3.dynamodb.conditions import Key
+
+        floor = (when - timedelta(days=1)).isoformat()
+        rows: list[dict] = []
+        query: dict[str, Any] = {
+            "KeyConditionExpression": Key("PK").eq(self._pk("AUDIT")) & Key("SK").gte(floor),
+            "ScanIndexForward": False,
+        }
+        while True:
+            page = self.table.query(**query)
+            rows.extend(page.get("Items", []))
+            last = page.get("LastEvaluatedKey")
+            if not last:
+                break
+            query["ExclusiveStartKey"] = last
         return [
             AuditRecord(
                 at=datetime.fromisoformat(row["at"]),

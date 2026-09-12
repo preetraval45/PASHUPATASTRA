@@ -85,6 +85,18 @@ class AuditLog:
             rows = [r for r in rows if r.incident_ref == incident_ref]
         return list(reversed(rows[-limit:]))
 
+    def since(self, when: datetime, kind: AuditKind | None = None) -> list[AuditRecord]:
+        """Every record at or after `when`, newest first, optionally of one kind.
+
+        For roll-ups — usage per day, attempts to date — which need a window
+        rather than the newest N. Filtered on the record's own `at` in every
+        backend, so the answer does not depend on how a store happens to order
+        its keys.
+        """
+        store = self._store()
+        rows = store.audit_since(when) if store is not None else list(reversed(self._records))
+        return [r for r in rows if r.at >= when and (kind is None or r.kind is kind)]
+
     def __len__(self) -> int:
         store = self._store()
         if store is not None:

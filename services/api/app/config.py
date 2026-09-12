@@ -131,6 +131,16 @@ class Settings(BaseSettings):
     """Ollama takes no key. Demanding one would leave the fallback switched off
     in exactly the deployment that needs it."""
 
+    chat_daily_allowance: int = 200_000
+    """Tokens the model provider allows in a day, for `/usage` to report against.
+
+    Groq's free tier for `openai/gpt-oss-20b` is 200,000 tokens a day (R68 spent
+    198,310 of them on one afternoon of prompt iteration). Not enforced here —
+    the provider enforces it, and a 429 already reaches the visitor as a plain
+    sentence — only reported, so that "how close are we" is a number on a page
+    rather than a surprise.
+    """
+
     chat_answer_tokens: int = 800
     """Output tokens one chat turn may produce.
 

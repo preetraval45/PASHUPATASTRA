@@ -131,6 +131,25 @@ class PostgresStore:
             for row in rows
         ]
 
+    def audit_since(self, when: datetime) -> list[AuditRecord]:
+        with connect(self.database_url) as conn:
+            rows = conn.execute(
+                "SELECT at, kind, actor, incident_id, summary, detail FROM audit_record "
+                "WHERE at >= %s ORDER BY at DESC, id DESC",
+                [when],
+            ).fetchall()
+        return [
+            AuditRecord(
+                at=row["at"],
+                kind=AuditKind(row["kind"]),
+                actor=row["actor"],
+                incident_ref=row["incident_id"],
+                summary=row["summary"],
+                detail=row["detail"] or {},
+            )
+            for row in rows
+        ]
+
     # --- events -------------------------------------------------------------
 
     def save_events(self, events: list) -> int:

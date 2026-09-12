@@ -259,6 +259,30 @@ async function get<T>(path: string): Promise<T | null> {
 }
 
 export const getHealth = () => get<Health>("/health");
+
+/** Tokens against the provider's daily allowance, rolled up from the ledger
+ *  (R104). Every figure is recomputable from `/audit`; `scripts/verifyusage.py`
+ *  does so and compares. */
+export interface Usage {
+  as_of: string;
+  timezone: string;
+  window_days: number;
+  allowance: { tokens_per_day: number; source: string };
+  today: {
+    day: string;
+    turns: number;
+    from_cache: number;
+    answered_by_model: number;
+    tokens: number;
+    cache_hit_rate: number | null;
+    allowance_used: number | null;
+  };
+  days: { day: string; turns: number; from_cache: number; tokens: number }[];
+  spend_usd: number;
+  spend_reason: string;
+  computed_from: string;
+}
+export const getUsage = () => get<Usage>("/usage");
 export const getIncidents = () => get<Incident[]>("/incidents");
 export const getActions = () => get<ActionSpec[]>("/actions");
 export const getTopology = () => get<TopologySnapshot>("/topology/graph");

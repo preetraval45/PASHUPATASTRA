@@ -2878,7 +2878,7 @@ capability; each task removes a thing a visitor already hit.
   configuration and 425 in the default, 0 failing in either; `openapi.json`
   current; web typecheck clean.*
 
-- [ ] **R104 — Tokens against the allowance.** Needs: **R22**.
+- [x] **R104 — Tokens against the allowance.** Needs: **R22**.
   Every answer already shows its token count and every `agent_turn` record
   carries `tokens` and `cached`. Rolled up: `GET /usage` — turns and tokens
   today against the daily allowance, the share answered from cache, and
@@ -2889,6 +2889,29 @@ capability; each task removes a thing a visitor already hit.
   from cache*.
   **Done when:** a script recomputes every figure from `/audit` and matches
   the route, and the line on the page equals the route.
+  Done. `app/usage.py` rolls `agent_turn` records up by day — pure over its
+  inputs, so it can be recomputed from outside — and `GET /usage` serves it
+  with `spend_usd: 0` and the sentence saying why. The ledger gained one read,
+  `AUDIT.since(when, kind)`, on all three backends; DynamoDB bounds it with a
+  range on the sort key and a day of slack, and every backend filters on the
+  record's own `at`, so the answer does not depend on how a store orders its
+  keys. `chat_daily_allowance` is 200,000, the provider's free-tier daily
+  limit, reported and not enforced — the provider enforces it and a 429
+  already reaches the visitor as a sentence.
+  **Cached turns are turns and not tokens.** A cached record carries the token
+  count of the run that produced the answer (R22), and a roll-up that summed
+  it again would bill every repeat of a question at full price — the cache
+  would then look like it saved nothing.
+  The line sits beside the title on `/ask` — *today 48k of 200k tokens · 61%
+  from cache* — with the reason for the zero in its tooltip rather than as
+  `$0.00`, which reads as a panel nobody wired.
+  *Evidence: `test_usage_is_recomputed_from_the_ledger` writes three turns
+  through the route, one a real cache hit, recounts them from `/audit` and
+  requires the route to agree on turns, hits, tokens and both rates.
+  `scripts/verifyusage.py` does the same against a running API and, with
+  `--page`, reads the line off `/ask`; run against a local API it matches
+  (0/0/0 — no model locally, so the non-zero case is the test's). Seeded
+  suite 434, default 425, `openapi.json` regenerated, web typecheck clean.*
 
 - [ ] **R105 — Confidence is labelled for what it is.** Needs: **R68**.
   "86% confidence" on a scripted scenario is a number the scenario's author

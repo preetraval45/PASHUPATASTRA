@@ -1341,6 +1341,23 @@ def audit(incident_ref: str | None = None, limit: int = 100) -> list[AuditRecord
     return AUDIT.records(incident_ref=incident_ref, limit=limit)
 
 
+@router.get("/usage")
+def usage() -> dict[str, object]:
+    """Tokens against the allowance, by day, from the ledger.
+
+    Every figure is recomputable from `/audit` — `scripts/verifyusage.py` does
+    exactly that and compares. Reported, not enforced: the provider enforces
+    its own limit and a 429 already reaches the visitor as a plain sentence.
+    """
+    from datetime import UTC, timedelta
+
+    from ..usage import WINDOW_DAYS, roll_up
+
+    since = datetime.now(UTC) - timedelta(days=WINDOW_DAYS)
+    turns = AUDIT.since(since, kind=AuditKind.AGENT_TURN)
+    return roll_up(turns, allowance=get_settings().chat_daily_allowance)
+
+
 class ChatRequest(BaseModel):
     incident_id: str
     message: str

@@ -1586,3 +1586,46 @@ def test_withheld_text_is_in_the_ledger_and_not_in_the_response(monkeypatch) -> 
     assert turn["detail"]["withheld"] is True
     assert turn["detail"]["withheld_answer"] == case["scripted"]["answer"]
     assert turn["detail"]["answer"] == WITHHELD
+
+
+# --- R104: tokens against the allowance ----------------------------------------
+
+
+def test_usage_is_recomputed_from_the_ledger(monkeypatch) -> None:
+    """The route's figures equal a recount over `/audit` — the same records,
+    counted independently. Cached turns are turns and not tokens, because a
+    cached record carries the producing run's token count (R22)."""
+    from datetime import UTC, datetime
+
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.usage import roll_up
+
+    _turn(monkeypatch, message="usage question one")
+    # The same question again is served from cache — a turn, not a spend.
+    repeat = _turn(monkeypatch, message="usage question one")
+    assert repeat["detail"]["cached"] is True, "the repeat did not hit the cache"
+    _turn(monkeypatch, message="usage question two")
+
+    client = TestClient(app)
+    reported = client.get("/api/v1/usage").json()
+    assert reported["spend_usd"] == 0 and reported["spend_reason"]
+    assert reported["allowance"]["tokens_per_day"] > 0
+    assert len(reported["days"]) == reported["window_days"]
+
+    records = client.get("/api/v1/audit?limit=1000").json()
+    today = datetime.now(UTC).date().isoformat()
+    turns = [r for r in records if r["kind"] == "agent_turn" and r["at"][:10] == today]
+    assert turns, "no turns were written"
+    cached = [r for r in turns if r["detail"].get("cached")]
+    tokens = sum(int(r["detail"].get("tokens") or 0) for r in turns if not r["detail"].get("cached"))
+
+    assert reported["today"]["turns"] == len(turns)
+    assert reported["today"]["from_cache"] == len(cached)
+    assert reported["today"]["tokens"] == tokens
+    assert reported["today"]["cache_hit_rate"] == len(cached) / len(turns)
+    assert reported["today"]["allowance_used"] == tokens / reported["allowance"]["tokens_per_day"]
+
+    # And the pure function agrees with itself on an empty window.
+    empty = roll_up([], allowance=100)
+    assert empty["today"]["turns"] == 0 and empty["today"]["cache_hit_rate"] is None
