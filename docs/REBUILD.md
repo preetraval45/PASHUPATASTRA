@@ -2721,7 +2721,7 @@ capability; each task removes a thing a visitor already hit.
   423 passing, `openapi.json` regenerated for the new route, web typecheck
   clean. The 144 records already in the deployed ledger are R98's.*
 
-- [ ] **R98 — Fold what is already in the ledger.** Needs: **R93**.
+- [x] **R98 — Fold what is already in the ledger.** Needs: **R93**.
   The 143 records R93 stops adding are still there, and the ledger is
   append-only. Consecutive records with the same kind, summary and actor
   collapse to one row carrying `×N` and the first and last timestamps, in the
@@ -2734,6 +2734,29 @@ capability; each task removes a thing a visitor already hit.
   rendered 144, a test feeds a fixture with a known run of duplicates and
   asserts the fold count and that no record id is lost, and every folded
   record is still reachable by its anchor.
+  Done. `lib/fold.ts` is the one fold — consecutive records with the same
+  kind, summary and actor become one row with `×N` and the span they cover —
+  and the loop timeline, the incident's trail and `/audit` all use it. On
+  `/audit` the key also carries the incident ref, so two incidents' identical
+  lines never fold into each other. **Consecutive only.** Two identical lines
+  with an approval between them are two events, and folding across the
+  approval would hide the order that makes a trail a trail. Each folded row
+  keeps the first record's anchors and lists the rest behind `all N records`,
+  each with its own `audit-N` and timestamp anchor, so a citation to any of
+  them still lands; browsers open a closed `<details>` on fragment navigation.
+  **The web app has tests now.** Node 24 runs TypeScript directly, so
+  `lib/fold.test.ts` is five `node --test` cases with no dependency added:
+  a known run of 144 folds to one row of 144, no index is lost between input
+  and output, a run is not folded across an intervening record, the span is
+  earliest-to-latest, and a single record is left alone. `npm test` runs them
+  and CI calls it before the build.
+  The sweep is not done, as the task said: with the fold in place the 143
+  records cost nothing to keep, and deleting from the ledger for tidiness is
+  a precedent the ledger does not need.
+  *Evidence: twelve identical evaluations were written into a local API and
+  the incident page rendered them as one row — `12 identical records, folded`
+  — in both the timeline and the trail, with `audit-0` through `audit-11`
+  each present exactly once. 5/5 node tests, web typecheck clean.*
 
 - [ ] **R99 — Name the 503 before fixing it.** Needs: nothing.
   Both reviewers saw an HTTP 503 on the first request of nearly every route,

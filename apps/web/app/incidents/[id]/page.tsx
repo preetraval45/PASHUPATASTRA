@@ -11,6 +11,7 @@ import { CounterfactualPanel } from "@/components/counterfactual";
 import { DetectionRulePanel } from "@/components/detectionrule";
 import { DraftPanel } from "@/components/drafts";
 import { IncidentGraph } from "@/components/incidentgraph";
+import { foldAudit, type Fold } from "@/lib/fold";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
 import { Timeline } from "@/components/timeline";
@@ -264,8 +265,13 @@ export default async function IncidentDetailPage({
           </Empty>
         ) : (
           <ol className="divide-y divide-[rgb(var(--edge))]">
-            {audit.map((record, index) => (
-              <AuditRow key={index} record={record} index={index} />
+            {/* Runs of identical records are one row each (R98): the trail
+                for the beaconing incident carried the same evaluation line 144
+                times, one per page view, until R93 stopped the writes. The
+                records stay — the ledger is append-only — and the row says
+                how many it stands for, with each still reachable below it. */}
+            {foldAudit(audit).map((fold) => (
+              <AuditRow key={fold.index} fold={fold} />
             ))}
           </ol>
         )}
@@ -279,7 +285,8 @@ export default async function IncidentDetailPage({
   );
 }
 
-function AuditRow({ record, index }: { record: AuditRecord; index: number }) {
+function AuditRow({ fold }: { fold: Fold<AuditRecord> }) {
+  const { record, index } = fold;
   const kind = KIND[record.kind] ?? { label: record.kind, status: "neutral" as Status };
   const human = record.actor.startsWith("human:");
   return (
@@ -328,8 +335,49 @@ function AuditRow({ record, index }: { record: AuditRecord; index: number }) {
           nothing swept. */}
       <div className="min-w-0 basis-full break-words text-sm sm:flex-1 sm:basis-0">
         {record.summary}
+        {fold.count > 1 && (
+          <span
+            className="tnum ml-2 text-xs text-[rgb(var(--faint))]"
+            title={`${fold.count} identical records, folded`}
+          >
+            ×{fold.count}
+          </span>
+        )}
         <AgentTurn record={record} />
+        {fold.count > 1 && <FoldedMembers fold={fold} />}
       </div>
     </li>
+  );
+}
+
+/**
+ * The records a folded row stands for, each with its own anchors, so a link
+ * to any one of them still lands. The disclosure is closed by default — 144
+ * timestamps are the noise the fold exists to remove — and browsers open a
+ * closed `<details>` when a fragment inside it is navigated to.
+ */
+function FoldedMembers({ fold }: { fold: Fold<AuditRecord> }) {
+  return (
+    <details className="mt-1 text-xs text-[rgb(var(--faint))]">
+      <summary className="focusable cursor-pointer">
+        all {fold.count} records · <Ago at={fold.earliest} /> to <Ago at={fold.latest} />
+      </summary>
+      <ol className="mt-1 space-y-0.5 pl-3">
+        {/* The first member's anchors are on the row itself; giving it a
+            second pair here would be two elements with one id. */}
+        {fold.members.map(({ record: member, index: row }, position) => (
+          <li
+            key={row}
+            id={position === 0 ? undefined : `audit-${row}`}
+            className="relative scroll-mt-24 target:text-[rgb(var(--ink))]"
+          >
+            {position > 0 && (
+              <span id={`audit:${member.at}`} aria-hidden="true" className="absolute -top-24" />
+            )}
+            <span className="mono">{member.at}</span>
+          </li>
+        ))}
+      </ol>
+    </details>
   );
 }

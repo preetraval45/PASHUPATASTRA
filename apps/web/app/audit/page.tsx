@@ -1,6 +1,7 @@
 import { AgentTurn } from "@/components/agentturn";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
 import { getAudit, type AuditRecord } from "@/lib/api";
+import { foldAudit } from "@/lib/fold";
 
 import type { Metadata } from "next";
 
@@ -58,9 +59,16 @@ export default async function AuditPage() {
           </Empty>
         ) : (
           <ol className="divide-y divide-[rgb(var(--edge))]">
-            {records.map((record, index) => (
-              <Row key={index} record={record} />
-            ))}
+            {/* Folded the same way the incident trail is (R98): a run of
+                identical records is one row with `×N`. Here the fold is only
+                within an incident's run — two incidents' identical lines
+                never sit consecutively with the same incident_ref folded
+                away, because the key includes it. */}
+            {foldAudit(records.map((r) => ({ ...r, summary: `${r.incident_ref ?? ""} | ${r.summary}` })))
+              .map((fold) => ({ ...fold, record: records[fold.index] }))
+              .map((fold) => (
+                <Row key={fold.index} record={fold.record} count={fold.count} span={[fold.earliest, fold.latest]} />
+              ))}
           </ol>
         )}
       </Panel>
@@ -77,7 +85,15 @@ export default async function AuditPage() {
   );
 }
 
-function Row({ record }: { record: AuditRecord }) {
+function Row({
+  record,
+  count = 1,
+  span,
+}: {
+  record: AuditRecord;
+  count?: number;
+  span?: [string, string];
+}) {
   const kind = KIND[record.kind] ?? { label: record.kind, status: "neutral" as Status };
   const human = record.actor.startsWith("human:");
 
@@ -100,6 +116,14 @@ function Row({ record }: { record: AuditRecord }) {
           `span`. The parser moves it during hydration and React reports #418. */}
       <div className="min-w-0 basis-full break-words text-sm sm:flex-1 sm:basis-0">
         {record.summary}
+        {count > 1 && span && (
+          <span
+            className="tnum ml-2 text-xs text-[rgb(var(--faint))]"
+            title={`${count} identical records between ${span[0]} and ${span[1]}, folded`}
+          >
+            ×{count}
+          </span>
+        )}
         <AgentTurn record={record} />
       </div>
       {record.incident_ref && (

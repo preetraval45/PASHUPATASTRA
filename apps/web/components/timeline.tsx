@@ -14,6 +14,7 @@ import Link from "next/link";
 
 import { Ago, Badge, Evidence, Stated, type Status } from "@/components/ui";
 import type { AuditRecord, Incident, IncidentState } from "@/lib/api";
+import { foldAudit } from "@/lib/fold";
 
 export type StageKey =
   | "detection"
@@ -219,17 +220,33 @@ export function Timeline({
 
               {matched.length > 0 && (
                 <ul className="mt-2 space-y-1">
-                  {matched.map(({ record, index: row }) => (
-                    <li key={row} className="text-xs">
-                      <Link
-                        href={`#audit-${row}`}
-                        className="focusable text-[rgb(var(--astra))] hover:underline"
-                      >
-                        {record.summary}
-                      </Link>
-                      <span className="mono ml-2 text-[rgb(var(--faint))]">{record.actor}</span>
-                    </li>
-                  ))}
+                  {/* Folded: a run of identical lines is one line with `×N`
+                      (R98). The link lands on the audit panel's row for the
+                      run, which lists every member. */}
+                  {foldAudit(matched.map((m) => m.record)).map((fold) => {
+                    const row = matched[fold.index].index;
+                    return (
+                      <li key={row} className="text-xs">
+                        <Link
+                          href={`#audit-${row}`}
+                          className="focusable text-[rgb(var(--astra))] hover:underline"
+                        >
+                          {fold.record.summary}
+                        </Link>
+                        {fold.count > 1 && (
+                          <span
+                            className="tnum ml-1.5 text-[rgb(var(--faint))]"
+                            title={`${fold.count} identical records, folded`}
+                          >
+                            ×{fold.count}
+                          </span>
+                        )}
+                        <span className="mono ml-2 text-[rgb(var(--faint))]">
+                          {fold.record.actor}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
