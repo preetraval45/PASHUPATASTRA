@@ -907,3 +907,27 @@ def test_the_warm_task_primes_the_indexes_and_beats_once() -> None:
     # Only the DynamoDB backend keeps a heartbeat; on memory or Postgres the
     # task reports none rather than a number it did not count.
     assert result["beats_today"] is None or isinstance(result["beats_today"], int)
+
+
+def test_the_attack_matrix_names_the_steps_that_fill_it() -> None:
+    """R75. Every filled cell links to steps that exist, and every empty
+    column is present and marked not observed rather than absent."""
+    body = client.get("/api/v1/attack/matrix").json()
+    assert len(body["columns"]) >= 14
+    assert {c["tactic"] for c in body["columns"]} >= {"Initial Access", "Impact", "Persistence"}
+    incidents = {i["id"]: i for i in client.get("/api/v1/incidents").json()}
+    filled = 0
+    for column in body["columns"]:
+        if not column["observed"]:
+            assert column["techniques"] == []
+            assert column["tactic"] in body["unobserved_tactics"] or not column["known"]
+            continue
+        for cell in column["techniques"]:
+            filled += 1
+            assert cell["url"].startswith("https://attack.mitre.org/techniques/")
+            for ref in cell["refs"]:
+                incident_id, _, step = ref.partition("#chain-")
+                chain = incidents[incident_id]["causal_chain"]
+                assert chain[int(step)]["attack_technique"]["id"] == cell["id"]
+    assert filled == body["technique_count"]
+    assert "not_observed" in body["meaning"]

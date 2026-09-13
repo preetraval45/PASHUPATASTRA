@@ -278,6 +278,25 @@ export interface Usage {
   computed_from: string;
 }
 export const getUsage = () => get<Usage>("/usage");
+
+/** The ATT&CK matrix across the library (R75): one column per tactic in
+ *  ATT&CK's order, one cell per technique, every cell naming the steps that
+ *  fill it. Empty columns are present and `observed: false`. */
+export interface AttackMatrix {
+  incident_count: number;
+  step_count: number;
+  technique_count: number;
+  observed_tactics: string[];
+  unobserved_tactics: string[];
+  columns: {
+    tactic: string;
+    known: boolean;
+    observed: boolean;
+    techniques: { id: string; name: string; url: string; refs: string[]; incidents: string[] }[];
+  }[];
+  meaning: { observed: string; not_observed: string };
+}
+export const getAttackMatrix = () => get<AttackMatrix>("/attack/matrix");
 export const getIncidents = () => get<Incident[]>("/incidents");
 export const getActions = () => get<ActionSpec[]>("/actions");
 export const getTopology = () => get<TopologySnapshot>("/topology/graph");

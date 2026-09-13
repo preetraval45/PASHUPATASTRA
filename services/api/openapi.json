@@ -1588,6 +1588,27 @@
         "summary": "Agent Chat"
       }
     },
+    "/api/v1/attack/matrix": {
+      "get": {
+        "description": "The library's ATT&CK coverage: one column per tactic, one cell per\ntechnique, every cell naming the steps that fill it (R75).\n\nComputed from the incidents on each request \u2014 three scenarios is not a\ncorpus worth caching \u2014 and from nothing else: no model, no lookup. An empty\ncolumn is *not observed* in this library and the response says so in a\nfield rather than leaving the page to choose a word.",
+        "operationId": "attack_matrix_api_v1_attack_matrix_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Attack Matrix Api V1 Attack Matrix Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Attack Matrix"
+      }
+    },
     "/api/v1/audit": {
       "get": {
         "operationId": "audit_api_v1_audit_get",

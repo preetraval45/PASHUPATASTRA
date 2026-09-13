@@ -39,7 +39,7 @@ VIEWPORTS = [
 # pages that render the most data are the ones a width sweep most needs.
 DEFAULT_ROUTES = ["/", "/how-it-works", "/overview", "/incidents",
                   "/incidents/INC-2026-0903", "/ask", "/observatory",
-                  "/blue-team", "/infrastructure", "/actions", "/audit", "/search"]
+                  "/blue-team", "/infrastructure", "/actions", "/audit", "/search", "/attack"]
 
 
 def check(page, url: str, route: str, label: str, width: int) -> list[str]:

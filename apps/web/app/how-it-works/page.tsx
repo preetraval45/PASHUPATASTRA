@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BuiltWith } from "@/components/builtwith";
 import { Cite } from "@/components/cite";
 import { Badge, Offline, Page, Panel, statusForRisk } from "@/components/ui";
-import { getActions, getHealth, getPolicyModel, tierLabel } from "@/lib/api";
+import { getActions, getAttackMatrix, getHealth, getPolicyModel, tierLabel } from "@/lib/api";
 
 /**
  * For the visitor who got interested and now wants to know whether to believe
@@ -45,10 +45,11 @@ const STAGES = [
 ];
 
 export default async function HowItWorksPage() {
-  const [policy, actions, health] = await Promise.all([
+  const [policy, actions, health, attack] = await Promise.all([
     getPolicyModel(),
     getActions(),
     getHealth(),
+    getAttackMatrix(),
   ]);
 
   if (policy === null) return <Offline />;
@@ -92,29 +93,40 @@ export default async function HowItWorksPage() {
           read what it is. The identifier is a citation, not a finding — it says
           what a step resembles, not that the step is proven.
         </p>
-        <ul className="mt-3 space-y-1.5 text-sm">
-          {[
-            ["T1071.001", "Web Protocols", "Command and Control"],
-            ["T1021.002", "SMB/Windows Admin Shares", "Lateral Movement"],
-            ["T1053.005", "Scheduled Task", "Persistence"],
-          ].map(([id, name, tactic]) => (
-            <li key={id} className="flex flex-wrap items-baseline gap-x-2">
-              <a
-                href={`https://attack.mitre.org/techniques/${id.replace(".", "/")}/`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="focusable mono rounded text-xs underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
-              >
-                {id}
-              </a>
-              <span className="text-[rgb(var(--muted))]">{name}</span>
-              <span className="text-xs text-[rgb(var(--faint))]">· {tactic}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-xs text-[rgb(var(--faint))]">
-          Those three are the chain of one incident on this site, in order.
-        </p>
+        {/* Read from the library, not typed. This list used to be three
+            identifiers written into the page — the one thing R54 forbids
+            everywhere else on it — and the matrix is what replaced them (R75). */}
+        {attack && (
+          <>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {attack.columns
+                .flatMap((column) => column.techniques)
+                .map((cell) => (
+                  <li key={cell.id} className="flex flex-wrap items-baseline gap-x-2">
+                    <a
+                      href={cell.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="focusable mono rounded text-xs underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+                    >
+                      {cell.id}
+                    </a>
+                    <span className="text-[rgb(var(--muted))]">{cell.name}</span>
+                    <span className="text-xs text-[rgb(var(--faint))]">
+                      · {attack.columns.find((c) => c.techniques.includes(cell))?.tactic}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+            <p className="mt-3 text-xs text-[rgb(var(--faint))]">
+              Every technique the library carries — {attack.technique_count} across{" "}
+              {attack.observed_tactics.length} tactics.{" "}
+              <Link href="/attack" className="focusable rounded underline decoration-dotted">
+                The whole matrix, with the tactics nothing was written to show →
+              </Link>
+            </p>
+          </>
+        )}
       </Panel>
 
       {/* --- risk tiers, generated --------------------------------------- */}

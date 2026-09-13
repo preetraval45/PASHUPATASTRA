@@ -2593,11 +2593,39 @@ or per-user persistence belongs to Phase 6, not to this one.
 
 **Detection and threat intelligence**
 
-- [ ] **R75 — The ATT&CK matrix as a view.** Needs: **R17**.
+- [x] **R75 — The ATT&CK matrix as a view.** Needs: **R17**.
   A tactic/technique matrix across the whole incident library rather than tags
   on one incident. Coverage is the interesting claim; a tag is not.
   **Done when:** every filled cell links to the incidents that fill it, and
   empty cells read as *not observed* rather than as *not covered*.
+  Done, started on 13 September 2026 at the owner's word while R74's deploy
+  still waits on credentials — the phase's own rule says 5C first, and the
+  only thing outstanding in 5C is a deploy this machine cannot run.
+  `packages/core/pashupatastra/attack.py` computes it: the fourteen
+  Enterprise tactics in ATT&CK's own order, one cell per technique, every
+  cell carrying `INC-…#chain-n` for each step that observed it — **the
+  cell links to the step, not to the incident**, because the step is where
+  the claim was made and a link to a page leaves the reader to find it.
+  `GET /attack/matrix` serves it, `/attack` draws it: a scrolling grid of
+  columns above `sm`, a stacked list below, one markup. Empty columns stay
+  on the board and read *not observed*, and the page says in words what
+  that does and does not mean — the library is three written scenarios,
+  and a tactic with nothing under it is a fact about what was written, not
+  a claim about detection. A tactic outside ATT&CK's fourteen is shown and
+  marked rather than dropped or filed under a neighbour.
+  **`/how-it-works` stopped typing techniques.** Its ATT&CK section listed
+  three identifiers written into the page — the one thing R54 forbids
+  everywhere else on it. It reads the matrix now and links to the whole
+  of it.
+  *Evidence: 6 core tests (order, step-level refs, one cell across two
+  incidents, empty columns present, unmapped steps neither counted nor
+  invented, an unknown tactic shown and marked); the route test resolves
+  every ref back to the step and its technique; `scripts/verifyattack.py`
+  follows every link in a browser to the anchored step and reads every
+  empty column for the words — 9 techniques across 7 tactics, 7 not
+  observed, all landing, on a local stack in the deployed configuration.
+  Width sweep and AA contrast pass on `/attack` and `/how-it-works`; core
+  617, seeded API 447.*
 
 - [ ] **R76 — More real feeds.** Needs: **R23**.
   Beyond CISA KEV and URLhaus: NVD/CVE recent disclosures and AlienVault OTX

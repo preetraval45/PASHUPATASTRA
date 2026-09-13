@@ -1341,6 +1341,53 @@ def audit(incident_ref: str | None = None, limit: int = 100) -> list[AuditRecord
     return AUDIT.records(incident_ref=incident_ref, limit=limit)
 
 
+@router.get("/attack/matrix")
+def attack_matrix() -> dict[str, object]:
+    """The library's ATT&CK coverage: one column per tactic, one cell per
+    technique, every cell naming the steps that fill it (R75).
+
+    Computed from the incidents on each request — three scenarios is not a
+    corpus worth caching — and from nothing else: no model, no lookup. An empty
+    column is *not observed* in this library and the response says so in a
+    field rather than leaving the page to choose a word.
+    """
+    from pashupatastra.attack import matrix
+
+    result = matrix(STORE.all())
+    return {
+        "incident_count": result.incident_count,
+        "step_count": result.step_count,
+        "technique_count": result.technique_count,
+        "observed_tactics": result.observed_tactics,
+        "unobserved_tactics": result.unobserved_tactics,
+        "columns": [
+            {
+                "tactic": column.tactic,
+                "known": column.known,
+                "observed": column.observed,
+                "techniques": [
+                    {
+                        "id": cell.id,
+                        "name": cell.name,
+                        "url": cell.url,
+                        "refs": cell.refs,
+                        "incidents": cell.incidents,
+                    }
+                    for cell in column.techniques
+                ],
+            }
+            for column in result.columns
+        ],
+        "meaning": {
+            "observed": "at least one step in an incident in this library carries the technique",
+            "not_observed": (
+                "no incident in this library carries a step under this tactic — a fact "
+                "about what was written, not a claim about what would be detected"
+            ),
+        },
+    }
+
+
 @router.get("/usage")
 def usage() -> dict[str, object]:
     """Tokens against the allowance, by day, from the ledger.

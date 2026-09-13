@@ -46,6 +46,7 @@ from .incidents import (
     VerificationCheck,
     incident_id,
 )
+from .attack import TACTICS, Matrix, matrix
 from .contest import Contest, ContestRefused, contest
 from .counterfactual import Counterfactual, CounterfactualRefused, Intervention, counterfactual
 from .drafts import Draft, build_draft
@@ -80,6 +81,9 @@ __all__ = [
     "DetectionRule",
     "Intervention",
     "contest",
+    "matrix",
+    "Matrix",
+    "TACTICS",
     "counterfactual",
     "Detector",
     "Ewma",
