@@ -297,6 +297,37 @@ export interface AttackMatrix {
   meaning: { observed: string; not_observed: string };
 }
 export const getAttackMatrix = () => get<AttackMatrix>("/attack/matrix");
+
+/** The detections library (R77): drafted rules beside written ones, told
+ *  apart by `author.kind` and nothing else. */
+export interface DetectionSummary {
+  rule_id: string;
+  title: string;
+  author: { kind: "agent" | "human"; name: string };
+  incidents: string[];
+  technique: { id: string; name: string; tactic: string } | null;
+  status: string;
+  level: string | null;
+  behavioural: boolean;
+  valid: boolean;
+  href: string;
+}
+export interface DetectionsLibrary {
+  count: number;
+  drafted: number;
+  written: number;
+  rules: DetectionSummary[];
+}
+export const getDetections = () => get<DetectionsLibrary>("/detections");
+
+export interface WrittenDetection extends Omit<DetectionSummary, "href" | "behavioural"> {
+  yaml: string;
+  problems: string[];
+  notes: string;
+  path: string;
+}
+export const getDetection = (id: string) =>
+  get<WrittenDetection>(`/detections/${encodeURIComponent(id)}`);
 export const getIncidents = () => get<Incident[]>("/incidents");
 export const getActions = () => get<ActionSpec[]>("/actions");
 export const getTopology = () => get<TopologySnapshot>("/topology/graph");

@@ -1,0 +1,40 @@
+title: Scheduled task created from the command line
+id: 91e9bdcc-837f-50d3-bc8d-8d7d532acf46
+status: experimental
+description: >-
+  A scheduled task registered with schtasks.exe /create. Persistence that
+  survives a reboot is the step an implant takes once it has a foothold; on a
+  workstation that is not an administrator's, task creation from a shell is
+  rare enough to review. Written by hand against the beaconing scenario, whose
+  drafted rule for the same technique could only name the host — the stored
+  telemetry carried no process image or command line, and this is the rule a
+  person writes for the fields a real endpoint sensor would send.
+author: Preet Raval
+date: 2026/09/13
+references:
+  - https://attack.mitre.org/techniques/T1053/005/
+  - https://pashupatastra.vercel.app/incidents/INC-2026-0903
+x-incidents:
+  - INC-2026-0903
+x-notes: >-
+  Tune on the account: task creation by SYSTEM or by a software-deployment
+  service account is routine and should be filtered before this is run wide.
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection:
+    Image|endswith: '\schtasks.exe'
+    CommandLine|contains: '/create'
+  filter_system:
+    User|contains:
+      - 'AUTHORI'
+      - 'AUTORI'
+  condition: selection and not filter_system
+falsepositives:
+  - Administrators registering tasks by hand
+  - Software installers and management agents
+level: medium
+tags:
+  - attack.persistence
+  - attack.t1053.005

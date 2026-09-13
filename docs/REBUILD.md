@@ -2674,11 +2674,40 @@ or per-user persistence belongs to Phase 6, not to this one.
   the others store. `/intel/status` carries seven feeds; the page names the
   source and shows CVSS and NVD's analysis state as facts. API 449 seeded.*
 
-- [ ] **R77 — A browsable detections library.** Needs: **R71**.
+- [x] **R77 — A browsable detections library.** Needs: **R71**.
   The rules from R71, plus any written by hand, as a page tied back to the
   incidents they came from.
   **Done when:** every rule names its incident and its author — drafted by the
   agent or written by a human — and the two are visually distinguishable.
+  Done. `/detections` lists every rule the console holds, grouped by the
+  incident it came from: six drafted by R71 from the three scenarios'
+  telemetry, and two written by hand under
+  `packages/core/pashupatastra/detections/` — plain Sigma files with an
+  `author`, an `x-incidents` list and a reviewer's note, loaded by
+  `detections.py`, which **refuses a file with no author or no incident**
+  rather than listing a rule nobody stands behind. The two written ones are
+  the general forms of the drafted rules that could only name a host:
+  schtasks task creation for T1053.005 and admin-share access for
+  T1021.002, on the fields a real sensor sends, and they are honest about
+  what a deployment has to edit before they mean anything.
+  **The kind is a field, never an inference.** `author.kind` is `agent` for
+  a draft and `human` for a person's rule; the page reads it and nothing
+  else to decide the marker (dashed square against filled), the border
+  (dashed against solid), the badge and the author line — `drafted by sati`
+  in the agent's colour, `written by Preet Raval` in the gold the audit
+  trail gives a person's decision. A drafted rule links to the incident that
+  assembles it, where its mapping table makes it checkable; a written one
+  has its own page, which shows the author, the incidents, the note and the
+  document, and does not pretend to a mapping table it cannot have.
+  *Evidence: 6 core tests — the library loads signed and tied, every file
+  parses under pySigma, no author and no incident are each refused, the
+  technique comes from the standard tag, a duplicate id is refused; the
+  route test walks both kinds and resolves every href; `verifydetections.py`
+  holds the page to the API through a grayscale filter — drafted rows are
+  `dashed`, written rows `solid`, every author and incident named, every
+  incident link resolving, every written rule's page carrying its author
+  and its document. Width and AA contrast pass on both new routes; the
+  crawl walks 64 pages clean; core 623, seeded API 455.*
 
 - [ ] **R78 — Indicator enrichment in place.** Needs: **R76**.
   Any IP, hash or domain anywhere in the app is clickable, and queries the

@@ -154,7 +154,10 @@ export function DetectionRulePanel({ rule }: { rule: DetectionRule }) {
         <p>
           Drafted from stored telemetry, never deployed and never adopted. Every field
           above was read from an event this incident cites; nothing was written from what
-          a model knows about Sigma.
+          a model knows about Sigma.{" "}
+          <Link href="/detections" className="focusable rounded underline decoration-dotted">
+            Every rule the console holds, drafted and written →
+          </Link>
         </p>
       </div>
     </Panel>

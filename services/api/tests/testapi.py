@@ -931,3 +931,32 @@ def test_the_attack_matrix_names_the_steps_that_fill_it() -> None:
                 assert chain[int(step)]["attack_technique"]["id"] == cell["id"]
     assert filled == body["technique_count"]
     assert "not_observed" in body["meaning"]
+
+
+def test_the_detections_library_names_incident_and_author_for_every_rule() -> None:
+    """R77. Both kinds present, told apart by `author.kind` and never by
+    title; every rule tied to incidents that exist; a written rule's detail
+    route serves its YAML and a drafted rule's href is its incident route."""
+    body = client.get("/api/v1/detections").json()
+    assert body["written"] >= 1, "no hand-written rules in the library"
+    kinds = {r["author"]["kind"] for r in body["rules"]}
+    listed = client.get("/api/v1/incidents").json()
+    incidents = {i["id"] for i in listed}
+    # The infrastructure fixture has no ATT&CK-mapped steps, so no draft; the
+    # security scenarios do, so both kinds must be present there.
+    mapped = any(step.get("attack_technique") for i in listed for step in i["causal_chain"])
+    if mapped:
+        assert body["drafted"] >= 1 and kinds == {"agent", "human"}
+    for rule in body["rules"]:
+        assert rule["author"]["name"]
+        assert rule["incidents"]
+        if rule["author"]["kind"] == "agent":
+            assert rule["author"]["name"] == "sati"
+            assert client.get(f"/api/v1{rule['href']}").status_code == 200
+            assert set(rule["incidents"]) <= incidents
+        else:
+            assert rule["author"]["name"] != "sati"
+            detail = client.get(f"/api/v1{rule['href']}").json()
+            assert detail["yaml"].startswith("title:") and detail["valid"] is True
+            assert detail["author"] == rule["author"]
+    assert client.get("/api/v1/detections/not-a-rule").status_code == 404

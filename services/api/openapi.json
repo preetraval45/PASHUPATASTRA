@@ -1669,6 +1669,69 @@
         "summary": "Audit"
       }
     },
+    "/api/v1/detections": {
+      "get": {
+        "description": "Every detection rule the console holds, drafted or written (R77).\n\nTwo kinds, kept apart by `author.kind`. A drafted rule is R71's \u2014 assembled\nfrom one incident's stored telemetry, author `sati`, and honest to the\npoint of catching only that incident. A written rule is a person's, loaded\nfrom `pashupatastra/detections/`, tied to the incidents it was written\nagainst and signed with a name. The page draws the two differently, and\nthe field that tells them apart is set here, not inferred from a title.\n\nDrafted rules are assembled on request, the way `/incidents/{id}/\ndetection-rule/{technique}` assembles them, so the library cannot list a\ndraft that the incident no longer supports. A step whose telemetry maps to\nnothing is simply absent here \u2014 the 422 the per-rule route returns is a\ncorrect answer about the data, and a library entry for it would be a rule\nthat does not exist.",
+        "operationId": "detections_library_api_v1_detections_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Detections Library Api V1 Detections Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Detections Library"
+      }
+    },
+    "/api/v1/detections/{rule_id}": {
+      "get": {
+        "description": "One hand-written rule, in full. Drafted rules are served where they are\nassembled, under their incident.",
+        "operationId": "detection_written_api_v1_detections__rule_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rule_id",
+            "required": true,
+            "schema": {
+              "title": "Rule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Detection Written Api V1 Detections  Rule Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detection Written"
+      }
+    },
     "/api/v1/entities/{entity_key}": {
       "get": {
         "description": "One entity: what it is, what depends on it, and what it has been saying.\n\nBlast radius is included because \"what breaks if this breaks\" is the first\nquestion anyone asks about an entity, and making it a second request invites\na view that renders without it.",

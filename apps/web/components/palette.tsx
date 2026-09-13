@@ -68,6 +68,7 @@ const PAGES: SearchItem[] = [
   { kind: "page", label: "Audit", hint: "append-only ledger", href: "/audit" },
   { kind: "page", label: "How it works", hint: "tiers, gates, the loop", href: "/how-it-works" },
   { kind: "page", label: "ATT&CK coverage", hint: "what the library observed, tactic by tactic", href: "/attack" },
+  { kind: "page", label: "Detections", hint: "rules drafted from incidents, and written ones", href: "/detections" },
   { kind: "page", label: "Ask", hint: "the assistant", href: "/ask" },
   { kind: "page", label: "Blue team", hint: "work one yourself", href: "/blue-team" },
 ];

@@ -48,6 +48,7 @@ from .incidents import (
 )
 from .attack import TACTICS, Matrix, matrix
 from .contest import Contest, ContestRefused, contest
+from .detections import HandWrittenRule, load_rules
 from .counterfactual import Counterfactual, CounterfactualRefused, Intervention, counterfactual
 from .drafts import Draft, build_draft
 from .relations import Overlap, Relation, relate
@@ -81,6 +82,8 @@ __all__ = [
     "DetectionRule",
     "Intervention",
     "contest",
+    "HandWrittenRule",
+    "load_rules",
     "matrix",
     "Matrix",
     "TACTICS",

@@ -1,0 +1,41 @@
+title: Administrative share accessed from a workstation
+id: e29458d0-baac-5c7b-a6f8-5c0472f7ff15
+status: experimental
+description: >-
+  A file share named ADMIN$ or C$ opened over SMB from a host that is not a
+  server or a management system. Lateral movement over administrative shares
+  is how the beaconing workstation reached two hosts it had never contacted;
+  the drafted rule for that step matched the one workstation by name, and this
+  is the general form, on the share-access events Windows audits as 5140 and
+  5145.
+author: Preet Raval
+date: 2026/09/13
+references:
+  - https://attack.mitre.org/techniques/T1021/002/
+  - https://pashupatastra.vercel.app/incidents/INC-2026-0903
+x-incidents:
+  - INC-2026-0903
+x-notes: >-
+  The filter on the source names workstations by prefix, which is this
+  estate's convention and not a fact about SMB; a deployment with a different
+  naming scheme has to edit it before the rule means anything.
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID:
+      - 5140
+      - 5145
+    ShareName|endswith:
+      - '\ADMIN$'
+      - '\C$'
+  filter_source:
+    IpAddress|startswith: '10.0.0.'
+  condition: selection and not filter_source
+falsepositives:
+  - Administrators and management tools reaching hosts over admin shares
+level: medium
+tags:
+  - attack.lateral_movement
+  - attack.t1021.002

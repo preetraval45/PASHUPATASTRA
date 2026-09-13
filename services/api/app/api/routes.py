@@ -1341,6 +1341,125 @@ def audit(incident_ref: str | None = None, limit: int = 100) -> list[AuditRecord
     return AUDIT.records(incident_ref=incident_ref, limit=limit)
 
 
+@router.get("/detections")
+def detections_library() -> dict[str, object]:
+    """Every detection rule the console holds, drafted or written (R77).
+
+    Two kinds, kept apart by `author.kind`. A drafted rule is R71's — assembled
+    from one incident's stored telemetry, author `sati`, and honest to the
+    point of catching only that incident. A written rule is a person's, loaded
+    from `pashupatastra/detections/`, tied to the incidents it was written
+    against and signed with a name. The page draws the two differently, and
+    the field that tells them apart is set here, not inferred from a title.
+
+    Drafted rules are assembled on request, the way `/incidents/{id}/
+    detection-rule/{technique}` assembles them, so the library cannot list a
+    draft that the incident no longer supports. A step whose telemetry maps to
+    nothing is simply absent here — the 422 the per-rule route returns is a
+    correct answer about the data, and a library entry for it would be a rule
+    that does not exist.
+    """
+    from pashupatastra.detections import load_rules
+    from pashupatastra.sigma import SigmaError, draft_rule, rule_techniques, validate
+
+    store = entitystore()
+    rules: list[dict[str, object]] = []
+
+    for incident in STORE.all():
+        for technique in rule_techniques(incident):
+            cited = [
+                ref
+                for link in incident.causal_chain
+                if link.attack_technique is not None and link.attack_technique.id == technique.id
+                for ref in link.evidence
+            ]
+            try:
+                rule = draft_rule(incident, events_by_id(store, cited), technique.id)
+            except SigmaError:
+                continue
+            text = rule.to_yaml(date=incident.opened_at.strftime("%Y/%m/%d"))
+            rules.append(
+                {
+                    "rule_id": rule.rule_id,
+                    "title": rule.title,
+                    "author": {"kind": "agent", "name": "sati"},
+                    "incidents": [incident.id],
+                    "technique": {
+                        "id": technique.id,
+                        "name": technique.name,
+                        "tactic": technique.tactic,
+                    },
+                    "status": rule.status,
+                    "level": None,
+                    "behavioural": rule.behavioural,
+                    "valid": validate(text) == [],
+                    "href": f"/incidents/{incident.id}/detection-rule/{technique.id}",
+                }
+            )
+
+    for written in load_rules():
+        rules.append(
+            {
+                "rule_id": written.rule_id,
+                "title": written.title,
+                "author": {"kind": "human", "name": written.author},
+                "incidents": written.incidents,
+                "technique": _technique_named(written.technique_id),
+                "status": written.status,
+                "level": written.level,
+                "behavioural": True,
+                "valid": written.valid,
+                "href": f"/detections/{written.rule_id}",
+            }
+        )
+
+    return {
+        "count": len(rules),
+        "drafted": sum(1 for r in rules if r["author"]["kind"] == "agent"),
+        "written": sum(1 for r in rules if r["author"]["kind"] == "human"),
+        "rules": rules,
+    }
+
+
+def _technique_named(technique_id: str | None) -> dict[str, str] | None:
+    """The technique's name and tactic, from the library's own chain steps —
+    the only catalogue this console holds. Unknown to the library means the
+    id alone, not an invented name."""
+    if technique_id is None:
+        return None
+    for incident in STORE.all():
+        for link in incident.causal_chain:
+            technique = link.attack_technique
+            if technique is not None and technique.id == technique_id:
+                return {"id": technique.id, "name": technique.name, "tactic": technique.tactic}
+    return {"id": technique_id, "name": "", "tactic": ""}
+
+
+@router.get("/detections/{rule_id}")
+def detection_written(rule_id: str) -> dict[str, object]:
+    """One hand-written rule, in full. Drafted rules are served where they are
+    assembled, under their incident."""
+    from pashupatastra.detections import load_rules
+
+    for written in load_rules():
+        if written.rule_id == rule_id:
+            return {
+                "rule_id": written.rule_id,
+                "title": written.title,
+                "author": {"kind": "human", "name": written.author},
+                "incidents": written.incidents,
+                "technique": _technique_named(written.technique_id),
+                "status": written.status,
+                "level": written.level,
+                "yaml": written.text,
+                "valid": written.valid,
+                "problems": written.problems,
+                "notes": written.notes,
+                "path": written.path,
+            }
+    raise HTTPException(status_code=404, detail=f"no written rule {rule_id}")
+
+
 @router.get("/attack/matrix")
 def attack_matrix() -> dict[str, object]:
     """The library's ATT&CK coverage: one column per tactic, one cell per
