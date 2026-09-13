@@ -3168,8 +3168,11 @@ capability; each task removes a thing a visitor already hit.
   tests run — the same `web` job build — and hands Vercel the prebuilt
   output (`vercel build`, `vercel deploy --prebuilt --prod`), gated on every
   other job passing. `vercel.json` switches Vercel's own Git builds off for
-  `main`, at `apps/web` and at the repository root, so whichever folder the
-  project reads, the failing builds and their emails stop. The job needs
+  every branch, at `apps/web` and at the repository root, so whichever
+  folder the project reads, the failing builds and their emails stop. (The
+  first version disabled `main` only, and a Dependabot preview branch cut
+  minutes earlier failed the same way; branches opened before this change
+  carry the old file until Dependabot rebases them.) The job needs
   three repository secrets — `VERCEL_TOKEN`, `VERCEL_ORG_ID`,
   `VERCEL_PROJECT_ID` — and until they exist it says so and stops rather
   than failing the run.
