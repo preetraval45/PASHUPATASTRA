@@ -16,6 +16,8 @@ import os
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from contextlib import contextmanager
+
 import pytest
 from app.dynamo import _numbers_to_decimal, _plain
 
@@ -61,44 +63,72 @@ def test_the_round_trip_preserves_a_confidence() -> None:
 # --- the backend decision -----------------------------------------------------
 
 
-def test_no_configuration_means_no_durable_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    """With neither a table nor a database, every store falls back to memory and
-    health says `degraded` — which is true, and is the point of saying it."""
+@contextmanager
+def no_durable_backends():
+    """Neither a table nor a database, for the duration of the block — and the
+    backend decision restored *after* the environment is, not before.
+
+    The first version used `monkeypatch.setenv` and cleared the settings cache
+    in a `finally`. The `finally` runs before monkeypatch undoes the
+    environment, so the cache was refilled with "no database" and every module
+    after this one ran against memory while the scenarios another test had
+    seeded sat in Postgres. Nine Blue Team tests failed in the full run and
+    skipped alone, and CI — the only place Postgres is reachable — was red
+    without anybody being able to say why (R114).
+    """
     from app import backend
     from app.config import get_settings
 
-    monkeypatch.setenv("PASHU_DYNAMO_TABLE", "")
-    monkeypatch.setenv("PASHU_DATABASE_URL", "")
+    keys = ("PASHU_DYNAMO_TABLE", "PASHU_DATABASE_URL")
+    saved = {key: os.environ.get(key) for key in keys}
+    for key in keys:
+        os.environ[key] = ""
     get_settings.cache_clear()
     backend.reset()
     try:
-        assert backend.durable() is None
+        yield backend
     finally:
+        for key, value in saved.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
         get_settings.cache_clear()
         backend.reset()
 
 
-def test_every_seam_gets_the_same_answer(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_no_configuration_means_no_durable_store() -> None:
+    """With neither a table nor a database, every store falls back to memory and
+    health says `degraded` — which is true, and is the point of saying it."""
+    with no_durable_backends() as backend:
+        assert backend.durable() is None
+
+
+def test_every_seam_gets_the_same_answer() -> None:
     """Incidents, the audit trail and the topology graph each used to decide
     this for themselves. They could disagree — an audit trail on a database
     while incidents sat in memory would report `degraded` from one seam and
     `ok` from another, and `/health` would be answering for a third of the
     system."""
-    from app import backend
-    from app.config import get_settings
     from app.graph import _durable as graph_durable
     from app.engines.audit import AUDIT
     from app.store import STORE
 
-    monkeypatch.setenv("PASHU_DYNAMO_TABLE", "")
-    monkeypatch.setenv("PASHU_DATABASE_URL", "")
-    get_settings.cache_clear()
-    backend.reset()
-    try:
+    with no_durable_backends():
         assert STORE.durable is AUDIT.durable is graph_durable() is False
-    finally:
-        get_settings.cache_clear()
-        backend.reset()
+
+
+def test_the_backend_decision_survives_this_module() -> None:
+    """R114's regression guard: whatever this module did to the environment,
+    the next module must find the same backend the process started with. With
+    Postgres reachable that is a durable store; without it, memory — either
+    way, the answer after the block equals the answer before it."""
+    from app import backend
+
+    before = type(backend.durable()).__name__
+    with no_durable_backends() as inner:
+        assert inner.durable() is None
+    assert type(backend.durable()).__name__ == before
 
 
 def test_postgres_does_not_answer_graph_questions() -> None:

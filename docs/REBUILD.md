@@ -3065,7 +3065,7 @@ capability; each task removes a thing a visitor already hit.
   that starts at the repository root finds no Next app. Owner's to check in
   the project settings; until then, deploy from the CLI as before.
 
-- [ ] **R114 — The Postgres-backed suite is order-dependent.** Needs: nothing.
+- [x] **R114 — The Postgres-backed suite is order-dependent.** Needs: nothing.
   CI runs the API suite against a Postgres service; locally it runs against
   memory, so nobody had seen this. Against Postgres, nine `testgame.py` cases
   fail in the full run and *skip* when run alone on a fresh database: an
@@ -3080,6 +3080,25 @@ capability; each task removes a thing a visitor already hit.
   is the "checker that lies" this file keeps naming.
   **Done when:** the api job is green with Postgres as a service, and
   running `testgame.py` alone and in the full suite gives the same result.
+  Done. The bisection found the leak two modules away from where it showed.
+  `testdemoincidents.py` did `os.environ.setdefault("PASHU_DATABASE_URL",
+  "")` and never restored it — harmless to itself, because the settings cache
+  was already filled, and fatal to everything after the first test that
+  cleared that cache: `testdynamo.py`'s "no durable backend" cases, which
+  then refilled it from an environment with no database and moved the whole
+  process to memory while the scenarios seeded in Postgres stayed there.
+  Nine Blue Team failures and four in `testgraph.py`, all one leak. Fixed at
+  the source — the test touches nothing in the environment now — and the
+  `testdynamo` cases moved from `monkeypatch.setenv` plus a `finally` (which
+  runs *before* monkeypatch undoes the environment) to a context manager that
+  restores the environment first and the backend decision second, with a
+  regression guard asserting the backend after the block is the backend
+  before it. The last failure was a different thing: a feed test read
+  `counts()` off the store, which only the memory and DynamoDB backends
+  carry; it now asks whichever object answers graph questions.
+  *Evidence: reproduced CI's 13 failures on a fresh Postgres in one run,
+  then 482 passing default and 491 passing seeded, each on a fresh database;
+  the memory-only runs unchanged.*
   Carries **R74**'s measurements too: Phase 5C is still undeployed, so the
   browser halves of `verifycontest`, `verifycounterfactual`, `verifysigma` and
   `verifyrelation`, and their live-model clauses, run here.

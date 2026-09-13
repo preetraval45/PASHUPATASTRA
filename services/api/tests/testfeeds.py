@@ -245,11 +245,17 @@ def test_intelligence_never_becomes_a_topology_node(feeds) -> None:
     """A map that draws a thousand CVEs beside eleven hosts tells a reader they
     are the same kind of fact, and blast radius would traverse from a host into
     a vulnerability as though the two were connected."""
-    from app.graph import entitystore
+    from app.graph import GraphStore, entitystore
 
-    graph = entitystore()
+    store = entitystore()
+    # Topology counts come from whoever answers graph questions: the memory
+    # mirror and DynamoDB answer for themselves, Postgres routes through
+    # `GraphStore` (`test_postgres_does_not_answer_graph_questions`). Reading
+    # `counts()` off the store directly passed locally and failed in CI, where
+    # Postgres is reachable and the store has no such method (R114).
+    graph = store if getattr(store, "answers_graph", False) else GraphStore()
     before, _ = graph.counts()
-    graph.save_events([*fetch_kev(), *fetch_urlhaus()])
+    store.save_events([*fetch_kev(), *fetch_urlhaus()])
     after, _ = graph.counts()
     assert after == before
 

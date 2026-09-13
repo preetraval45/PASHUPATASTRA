@@ -163,10 +163,16 @@ def test_every_citation_resolves_through_the_api() -> None:
     A test that only compares two Python structures would pass while the route
     that serves them 404s, and the citation would still be dead everywhere a
     reader could actually click it.
-    """
-    import os
 
-    os.environ.setdefault("PASHU_DATABASE_URL", "")
+    Runs against whichever store the process has — memory locally, Postgres in
+    CI. It used to blank `PASHU_DATABASE_URL` first "to run without a
+    database", which did nothing here (the settings cache was already filled)
+    and everything later: the first test to clear that cache re-read an
+    environment with no database and moved the whole process to memory while
+    the scenarios seeded here stayed in Postgres. Nine Blue Team tests failed
+    in every CI run and passed alone (R114). A test must leave the environment
+    as it found it, and this one now touches nothing.
+    """
     from fastapi.testclient import TestClient
 
     from app.graph import GraphStore, entitystore
@@ -187,9 +193,6 @@ def test_every_citation_resolves_through_the_api() -> None:
 def test_an_unknown_citation_is_a_404_not_a_silent_empty() -> None:
     """A missing citation must be distinguishable from a reachable-but-empty
     one, or the dashboard cannot tell the difference either."""
-    import os
-
-    os.environ.setdefault("PASHU_DATABASE_URL", "")
     from fastapi.testclient import TestClient
 
     from app.main import app
