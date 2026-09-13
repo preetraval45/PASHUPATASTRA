@@ -1,8 +1,14 @@
 """The feeds themselves: fetch, and turn each entry into an `Event`.
 
-Two are here. A third, ThreatFox, is deliberately absent — abuse.ch now requires
-an API key for it, and a key nobody has is a dependency that fails in
-production and passes in every test written around it.
+Three are here: CISA KEV, URLhaus, and NVD's recent disclosures (R76). The
+real-attack feeds — leak sites, Feodo, ThreatFox, HIBP — are in `attacks.py`.
+
+**AlienVault OTX is deliberately absent.** R76 named it beside NVD, and the
+pulse endpoints all require an account's API key — a key nobody has is a
+dependency that fails in production and passes in every test written around
+it, which is the same reason ThreatFox was left out until a keyless export
+existed. If OTX ever publishes one, it belongs here; until then it is not
+half-wired.
 
 No SDK, no client library. Each of these is one GET returning JSON, and a
 library would add a dependency to the Lambda bundle, a second retry policy, and
@@ -14,7 +20,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Iterable
 
 from pashupatastra.events import (
@@ -34,6 +40,7 @@ TIMEOUT = 45.0
 
 KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 URLHAUS_URL = "https://urlhaus.abuse.ch/downloads/json_recent/"
+NVD_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
 
 class FeedUnavailable(RuntimeError):
@@ -119,6 +126,151 @@ def fetch_kev(limit: int = 25, since: str | None = None) -> list[Event]:
         if len(events) >= limit:
             break
     return events
+
+
+# --- NVD recent disclosures ---------------------------------------------------
+
+NVD_FIRST_WINDOW_HOURS = 24
+"""How far back the first poll looks. NVD publishes on the order of three
+hundred CVEs a day; a first run that reached back a week would spend its
+whole allowance on the oldest of two thousand."""
+
+
+def _parse_iso(value: str) -> datetime:
+    """NVD's `2026-09-10T19:17:32.423` — ISO, milliseconds, no offset, UTC.
+
+    Its own parser rather than a pattern added to `_parse_stamp`, because
+    that one falls back to *now* on a shape it does not know, and a cursor
+    parsed as *now* would open an empty window on every poll and the feed
+    would look quiet forever. A shape this feed cannot read is an error.
+    """
+    parsed = datetime.fromisoformat(value)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+
+
+def _nvd_stamp(value: datetime) -> str:
+    """The API's own timestamp shape, to the millisecond, no offset — it takes
+    UTC and rejects a `+00:00`. The milliseconds are real: a window that
+    started at `.000` would re-fetch the cursor's own record every poll."""
+    utc = value.astimezone(UTC)
+    return utc.strftime("%Y-%m-%dT%H:%M:%S.") + f"{utc.microsecond // 1000:03d}"
+
+
+def fetch_nvd(limit: int = 25, since: str | None = None) -> list[Event]:
+    """CVEs published to NVD since the cursor, oldest first.
+
+    **Reported, unless NVD has analysed it.** A CVE record is what its CNA
+    published; NVD's own analysis — a CVSS score it assigned, `vulnStatus:
+    Analyzed` — is the publisher's review, and only that earns `corroborated`.
+    Most recent records are `Awaiting Analysis` or `Deferred`, and they stay
+    `reported`, because "someone registered a CVE" is exactly what that word
+    means. Nothing from this feed is ever `confirmed`: that is KEV's word for
+    observed exploitation, and a disclosure is not an exploit.
+
+    **The cursor walks forward through publication time.** The API returns a
+    window oldest-first and there is no newest-first ordering, so each poll
+    takes the next `limit` after the cursor rather than the head of the day;
+    at twenty-five an hour against roughly three hundred a day the cursor
+    keeps up, and if it ever fell behind the page would show that as a growing
+    gap between `published` and now rather than skip silently. The window
+    starts at the cursor's own timestamp plus one millisecond, so the last
+    record stored is not fetched twice.
+
+    Severity is NVD's CVSS `baseSeverity` where a metric exists, from the
+    newest CVSS version present. Without one the record is `INFO`: a
+    disclosure with no score is a disclosure, and guessing a severity for it
+    would be the invented number every other feed here refuses.
+    """
+    end = _now()
+    if since:
+        start = _parse_iso(since) + timedelta(milliseconds=1)
+    else:
+        start = end - timedelta(hours=NVD_FIRST_WINDOW_HOURS)
+    url = (
+        f"{NVD_URL}?pubStartDate={_nvd_stamp(start)}&pubEndDate={_nvd_stamp(end)}"
+        f"&resultsPerPage={max(1, min(limit, 200))}"
+    )
+    payload = _get(url)
+    entries: Iterable[dict] = payload.get("vulnerabilities") or []
+
+    events: list[Event] = []
+    for entry in entries:
+        cve = entry.get("cve") or {}
+        identifier = cve.get("id")
+        published = cve.get("published")
+        if not identifier or not published:
+            continue
+        description = next(
+            (d.get("value", "") for d in cve.get("descriptions") or [] if d.get("lang") == "en"),
+            "",
+        )
+        score, severity_word, vector = _nvd_cvss(cve.get("metrics") or {})
+        status = str(cve.get("vulnStatus", ""))
+        analysed = status.lower() == "analyzed"
+        events.append(
+            Event(
+                event_class=EventClass.SECURITY,
+                source="nvd",
+                occurred_at=_parse_iso(published),
+                observed_at=_now(),
+                entity_ref=EntityRef(kind=EntityKind.VULNERABILITY, id=identifier, name=identifier),
+                severity=_nvd_severity(severity_word),
+                payload=SecurityPayload(
+                    detection_type="cve_disclosure",
+                    asset=str(cve.get("sourceIdentifier", ""))[:120],
+                    confidence=1.0,
+                ),
+                provenance=Provenance(
+                    source_system="nvd",
+                    url=f"https://nvd.nist.gov/vuln/detail/{identifier}",
+                    offset=published,
+                ),
+                labels={
+                    "verification": (
+                        Verification.CORROBORATED if analysed else Verification.REPORTED
+                    ),
+                    "title": description[:200],
+                    "summary": description[:400],
+                    # Not `status`: URLhaus uses that key for online/offline
+                    # and the page renders it as the URL's state.
+                    "analysis": status,
+                    "cvss": score,
+                    "cvss_severity": severity_word,
+                    "vector": vector,
+                    "cna": str(cve.get("sourceIdentifier", ""))[:120],
+                },
+            )
+        )
+        if len(events) >= limit:
+            break
+    return events
+
+
+def _nvd_cvss(metrics: dict) -> tuple[str, str, str]:
+    """Score, severity word and vector from the newest CVSS version present."""
+    for key in ("cvssMetricV40", "cvssMetricV31", "cvssMetricV30", "cvssMetricV2"):
+        for metric in metrics.get(key) or []:
+            data = metric.get("cvssData") or {}
+            if "baseScore" in data:
+                severity = data.get("baseSeverity") or metric.get("baseSeverity") or ""
+                return (
+                    str(data.get("baseScore", "")),
+                    str(severity).upper(),
+                    str(data.get("vectorString", ""))[:200],
+                )
+    return "", "", ""
+
+
+def _nvd_severity(word: str) -> Severity:
+    """CVSS words onto the three the event model has. `MEDIUM` and `LOW` are
+    `INFO` alongside "no score at all" — a disclosure is not an alert, and
+    only the top of the CVSS scale is worth a colour on a page whose other
+    entries are controllers answering right now."""
+    if word == "CRITICAL":
+        return Severity.CRITICAL
+    if word == "HIGH":
+        return Severity.WARNING
+    return Severity.INFO
 
 
 # --- abuse.ch URLhaus --------------------------------------------------------
@@ -242,4 +394,4 @@ def _tags(row: dict) -> list[str]:
     return []
 
 
-FEEDS = {"cisa-kev": fetch_kev, "urlhaus": fetch_urlhaus}
+FEEDS = {"cisa-kev": fetch_kev, "urlhaus": fetch_urlhaus, "nvd": fetch_nvd}

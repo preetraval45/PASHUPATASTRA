@@ -12,6 +12,8 @@ URLhaus's tags arriving as a Python-repr string rather than JSON.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from app.feeds import RANK, Verification
 from app.feeds.ingest import MemoryCursors, run
@@ -511,3 +513,122 @@ def test_a_quiet_feed_is_not_reported_as_broken(monkeypatch) -> None:
     assert feed["ok"] is True
     assert feed["stale"] is False
     assert feed["age_seconds"] is not None and feed["age_seconds"] < 60
+
+
+# --- R76: NVD recent disclosures, against a committed sample ------------------
+
+
+def _nvd_sample():
+    from pathlib import Path
+
+    return json.loads(
+        (Path(__file__).resolve().parent / "samples" / "nvd.json").read_text(encoding="utf-8")
+    )
+
+
+@pytest.fixture
+def nvd(monkeypatch):
+    """NVD answering from the sample captured on 13 September 2026 — twelve
+    records, every one `Deferred`, `Awaiting Analysis` or `Undergoing
+    Analysis`, which is what a three-day window of fresh CVEs looks like."""
+    from app.feeds import sources
+
+    asked: list[str] = []
+
+    def fake_get(url: str):
+        asked.append(url)
+        return _nvd_sample()
+
+    monkeypatch.setattr(sources, "_get", fake_get)
+    return asked
+
+
+def test_nvd_parses_its_real_sample_with_a_source_on_every_record(nvd) -> None:
+    from app.feeds.sources import fetch_nvd
+
+    events = fetch_nvd(limit=25)
+    assert len(events) == 12
+    for event in events:
+        assert event.source == "nvd"
+        assert event.provenance.source_system == "nvd"
+        assert event.provenance.url == f"https://nvd.nist.gov/vuln/detail/{event.entity_ref.id}"
+        assert event.entity_ref.id.startswith("CVE-")
+        assert event.provenance.offset == event.occurred_at.strftime("%Y-%m-%dT%H:%M:%S.") + f"{event.occurred_at.microsecond // 1000:03d}"
+
+
+def test_a_disclosure_is_reported_until_nvd_has_analysed_it(nvd) -> None:
+    """`Awaiting Analysis` and `Deferred` are what the word *reported* means;
+    only NVD's own analysis earns `corroborated`, and nothing here is ever
+    `confirmed` — that is KEV's word for observed exploitation."""
+    from app.feeds import Verification
+    from app.feeds.sources import fetch_nvd
+
+    events = fetch_nvd(limit=25)
+    assert {e.labels["verification"] for e in events} == {Verification.REPORTED}
+    assert Verification.CONFIRMED not in {e.labels["verification"] for e in events}
+
+    payload = _nvd_sample()
+    payload["vulnerabilities"][0]["cve"]["vulnStatus"] = "Analyzed"
+    from app.feeds import sources
+
+    sources._get = lambda url: payload  # type: ignore[assignment]
+    first = fetch_nvd(limit=1)[0]
+    assert first.labels["verification"] == Verification.CORROBORATED
+
+
+def test_the_first_poll_looks_back_one_day_and_later_polls_start_at_the_cursor(nvd) -> None:
+    from app.feeds.sources import fetch_nvd
+
+    fetch_nvd(limit=12)
+    first = nvd[-1]
+    assert "pubStartDate=" in first and "resultsPerPage=12" in first
+
+    fetch_nvd(limit=12, since="2026-09-10T19:17:32.423")
+    later = nvd[-1]
+    # One millisecond after the cursor, milliseconds intact, so the cursor's
+    # own record is not fetched again.
+    assert "pubStartDate=2026-09-10T19:17:32.424" in later
+
+
+def test_nvd_timestamps_are_read_not_defaulted_to_now() -> None:
+    """`_parse_stamp` falls back to *now* on a shape it does not know. NVD's
+    ISO shape must go through its own parser, or every record would be dated
+    to the poll and the cursor window would be empty forever."""
+    from datetime import UTC, datetime
+
+    from app.feeds.sources import _parse_iso
+
+    assert _parse_iso("2026-09-10T19:17:32.423") == datetime(2026, 9, 10, 19, 17, 32, 423000, tzinfo=UTC)
+
+
+def test_cvss_severity_maps_onto_the_event_models_three(nvd) -> None:
+    from app.feeds.sources import _nvd_severity
+    from pashupatastra.events import Severity
+
+    assert _nvd_severity("CRITICAL") is Severity.CRITICAL
+    assert _nvd_severity("HIGH") is Severity.WARNING
+    assert _nvd_severity("MEDIUM") is Severity.INFO
+    assert _nvd_severity("") is Severity.INFO
+
+
+def test_nvd_is_polled_beside_the_others_and_its_outage_stops_nothing(monkeypatch) -> None:
+    """R76's last clause, on the new feed: NVD down, every other feed stored."""
+    from app.feeds import ingest, sources
+    from app.feeds.ingest import MemoryCursors, run
+    from app.graphmemory import MemoryGraph
+
+    assert "nvd" in ingest.FEEDS
+
+    def selective(url: str):
+        if "nvd.nist.gov" in url:
+            raise sources.FeedUnavailable("nvd is down")
+        return KEV_PAYLOAD if "cisa.gov" in url else URLHAUS_PAYLOAD
+
+    monkeypatch.setattr(sources, "_get", selective)
+    from app.feeds import attacks
+
+    monkeypatch.setattr(attacks, "_get", lambda url: (_ for _ in ()).throw(attacks.FeedUnavailable("skip")))
+    summary = run(store=MemoryGraph(), cursors=MemoryCursors(), limit=5)
+    assert summary["nvd"]["ok"] is False and "down" in summary["nvd"]["error"]
+    assert summary["cisa-kev"]["ok"] is True and summary["cisa-kev"]["stored"] > 0
+    assert summary["urlhaus"]["ok"] is True and summary["urlhaus"]["stored"] > 0

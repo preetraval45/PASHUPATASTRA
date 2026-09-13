@@ -76,6 +76,11 @@ const SOURCE: Record<string, { name: string; about: string }> = {
     name: "HIBP",
     about: "Data breaches disclosed and loaded into Have I Been Pwned",
   },
+  nvd: {
+    name: "NVD",
+    about:
+      "CVEs newly published to the National Vulnerability Database. A disclosure, not an exploit — most arrive before NVD has analysed them, and stay reported until it has",
+  },
 };
 
 export function sourceName(source: string): string {
@@ -283,6 +288,19 @@ function Facts({ labels }: { labels: Record<string, string> }) {
   }
   if (labels.required_action) {
     facts.push({ key: "required action", value: labels.required_action });
+  }
+  // NVD: the score when NVD or the CNA has assigned one, and where the record
+  // is in NVD's own analysis — "Awaiting Analysis" is the honest state of most
+  // fresh CVEs and is worth showing rather than hiding behind a badge.
+  if (labels.cvss) {
+    facts.push({
+      key: "cvss",
+      value: labels.cvss_severity ? `${labels.cvss} ${labels.cvss_severity.toLowerCase()}` : labels.cvss,
+      warn: labels.cvss_severity === "CRITICAL" || labels.cvss_severity === "HIGH",
+    });
+  }
+  if (labels.analysis) {
+    facts.push({ key: "nvd analysis", value: labels.analysis.toLowerCase() });
   }
 
   if (!facts.length) return null;

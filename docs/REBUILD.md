@@ -2627,12 +2627,52 @@ or per-user persistence belongs to Phase 6, not to this one.
   Width sweep and AA contrast pass on `/attack` and `/how-it-works`; core
   617, seeded API 447.*
 
-- [ ] **R76 — More real feeds.** Needs: **R23**.
+- [x] **R76 — More real feeds.** Needs: **R23**.
   Beyond CISA KEV and URLhaus: NVD/CVE recent disclosures and AlienVault OTX
   pulses, both free and both polled the way the existing feeds are.
   **Done when:** each new feed has its own poller, its own failure handling and
   a source attribution on every record it produces — and one feed being down
   does not empty the page.
+  Done for NVD; OTX is deliberately absent, for R24's reason. Every OTX
+  pulse endpoint requires an account's API key, and a key nobody has is a
+  dependency that fails in production and passes in every test written
+  around it — the same reason ThreatFox waited for a keyless export. It is
+  named in `sources.py` as absent rather than half-wired.
+  `fetch_nvd` polls the NVD 2.0 API with no key (five requests per thirty
+  seconds is the keyless limit; the poll is hourly). Two properties worth
+  recording. **Reported unless NVD has analysed it**: a fresh CVE is what
+  its CNA published, and most arrive `Awaiting Analysis` or `Deferred`; only
+  `vulnStatus: Analyzed` earns `corroborated`, and nothing from this feed is
+  ever `confirmed` — that is KEV's word for observed exploitation, and a
+  disclosure is not an exploit. **The cursor walks forward through
+  publication time**: the API returns a window oldest-first with no
+  newest-first ordering, so each poll takes the next twenty-five after the
+  cursor — starting one *millisecond* after it, milliseconds intact, so the
+  cursor's own record is not fetched twice — and at roughly three hundred
+  disclosures a day the cursor keeps up. NVD's ISO timestamps go through
+  their own parser: `_parse_stamp` falls back to *now* on a shape it does
+  not know, and a cursor parsed as *now* would have opened an empty window
+  on every poll and looked like a quiet feed forever.
+  A CVE in both KEV and NVD is one indicator with two reports under R56's
+  grouping, and KEV's `confirmed` outranks — which is the right reading.
+  **Polled live, all seven feeds, and the last clause exercised for real.**
+  NVD stored twelve on its first run and twenty-five from the cursor on its
+  second. And `ransomware.live`'s `/v2/recentvictims` answered **404** on
+  every attempt: the site now describes its free API as *legacy, victims
+  delayed vs PRO, one request a minute* and the PRO API needs a key. The
+  other six feeds were untouched by it, which is R88's per-feed handling
+  doing exactly what this clause asks — and it means the deployed
+  Observatory has been showing that feed stale, honestly, since whenever the
+  endpoint moved. Left registered: a feed that has stopped and says so is
+  the right state until a keyless endpoint exists or the owner decides on a
+  key.
+  *Evidence: a real response committed at `tests/samples/nvd.json`; six
+  tests — the sample parses with a source on every record, `reported` until
+  analysed and never `confirmed`, the first poll looks back a day and later
+  polls start at the cursor plus one millisecond, the ISO parser reads
+  rather than defaults, CVSS onto the three severities, and NVD down while
+  the others store. `/intel/status` carries seven feeds; the page names the
+  source and shows CVSS and NVD's analysis state as facts. API 449 seeded.*
 
 - [ ] **R77 — A browsable detections library.** Needs: **R71**.
   The rules from R71, plus any written by hand, as a page tied back to the
@@ -3122,6 +3162,17 @@ capability; each task removes a thing a visitor already hit.
   Root Directory: the CLI uploads `apps/web` as the root, and a Git build
   that starts at the repository root finds no Next app. Owner's to check in
   the project settings; until then, deploy from the CLI as before.
+  **Then made not to matter (13 September).** The owner asked that this
+  never happen again, and the honest fix without the log is to stop letting
+  Vercel build at all: CI's `deploy site` job builds the site where the
+  tests run — the same `web` job build — and hands Vercel the prebuilt
+  output (`vercel build`, `vercel deploy --prebuilt --prod`), gated on every
+  other job passing. `vercel.json` switches Vercel's own Git builds off for
+  `main`, at `apps/web` and at the repository root, so whichever folder the
+  project reads, the failing builds and their emails stop. The job needs
+  three repository secrets — `VERCEL_TOKEN`, `VERCEL_ORG_ID`,
+  `VERCEL_PROJECT_ID` — and until they exist it says so and stops rather
+  than failing the run.
 
 - [x] **R114 — The Postgres-backed suite is order-dependent.** Needs: nothing.
   CI runs the API suite against a Postgres service; locally it runs against

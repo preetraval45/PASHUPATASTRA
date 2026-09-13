@@ -139,6 +139,55 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  deploy-site:
+    name: deploy site
+    # The site is built here — the same build the `web` job just proved — and
+    # handed to Vercel prebuilt, so Vercel never builds it and its Git
+    # integration is switched off in vercel.json. Every Git-triggered Vercel
+    # build had failed since before September, on a project setting no log
+    # from outside the dashboard could name; a deploy that happens where the
+    # tests happen is one that can be read.
+    #
+    # Gated on every test job. Needs three repository secrets: VERCEL_TOKEN
+    # (Account → Settings → Tokens), VERCEL_ORG_ID (Team → Settings → General,
+    # "Team ID") and VERCEL_PROJECT_ID (Project → Settings → General). Without
+    # them the job says so and stops, rather than failing the run.
+    needs: [core, api, connectors, web, dependencies, secrets]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: secrets present?
+        id: gate
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::warning::VERCEL_TOKEN, VERCEL_ORG_ID and VERCEL_PROJECT_ID are not all set — the site was tested but not deployed"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.gate.outputs.ready == 'true'
+        run: npm ci || npm install
+      - name: pull the project's production settings and environment
+        if: steps.gate.outputs.ready == 'true'
+        run: npx vercel@50 pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - name: build, here
+        if: steps.gate.outputs.ready == 'true'
+        run: npx vercel@50 build --prod --token="$VERCEL_TOKEN"
+      - name: deploy the prebuilt output
+        if: steps.gate.outputs.ready == 'true'
+        run: npx vercel@50 deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
   dependencies:
     name: dependency audit
     runs-on: ubuntu-latest
