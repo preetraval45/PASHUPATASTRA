@@ -122,13 +122,13 @@ function StepList({
             <span className="mono text-xs text-[rgb(var(--faint))]">{time(step.at)}</span>{" "}
             <span className="mono break-all text-[rgb(var(--astra))]">{step.entity_key}</span>{" "}
             <span className="break-words">{step.transition}</span>{" "}
-            <span className="mono whitespace-nowrap text-xs text-[rgb(var(--faint))]">
+            <span className="mono text-xs text-[rgb(var(--faint))]">
               {step.refs.map((ref, at) => (
                 <span key={ref}>
                   {at > 0 && ", "}
                   <Link
                     href={hrefFor(ref, incidentRef)}
-                    className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+                    className="focusable whitespace-nowrap rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
                   >
                     {ref}
                   </Link>

@@ -2543,11 +2543,41 @@ human. Generation is a new output, not a new authority.
   and it is the one most likely to fail.
   `openapi.json` regenerated for the new route.
 
-- [ ] **R74 — Deploy Phase 5C and review.** Needs: **R68–R73**.
+- [~] **R74 — Deploy Phase 5C and review.** Needs: **R68–R73**.
   **Done when:** every new output is cited, no generated artefact can be adopted
   without an approval record, and the Groq token ceiling from R19 still holds
   with the trace and the self-critique pass both running.
   **Stop here for review.**
+  **Reviewed on 13 September 2026 against a local stack in the deployed
+  configuration — a production build of the site over the seeded API —
+  because this session holds no AWS credentials, no Vercel token and no
+  model key.** What that could measure, it did, and every one of the browser
+  halves that R70–R73 recorded as *not measured through a browser* now has
+  been: `verifycontest` — three incidents argue a real rival and the page
+  names what answers it; `verifycounterfactual` — the estimate, the
+  remainder and the four basis lines on screen for all three, and the
+  clairvoyant question refused; `verifysigma` — six rules parsing, three
+  steps refused, the page showing the rule, its mapping table and its gaps;
+  `verifydraft` — every line cited and resolving, adopting priced at 41 and
+  `approval` for both kinds, so nothing generated can be adopted without a
+  record. The full crawl walks 59 pages with no broken link, no empty page
+  and no browser error; the width sweep passes 60/60; every pairing meets AA
+  in both themes.
+  **The sweep found what nothing else had.** The drafts and the
+  counterfactual set a line's citations in one `whitespace-nowrap` span, and
+  a line resting on five refs was 432px wide at 375 — the page scrolled
+  sideways by 90px on the beaconing incident. Neither panel had ever been
+  measured at a phone width. Each citation is nowrap now and the list is
+  not, so it breaks at a comma.
+  **What remains, and why:** the Lambda deploy (`dist/api.zip` is built and
+  waiting — 832 files, 6 MB, `tasks.py` and `usage.py` inside), the Vercel
+  deploy, and the two clauses only a live model settles — whether the model
+  calls `argue_the_other_side`, `what_if_we_had_acted` and
+  `draft_detection_rule` rather than answering from its reading, and whether
+  the R19 token ceiling holds with the trace and the self-critique both
+  running. `verifytrace.py` and the live half of `verifyagent.py` carry
+  those; they run at R106, which now owns the deploy for Phases 5C and 5E
+  together.
 
 ---
 

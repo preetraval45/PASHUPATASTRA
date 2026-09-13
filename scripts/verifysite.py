@@ -30,7 +30,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
         sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
     )
 
-SITE = "https://pashupatastra.vercel.app"
+SITE = __import__("os").environ.get("PASHU_SITE", "https://pashupatastra.vercel.app")
 
 # Words that mean the page gave up.
 #

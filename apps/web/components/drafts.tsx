@@ -43,13 +43,18 @@ export function DraftPanel({
               {section.lines.map((line, index) => (
                 <li key={`${section.title}-${index}`} className="min-w-0">
                   <span className="break-words">{line.text}</span>{" "}
-                  <span className="mono whitespace-nowrap text-xs text-[rgb(var(--faint))]">
+                  <span className="mono text-xs text-[rgb(var(--faint))]">
+                    {/* Wrap between citations, never inside one: each link is
+                        nowrap and the list is not, so a line with five refs
+                        breaks at a comma instead of pushing the page sideways at
+                        375px — found by the width sweep at R74, on a panel that
+                        had never been measured at a phone width. */}
                     {line.refs.map((ref, at) => (
                       <span key={ref}>
                         {at > 0 && ", "}
                         <Link
                           href={hrefFor(ref, draft.incident_ref)}
-                          className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+                          className="focusable whitespace-nowrap rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
                         >
                           {label(ref, draft.incident_ref)}
                         </Link>
