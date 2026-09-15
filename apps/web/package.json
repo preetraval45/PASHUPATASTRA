@@ -11,9 +11,9 @@
     "test": "node --test lib/*.test.ts"
   },
   "dependencies": {
-    "next": "15.5.25",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "_comment_overrides": "Both entries force a patched transitive dependency that next pins below the fix, where npm's only offered remedy is the next@16 major. sharp: an OPTIONAL dependency of next (^0.34.3) used solely for next/image optimization; 0.34.x carries four libvips CVEs, and this app imports no next/image. postcss: next bundles its own nested copy, so bumping our direct dependency alone left the vulnerable one in place. Re-check both on every next upgrade and delete whichever the new range already satisfies — a stale override silently pins a dependency backwards.",
   "overrides": {
@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "@types/node": "22.10.7",
-    "@types/react": "19.0.7",
-    "@types/react-dom": "19.0.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "autoprefixer": "10.4.20",
     "postcss": "8.5.26",
     "tailwindcss": "3.4.17",
