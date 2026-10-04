@@ -76,7 +76,7 @@ export function ChatConsole({ incidents }: { incidents: Incident[] }) {
   if (!incident) {
     return (
       <p className="text-sm text-[rgb(var(--faint))]">
-        There are no incidents to ask about. Sati answers from stored evidence,
+        There are no incidents to ask about. Sati, the investigation agent, answers from stored evidence,
         so it has nothing to work from until one exists.
       </p>
     );
@@ -202,7 +202,7 @@ function Opening({ incident }: { incident: Incident }) {
   return (
     <div className="space-y-3 text-sm">
       <p className="text-[rgb(var(--muted))]">
-        Sati reads {incident.id} — its causal chain, the telemetry behind it, and
+        Sati, the investigation agent, reads {incident.id} — its causal chain, the telemetry behind it, and
         the plan — and answers from that. Every claim carries a citation you can
         follow.
       </p>

@@ -36,3 +36,4 @@ Protocol: before every push, write a topic-named file from
 - [Counterfactuals](Counterfactuals.md) — R72: what acting earlier would have prevented; why later is not downstream and you cannot act on what you had not seen
 - [ArgueTheOtherSide](ArgueTheOtherSide.md) — R73: the plausible-and-wrong explanation; why a confidence ranking is not a refutation
 - [ReviewPass](ReviewPass.md) — R93, R98–R105, R108, R111: two reviews folded in and the O-1 map; the 503 was an unbounded partition read at API Gateway's limit, not a cold start — deploy pending credentials
+- [ReachableAndNamed](ReachableAndNamed.md) — R115, R120, R122: defanging in two layers, the approved origin note for the names, and production found serving an empty, memory-only API

@@ -292,7 +292,8 @@ Phase 5G ─ reachable, then convincing   R115, R116 first — ahead of everythi
   R115 ──► R116 (recategorise after defanging)     R112 (domain purchase first)
   R20, R68 ──► R117      R5, R50 ──► R118      R107 ──► R119
   R120 (descriptor now; origin sentence after owner decision)
-  R115, R117, R120 ────────────► R121 (deploy + review)
+  R122 (AWS access first) ──► every deployed check below
+  R123      R115, R117, R120, R122 ──► R121 (deploy + review)
 
 Phase 6 ─ tenancy and identity           needs R18, R59, R55
   S1 ──► S2 ──► S3 ──► S4 ──► S5        the order is not negotiable:
@@ -3482,7 +3483,7 @@ Needs nothing from 5F to start — **R115 and R116 run first, ahead of
 everything else in this file**, because every other task here is worth
 nothing to a visitor whose filter stops at the front door.
 
-- [ ] **R115 — Defang every indicator.** Needs: nothing.
+- [~] **R115 — Defang every indicator.** Needs: nothing.
   Every URL, domain and IP that came from a threat feed is rendered defanged —
   `hxxp://evil[.]example`, `45.61.184[.]22` — is never an `href`, and never
   appears in its live form anywhere in the served HTML or RSC payload. The
@@ -3495,6 +3496,24 @@ nothing to a visitor whose filter stops at the front door.
   **Done when:** a crawl of every route in the sitemap finds no live feed
   URL, domain or routable IP in the response body, and a unit test holds
   the defang function to round-trip with a re-fang.
+  Verified locally; **what remains is committing it and the deployed crawl**,
+  which waits on R122 — production is still serving an empty Observatory, so a
+  deployed pass today would prove nothing. Two layers, built by two sessions
+  the same day: the API defangs at source (`packages/core/pashupatastra/defang.py`,
+  `services/api/app/defanging.py`), and the web defangs again before render
+  (`apps/web/lib/defang.ts` → `defangIntel` on the Observatory; `Indicators`
+  displays the defanged form and re-fangs only in the browser, at the moment
+  a lookup is asked). Both are idempotent, so either alone holds.
+  `scripts/verifydefang.py` reads every reachable indicator from the API,
+  re-fangs it, and searches every sitemap route and every Observatory filter
+  for the live form — and fails a vacuous pass, by requiring the defanged
+  form still to appear. Publisher advisory links
+  (`feodotracker.abuse.ch/browse/host/<ip>/`) stay live by design and are
+  excluded; the first run flagged them, which is how that rule was written.
+  *Evidence: against a local API holding real feed data (19 reachable
+  indicators from URLhaus, ThreatFox and Feodo), 27 routes clean and all 19
+  shown defanged; web unit tests 34/34 including 8 for defang; typecheck and
+  production build clean.*
 
 - [ ] **R116 — Name the filter.** Needs: **a block-page screenshot** — the
   owner's to collect from someone who sees it.
@@ -3552,7 +3571,7 @@ nothing to a visitor whose filter stops at the front door.
   source, and a figure whose source is absent renders as absent rather than
   as a stale number.
 
-- [ ] **R120 — Sati, never met bare.** Needs: **an owner decision** on the
+- [x] **R120 — Sati, never met bare.** Needs: **an owner decision** on the
   origin sentence.
   Two halves. The first needs no decision: the first mention of Sati on every
   page reads *Sati, the investigation agent* (or the shortest form that fits),
@@ -3565,9 +3584,44 @@ nothing to a visitor whose filter stops at the front door.
   **Done when:** a crawl finds no page whose first *Sati* lacks its
   descriptor; and the origin sentence is either live with the CLAUDE.md
   amendment in the same change, or recorded in BRAND.md as declined.
+  Done. The owner approved the origin note on 4 October 2026; CLAUDE.md now
+  permits exactly that passage, in the same change that ships it as *The
+  names* on `/how-it-works`. The three places Sati is introduced — the
+  incident chat panel and both states of `/ask` — read *Sati, the
+  investigation agent*.
+  *Evidence: a crawl of every sitemap route finds Sati's first mention
+  carrying the descriptor on each page that names it; `/ask` checked
+  separately, since it is not in the sitemap.*
 
-- [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120**
-  (R116, R118, R119 when they land).
+- [ ] **R122 — Production is serving nothing.** Needs: **AWS access** — the
+  owner's, since this session's permissions do not reach the account.
+  Found while checking R115 against the live site, 4 October 2026: the
+  deployed API (`265d0hsmwa.execute-api…/api/v1`) answers
+  `status: degraded`, `audit_storage: memory`, every feed *has not polled
+  yet*, and its feed list predates R76 (no NVD). So the Observatory, which
+  the landing page calls live, is empty for every visitor, and the header
+  says *memory only*. The Lambda is running old code without its DynamoDB
+  connection, and the hourly schedule is either missing or invoking
+  something that cannot store. Steps, all from
+  [DEPLOYMENT.md](DEPLOYMENT.md): `python scripts/buildlambda.py`, then
+  `python scripts/deploylambda.py` with the DynamoDB table configured,
+  then `python scripts/schedulefeeds.py --function pashupatastra-api`, then
+  invoke `{"task": "ingest_feeds"}` once rather than waiting an hour.
+  **Done when:** `/health` reports `ok` with durable storage, `/intel/status`
+  shows every feed polled within the stale window, NVD is among them, and
+  the live Observatory renders entries.
+
+- [ ] **R123 — ransomware.live moved.** Needs: nothing.
+  `https://api.ransomware.live/v2/recentvictims` answers 404 as of
+  4 October 2026, so the *Leak sites* feed fails on every poll. Find the
+  current endpoint in the publisher's documentation, adapt the connector,
+  and keep the failure state honest in the meantime — it already reads as
+  *unavailable* rather than as quiet.
+  **Done when:** a live poll stores entries and the R88 connector tests pass
+  against the new response shape.
+
+- [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
+  R122** (R116, R118, R119, R123 when they land).
   **Done when:** the R115 crawl passes on the deployed site, R116's second
   person can open it, and `verifysite.py` and `verifyui.py` pass with the new
   incidents included.

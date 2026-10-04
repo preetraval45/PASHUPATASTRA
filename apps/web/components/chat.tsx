@@ -131,7 +131,7 @@ export function ChatPanel({ incident }: { incident: Incident }) {
       >
         {turns.length === 0 && (
           <p className="text-sm text-[rgb(var(--faint))]">
-            Sati reads this incident&rsquo;s evidence and answers from it. It can
+            Sati, the investigation agent, reads this incident&rsquo;s evidence and answers from it. It can
             name an action, but it cannot run one &mdash; anything it proposes
             goes to a human for approval.
           </p>

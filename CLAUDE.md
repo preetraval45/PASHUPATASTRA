@@ -41,10 +41,20 @@ artwork** — the Pashupatastra spear — by an owner decision on 17 August 2026
 reversed the earlier geometric-mark rule. See [docs/BRAND.md](docs/BRAND.md) for
 that decision and the constraints the file brings.
 
-That exception is the logo and nothing else. Do not add deities, weapons, flames,
-or mythological flourish to UI copy, docs, or other assets, and do not translate
-the tagline into mystical language — it is a technical claim. Elsewhere the
-mythology stays subtle: names only.
+That exception is the logo, plus one approved origin note, and nothing else. Do
+not add deities, weapons, flames, or mythological flourish to UI copy, docs, or
+other assets, and do not translate the tagline into mystical language — it is a
+technical claim. Elsewhere the mythology stays subtle: names only.
+
+**The origin note** — approved by the owner on 4 October 2026 (REBUILD.md R120).
+One short passage on `/how-it-works`, and the *The names* section of
+[docs/BRAND.md](docs/BRAND.md), may say where the two names come from:
+Pashupatastra is Lord Shiva's weapon, which Arjuna earned and held back; Sati is
+named for Mata Sati, Shiva's consort, the goddess later born as Parvati. That is
+factual attribution, not ornament — no imagery, no devotional language, and it
+appears nowhere else. On every page, the first mention of Sati carries what it
+is (*Sati, the investigation agent*), because the bare word has an unrelated
+common meaning in English.
 
 ## Engineering rules
 

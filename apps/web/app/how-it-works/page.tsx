@@ -324,6 +324,26 @@ export default async function HowItWorksPage() {
         </ul>
       </Panel>
 
+      {/* The origin note (R120). The one place on the site the names are
+          explained — approved wording, recorded in CLAUDE.md and BRAND.md.
+          Attribution, not ornament: no imagery, and nowhere else. */}
+      <Panel title="The names" aside="where they come from">
+        <p className="text-sm leading-relaxed text-[rgb(var(--muted))]">
+          <span className="text-[rgb(var(--ink))]">Pashupatastra</span> is Lord
+          Shiva&rsquo;s weapon. In the epic, Arjuna earns it and never uses it
+          — it is held back, not fired. That is the design here: the system can
+          name drastic actions, and everything around it exists so that it
+          proposes them and waits.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-[rgb(var(--muted))]">
+          <span className="text-[rgb(var(--ink))]">Sati</span>, the
+          investigation agent, is named for Mata Sati, Shiva&rsquo;s consort,
+          the goddess later born as Parvati. The engines are deterministic and
+          decide nothing on their own; Sati is what brings them to bear — and
+          still only proposes. The policy engine authorises.
+        </p>
+      </Panel>
+
       <Panel title="Cite this work" aside="from CITATION.cff">
         <Cite />
       </Panel>
