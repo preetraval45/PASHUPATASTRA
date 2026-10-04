@@ -825,6 +825,27 @@ and talks about it. Your risk tiers never ask an LLM whether something is safe.
   be the provider's own body, which carries the organisation id and a billing
   upgrade link — on a public endpoint.
 
+  **Correction, 4 October 2026 — the evidence blocks carried no evidence.**
+  Found while reviewing R117. `context.build` read an event's text from
+  `payload.message` or `payload.summary`, and on every scenario event both are
+  `None`: the observation lives in `labels.summary`. So each event block the
+  model received was a header line — `class=… severity=… entity=… at=…` — and
+  not one word of what was observed. Advisories were unaffected
+  (`_advisory_lines` reads `labels` directly), which is why R26's measurements
+  stand.
+  What makes this worth recording rather than just fixing is how it survived.
+  Answers stayed plausible because the chain, hypothesis and plan blocks are
+  built from the `Incident` model and do carry their text, so the agent
+  answered from the diagnosis and cited event ids whose contents it had never
+  read. And R19's citation check passed, correctly by its own definition: it
+  asks whether a ref is among what was retrieved this turn, and the ref *was*
+  retrieved — empty. **A citation verified against a block with nothing in it
+  is the same green tick as one verified against the evidence.** The
+  recurring lesson of Phase 3 was that checks lie; this is the same shape,
+  one layer lower, and the fix is in `4227678`.
+  *Deployed answers predate the fix, so what the live site has been saying was
+  reasoned from less than it appeared to be. It changes with R122.*
+
 - [x] **R20 — Guardrails in code.** Needs: **R19**.
   The chat route cannot invoke a non-zero-risk action — enforced by the route's
   tool list, not by prompt instruction. Most of this landed with R19 and is
