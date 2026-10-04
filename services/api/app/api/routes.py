@@ -1336,7 +1336,22 @@ def event(event_id: str) -> dict[str, object]:
     record = entitystore().event(event_id)
     if record is None:
         raise HTTPException(status_code=404, detail=f"unknown event {event_id}")
-    return record
+    # Kavach's reading of the observation's own words (R117), so the page can
+    # mark text addressed to the agent as what it is. Computed on read rather
+    # than stored: the tripwire improves, and an old flag should not outlive it.
+    from pashupatastra.kavach import screen
+
+    labels = record.get("labels") or {}
+    payload = record.get("payload") or {}
+    screening = screen(labels.get("summary") or payload.get("message") or payload.get("summary"))
+    return {
+        **record,
+        "kavach": {
+            "flagged": screening.flagged,
+            "signals": list(screening.signals),
+            "actions_named": list(screening.actions_named),
+        },
+    }
 
 
 # --- audit -------------------------------------------------------------------

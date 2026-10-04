@@ -416,8 +416,19 @@ export const getEntity = (key: string) =>
 
 /** One event by id. This is what makes an evidence citation checkable rather
  *  than decorative — without it the id is a string a reader takes on trust. */
+/** Kavach's reading of an observation's words (R117): whether they look
+ *  addressed to the agent. A tripwire, so `flagged: false` is *nothing
+ *  noticed*, never *safe*. */
+export interface KavachScreening {
+  flagged: boolean;
+  signals: string[];
+  actions_named: string[];
+}
+
 export const getEvent = (id: string) =>
-  get<EntityEvent & { entity_key: string }>(`/events/${encodeURIComponent(id)}`);
+  get<EntityEvent & { entity_key: string; kavach?: KavachScreening }>(
+    `/events/${encodeURIComponent(id)}`,
+  );
 
 /** Whether the API is reachable at all.
  *

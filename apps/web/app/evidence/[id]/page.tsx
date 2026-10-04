@@ -75,7 +75,31 @@ export default async function EvidencePage({
             <Ago at={event.occurred_at} />
           </span>
         </div>
-        {summary && <p className="mt-4 text-sm">{summary}</p>}
+        {summary && !event.kavach?.flagged && <p className="mt-4 text-sm">{summary}</p>}
+
+        {/* Text addressed to the agent (R117). Shown, because hiding an
+            attack is not the same as resisting it — but quoted, set apart,
+            and labelled as the attacker's words rather than the console's. */}
+        {summary && event.kavach?.flagged && (
+          <div className="mt-4 space-y-2">
+            <p className="flex flex-wrap items-center gap-2 text-xs text-[rgb(var(--crit))]">
+              <span aria-hidden="true">▲</span>
+              <span className="font-medium">Untrusted text addressed to the agent</span>
+              <span className="text-[rgb(var(--muted))]">
+                — {[...event.kavach.signals, ...event.kavach.actions_named.map((a) => `names ${a}`)].join(" · ")}
+              </span>
+            </p>
+            <blockquote className="mono break-words border-l-2 border-[rgb(var(--crit))] pl-3 text-sm text-[rgb(var(--muted))]">
+              {summary}
+            </blockquote>
+            <p className="text-xs text-[rgb(var(--faint))]">
+              Kept as evidence of an attempt. It reaches the model fenced as
+              data, and anything it asks for is scored by the policy engine like
+              any other proposal — <span className="mono">wipe_host</span> is
+              denied by name.
+            </p>
+          </div>
+        )}
       </Panel>
 
       {/* Provenance is the point of the page. An observation whose origin cannot
