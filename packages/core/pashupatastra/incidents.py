@@ -156,6 +156,22 @@ class Verification(BaseModel):
         return all(c.passed for c in self.checks)
 
 
+class Source(BaseModel):
+    """One published reference, named so a reader can go and read it."""
+
+    title: str
+    url: str = Field(pattern=r"^https://")
+    """`https` only. A citation is followed from a public page, and offering a
+    reader an unencrypted hop to read the evidence behind a security claim
+    would be an odd way to make it."""
+
+    publisher: str = ""
+    note: str = ""
+    """What this source supports, in a few words. A list of links with no
+    reason attached is a bibliography; the reason is what makes it a
+    citation."""
+
+
 class Incident(BaseModel):
     id: str
     state: IncidentState = IncidentState.DETECTED
@@ -172,6 +188,25 @@ class Incident(BaseModel):
     verification: Verification | None = None
     similar_incident_ids: list[str] = Field(default_factory=list)
     transitions: list[Transition] = Field(default_factory=list)
+
+    sources: list[Source] = Field(default_factory=list)
+    """Published work this account rests on, beyond our own telemetry.
+
+    Evidence ids cite what *we* observed; this cites what someone else
+    published — a vendor advisory behind a diagnosis, or, for an incident
+    written as a simulation of a real event, the public reporting it is
+    modelled on. Kept apart from `evidence` on purpose: an external analysis
+    is not an observation of this estate, and filing the two together would
+    let a scenario borrow the standing of something that was actually seen.
+    """
+
+    simulation_of: str | None = None
+    """What this incident is a simulation of, named, when it is one.
+
+    Set means *nothing here was observed anywhere* — the account is modelled
+    on the public record of some other organisation's incident. A reader must
+    never have to infer that from the prose, so it is a field, and every
+    surface that renders the incident can say it without parsing anything."""
 
     @property
     def top_hypothesis(self) -> Hypothesis | None:

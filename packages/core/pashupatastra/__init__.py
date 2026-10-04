@@ -45,6 +45,7 @@ from .incidents import (
     Verification,
     VerificationCheck,
     incident_id,
+    Source,
 )
 from .attack import TACTICS, Matrix, matrix
 from .contest import Contest, ContestRefused, contest
@@ -82,6 +83,7 @@ __all__ = [
     "DetectionRule",
     "Intervention",
     "contest",
+    "Source",
     "HandWrittenRule",
     "load_rules",
     "matrix",
