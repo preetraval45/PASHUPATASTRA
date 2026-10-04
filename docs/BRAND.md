@@ -52,6 +52,42 @@ public launch on trademark clearance, and a logo cannot be registered — or saf
 commercialised — without clear rights to it. **Resolve before any public launch,
 not after.** See the note in that section.
 
+## The names
+
+**Owner's reasoning, stated 4 October 2026**, recorded here because a review
+that day questioned both names and the answer belongs beside the rules rather
+than in a chat log.
+
+| Name | Origin, as the owner chose it | What it maps to |
+|------|------------------------------|-----------------|
+| **Pashupatastra** | Lord Shiva's most powerful weapon | The platform: the full capability to act on an estate, up to `wipe_host` |
+| **Sati** | Mata Sati — the form of the goddess later born as Parvati, Shiva's consort, and Shakti, the power that moves | The agent: the part of the system that acts, reasoning over the engines |
+
+**Why the pair works, and how to say it in one breath.** In the epic, Arjuna
+earns the Pashupatastra and never uses it at Kurukshetra — it is held, not
+fired. That is this product's design: the system can take drastic actions,
+and the architecture exists so that it proposes them and waits. The pairing
+holds a second way: in the Shaiva saying, Shiva without Shakti is inert. The
+platform's engines are deterministic and have no opinion about what to do
+next (CLAUDE.md); Sati is what brings them to bear. Neither reading weakens
+rule 2 — Sati proposes, Dharma authorises.
+
+**The known misreading, and what is done about it.** In English and in most
+search results, *sati* also names the outlawed practice of widow-burning, and
+a first-time reader cannot tell which is meant. The names are kept — that is
+the owner's call and this section does not reopen it. The misreading is
+handled by context instead:
+
+- The first mention of Sati on any page or document says what it is — *Sati,
+  the investigation agent* — so the word is never met bare.
+- The capitalised proper noun only; never lower-case *sati* in copy.
+- Where there is room for one sentence on origin (an About section, a talk,
+  a README), name the goddess explicitly: *named for Mata Sati, Shiva's
+  consort*. Naming the source is what removes the ambiguity.
+- Whether that origin sentence appears **on the site** is gated by
+  [REBUILD.md](REBUILD.md) **R120**, because CLAUDE.md currently keeps the
+  mythology to names only and the site copy follows CLAUDE.md.
+
 ## Tagline
 
 **Observe. Reason. Act. Verify.**

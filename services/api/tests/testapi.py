@@ -960,3 +960,91 @@ def test_the_detections_library_names_incident_and_author_for_every_rule() -> No
             assert detail["yaml"].startswith("title:") and detail["valid"] is True
             assert detail["author"] == rule["author"]
     assert client.get("/api/v1/detections/not-a-rule").status_code == 404
+
+# --- R78: indicator enrichment ------------------------------------------------
+
+
+def test_a_known_indicator_comes_back_with_what_the_feeds_stored() -> None:
+    """The feeds write their indicators keyed by kind; a lookup finds them
+    under whichever key the feed that saw it used."""
+    from app.feeds import Verification
+    from app.graph import entitystore
+    from pashupatastra.events import (
+        Event,
+        EventClass,
+        EntityKind,
+        EntityRef,
+        Provenance,
+        SecurityPayload,
+        Severity,
+    )
+    from datetime import UTC, datetime
+
+    entitystore().save_events(
+        [
+            Event(
+                event_class=EventClass.SECURITY,
+                source="feodo-tracker",
+                occurred_at=datetime(2026, 10, 1, 9, 0, tzinfo=UTC),
+                observed_at=datetime(2026, 10, 1, 9, 0, tzinfo=UTC),
+                entity_ref=EntityRef(
+                    kind=EntityKind.INDICATOR, id="ip:203.0.113.77", name="203.0.113.77"
+                ),
+                severity=Severity.CRITICAL,
+                payload=SecurityPayload(detection_type="c2_server", confidence=1.0),
+                provenance=Provenance(
+                    source_system="feodo-tracker",
+                    url="https://feodotracker.abuse.ch/browse/host/203.0.113.77/",
+                ),
+                labels={"verification": Verification.REPORTED, "title": "QakBot controller"},
+            )
+        ]
+    )
+
+    body = client.get("/api/v1/intel/indicator/203.0.113.77").json()
+    assert body["known"] is True and body["kind"] == "ipv4"
+    assert body["sources"] == ["feodo-tracker"]
+    assert body["reports"][0]["title"] == "QakBot controller"
+    assert body["reports"][0]["url"].startswith("https://feodotracker.abuse.ch/")
+    assert body["queried_externally"] is False
+
+
+def test_nothing_known_is_an_answer_not_an_error() -> None:
+    """R78's done-when. A 404 would say the request was wrong; the request was
+    fine and the catalogues have nothing."""
+    response = client.get("/api/v1/intel/indicator/192.0.2.123")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["known"] is False and body["reports"] == []
+    assert body["consulted"] and body["queried_externally"] is False
+    assert body["keys_tried"]
+
+
+def test_an_entity_key_is_refused_rather_than_looked_up() -> None:
+    """The guard. Without it this route takes any string from a URL and
+    answers questions about which accounts and hosts exist."""
+    for value in ("account:j.rivera", "host:ws-0148", "j.rivera", "ws-0148"):
+        response = client.get(f"/api/v1/intel/indicator/{value}")
+        assert response.status_code == 422, f"{value} was looked up"
+        assert "not an indicator" in response.json()["detail"]
+
+
+def test_a_repeat_lookup_is_served_from_cache() -> None:
+    first = client.get("/api/v1/intel/indicator/198.51.100.200").json()
+    second = client.get("/api/v1/intel/indicator/198.51.100.200").json()
+    assert first["cached"] is False and second["cached"] is True
+    assert second["known"] == first["known"]
+
+
+def test_the_lookup_never_reaches_the_network(monkeypatch) -> None:
+    """Stated as a property rather than trusted to the docstring: every outward
+    call in this process goes through urllib, so failing it proves the lookup
+    did not make one."""
+    import urllib.request
+
+    def refuse(*args, **kwargs):
+        raise AssertionError("the enrichment lookup made an outward request")
+
+    monkeypatch.setattr(urllib.request, "urlopen", refuse)
+    body = client.get("/api/v1/intel/indicator/cve-2026-69836").json()
+    assert body["kind"] == "cve"

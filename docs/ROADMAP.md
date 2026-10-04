@@ -35,13 +35,18 @@ Week 1 begins **Monday 10 August 2026**.
 
 | Phase | Weeks | Dates | Status |
 |-------|-------|-------|--------|
-| 0 — Foundation | 1–2 | Aug 10 – Aug 23 | **In progress** — everything not needing AWS access or a legal decision is done |
-| 1 — Drishti · Perception | 3–6 | Aug 24 – Sep 20 | **Started early** — framework and Prometheus connector done |
-| 2 — Buddhi + Smriti · Intelligence | 7–10 | Sep 21 – Oct 18 | Not started |
-| 3 — Astra + Dharma · Action | 11–14 | Oct 19 – Nov 15 | Partly built early |
-| 4 — Verification | 15–17 | Nov 16 – Dec 6 | Partly built early |
-| 5 — PIB · Benchmark | 18–20 | Dec 7 – Dec 27 | Not started |
-| 6 — Research & OSS release | 21–24 | Dec 28 – Jan 24 2027 | Not started |
+| 0 — Foundation | 1–2 | Aug 10 – Aug 23 | **In progress** — 76 done, 2 partial, 12 open; what remains needs AWS SSO, name clearance or a second reviewer |
+| 1 — Drishti · Perception | 3–6 | Aug 24 – Sep 20 | **Nearly done** — 47 of 48; the open item is one-click approve, which waits on Phase 3 |
+| 2 — Buddhi + Smriti · Intelligence | 7–10 | Sep 21 – Oct 18 | **Mostly done** — 57 done, 6 open, each waiting on the Phase 5 corpus or real traffic |
+| 3 — Astra + Dharma · Action | 11–14 | Oct 19 – Nov 15 | **In progress** — 48 done, 10 open (3 added 4 Oct: §3.6, §3.7) |
+| 4 — Verification | 15–17 | Nov 16 – Dec 6 | **Nearly done** — 22 of 23 |
+| 5 — PIB · Benchmark | 18–20 | Dec 7 – Dec 27 | **In progress** — 30 done, 1 partial, 6 open |
+| 6 — Research & OSS release | 21–24 | Dec 28 – Jan 24 2027 | **Started** — 4 done, 1 partial, 9 open |
+
+*Counts recounted from the checkboxes on 4 October 2026; the previous statuses
+were written in August and had drifted well behind the work.* The public site's
+own plan is [REBUILD.md](REBUILD.md); its newest phase, **5G**, puts making
+the site reachable ahead of everything else.
 
 ### Why Phases 3 and 4 are partly built already
 
@@ -498,6 +503,35 @@ floor beneath them.
 - [ ] Agent roles are skipped until an EKS OIDC provider exists — a cluster-less environment plans clean by design, so this lands with the cluster
 - [ ] KMS customer-managed keys for connector credentials *(Secrets Manager uses the AWS-managed key today)*
 
+### 3.6 A security action, for real *(added 4 October 2026)*
+
+The Kubernetes executors are real and cluster-verified, but every *security*
+action the public demo shows — `block_ip`, `revoke_session`, `isolate_host` —
+has no executor behind it. A reviewer reading "the system can act" will check
+exactly those.
+
+- [ ] `block_ip` executed against a sandbox — a security-group or NACL deny
+  rule in a throwaway AWS account, or `iptables` on a local VM where AWS is not
+  yet provisioned — through the existing remediation loop: capture prior state,
+  Dharma verdict, execute, verify the rule exists and the address is refused,
+  roll back, verify it is gone. Same two live-execution gates as §3.2; the
+  executor lives in `services/api` or `packages/connectors`, never in
+  `packages/core`. *Evidence: a `verifyexecutors.py`-style script run against
+  the sandbox, and a recording of it end to end*
+- [ ] `revoke_session` against a test identity provider tenant (Okta developer
+  or Entra free tier), with the same capture → verify → rollback shape, where
+  the rollback is `reissue_session` and verification reads the session list
+
+### 3.7 Policy as data *(added 4 October 2026)*
+
+- [ ] Dharma's tier thresholds and escalation rules loaded from a versioned,
+  schema-validated policy file rather than constants in `dharma.py`, with the
+  scoring arithmetic staying code. The verdict records the policy version it
+  was decided under, so an audit can say which rules were in force. A test
+  shows one policy edit changing one verdict and nothing else, and a
+  malformed file fails closed — every action to the highest tier — rather
+  than open
+
 **Exit criterion:** a red-team pass finds no execution path that reaches a
 connector without a recorded policy verdict; every action has a tested rollback;
 CloudTrail confirms no action occurred that the internal audit log does not
@@ -698,6 +732,18 @@ Task-level breakdowns for every phase live in [TASKS.md](TASKS.md).
 if I restart PostgreSQL?" *before* acting — expected downtime, affected services,
 users impacted, recovery probability. This is the step from monitoring to
 decision intelligence.
+
+Today `counterfactual.py` answers the backward question (*what would acting
+earlier have prevented*). The forward question is the first Kaal task:
+
+- [ ] **Kaal v0 — predict before acting** *(added 4 October 2026)*. Every
+  proposal carries a predicted post-state from a dry run over the topology
+  graph — entities affected, estimated users, expected recovery — shown on
+  the approval surface beside the risk arithmetic, and compared after
+  execution through the predicted-vs-actual error `learning.py` already
+  publishes. Deterministic; no model participates in the prediction.
+  *Evidence: a test where a prediction is made, the action runs, and the
+  recorded error equals the difference*
 
 ## Business model
 

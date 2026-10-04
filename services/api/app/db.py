@@ -241,6 +241,53 @@ class PostgresStore:
             for r in rows
         ]
 
+    def recent_events(self, sources: list[str] | None = None, limit: int = 50) -> list[dict]:
+        """Newest events, optionally from named sources.
+
+        Added on 4 October 2026, when R78's verification found the Observatory
+        empty on a Postgres deployment while sixty-five feed events sat in the
+        table. `/intel`, `/intel/status` and the palette's advisory index all
+        reach for this method with `getattr(store, "recent_events", None)` and
+        all three quietly showed nothing when it was absent — the store had the
+        rows and no way to ask for them.
+
+        DynamoDB and the memory mirror had it; Postgres is the on-prem path
+        `docs/DEPLOYMENT.md` keeps open, and it was the one without. Filtered
+        in SQL rather than in Python for the reason the DynamoDB one gives:
+        fetching every event to discard most of them works at sixty-five rows
+        and stops working at the first real deployment.
+        """
+        clause = "WHERE source = ANY(%s)" if sources else ""
+        params: list[Any] = [list(sources)] if sources else []
+        params.append(limit)
+        with connect(self.database_url) as conn:
+            rows = conn.execute(
+                f"""
+                SELECT id, event_class, source, occurred_at, observed_at,
+                       severity, payload, provenance, labels, entity_key
+                FROM event
+                {clause}
+                ORDER BY occurred_at DESC, id DESC
+                LIMIT %s
+                """,
+                params,
+            ).fetchall()
+        return [
+            {
+                "id": r["id"],
+                "event_class": r["event_class"],
+                "source": r["source"],
+                "occurred_at": r["occurred_at"].isoformat(),
+                "observed_at": r["observed_at"].isoformat(),
+                "severity": r["severity"],
+                "payload": r["payload"],
+                "provenance": r["provenance"],
+                "labels": r["labels"],
+                "entity_key": r["entity_key"],
+            }
+            for r in rows
+        ]
+
     def event(self, event_id: str) -> dict | None:
         """One event by id, so a citation can be followed to what it cites."""
         with connect(self.database_url) as conn:

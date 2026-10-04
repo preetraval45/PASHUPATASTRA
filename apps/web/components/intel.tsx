@@ -17,6 +17,7 @@ import {
   type IntelGroup,
   type Verification,
 } from "@/lib/api";
+import { Indicators } from "@/components/indicator";
 import { Ago, Badge, statusForSeverity, type Status } from "@/components/ui";
 
 /**
@@ -139,7 +140,11 @@ export function IntelGroupRow({ group }: { group: IntelGroup }) {
             minimum contribution without it. */}
         {identifier && (
           <span className="mono min-w-0 break-all text-[rgb(var(--astra))]">
-            {identifier}
+            {/* The feed's own indicator, clickable like any other (R78). This
+                is the page where a reader is most likely to want the other
+                reports on an address, and the identifier here is exactly the
+                value the lookup is keyed by. */}
+            <Indicators text={identifier} />
           </span>
         )}
       </div>

@@ -320,6 +320,54 @@ export interface DetectionsLibrary {
 }
 export const getDetections = () => get<DetectionsLibrary>("/detections");
 
+/** What this console holds about one indicator (R78). Nothing external is
+ *  consulted; `consulted` and `note` say so, and the popover prints them. */
+export interface IndicatorReport {
+  value: string;
+  kind: string;
+  known: boolean;
+  reports: {
+    event_id: string;
+    source: string | null;
+    occurred_at: string | null;
+    severity: string | null;
+    verification: string | null;
+    title: string;
+    url: string | null;
+  }[];
+  report_count: number;
+  sources: string[];
+  first_seen: string | null;
+  last_seen: string | null;
+  keys_tried: string[];
+  consulted: string;
+  queried_externally: boolean;
+  note: string;
+  cached: boolean;
+}
+
+/** Looked up from the browser, on a click, never during a render.
+ *
+ *  Reports the failure rather than returning null, because the popover has to
+ *  tell "nothing known" from "could not ask" — the first is an answer about
+ *  the world and the second is an answer about us, and showing the first when
+ *  the second is true is how a reader relaxes about a live C2 address. */
+export async function lookupIndicator(
+  value: string,
+): Promise<{ ok: true; report: IndicatorReport } | { ok: false; reason: string }> {
+  const result = await request<IndicatorReport>(
+    `${API_BASE}/intel/indicator/${encodeURIComponent(value)}`,
+  );
+  if (result.ok) return { ok: true, report: result.data };
+  return {
+    ok: false,
+    reason:
+      result.failure.kind === "missing"
+        ? "this is not an indicator the console looks up"
+        : "the API did not answer",
+  };
+}
+
 export interface WrittenDetection extends Omit<DetectionSummary, "href" | "behavioural"> {
   yaml: string;
   problems: string[];

@@ -407,3 +407,21 @@ def test_recent_events_come_from_the_index_and_match_the_partition(store) -> Non
     second = store.recent_events(limit=20)
     assert "EVENT" not in calls, "the second read went back to the partition"
     assert [r["id"] for r in first] == [r["id"] for r in second]
+
+def test_every_durable_store_can_answer_what_is_recent() -> None:
+    """R78's verification found the Observatory empty on Postgres while the
+    table held sixty-five feed events: `/intel`, `/intel/status` and the
+    palette all ask for `recent_events` through `getattr(..., None)`, so a
+    store without it shows nothing rather than failing. The general form of
+    that bug is a store missing a method every reader assumes, so the shape is
+    asserted for all three rather than the one that was broken."""
+    from app.db import PostgresStore
+    from app.dynamo import DynamoStore
+    from app.graphmemory import MemoryGraph
+
+    for store in (PostgresStore, DynamoStore, MemoryGraph):
+        assert callable(getattr(store, "recent_events", None)), (
+            f"{store.__name__} cannot answer recent_events; every intel surface "
+            "reads it through getattr and would silently show nothing"
+        )
+        assert callable(getattr(store, "entity_events", None)), store.__name__

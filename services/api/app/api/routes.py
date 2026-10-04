@@ -1341,6 +1341,51 @@ def audit(incident_ref: str | None = None, limit: int = 100) -> list[AuditRecord
     return AUDIT.records(incident_ref=incident_ref, limit=limit)
 
 
+ENRICHER: object | None = None
+
+
+def _enricher():
+    """One enricher per process, so its cache survives between requests.
+
+    Built lazily rather than at import: `entitystore()` resolves the backend,
+    and resolving it at import time is what made the test suite depend on
+    module order (R114).
+    """
+    global ENRICHER
+    from ..enrich import Enricher
+
+    store = entitystore()
+    if ENRICHER is None or getattr(ENRICHER, "store", None) is not store:
+        ENRICHER = Enricher(store=store)
+    return ENRICHER
+
+
+@router.get("/intel/indicator/{value:path}")
+def enrich_indicator(value: str) -> dict[str, object]:
+    """What this console holds about one address, hash, domain or CVE (R78).
+
+    A 422 for anything that is not one of those. That is the guard rather than
+    pedantry: this route takes a value straight from the URL, and without the
+    classifier refusing them, `account:j.rivera` would be a lookup and a public
+    page would be an interface for asking which accounts exist. The classifier
+    errs toward refusing, so a new generic TLD is a missing link rather than an
+    open door.
+
+    Nothing known is a 200 with `known: false`. The catalogues having nothing
+    is an answer about the world, not an error about the request.
+    """
+    answer = _enricher().lookup(value)
+    if answer is None:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"{value!r} is not an indicator this route will look up. "
+                "Addresses, domains, file hashes and CVE identifiers only."
+            ),
+        )
+    return answer
+
+
 @router.get("/detections")
 def detections_library() -> dict[str, object]:
     """Every detection rule the console holds, drafted or written (R77).

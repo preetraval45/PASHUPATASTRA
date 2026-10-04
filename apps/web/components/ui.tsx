@@ -12,6 +12,8 @@ import Link from "next/link";
 import { hrefFor } from "@/lib/refs";
 import type { ReactNode } from "react";
 
+import { Indicators } from "@/components/indicator";
+
 import type { AttackTechnique } from "@/lib/api";
 
 /* ------------------------------------------------------------------ status */
@@ -350,7 +352,15 @@ export function Stated({ value, className = "" }: { value: number; className?: s
  *  without it. */
 export function Ident({ children }: { children: ReactNode }) {
   return (
-    <span className="mono min-w-0 break-all text-[rgb(var(--astra))]">{children}</span>
+    <span className="mono min-w-0 break-all text-[rgb(var(--astra))]">
+      {/* Any address, hash, domain or CVE inside becomes a lookup (R78).
+          Here rather than at each call site, because every identifier on the
+          site already comes through this component — and because a second
+          place that decided what an indicator is would eventually disagree
+          with this one. Plain strings pass through untouched; anything that is
+          not a string is rendered as given, since markup cannot be scanned. */}
+      {typeof children === "string" ? <Indicators text={children} /> : children}
+    </span>
   );
 }
 
