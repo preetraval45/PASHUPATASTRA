@@ -22,6 +22,13 @@ wrong:
 * **Beaconing and lateral movement** — regular outbound connections to one
   destination are what backup software looks like, and the difference is the
   destination, not the pattern.
+
+
+Every address here is from RFC 5737's documentation ranges (`192.0.2.0/24`,
+`198.51.100.0/24`, `203.0.113.0/24`), which are reserved so they can be
+written down and cannot route anywhere. A scripted scenario carrying a real
+routable address puts a live-looking indicator on a public page, which is
+what R115 is about — `45[.]61[.]184[.]22` was one until 4 October 2026.
 """
 
 from __future__ import annotations
@@ -159,7 +166,7 @@ ACCESS_0901 = [
     # nothing more — it does not yet say anyone got in.
     Edge(
         source="asset:sso-portal",
-        target="network_flow:45.61.184.22->sso-portal:443",
+        target="network_flow:203.0.113.22->sso-portal:443",
         kind="reached_by",
         evidence=["SEC-0001-a"],
     ),
@@ -168,7 +175,7 @@ ACCESS_0901 = [
     # to the identity; without that line these would be two unrelated facts.
     Edge(
         source="account:j.rivera",
-        target="network_flow:45.61.184.22->sso-portal:443",
+        target="network_flow:203.0.113.22->sso-portal:443",
         kind="authenticated_from",
         evidence=["SEC-0001-b"],
     ),
@@ -253,7 +260,7 @@ ACCESS_0903 = [
 def credential_stuffing(now: datetime) -> Scenario:
     account = _ref(EntityKind.ACCOUNT, "j.rivera")
     asset = _ref(EntityKind.ASSET, "sso-portal")
-    flow = _ref(EntityKind.NETWORK_FLOW, "45.61.184.22->sso-portal:443")
+    flow = _ref(EntityKind.NETWORK_FLOW, "203.0.113.22->sso-portal:443")
 
     signals = [
         Signal("SEC-0001-a", flow, -2100, "auth_failure_burst",

@@ -20,12 +20,14 @@ from pashupatastra import (
 )
 from pashupatastra.approvals import ApprovalLog, Decision
 from pashupatastra.learning import Prediction
+from pashupatastra.defang import refang
 from pashupatastra.registry import all_actions, get as get_action
 from pydantic import BaseModel
 
 from ..config import get_settings
 from ..engines import astra, loop as loop_engine, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
+from ..defanging import defang_record
 from ..engines.buddhi import model_health
 from ..graph import GraphStore, chain_times, entitystore, events_by_id
 from .. import progress as progress_module
@@ -970,7 +972,11 @@ def intel(limit: int = 50, source: str | None = None) -> dict[str, object]:
         "count": len(groups),
         "reports": len(entries),
         "window_hours": int(GROUPING_WINDOW.total_seconds() // 3600),
-        "groups": groups,
+        # Defanged on the way out, not on the way to the screen (R115). A
+        # server component that renders a defanged string can still have been
+        # handed the live one as a prop, and the live value reaches the browser
+        # in the RSC payload whether or not it is ever shown.
+        "groups": defang_record(groups),
     }
 
 
@@ -1037,7 +1043,7 @@ def search_index(advisories: int = 40) -> dict[str, object]:
     from ..feeds.ingest import FEEDS
 
     entries = reader(sources=sorted(FEEDS), limit=advisories * 2) if reader else []
-    for entry in group(entries)[:advisories]:
+    for entry in defang_record(group(entries))[:advisories]:
         items.append(
             {
                 "kind": "advisory",
@@ -1374,7 +1380,9 @@ def enrich_indicator(value: str) -> dict[str, object]:
     Nothing known is a 200 with `known: false`. The catalogues having nothing
     is an answer about the world, not an error about the request.
     """
-    answer = _enricher().lookup(value)
+    # Either form is accepted: the page now renders the defanged value (R115),
+    # and a link built from what the reader sees has to come back here and work.
+    answer = _enricher().lookup(refang(value))
     if answer is None:
         raise HTTPException(
             status_code=422,
@@ -1383,7 +1391,9 @@ def enrich_indicator(value: str) -> dict[str, object]:
                 "Addresses, domains, file hashes and CVE identifiers only."
             ),
         )
-    return answer
+    # Echoed back defanged, for the same reason the feed rows are: this answer
+    # is rendered into a page, and the page must not carry a live indicator.
+    return defang_record(answer)
 
 
 @router.get("/detections")

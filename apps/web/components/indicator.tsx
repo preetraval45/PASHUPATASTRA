@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { lookupIndicator, type IndicatorReport } from "@/lib/api";
+import { defang, refang } from "@/lib/defang";
 import { split, type IndicatorKind } from "@/lib/indicators";
 
 /**
@@ -48,17 +49,23 @@ const KIND_LABEL: Record<IndicatorKind, string> = {
   cve: "vulnerability",
 };
 
-/** Text with its indicators marked up. Plain runs render untouched. */
+/** Text with its indicators marked up.
+ *
+ *  Accepts text that is already defanged (the Observatory's, R115) or not
+ *  (an incident's), and renders both the same way: defanged. The scan runs
+ *  over the re-fanged form so a bracketed address is still recognised, and
+ *  only the display and the props carry the bracketed one — the live value is
+ *  rebuilt inside `Indicator` at the moment a reader asks about it. */
 export function Indicators({ text }: { text: string }) {
-  const pieces = split(text);
-  if (pieces.every((piece) => !("value" in piece))) return <>{text}</>;
+  const pieces = split(refang(text));
+  if (pieces.every((piece) => !("value" in piece))) return <>{defang(text)}</>;
   return (
     <>
       {pieces.map((piece, index) =>
         "value" in piece ? (
-          <Indicator key={`${piece.start}-${piece.value}`} value={piece.value} kind={piece.kind} />
+          <Indicator key={`${piece.start}-${index}`} value={defang(piece.value)} kind={piece.kind} />
         ) : (
-          <span key={`t-${index}`}>{piece.text}</span>
+          <span key={`t-${index}`}>{defang(piece.text)}</span>
         ),
       )}
     </>
@@ -92,15 +99,17 @@ export function Indicator({ value, kind }: { value: string; kind: IndicatorKind 
   }, []);
 
   const ask = useCallback(async () => {
-    const cached = CACHE.get(value);
+    // The only place the live form exists, and only in the browser (R115).
+    const live = refang(value);
+    const cached = CACHE.get(live);
     if (cached) {
       setState({ status: "answered", report: cached });
       return;
     }
     setState({ status: "asking" });
-    const result = await lookupIndicator(value);
+    const result = await lookupIndicator(live);
     if (result.ok) {
-      CACHE.set(value, result.report);
+      CACHE.set(live, result.report);
       setState({ status: "answered", report: result.report });
     } else {
       // Deliberately not "nothing known". The catalogues having nothing and

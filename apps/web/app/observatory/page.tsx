@@ -10,6 +10,7 @@ import {
   type FeedStatus,
   type IntelGroup,
 } from "@/lib/api";
+import { defangIntel } from "@/lib/defang";
 import { observatoryState } from "@/lib/observatory";
 
 export const metadata: Metadata = {
@@ -63,7 +64,10 @@ export default async function ObservatoryPage({
       </Page>
     );
   }
-  const intel = result.data;
+  // Defanged here, before anything renders, so no live host or address from
+  // a feed reaches the HTML or the RSC payload (R115). Content filters were
+  // classifying the whole site by what this page carried.
+  const intel = defangIntel(result.data);
 
   // Split by whether the thing is still up, because that is the difference
   // between "block this" and "note that this happened". The status came back

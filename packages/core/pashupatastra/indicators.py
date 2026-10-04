@@ -56,11 +56,16 @@ enforces is the one that matters — an unrecognised ending is **not** a domain.
 case the list exists for.
 """
 
-_IPV4 = re.compile(r"(?<![\w.])((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?![\w.])")
+# `.` or its defanged form `[.]`. The page renders defanged values (R115), and
+# an indicator nobody can click because it is written the safe way would be the
+# enrichment switched off by the defanging.
+_SEP = r"(?:\.|\[\.\])"
+_OCTET = r"(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)"
+_IPV4 = re.compile(rf"(?<![\w.])({_OCTET}(?:{_SEP}{_OCTET}){{3}})(?![\w.])")
 _HASH = re.compile(r"(?<![\w])([a-fA-F0-9]{32}|[a-fA-F0-9]{40}|[a-fA-F0-9]{64})(?![\w])")
 _CVE = re.compile(r"(?<![\w-])(CVE-\d{4}-\d{4,7})(?![\w-])", re.IGNORECASE)
 _DOMAIN = re.compile(
-    r"(?<![\w.@-])((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,24})(?![\w-])"
+    rf"(?<![\w.@-])((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{{0,61}}[a-zA-Z0-9])?{_SEP})+[a-zA-Z]{{2,24}})(?![\w-])"
 )
 
 # Order matters: a 32-character hex run is a hash, not four labels, and a CVE
@@ -104,7 +109,14 @@ def classify(value: str) -> IndicatorKind | None:
 
 
 def _has_known_suffix(domain: str) -> bool:
-    return domain.rsplit(".", 1)[-1].lower() in SUFFIXES
+    return _live(domain).rsplit(".", 1)[-1].lower() in SUFFIXES
+
+
+def _live(value: str) -> str:
+    """The live form of a possibly-defanged value. Classification is about what
+    a thing *is*, and `45[.]61[.]184[.]22` is the same address as the live one
+    — so the suffix check and the lookup key both read through the defanging."""
+    return value.replace("[.]", ".")
 
 
 def scan(text: str) -> list[Span]:
@@ -142,7 +154,8 @@ def candidate_keys(value: str, kind: IndicatorKind) -> list[str]:
     at the call site, because the day a feed changes its key this is the one
     place that has to know.
     """
-    lowered = value.lower()
+    lowered = _live(value).lower()
+    value = _live(value)
     if kind is IndicatorKind.CVE:
         return [f"vulnerability:{value.upper()}"]
     if kind is IndicatorKind.IPV4:

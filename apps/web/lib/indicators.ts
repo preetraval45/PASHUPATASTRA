@@ -37,12 +37,15 @@ const SUFFIXES = new Set(
    vn id my ph pk bd lk np ir eg ng ke gh tz ug ma dz tn`.split(/\s+/),
 );
 
+// `.` or its defanged form `[.]`. The page renders defanged values (R115), and
+// an indicator nobody can click because it is written the safe way would be the
+// enrichment switched off by the defanging.
+const SEP = "(?:\\.|\\[\\.\\])";
 const OCTET = "(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)";
-const IPV4 = `(?<![\\w.])(${OCTET}(?:\\.${OCTET}){3})(?![\\w.])`;
+const IPV4 = `(?<![\\w.])(${OCTET}(?:${SEP}${OCTET}){3})(?![\\w.])`;
 const HASH = "(?<![\\w])([a-fA-F0-9]{32}|[a-fA-F0-9]{40}|[a-fA-F0-9]{64})(?![\\w])";
 const CVE = "(?<![\\w-])(CVE-\\d{4}-\\d{4,7})(?![\\w-])";
-const DOMAIN =
-  "(?<![\\w.@-])((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,24})(?![\\w-])";
+const DOMAIN = `(?<![\\w.@-])((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?${SEP})+[a-zA-Z]{2,24})(?![\\w-])`;
 
 // Order matters, and matches the Python module's: a 32-character hex run is a
 // hash and not four labels, and a CVE is claimed before anything else can take
@@ -54,8 +57,14 @@ const PATTERNS: { source: string; kind: IndicatorKind | null; flags: string }[] 
   { source: DOMAIN, kind: "domain", flags: "g" },
 ];
 
+/** The live form of a possibly-defanged value. Classification is about what a
+ *  thing *is*, and `45[.]61[.]184[.]22` is the same address as the live one. */
+export function live(value: string): string {
+  return value.replaceAll("[.]", ".");
+}
+
 function hasKnownSuffix(domain: string): boolean {
-  const suffix = domain.split(".").pop();
+  const suffix = live(domain).split(".").pop();
   return suffix !== undefined && SUFFIXES.has(suffix.toLowerCase());
 }
 
@@ -68,7 +77,7 @@ export function classify(value: string): IndicatorKind | null {
     const whole = new RegExp(`^(?:${source})$`, flags.replace("g", ""));
     if (!whole.test(candidate)) continue;
     if (kind === "cve") return kind;
-    if (kind === null) return HASH_KINDS[candidate.length] ?? null;
+    if (kind === null) return HASH_KINDS[live(candidate).length] ?? null;
     if (kind === "domain" && !hasKnownSuffix(candidate)) return null;
     return kind;
   }
@@ -88,7 +97,7 @@ export function scan(text: string): Span[] {
       const start = match.index + match[0].indexOf(value);
       const end = start + value.length;
       if (taken.some(([otherStart, otherEnd]) => start < otherEnd && otherStart < end)) continue;
-      const resolved = kind === null ? HASH_KINDS[value.length] : kind;
+      const resolved = kind === null ? HASH_KINDS[live(value).length] : kind;
       if (!resolved) continue;
       if (resolved === "domain" && !hasKnownSuffix(value)) continue;
       taken.push([start, end]);

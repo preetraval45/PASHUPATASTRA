@@ -13,62 +13,224 @@
     "",
     "The refusals matter more than the matches: `j.rivera` is an account in",
     "this estate, and a classifier loose enough to call it a domain would make",
-    "every identifier on a public page a question about which accounts exist."
+    "every identifier on a public page a question about which accounts exist.",
+    "",
+    "Defanged forms are classified too (R115): the page renders `45[.]61[.]184[.]22`, and an indicator nobody can click because it is written the safe way would be the enrichment switched off by the defanging."
   ],
   "classify": [
-    { "value": "198.51.100.74", "kind": "ipv4", "why": "the C2 address in the beaconing scenario" },
-    { "value": "45.61.184.22", "kind": "ipv4" },
-    { "value": "0.86", "kind": null, "why": "a confidence, not an address" },
-    { "value": "999.1.1.1", "kind": null, "why": "not a valid octet" },
-    { "value": "10.0.0.1.5", "kind": null, "why": "five octets is not an address" },
-    { "value": "evil-domain.com", "kind": "domain" },
-    { "value": "sso-portal.example.co.uk", "kind": "domain" },
-    { "value": "pashupatastra.vercel.app", "kind": "domain", "why": "ours, and 'nothing known' is the honest answer" },
-    { "value": "j.rivera", "kind": null, "why": "an account in this estate — the case the suffix list exists for" },
-    { "value": "m.okafor", "kind": null },
-    { "value": "app.tsx", "kind": null, "why": "a source file" },
-    { "value": "page.py", "kind": null },
-    { "value": "T1021.002", "kind": null, "why": "an ATT&CK technique" },
-    { "value": "INC-2026-0903", "kind": null },
-    { "value": "ws-0148", "kind": null },
-    { "value": "account:j.rivera", "kind": null, "why": "an entity key is never an indicator" },
-    { "value": "host:ws-0148", "kind": null },
-    { "value": "d41d8cd98f00b204e9800998ecf8427e", "kind": "md5" },
-    { "value": "da39a3ee5e6b4b0d3255bfef95601890afd80709", "kind": "sha1" },
-    { "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "kind": "sha256" },
-    { "value": "D41D8CD98F00B204E9800998ECF8427E", "kind": "md5", "why": "hex is case-insensitive" },
-    { "value": "abcdef", "kind": null, "why": "hex, but no hash is six characters" },
-    { "value": "CVE-2026-69836", "kind": "cve" },
-    { "value": "cve-2021-44228", "kind": "cve" },
-    { "value": "CVE-26-1", "kind": null },
-    { "value": "", "kind": null },
-    { "value": "   ", "kind": null }
+    {
+      "value": "198.51.100.74",
+      "kind": "ipv4",
+      "why": "the C2 address in the beaconing scenario"
+    },
+    {
+      "value": "203.0.113.22",
+      "kind": "ipv4"
+    },
+    {
+      "value": "0.86",
+      "kind": null,
+      "why": "a confidence, not an address"
+    },
+    {
+      "value": "999.1.1.1",
+      "kind": null,
+      "why": "not a valid octet"
+    },
+    {
+      "value": "10.0.0.1.5",
+      "kind": null,
+      "why": "five octets is not an address"
+    },
+    {
+      "value": "evil-domain.com",
+      "kind": "domain"
+    },
+    {
+      "value": "sso-portal.example.co.uk",
+      "kind": "domain"
+    },
+    {
+      "value": "pashupatastra.vercel.app",
+      "kind": "domain",
+      "why": "ours, and 'nothing known' is the honest answer"
+    },
+    {
+      "value": "j.rivera",
+      "kind": null,
+      "why": "an account in this estate — the case the suffix list exists for"
+    },
+    {
+      "value": "m.okafor",
+      "kind": null
+    },
+    {
+      "value": "app.tsx",
+      "kind": null,
+      "why": "a source file"
+    },
+    {
+      "value": "page.py",
+      "kind": null
+    },
+    {
+      "value": "T1021.002",
+      "kind": null,
+      "why": "an ATT&CK technique"
+    },
+    {
+      "value": "INC-2026-0903",
+      "kind": null
+    },
+    {
+      "value": "ws-0148",
+      "kind": null
+    },
+    {
+      "value": "account:j.rivera",
+      "kind": null,
+      "why": "an entity key is never an indicator"
+    },
+    {
+      "value": "host:ws-0148",
+      "kind": null
+    },
+    {
+      "value": "d41d8cd98f00b204e9800998ecf8427e",
+      "kind": "md5"
+    },
+    {
+      "value": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "kind": "sha1"
+    },
+    {
+      "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "sha256"
+    },
+    {
+      "value": "D41D8CD98F00B204E9800998ECF8427E",
+      "kind": "md5",
+      "why": "hex is case-insensitive"
+    },
+    {
+      "value": "abcdef",
+      "kind": null,
+      "why": "hex, but no hash is six characters"
+    },
+    {
+      "value": "CVE-2026-69836",
+      "kind": "cve"
+    },
+    {
+      "value": "cve-2021-44228",
+      "kind": "cve"
+    },
+    {
+      "value": "CVE-26-1",
+      "kind": null
+    },
+    {
+      "value": "",
+      "kind": null
+    },
+    {
+      "value": "   ",
+      "kind": null
+    },
+    {
+      "value": "203[.]0[.]113[.]22",
+      "kind": "ipv4",
+      "why": "defanged, as the page now renders it (R115)"
+    },
+    {
+      "value": "evil-domain[.]com",
+      "kind": "domain"
+    },
+    {
+      "value": "hxxp://evil[.]example[.]com/p[.]exe",
+      "kind": null,
+      "why": "a whole URL is not one of the kinds; its host is found by scan"
+    }
   ],
   "scan": [
     {
       "text": "network_flow:ws-0148->198.51.100.74:8443",
-      "spans": [["198.51.100.74", "ipv4"]],
+      "spans": [
+        [
+          "198.51.100.74",
+          "ipv4"
+        ]
+      ],
       "why": "the address an analyst wants, inside a key they do not"
     },
     {
-      "text": "flow 45.61.184.22 -> sso-portal reached evil-domain.com",
-      "spans": [["45.61.184.22", "ipv4"], ["evil-domain.com", "domain"]]
+      "text": "flow 203.0.113.22 -> sso-portal reached evil-domain.com",
+      "spans": [
+        [
+          "203.0.113.22",
+          "ipv4"
+        ],
+        [
+          "evil-domain.com",
+          "domain"
+        ]
+      ]
     },
     {
       "text": "account:j.rivera signed in from 203.0.113.9",
-      "spans": [["203.0.113.9", "ipv4"]],
+      "spans": [
+        [
+          "203.0.113.9",
+          "ipv4"
+        ]
+      ],
       "why": "the address is an indicator; the account is not"
     },
     {
       "text": "CVE-2026-69836 is catalogued and d41d8cd98f00b204e9800998ecf8427e was dropped",
-      "spans": [["CVE-2026-69836", "cve"], ["d41d8cd98f00b204e9800998ecf8427e", "md5"]]
+      "spans": [
+        [
+          "CVE-2026-69836",
+          "cve"
+        ],
+        [
+          "d41d8cd98f00b204e9800998ecf8427e",
+          "md5"
+        ]
+      ]
     },
     {
       "text": "T1021.002 SMB/Windows Admin Shares on host:ws-0148",
       "spans": [],
       "why": "a technique, a name and an entity key — nothing to look up"
     },
-    { "text": "INC-2026-0903#chain-1", "spans": [] },
-    { "text": "", "spans": [] }
+    {
+      "text": "INC-2026-0903#chain-1",
+      "spans": []
+    },
+    {
+      "text": "",
+      "spans": []
+    },
+    {
+      "text": "reported 43x: 203[.]0[.]113[.]22",
+      "spans": [
+        [
+          "203[.]0[.]113[.]22",
+          "ipv4"
+        ]
+      ],
+      "why": "the defanged value on the Observatory is still a lookup"
+    },
+    {
+      "text": "hxxp://evil-domain[.]com/payload[.]exe",
+      "spans": [
+        [
+          "evil-domain[.]com",
+          "domain"
+        ]
+      ],
+      "why": "the host, not the path — `payload[.]exe` is a file name"
+    }
   ]
 }

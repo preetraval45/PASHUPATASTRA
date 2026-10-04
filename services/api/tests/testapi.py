@@ -1048,3 +1048,69 @@ def test_the_lookup_never_reaches_the_network(monkeypatch) -> None:
     monkeypatch.setattr(urllib.request, "urlopen", refuse)
     body = client.get("/api/v1/intel/indicator/cve-2026-69836").json()
     assert body["kind"] == "cve"
+
+# --- R115: nothing live crosses the wire --------------------------------------
+
+
+def test_feed_indicators_are_defanged_on_the_way_out() -> None:
+    """The Observatory served live malware URLs and C2 addresses as plain
+    text, which is the first cause that fits visitors being unable to open the
+    site at all. Defanged at the exit rather than at the screen: a server
+    component that renders a defanged string can still have been handed the
+    live one as a prop."""
+    from app.defanging import defang_record
+
+    row = {
+        "entity_key": "indicator:ip:45.61.184.22",
+        "title": "QakBot controller at 45.61.184.22",
+        "provenance": {"url": "https://feodotracker.abuse.ch/browse/host/45.61.184.22/"},
+        "labels": {"title": "hxxp placeholder", "summary": "seen at evil.example.com"},
+        "keys_tried": ["indicator:ip:45.61.184.22"],
+        "reports": [{"title": "http://evil.example.com/p.exe", "url": "https://urlhaus.abuse.ch/url/1/"}],
+    }
+    out = defang_record(row)
+
+    assert out["entity_key"] == "indicator:ip:45[.]61[.]184[.]22"
+    assert "45.61.184.22" not in out["title"]
+    assert out["labels"]["summary"] == "seen at evil[.]example[.]com"
+    assert out["keys_tried"] == ["indicator:ip:45[.]61[.]184[.]22"]
+    assert out["reports"][0]["title"] == "hxxp://evil[.]example[.]com/p[.]exe"
+
+    # The advisory is a reference *about* the indicator and stays followable:
+    # R24 settled that the malware URL is never rendered and the advisory
+    # always is, and a reader who cannot follow it cannot check the claim.
+    assert out["provenance"]["url"].startswith("https://feodotracker.abuse.ch/")
+    assert out["reports"][0]["url"] == "https://urlhaus.abuse.ch/url/1/"
+
+
+def test_a_documentation_address_is_not_defanged() -> None:
+    """RFC 5737 ranges are reserved so they can be written down. Defanging
+    them would make a scripted scenario harder to read for no gain."""
+    from app.defanging import defang_record
+
+    assert defang_record({"value": "198.51.100.74"})["value"] == "198.51.100.74"
+
+
+def test_the_intel_route_serves_nothing_live() -> None:
+    """End to end over whatever the store holds: every address, domain and URL
+    in the response body is either defanged or an advisory link."""
+    import re
+
+    from pashupatastra.defang import is_documentation_address
+
+    def without_advisories(value):
+        """Everything except the links. An advisory URL is a reference *about*
+        an indicator and is deliberately live (R24); what must not be live is
+        the indicator."""
+        if isinstance(value, dict):
+            return {k: without_advisories(v) for k, v in value.items() if k not in ("url", "provenance")}
+        if isinstance(value, list):
+            return [without_advisories(v) for v in value]
+        return value
+
+    body = client.get("/api/v1/intel?limit=50").json()
+    for group in body.get("groups", []):
+        text = str(without_advisories(group))
+        for address in re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text):
+            assert is_documentation_address(address), f"{address} is live in /intel"
+        assert "http://" not in text and "https://" not in text, text[:200]
