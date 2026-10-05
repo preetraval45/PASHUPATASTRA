@@ -267,3 +267,81 @@ def test_transitions_append_rather_than_rewrite(store: PostgresStore) -> None:
             (incident.id,),
         ).fetchall()
     assert [r["to_state"] for r in rows] == ["correlated", "diagnosed"]
+
+# --- every store keeps the whole incident ------------------------------------
+
+
+def test_a_fully_populated_incident_round_trips_through_every_store() -> None:
+    """The guard R107 earned, and the reason it exists.
+
+    DynamoDB keeps an incident as one JSON document, so a field added to the
+    model round-trips there without anybody doing anything. Postgres shreds it
+    into columns, so the same field is silently dropped — which is what
+    happened to `simulation_of` and `sources` the day they were added, and
+    which nothing would have caught: the deployed store was fine and only the
+    on-prem path lost data.
+
+    So this compares a *fully populated* incident against what each store gives
+    back, field by field, rather than asserting the fields anybody thought of
+    on the day. The next field added to `Incident` fails here instead of
+    vanishing on one deployment.
+    """
+    from datetime import UTC, datetime
+
+    from app.demoincidents import scenarios
+    from app.graphmemory import MemoryGraph  # noqa: F401 — the memory path is the Store
+    from app.store import Store
+
+    original = next(
+        sc.incident
+        for sc in scenarios(datetime(2026, 10, 5, 12, 0, tzinfo=UTC))
+        if sc.incident.id == "INC-2026-0905"
+    )
+    # Chosen because it is the one scenario that populates every optional
+    # field: sources, simulation_of, a contradicted hypothesis, a plan, a full
+    # chain with techniques, and three transitions.
+    assert original.sources and original.simulation_of and original.plan
+
+    # The in-memory `Store` speaks `save`/`get`; the durable ones speak
+    # `save_incident`/`get_incident`. Adapted here rather than in the stores:
+    # the seam is real and this test is about what survives, not about naming.
+    class _Memory:
+        def __init__(self) -> None:
+            self._store = Store()
+
+        def save_incident(self, incident):
+            self._store.save(incident)
+
+        def get_incident(self, incident_id):
+            return self._store.get(incident_id)
+
+    stores: list[tuple[str, object]] = [("memory", _Memory())]
+    try:
+        from app.db import PostgresStore, is_available
+
+        if is_available():
+            stores.append(("postgres", PostgresStore()))
+    except Exception:  # noqa: BLE001 — no driver is a skip, not a failure
+        pass
+    try:
+        from app.dynamo import DynamoStore
+
+        candidate = DynamoStore(namespace="test")
+        if candidate.available():
+            stores.append(("dynamodb", candidate))
+    except Exception:  # noqa: BLE001
+        pass
+
+    for name, store in stores:
+        store.save_incident(original)
+        back = store.get_incident(original.id)
+        assert back is not None, f"{name} lost the incident entirely"
+        for field in ("simulation_of", "sources", "severity", "state"):
+            assert getattr(back, field) == getattr(original, field), (
+                f"{name} did not keep {field}: {getattr(back, field)!r} "
+                f"rather than {getattr(original, field)!r}"
+            )
+        assert len(back.hypotheses) == len(original.hypotheses), f"{name} lost hypotheses"
+        assert len(back.plan) == len(original.plan), f"{name} lost the plan"
+        assert len(back.causal_chain) == len(original.causal_chain), f"{name} lost the chain"
+        print(f"{name}: whole incident round-tripped")

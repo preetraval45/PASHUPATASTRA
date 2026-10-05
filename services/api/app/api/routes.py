@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException
 from pashupatastra import (
@@ -1577,6 +1577,68 @@ def attack_matrix() -> dict[str, object]:
                 "about what was written, not a claim about what would be detected"
             ),
         },
+    }
+
+
+class ViewRequest(BaseModel):
+    route: str
+
+
+@router.post("/impact/view")
+def record_view(request: ViewRequest) -> dict[str, object]:
+    """Count one render of one route (R107).
+
+    **Not an audit record.** R93 stopped page views reaching the append-only
+    ledger, and this does not undo that: a counter has no actor, no verdict and
+    nothing to approve, and it is kept in the store's META space rather than in
+    the trail. The two answer different questions.
+
+    The route is validated rather than stored as sent. This is a public write,
+    and an unvalidated string becomes a key — a page could otherwise be made to
+    count anything anyone typed, including a query string carrying somebody's
+    search terms.
+    """
+    route = (request.route or "").split("?")[0].split("#")[0].strip()
+    if not route.startswith("/") or len(route) > 120 or "\n" in route:
+        raise HTTPException(status_code=422, detail="a route is a path under 120 characters")
+
+    store = entitystore()
+    counter = getattr(store, "record_view", None)
+    if counter is None:
+        return {"counted": False, "why": "this store counts no views"}
+    day = datetime.now(UTC).date().isoformat()
+    return {"counted": True, "route": route, "day": day, "views": counter(route, day)}
+
+
+@router.get("/impact")
+def impact() -> dict[str, object]:
+    """What this project has done, counted from the things that did it.
+
+    Every figure names its source and a figure that could not be measured is
+    reported absent rather than as zero — a zero is a measurement, and on a
+    page meant to be read by people whose job is to doubt it, the difference
+    is the whole value.
+    """
+    from ..feeds.ingest import FEEDS
+    from .. import impact as impact_module
+
+    store = entitystore()
+    return {
+        "as_of": datetime.now(UTC).isoformat(),
+        "intelligence": impact_module.intelligence(store, FEEDS),
+        "ledger": impact_module.ledger(AUDIT),
+        "views": impact_module.views(store),
+        "uptime": impact_module.uptime(store),
+        "repository": impact_module.github(),
+        "milestones": impact_module.milestones(),
+        "incidents": impact_module.measured(len(STORE.all()), "the incident store"),
+        "note": (
+            "Every figure here is a recount of something that exists for another "
+            "reason — the feed store, the audit ledger, the warm task's heartbeat, "
+            "git. Nothing is incremented by this page and kept on its own. Views "
+            "are renders counted on the server, not people, and nothing "
+            "authenticates them."
+        ),
     }
 
 

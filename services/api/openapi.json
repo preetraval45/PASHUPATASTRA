@@ -1463,6 +1463,19 @@
         ],
         "title": "VerifyRequest",
         "type": "object"
+      },
+      "ViewRequest": {
+        "properties": {
+          "route": {
+            "title": "Route",
+            "type": "string"
+          }
+        },
+        "required": [
+          "route"
+        ],
+        "title": "ViewRequest",
+        "type": "object"
       }
     }
   },
@@ -2102,6 +2115,68 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/api/v1/impact": {
+      "get": {
+        "description": "What this project has done, counted from the things that did it.\n\nEvery figure names its source and a figure that could not be measured is\nreported absent rather than as zero \u2014 a zero is a measurement, and on a\npage meant to be read by people whose job is to doubt it, the difference\nis the whole value.",
+        "operationId": "impact_api_v1_impact_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Impact Api V1 Impact Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Impact"
+      }
+    },
+    "/api/v1/impact/view": {
+      "post": {
+        "description": "Count one render of one route (R107).\n\n**Not an audit record.** R93 stopped page views reaching the append-only\nledger, and this does not undo that: a counter has no actor, no verdict and\nnothing to approve, and it is kept in the store's META space rather than in\nthe trail. The two answer different questions.\n\nThe route is validated rather than stored as sent. This is a public write,\nand an unvalidated string becomes a key \u2014 a page could otherwise be made to\ncount anything anyone typed, including a query string carrying somebody's\nsearch terms.",
+        "operationId": "record_view_api_v1_impact_view_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ViewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Record View Api V1 Impact View Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record View"
       }
     },
     "/api/v1/incidents": {

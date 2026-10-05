@@ -21,6 +21,7 @@ from pashupatastra import (
     IncidentState,
     PlanStep,
     Verdict,
+    Source,
 )
 from pashupatastra.incidents import Transition
 
@@ -288,6 +289,56 @@ class PostgresStore:
             for r in rows
         ]
 
+    def record_view(self, route: str, day: str) -> int:
+        """Count one render of `route` on `day`.
+
+        Not an audit record: R93's rule is about the append-only log of
+        decisions, and this is an aggregate with no actor and nothing to
+        approve. An upsert rather than a read-then-write, so two renders in the
+        same moment cannot lose one of each other.
+        """
+        with connect(self.database_url) as conn:
+            row = conn.execute(
+                """
+                INSERT INTO page_view (day, route, views) VALUES (%s, %s, 1)
+                ON CONFLICT (day, route) DO UPDATE SET views = page_view.views + 1
+                RETURNING views
+                """,
+                (day, route),
+            ).fetchone()
+            conn.commit()
+        return int(row["views"])
+
+    def views(self, days: int = 30) -> dict[str, dict[str, int]]:
+        with connect(self.database_url) as conn:
+            rows = conn.execute(
+                "SELECT day, route, views FROM page_view ORDER BY day DESC"
+            ).fetchall()
+        out: dict[str, dict[str, int]] = {}
+        for row in rows:
+            out.setdefault(str(row["day"]), {})[row["route"]] = int(row["views"])
+        return dict(list(out.items())[:days])
+
+    def heartbeat(self, day: str) -> int:
+        with connect(self.database_url) as conn:
+            row = conn.execute(
+                """
+                INSERT INTO heartbeat (day, beats) VALUES (%s, 1)
+                ON CONFLICT (day) DO UPDATE SET beats = heartbeat.beats + 1
+                RETURNING beats
+                """,
+                (day,),
+            ).fetchone()
+            conn.commit()
+        return int(row["beats"])
+
+    def heartbeats(self, days: int = 30) -> dict[str, int]:
+        with connect(self.database_url) as conn:
+            rows = conn.execute(
+                "SELECT day, beats FROM heartbeat ORDER BY day DESC LIMIT %s", (days,)
+            ).fetchall()
+        return {str(row["day"]): int(row["beats"]) for row in rows}
+
     def event(self, event_id: str) -> dict | None:
         """One event by id, so a citation can be followed to what it cites."""
         with connect(self.database_url) as conn:
@@ -428,9 +479,10 @@ class PostgresStore:
                 INSERT INTO incident (
                     id, state, severity, opened_at, closed_at,
                     estimated_users_affected, affected_services,
-                    blast_radius_entities, causal_chain, similar_incident_ids
+                    blast_radius_entities, causal_chain, similar_incident_ids,
+                    simulation_of, sources
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (id) DO UPDATE SET
                     state = EXCLUDED.state,
                     closed_at = EXCLUDED.closed_at,
@@ -438,7 +490,9 @@ class PostgresStore:
                     affected_services = EXCLUDED.affected_services,
                     blast_radius_entities = EXCLUDED.blast_radius_entities,
                     causal_chain = EXCLUDED.causal_chain,
-                    similar_incident_ids = EXCLUDED.similar_incident_ids
+                    similar_incident_ids = EXCLUDED.similar_incident_ids,
+                    simulation_of = EXCLUDED.simulation_of,
+                    sources = EXCLUDED.sources
                 """,
                 (
                     incident.id,
@@ -451,6 +505,8 @@ class PostgresStore:
                     incident.impact.blast_radius_entities,
                     json.dumps([link.model_dump(mode="json") for link in incident.causal_chain]),
                     incident.similar_incident_ids,
+                    incident.simulation_of,
+                    json.dumps([source.model_dump(mode="json") for source in incident.sources]),
                 ),
             )
 
@@ -545,6 +601,8 @@ class PostgresStore:
         incident.impact.affected_services = list(row["affected_services"])
         incident.impact.blast_radius_entities = row["blast_radius_entities"]
         incident.similar_incident_ids = list(row["similar_incident_ids"])
+        incident.simulation_of = row.get("simulation_of")
+        incident.sources = [Source(**source) for source in (row.get("sources") or [])]
         incident.hypotheses = [
             Hypothesis(
                 statement=h["statement"],

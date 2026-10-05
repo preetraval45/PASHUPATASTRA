@@ -1182,3 +1182,49 @@ def test_the_wiper_plan_isolates_at_the_tier_dharma_assigns() -> None:
     ).json()
     assert verdict["tier"] in ("senior", "denied")
     assert verdict["tier"] == "senior", "a plan step may not be denied"
+
+@security_fixture
+def test_impact_figures_name_their_source_or_say_why_they_are_absent() -> None:
+    """R107's shape, which is the whole of its value: exactly one of a value
+    with a source, or an absence with a reason. A figure that could not be
+    measured must never render as zero — "nobody starred it" and "GitHub did
+    not answer" are different facts."""
+    body = client.get("/api/v1/impact").json()
+    for name in ("intelligence", "ledger", "views", "uptime", "repository", "milestones", "incidents"):
+        figure = body[name]
+        assert ("from" in figure) != ("absent" in figure), f"{name}: {figure}"
+        if "absent" in figure:
+            assert figure["value"] is None and figure["absent"]
+        else:
+            assert figure["from"]
+
+
+@security_fixture
+def test_the_incident_count_is_the_store_recounted() -> None:
+    body = client.get("/api/v1/impact").json()
+    assert body["incidents"]["value"] == len(client.get("/api/v1/incidents").json())
+
+
+def test_a_view_is_counted_and_is_not_an_audit_record() -> None:
+    """R93 stopped page views reaching the append-only ledger. A counter has no
+    actor, no verdict and nothing to approve, and this asserts the two stayed
+    apart rather than trusting that they did."""
+    before = len(client.get("/api/v1/audit?limit=1000").json())
+    for _ in range(5):
+        assert client.post("/api/v1/impact/view", json={"route": "/overview"}).json()["counted"]
+    after = len(client.get("/api/v1/audit?limit=1000").json())
+    assert after == before, "counting a render wrote to the audit ledger"
+
+    views = client.get("/api/v1/impact").json()["views"]["value"]
+    assert views["by_route"]["/overview"] >= 5
+
+
+def test_a_route_is_validated_before_it_becomes_a_key() -> None:
+    """A public write whose argument becomes a key. Unvalidated, a page could
+    be made to count anything anyone typed — including a query string carrying
+    somebody's search terms."""
+    for bad in ("not-a-path", "", "/" + "x" * 200, "/x\nmore"):
+        assert client.post("/api/v1/impact/view", json={"route": bad}).status_code == 422
+    # The query string is dropped rather than refused: the route is the page.
+    counted = client.post("/api/v1/impact/view", json={"route": "/search?q=secret"}).json()
+    assert counted["route"] == "/search"

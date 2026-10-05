@@ -727,6 +727,46 @@ class DynamoStore:
         )
         return int(response["Attributes"]["beats"])
 
+    def record_view(self, route: str, day: str) -> int:
+        """Count one render of `route` on `day`, atomically.
+
+        **Not an audit record, and deliberately not in the ledger.** R93's rule
+        is that reading a page must not append to an append-only log of
+        decisions; this is an aggregate with no actor, no verdict and nothing
+        to approve, and it lives in the META partition beside the heartbeat. A
+        counter and a ledger answer different questions, and conflating them is
+        what put 143 page views in the audit trail.
+        """
+        response = self.table.update_item(
+            Key={"PK": self._pk("META"), "SK": f"VIEW#{day}#{route}"},
+            UpdateExpression="ADD views :one SET #at = :at",
+            ExpressionAttributeNames={"#at": "at"},
+            ExpressionAttributeValues={":one": 1, ":at": datetime.now().astimezone().isoformat()},
+            ReturnValues="ALL_NEW",
+        )
+        return int(response["Attributes"]["views"])
+
+    def views(self, days: int = 30) -> dict[str, dict[str, int]]:
+        """Views per day per route, newest day first."""
+        from boto3.dynamodb.conditions import Key
+
+        out: dict[str, dict[str, int]] = {}
+        query: dict[str, Any] = {
+            "KeyConditionExpression": Key("PK").eq(self._pk("META"))
+            & Key("SK").begins_with("VIEW#"),
+            "ScanIndexForward": False,
+        }
+        while True:
+            page = self.table.query(**query)
+            for row in page.get("Items", []):
+                _, day, route = str(row["SK"]).split("#", 2)
+                out.setdefault(day, {})[route] = int(row.get("views", 0))
+            last = page.get("LastEvaluatedKey")
+            if not last:
+                break
+            query["ExclusiveStartKey"] = last
+        return dict(sorted(out.items(), reverse=True)[:days])
+
     def heartbeats(self, days: int = 30) -> dict[str, int]:
         """Beats per day for the last `days` days that have any."""
         from boto3.dynamodb.conditions import Key

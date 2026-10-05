@@ -38,6 +38,10 @@ class MemoryGraph:
         self._events: dict[str, list[dict]] = {}
         self._first_seen: dict[str, datetime] = {}
         self._last_seen: dict[str, datetime] = {}
+        # Counters, not ledgers: aggregates with no actor and nothing to
+        # approve, which is why they are here and not in the audit trail (R93).
+        self._views: dict[str, dict[str, int]] = {}
+        self._heartbeats: dict[str, int] = {}
 
     # --- reconciliation -----------------------------------------------------
 
@@ -107,6 +111,23 @@ class MemoryGraph:
 
     def adjacent(self, a: str, b: str, max_depth: int = 3) -> bool:
         return self._graph.adjacent(a, b, max_depth=max_depth)
+
+    def record_view(self, route: str, day: str) -> int:
+        """Count one render. In memory, so it starts at nothing every restart —
+        which is the honest behaviour for a store that keeps nothing else."""
+        bucket = self._views.setdefault(day, {})
+        bucket[route] = bucket.get(route, 0) + 1
+        return bucket[route]
+
+    def views(self, days: int = 30) -> dict[str, dict[str, int]]:
+        return dict(sorted(self._views.items(), reverse=True)[:days])
+
+    def heartbeat(self, day: str) -> int:
+        self._heartbeats[day] = self._heartbeats.get(day, 0) + 1
+        return self._heartbeats[day]
+
+    def heartbeats(self, days: int = 30) -> dict[str, int]:
+        return dict(sorted(self._heartbeats.items(), reverse=True)[:days])
 
     def counts(self) -> tuple[int, int]:
         return len(self._nodes), len(self._edges)

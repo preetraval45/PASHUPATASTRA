@@ -286,6 +286,36 @@ export interface Usage {
 }
 export const getUsage = () => get<Usage>("/usage");
 
+/** One number on `/impact`, with where it came from — or, when it could not be
+ *  measured, the reason instead (R107). Absent is not zero: "nobody starred it"
+ *  and "GitHub did not answer" are different facts. */
+export type Figure<T> = { value: T; from: string; absent?: undefined } | { value: null; absent: string; from?: undefined };
+
+export interface Impact {
+  as_of: string;
+  intelligence: Figure<{ reports: number; indicators: number; by_source: Record<string, number>; feeds: number }>;
+  ledger: Figure<{ records: number; agent_turns: number; by_kind: Record<string, number> }>;
+  views: Figure<{ total: number; days: number; by_day: Record<string, number>; by_route: Record<string, number> }>;
+  uptime: Figure<{ days: number; beats: number; expected: number; share: number | null; by_day: Record<string, number> }>;
+  repository: Figure<{ stars: number; forks: number; watchers: number; open_issues: number }>;
+  milestones: Figure<{ tasks: string[]; title: string; at: string; sha: string }[]>;
+  incidents: Figure<number>;
+  note: string;
+}
+export const getImpact = () => get<Impact>("/impact");
+
+/** Count one render, server-side. Never awaited by a page: it is told to the
+ *  API after the response has gone out (R107), so a counter can never be the
+ *  reason a page is slow. */
+export async function recordView(route: string): Promise<void> {
+  await request(`${API_BASE}/impact/view`, {
+    method: "POST",
+    body: { route },
+    retry: false,
+    timeoutMs: 3_000,
+  });
+}
+
 /** The ATT&CK matrix across the library (R75): one column per tactic in
  *  ATT&CK's order, one cell per technique, every cell naming the steps that
  *  fill it. Empty columns are present and `observed: false`. */
