@@ -102,11 +102,33 @@ def main() -> int:
 
     out = Path(args.out)
     if args.check:
-        current = out.read_text(encoding="utf-8") if out.exists() else ""
-        if current != rendered:
-            print(f"FAIL  {out.relative_to(ROOT)} is stale — run python scripts/milestones.py")
+        # **Correctness, not exhaustiveness.** The file is committed *in* a
+        # commit, so it can never contain that commit — a check demanding the
+        # two be identical would fail immediately after every single commit and
+        # would be switched off within a week. What must hold is that nothing
+        # already in the file is wrong: it is a prefix of the current history,
+        # in order, entry for entry. Anything newer is simply not in it yet, and
+        # the count of those is printed rather than hidden.
+        if not out.exists():
+            print(f"FAIL  {out.relative_to(ROOT)} has not been generated")
             return 1
-        print(f"{out.relative_to(ROOT)} is current ({len(found)} milestones)")
+        try:
+            committed = json.loads(out.read_text(encoding="utf-8")).get("milestones", [])
+        except json.JSONDecodeError as error:
+            print(f"FAIL  {out.relative_to(ROOT)} is not readable: {error}")
+            return 1
+        if committed != found[: len(committed)]:
+            for index, (was, now) in enumerate(zip(committed, found)):
+                if was != now:
+                    print(f"FAIL  entry {index} disagrees with git: {was} / {now}")
+                    return 1
+            print(f"FAIL  {out.relative_to(ROOT)} has {len(committed)} entries, git has {len(found)}")
+            return 1
+        behind = len(found) - len(committed)
+        print(
+            f"{out.relative_to(ROOT)} matches git for all {len(committed)} entries"
+            + (f"; {behind} newer commit(s) not in it yet" if behind else "")
+        )
         return 0
 
     out.write_text(rendered, encoding="utf-8")

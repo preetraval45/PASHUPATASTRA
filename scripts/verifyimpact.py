@@ -145,6 +145,54 @@ def main() -> int:
         if share is not None and not 0 <= share <= 1.5:
             failures.append(f"uptime: a share of {share} is not a share")
 
+    # --- the landing figures (R119) -------------------------------------------
+    #
+    # Recounted from their own sources, not read off the page. The absent case
+    # is checked as carefully as the present ones: a figure with no committed
+    # evidence must say so where the number would have been.
+    figures = get(f"{args.api}/figures")
+    incident_list = get(f"{args.api}/incidents")
+    refs: set[str] = set()
+    for incident in incident_list:
+        for hypothesis in incident["hypotheses"]:
+            refs.update(hypothesis["evidence"])
+            refs.update(hypothesis["contradicted_by"])
+        for link in incident["causal_chain"]:
+            refs.update(link["evidence"])
+    resolved = 0
+    for ref in sorted(refs):
+        try:
+            get(f"{args.api}/events/{ref}")
+            resolved += 1
+        except urllib.error.HTTPError:
+            pass
+    citations = figures["citations"]
+    if citations.get("value") is None:
+        failures.append(f"citations: absent — {citations.get('absent')}")
+    elif (citations["value"]["cited"], citations["value"]["resolved"]) != (len(refs), resolved):
+        failures.append(
+            f"citations: /figures says {citations['value']['resolved']}/{citations['value']['cited']}, "
+            f"following them gives {resolved}/{len(refs)}"
+        )
+    else:
+        print(f"  citations      {resolved}/{len(refs)} resolve — followed one by one")
+
+    actions = get(f"{args.api}/actions")
+    for name in ("accountability", "refusals"):
+        figure = figures[name]
+        if figure.get("value") and figure["value"]["registered"] != len(actions):
+            failures.append(
+                f"{name}: registered {figure['value']['registered']}, /actions has {len(actions)}"
+            )
+    print(f"  registry       {len(actions)} actions — matches /actions")
+
+    for name in ("citations", "accountability", "refusals", "benchmark"):
+        figure = figures[name]
+        if ("from" in figure) == ("absent" in figure):
+            failures.append(f"{name}: must be a value with a source or an absence with a reason")
+        if figure.get("absent"):
+            print(f"  {name:14} absent — {figure['absent'][:70]}")
+
     # --- the page says the same thing -----------------------------------------
     if args.page:
         from playwright.sync_api import sync_playwright
@@ -165,6 +213,24 @@ def main() -> int:
         if "renders, not people" not in body and "not people" not in body:
             failures.append("the page does not say views are renders rather than people")
         print("  page           figures and absences both rendered")
+
+        # And the landing page, where a stale number would do the most damage.
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
+            page = browser.new_context(viewport={"width": 1280, "height": 1200}).new_page()
+            page.goto(f"{args.site}/", wait_until="networkidle")
+            landing = page.inner_text("main")
+            absent_shown = page.locator("[data-absent]").count()
+            browser.close()
+        citations_value = figures["citations"].get("value")
+        if citations_value and f"{round(citations_value['share'] * 100)}%" not in landing:
+            failures.append("the landing page does not show the citation figure the API reports")
+        expected_absences = sum(1 for n in ("citations", "accountability", "refusals", "benchmark") if figures[n].get("absent"))
+        if absent_shown != expected_absences:
+            failures.append(
+                f"landing page shows {absent_shown} absent figure(s), API reports {expected_absences}"
+            )
+        print(f"  landing        figure rendered, {absent_shown} absence(s) stated")
 
     print()
     if failures:

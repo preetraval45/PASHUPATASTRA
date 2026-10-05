@@ -1887,6 +1887,27 @@
         "summary": "Event"
       }
     },
+    "/api/v1/figures": {
+      "get": {
+        "description": "The few numbers a stranger meets first, recomputed on the way out (R119).\n\nNot cached and not incremented: a landing page is where a figure nobody can\ncheck does the most damage and is least likely to be questioned, so each of\nthese is derived from the store or the registry now, and each names the\npage a reader can recount it on.",
+        "operationId": "figures_api_v1_figures_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Figures Api V1 Figures Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Figures"
+      }
+    },
     "/api/v1/game/progress/{player_id}": {
       "get": {
         "description": "One player's own record, by the token their browser holds.\n\nThere is no route that lists players, and that absence is the feature: an\nenumerable set of scores is a leaderboard, and a leaderboard is what this\nwas asked not to be. A token can read only itself, and nothing joins a token\nto a person.",

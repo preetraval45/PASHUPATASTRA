@@ -289,7 +289,9 @@ export const getUsage = () => get<Usage>("/usage");
 /** One number on `/impact`, with where it came from — or, when it could not be
  *  measured, the reason instead (R107). Absent is not zero: "nobody starred it"
  *  and "GitHub did not answer" are different facts. */
-export type Figure<T> = { value: T; from: string; absent?: undefined } | { value: null; absent: string; from?: undefined };
+export type Figure<T> =
+  | { value: T; from: string; absent?: undefined; check_on?: string }
+  | { value: null; absent: string; from?: undefined; check_on?: string };
 
 export interface Impact {
   as_of: string;
@@ -303,6 +305,17 @@ export interface Impact {
   note: string;
 }
 export const getImpact = () => get<Impact>("/impact");
+
+/** The four numbers on the landing page, each recomputed by the API on request
+ *  and each naming where a reader can count it again (R119). */
+export interface Figures {
+  citations: Figure<{ resolved: number; cited: number; share: number }> & { check_on?: string };
+  accountability: Figure<{ registered: number; needs_a_human: number; share: number }> & { check_on?: string };
+  refusals: Figure<{ registered: number; denied: number; examples: string[] }> & { check_on?: string };
+  benchmark: Figure<Record<string, unknown>> & { check_on?: string };
+  note: string;
+}
+export const getFigures = () => get<Figures>("/figures");
 
 /** Count one render, server-side. Never awaited by a page: it is told to the
  *  API after the response has gone out (R107), so a counter can never be the

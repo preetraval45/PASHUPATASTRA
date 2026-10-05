@@ -1228,3 +1228,48 @@ def test_a_route_is_validated_before_it_becomes_a_key() -> None:
     # The query string is dropped rather than refused: the route is the page.
     counted = client.post("/api/v1/impact/view", json={"route": "/search?q=secret"}).json()
     assert counted["route"] == "/search"
+
+@security_fixture
+def test_the_landing_figures_are_recomputed_and_name_where_to_check() -> None:
+    """R119. A landing page is where a figure nobody can check does the most
+    damage. Each is recomputed here against its own source."""
+    body = client.get("/api/v1/figures").json()
+
+    citations = body["citations"]
+    assert citations["check_on"] == "/incidents"
+    # Recounted independently: every ref on every incident, followed.
+    refs = set()
+    for incident in client.get("/api/v1/incidents").json():
+        for hypothesis in incident["hypotheses"]:
+            refs.update(hypothesis["evidence"])
+            refs.update(hypothesis["contradicted_by"])
+        for link in incident["causal_chain"]:
+            refs.update(link["evidence"])
+    resolved = sum(1 for ref in refs if client.get(f"/api/v1/events/{ref}").status_code == 200)
+    assert citations["value"]["cited"] == len(refs)
+    assert citations["value"]["resolved"] == resolved
+
+    actions = client.get("/api/v1/actions").json()
+    assert body["accountability"]["value"]["registered"] == len(actions)
+    assert body["refusals"]["value"]["registered"] == len(actions)
+
+
+def test_a_figure_with_no_committed_source_is_absent_not_a_number() -> None:
+    """The case that proves the rule rather than a hypothetical branch:
+    docs/research/tables.md carries a correct-diagnosis rate generated from a
+    run that was never committed, so nothing in this repository can recompute
+    it. A stale number would read exactly like a measured one."""
+    benchmark = client.get("/api/v1/figures").json()["benchmark"]
+    if benchmark.get("absent"):
+        assert benchmark["value"] is None
+        assert "recomputed" in benchmark["absent"] or "committed" in benchmark["absent"]
+    else:
+        # If run records are ever committed, the figure must name them.
+        assert benchmark["from"].startswith("benchmark/results")
+
+
+def test_every_figure_is_a_value_with_a_source_or_an_absence_with_a_reason() -> None:
+    body = client.get("/api/v1/figures").json()
+    for name in ("citations", "accountability", "refusals", "benchmark"):
+        figure = body[name]
+        assert ("from" in figure) != ("absent" in figure), f"{name}: {figure}"

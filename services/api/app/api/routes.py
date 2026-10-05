@@ -1610,6 +1610,41 @@ def record_view(request: ViewRequest) -> dict[str, object]:
     return {"counted": True, "route": route, "day": day, "views": counter(route, day)}
 
 
+@router.get("/figures")
+def figures() -> dict[str, object]:
+    """The few numbers a stranger meets first, recomputed on the way out (R119).
+
+    Not cached and not incremented: a landing page is where a figure nobody can
+    check does the most damage and is least likely to be questioned, so each of
+    these is derived from the store or the registry now, and each names the
+    page a reader can recount it on.
+    """
+    from .. import figures as figures_module
+
+    domain = get_settings().action_domain
+    return {
+        "citations": {
+            **figures_module.citations_resolve(STORE.all(), entitystore()),
+            "check_on": "/incidents",
+        },
+        "accountability": {
+            **figures_module.never_unattended(domain),
+            "check_on": "/actions",
+        },
+        "refusals": {
+            **figures_module.irreversible_refused(domain),
+            "check_on": "/how-it-works",
+        },
+        "benchmark": {**figures_module.benchmark(), "check_on": "/how-it-works"},
+        "note": (
+            "Each figure is recomputed from the store or the action registry on "
+            "request, and names where to go and count it again. A figure whose "
+            "source is not committed is reported absent rather than as a number "
+            "nobody can check."
+        ),
+    }
+
+
 @router.get("/impact")
 def impact() -> dict[str, object]:
     """What this project has done, counted from the things that did it.

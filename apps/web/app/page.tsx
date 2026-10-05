@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { getIncidents } from "@/lib/api";
+import { getFigures, getIncidents } from "@/lib/api";
 
 /**
  * The page a stranger sees.
@@ -44,7 +44,7 @@ const SCATTERED = [
 ];
 
 export default async function LandingPage() {
-  const incidents = await getIncidents();
+  const [incidents, figures] = await Promise.all([getIncidents(), getFigures()]);
 
   // The incident this page describes, not merely the first one.
   //
@@ -141,6 +141,58 @@ export default async function LandingPage() {
           </li>
         </ol>
       </section>
+
+      {/* --- four numbers, each recountable ------------------------------- */}
+      {figures && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+            Four numbers, and where to go and check them
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <FigureCard
+              label="Citations that resolve"
+              absent={figures.citations.absent}
+              value={
+                figures.citations.value
+                  ? `${Math.round(figures.citations.value.share * 100)}%`
+                  : null
+              }
+              hint={
+                figures.citations.value
+                  ? `${figures.citations.value.resolved} of ${figures.citations.value.cited} references followed`
+                  : ""
+              }
+              checkOn={figures.citations.check_on}
+            />
+            <FigureCard
+              label="Actions needing a human"
+              absent={figures.accountability.absent}
+              value={
+                figures.accountability.value
+                  ? `${figures.accountability.value.needs_a_human} of ${figures.accountability.value.registered}`
+                  : null
+              }
+              hint="anything that changes something waits for a person"
+              checkOn={figures.accountability.check_on}
+            />
+            <FigureCard
+              label="Actions refused outright"
+              absent={figures.refusals.absent}
+              value={figures.refusals.value ? String(figures.refusals.value.denied) : null}
+              hint={figures.refusals.value ? figures.refusals.value.examples.join(", ") : ""}
+              checkOn={figures.refusals.check_on}
+            />
+            <FigureCard
+              label="Benchmark accuracy"
+              absent={figures.benchmark.absent}
+              value={null}
+              hint=""
+              checkOn={figures.benchmark.check_on}
+            />
+          </div>
+          <p className="text-xs leading-relaxed text-[rgb(var(--faint))]">{figures.note}</p>
+        </section>
+      )}
 
       {/* --- before and after -------------------------------------------- */}
       <section className="space-y-5">
@@ -299,6 +351,63 @@ export default async function LandingPage() {
           </Link>
         </div>
       </section>
+    </div>
+  );
+}
+
+/**
+ * One number, or the reason there is not one (R119).
+ *
+ * The absent branch is the point rather than an edge case. A landing page is
+ * where a stale figure does the most damage and is least likely to be
+ * questioned, so a figure whose source is not committed says so in the place
+ * the number would have been — and the benchmark is exactly that case today:
+ * `docs/research/tables.md` carries a correct-diagnosis rate generated from a
+ * run that was never committed, so nothing in this repository can recompute
+ * it. The reason is more useful to a reader than the number would be.
+ */
+function FigureCard({
+  label,
+  value,
+  hint,
+  absent,
+  checkOn,
+}: {
+  label: string;
+  value: string | null;
+  hint: string;
+  absent?: string;
+  checkOn?: string;
+}) {
+  return (
+    <div data-figure={label} className="panel min-w-0 p-4">
+      <p className="label">{label}</p>
+      {absent || value === null ? (
+        <>
+          <p className="mt-1 text-2xl text-[rgb(var(--faint))]">&mdash;</p>
+          <p
+            data-absent
+            className="mt-1 break-words text-xs leading-relaxed text-[rgb(var(--warn))]"
+          >
+            no committed evidence{absent ? ` — ${absent}` : ""}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="tnum mt-1 text-3xl">{value}</p>
+          <p className="mt-1 break-words text-xs leading-relaxed text-[rgb(var(--faint))]">
+            {hint}
+          </p>
+          <p className="mt-2 text-xs">
+            <Link
+              href={checkOn ?? "/how-it-works"}
+              className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+            >
+              count it yourself &rarr;
+            </Link>
+          </p>
+        </>
+      )}
     </div>
   );
 }
