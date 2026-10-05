@@ -19,6 +19,11 @@ client = TestClient(app)
 from app.config import get_settings as _settings  # noqa: E402
 from pashupatastra.dharma import ActionDomain as _Domain  # noqa: E402
 
+security_fixture = pytest.mark.skipif(
+    _settings().action_domain is not _Domain.SECURITY,
+    reason="asserts a security scenario; this run serves the infrastructure fixture",
+)
+
 infrastructure_fixture = pytest.mark.skipif(
     _settings().action_domain not in (None, _Domain.INFRASTRUCTURE),
     reason="asserts the infrastructure fixture; this run serves the security domain",
@@ -1114,3 +1119,66 @@ def test_the_intel_route_serves_nothing_live() -> None:
         for address in re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text):
             assert is_documentation_address(address), f"{address} is live in /intel"
         assert "http://" not in text and "https://" not in text, text[:200]
+
+@security_fixture
+def test_a_simulation_says_so_and_names_its_sources() -> None:
+    """R118. An incident modelled on somebody else's published outbreak must
+    never be mistaken for something this estate observed, so the claim is a
+    field rather than prose a view has to parse — and the sources are named,
+    because an account written from reporting is only as checkable as the
+    reporting it cites."""
+    body = client.get("/api/v1/incidents/INC-2026-0905").json()
+    assert body["simulation_of"] == "the June 2017 NotPetya outbreak"
+    assert len(body["sources"]) >= 2
+    for source in body["sources"]:
+        assert source["url"].startswith("https://")
+        assert source["title"] and source["publisher"]
+
+    # Every other scenario is a written scenario too, but not a simulation *of*
+    # anything in particular, and must not claim to be.
+    for other in ("INC-2026-0901", "INC-2026-0903"):
+        assert client.get(f"/api/v1/incidents/{other}").json()["simulation_of"] is None
+
+
+@security_fixture
+def test_the_wiper_is_separated_from_ransomware_by_the_key(seeded_incident: str = "") -> None:
+    """The lesson the scenario exists for. A ransom note invites exactly one
+    response — pay or restore — and here there is nothing to pay for. The
+    separation has to rest on stored records, not on the confidence gap."""
+    body = client.get("/api/v1/incidents/INC-2026-0905").json()
+    decoy = next(h for h in body["hypotheses"] if h["contradicted_by"])
+    assert "ransomware" in decoy["statement"].lower()
+    assert decoy["contradicted_by"] == ["SEC-0005-i", "SEC-0005-g"]
+    for ref in decoy["contradicted_by"]:
+        assert client.get(f"/api/v1/events/{ref}").status_code == 200
+
+
+@security_fixture
+def test_the_supply_chain_chain_maps_the_techniques_the_analyses_name() -> None:
+    """Supply chain, credential dumping, SMB admin shares, remote exploitation,
+    disk structure wipe — in that order, each citing stored evidence."""
+    body = client.get("/api/v1/incidents/INC-2026-0905").json()
+    ids = [step["attack_technique"]["id"] for step in body["causal_chain"]]
+    assert ids == ["T1195.002", "T1003", "T1021.002", "T1210", "T1561.002"]
+    for step in body["causal_chain"]:
+        assert step["evidence"]
+        for ref in step["evidence"]:
+            assert client.get(f"/api/v1/events/{ref}").status_code == 200
+
+
+@security_fixture
+def test_the_wiper_plan_isolates_at_the_tier_dharma_assigns() -> None:
+    """R118 asks the plan to isolate at the tier Dharma gives it — not at a
+    lower one because the incident is frightening."""
+    body = client.get("/api/v1/incidents/INC-2026-0905").json()
+    assert [step["action_id"] for step in body["plan"]][0] == "isolate_host"
+    verdict = client.post(
+        "/api/v1/policy/preview",
+        json={
+            "action_id": "isolate_host",
+            "incident_ref": "INC-2026-0905",
+            "blast_radius_entities": body["impact"]["blast_radius_entities"],
+        },
+    ).json()
+    assert verdict["tier"] in ("senior", "denied")
+    assert verdict["tier"] == "senior", "a plan step may not be denied"

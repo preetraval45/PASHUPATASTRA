@@ -748,6 +748,24 @@
             "title": "Similar Incident Ids",
             "type": "array"
           },
+          "simulation_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simulation Of"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
           "state": {
             "$ref": "#/components/schemas/IncidentState",
             "default": "detected"
@@ -1062,6 +1080,36 @@
         ],
         "title": "RiskFactor",
         "type": "string"
+      },
+      "Source": {
+        "description": "One published reference, named so a reader can go and read it.",
+        "properties": {
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "publisher": {
+            "default": "",
+            "title": "Publisher",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "pattern": "^https://",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "url"
+        ],
+        "title": "Source",
+        "type": "object"
       },
       "Tier": {
         "enum": [

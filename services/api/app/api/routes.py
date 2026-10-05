@@ -1185,7 +1185,10 @@ def game_scenarios() -> list[dict[str, object]]:
 
     graph = entitystore()
     out = []
-    for incident in STORE.all():
+    # `game.playable`, not every incident in the store: an incident whose
+    # opening alert cannot be resolved is not an exercise, and offering it
+    # hands a player a briefing with nothing in it.
+    for incident in game.playable(STORE.all(), graph):
         alert = game.opening_alert(incident, graph)
         out.append(
             {

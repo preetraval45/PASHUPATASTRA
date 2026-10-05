@@ -52,6 +52,7 @@ from pashupatastra import (
     PlanStep,
     Provenance,
     Severity,
+    Source,
 )
 from pashupatastra.events import SecurityPayload
 from pashupatastra.registry import get as get_action
@@ -707,7 +708,267 @@ def injection(now: datetime) -> Scenario:
     return Scenario(incident=incident, signals=signals, access=ACCESS_0904)
 
 
-BUILDERS = (credential_stuffing, token_theft, beaconing, injection)
+SOURCES_0905 = [
+    Source(
+        title="NotPetya (S0368)",
+        url="https://attack.mitre.org/software/S0368/",
+        publisher="MITRE ATT&CK",
+        note="the technique mapping this chain follows",
+    ),
+    Source(
+        title="Petya Ransomware (TA17-181A)",
+        url="https://www.cisa.gov/news-events/alerts/2017/07/01/petya-ransomware",
+        publisher="CISA",
+        note="the contemporaneous advisory: update channel, SMB spread, no recoverable key",
+    ),
+]
+"""The published record this scenario is modelled on.
+
+Named rather than alluded to. An incident written from somebody else's
+reporting is only as checkable as the reporting it names, and a reader who
+cannot follow the sources has to take the shape of it on trust — which is the
+one thing this console does not ask of anyone.
+"""
+
+
+ACCESS_0905 = [
+    # The update channel reached the workstation. SEC-0005-a is the fetch
+    # itself: contact, and on its own entirely ordinary.
+    Edge(
+        source="host:fin-034",
+        target="network_flow:192.0.2.30->fin-034:443",
+        kind="updated_over",
+        evidence=["SEC-0005-a"],
+    ),
+    # The credentials were read on fin-034, so the account is reachable from
+    # it. Direction as everywhere else here: compromise flows target to source.
+    Edge(
+        source="account:svc-deploy",
+        target="host:fin-034",
+        kind="credentials_taken_on",
+        evidence=["SEC-0005-c"],
+    ),
+    # One event, two paths — fin-034 wrote to ADMIN$ on both within the same
+    # forty seconds, which is why both edges cite the same id rather than one
+    # of them being assumed from the other.
+    Edge(
+        source="host:fs-04",
+        target="host:fin-034",
+        kind="smb_from",
+        evidence=["SEC-0005-d"],
+    ),
+    Edge(
+        source="host:dc-01",
+        target="host:fin-034",
+        kind="smb_from",
+        evidence=["SEC-0005-d"],
+    ),
+]
+
+
+def supply_chain_wiper(now: datetime) -> Scenario:
+    """A wiper that arrives through an update and is not ransomware.
+
+    Modelled on the public record of the June 2017 NotPetya outbreak and
+    labelled as a simulation everywhere it appears: nothing here was observed,
+    on this estate or anyone else's. What it is for is the shape, which is the
+    one most worth being able to read — a signed update channel carrying
+    something the vendor never published, credentials taken out of memory,
+    spread that uses both the stolen credentials and an unpatched service, and
+    destruction wearing a ransom note.
+
+    **The alternative reading is the one the world believed for a day**, and it
+    is the reason this scenario earns its place beside the other four. A ransom
+    note invites exactly one response — pay, or restore the key — and here
+    there is no key to restore: the installation ID is random bytes and the
+    boot record was overwritten without a copy. Recovery planning that starts
+    from "ransomware" is wrong in the direction that costs the most, and the
+    evidence that separates the two is on the page.
+    """
+    flow = _ref(EntityKind.NETWORK_FLOW, "192.0.2.30->fin-034:443")
+    patient_zero = _ref(EntityKind.HOST, "fin-034")
+    file_server = _ref(EntityKind.HOST, "fs-04")
+    controller = _ref(EntityKind.HOST, "dc-01")
+    service_account = _ref(EntityKind.ACCOUNT, "svc-deploy")
+
+    signals = [
+        Signal("SEC-0005-a", flow, -5400, "software_update_fetched",
+               "fin-034 fetched build 7.4.11 from the vendor update endpoint at "
+               "192.0.2.30 — signed, on schedule, and indistinguishable from "
+               "every other Tuesday",
+               severity=Severity.INFO, confidence=0.99),
+        Signal("SEC-0005-b", patient_zero, -5280, "binary_outside_vendor_manifest",
+               "the updater wrote and launched a binary the vendor's published "
+               "manifest for 7.4.11 does not list",
+               severity=Severity.CRITICAL, confidence=0.95),
+        Signal("SEC-0005-c", service_account, -5100, "credential_dump",
+               "that binary read lsass memory; svc-deploy's deployment "
+               "credentials were recovered in cleartext",
+               severity=Severity.CRITICAL, confidence=0.96),
+        Signal("SEC-0005-d", patient_zero, -4800, "smb_admin_share_write",
+               "fin-034 wrote to ADMIN$ on fs-04 and dc-01 within forty seconds, "
+               "authenticating as svc-deploy; it had contacted neither before",
+               severity=Severity.CRITICAL, confidence=0.97),
+        Signal("SEC-0005-e", file_server, -4620, "smb_remote_code_execution",
+               "fs-04 accepted a malformed SMBv1 transaction from fin-034 of the "
+               "shape used to execute code on an unpatched service",
+               severity=Severity.CRITICAL, confidence=0.94),
+        Signal("SEC-0005-f", file_server, -4200, "scheduled_reboot_registered",
+               "a scheduled task was registered on fs-04 and dc-01 to reboot in "
+               "fifty-seven minutes",
+               severity=Severity.CRITICAL, confidence=0.95),
+        Signal("SEC-0005-g", file_server, -3900, "boot_record_overwritten",
+               "the first sector of fs-04's system disk was overwritten and the "
+               "original master boot record was not copied anywhere on the volume",
+               severity=Severity.CRITICAL, confidence=0.98),
+        Signal("SEC-0005-h", file_server, -3600, "ransom_note_displayed",
+               "a note demanding 300 USD of bitcoin to one fixed address, "
+               "carrying an installation ID for the victim to send back",
+               severity=Severity.WARNING, confidence=0.99),
+        Signal("SEC-0005-i", file_server, -3540, "installation_id_is_not_key_material",
+               "the installation ID is random bytes rather than anything derived "
+               "from a key, and no key material left the host — there is nothing "
+               "the fixed address could decrypt in exchange",
+               severity=Severity.CRITICAL, confidence=0.97),
+    ]
+
+    incident = Incident(
+        id="INC-2026-0905",
+        severity=IncidentSeverity.CRITICAL,
+        opened_at=now - timedelta(seconds=5000),
+        affected_entities=[patient_zero, file_server, controller, service_account, flow],
+        impact=Impact(
+            # As everywhere else here: the entity count is real and the user
+            # figure is absent rather than guessed. A wiper on a domain
+            # controller plainly affects everyone, and "everyone" is not a
+            # number this estate's records can produce (R50, R51).
+            estimated_users_affected=0,
+            affected_services=["fin-034", "fs-04", "dc-01"],
+            # What isolating patient zero would reach, per the access edges
+            # below: svc-deploy, fs-04 and dc-01. Written as 5 first — the
+            # count of affected entities, which is a different question — and
+            # that put `isolate_host` over the escalation threshold and into
+            # `denied`, which would have left the plan's first step unable to
+            # be approved by anyone. The number is the graph's answer, and the
+            # tier follows from it rather than the other way round.
+            blast_radius_entities=3,
+        ),
+        simulation_of="the June 2017 NotPetya outbreak",
+        sources=SOURCES_0905,
+        hypotheses=[
+            Hypothesis(
+                statement=(
+                    "A destructive wiper arrived inside a trojanised vendor update, "
+                    "took svc-deploy's credentials out of memory, spread to fs-04 "
+                    "and dc-01 both with those credentials and by exploiting an "
+                    "unpatched SMB service, and overwrote boot records behind a "
+                    "ransom note that cannot be paid."
+                ),
+                confidence=0.94,
+                evidence=[
+                    "SEC-0005-a", "SEC-0005-b", "SEC-0005-c", "SEC-0005-d",
+                    "SEC-0005-e", "SEC-0005-g", "SEC-0005-i",
+                ],
+                contradicted_by=[],
+                mechanism=[
+                    "signed update channel delivers a binary the vendor never published",
+                    "deployment credentials read from process memory",
+                    "admin-share writes to two hosts never contacted before",
+                    "unpatched SMB service exploited in parallel with the credentials",
+                    "boot record overwritten, no copy kept, reboot scheduled",
+                ],
+            ),
+            Hypothesis(
+                statement=(
+                    "Ransomware. The data is encrypted and recoverable — pay the "
+                    "demand or wait for a key."
+                ),
+                confidence=0.06,
+                # The ransom note is the only thing that supports this, and the
+                # note is written by the attacker. The two records that could
+                # have corroborated it say the opposite.
+                evidence=["SEC-0005-h"],
+                contradicted_by=["SEC-0005-i", "SEC-0005-g"],
+            ),
+        ],
+        causal_chain=[
+            CausalLink(
+                entity=patient_zero,
+                transition="a binary outside the vendor manifest, through the signed update channel",
+                evidence=["SEC-0005-a", "SEC-0005-b"],
+                attack_technique=AttackTechnique(
+                    id="T1195.002",
+                    name="Compromise Software Supply Chain",
+                    tactic="Initial Access",
+                ),
+            ),
+            CausalLink(
+                entity=service_account,
+                transition="deployment credentials read out of process memory",
+                evidence=["SEC-0005-c"],
+                attack_technique=AttackTechnique(
+                    id="T1003", name="OS Credential Dumping", tactic="Credential Access"
+                ),
+            ),
+            CausalLink(
+                entity=file_server,
+                transition="written to over ADMIN$ with the stolen credentials",
+                evidence=["SEC-0005-d"],
+                attack_technique=AttackTechnique(
+                    id="T1021.002",
+                    name="SMB/Windows Admin Shares",
+                    tactic="Lateral Movement",
+                ),
+            ),
+            CausalLink(
+                entity=file_server,
+                transition="malformed SMBv1 transaction against the unpatched service",
+                evidence=["SEC-0005-e"],
+                attack_technique=AttackTechnique(
+                    id="T1210",
+                    name="Exploitation of Remote Services",
+                    tactic="Lateral Movement",
+                ),
+            ),
+            CausalLink(
+                entity=file_server,
+                # T1561.002 rather than its parent T1561: what was observed is
+                # the boot record specifically, and the sub-technique is what
+                # the published analyses name. A step mapped one level vaguer
+                # than the evidence supports is a small invention in the
+                # direction of looking more certain.
+                transition="boot record overwritten with no copy kept, and a reboot scheduled",
+                evidence=["SEC-0005-f", "SEC-0005-g"],
+                attack_technique=AttackTechnique(
+                    id="T1561.002", name="Disk Structure Wipe", tactic="Impact"
+                ),
+            ),
+        ],
+        # Isolate first and at the tier Dharma assigns — `isolate_host` is risk
+        # 67 and senior, and nothing here lowers it because the incident is
+        # frightening. Revoking the deployment account closes the credential
+        # the spread is using; blocking the update endpoint stops the next
+        # machine fetching the same build.
+        plan=_plan("isolate_host", "revoke_session", "block_ip", "notify_analyst"),
+    )
+    incident.transition_to(
+        IncidentState.CORRELATED, "agent:sentinel",
+        "update fetch, unlisted binary, credential read and admin-share writes "
+        "to two hosts inside eleven minutes",
+    )
+    incident.transition_to(
+        IncidentState.DIAGNOSED, "agent:analyst",
+        "the ransom note is contradicted by the installation ID and by the "
+        "overwritten boot record — this destroys rather than encrypts",
+    )
+    incident.transition_to(
+        IncidentState.ESCALATED, "dharma",
+        "isolate_host scores 67 → senior tier, and the plan touches a domain controller",
+    )
+    return Scenario(incident=incident, signals=signals, access=ACCESS_0905)
+
+
+BUILDERS = (credential_stuffing, token_theft, beaconing, injection, supply_chain_wiper)
 
 
 def scenarios(now: datetime | None = None) -> list[Scenario]:

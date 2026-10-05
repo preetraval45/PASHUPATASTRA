@@ -17,7 +17,26 @@ from app import game
 from app.graph import entitystore
 from app.store import STORE
 
-SCENARIOS = ["INC-2026-0901", "INC-2026-0902", "INC-2026-0903"]
+def _playable() -> list[str]:
+    """Every scenario a visitor can actually play, asked of the same store the
+    route asks.
+
+    Hard-coded as three until 4 October 2026, while `/game/scenarios`
+    enumerated `STORE.all()` — so INC-2026-0904 and INC-2026-0905 were
+    playable on the deployed site and exercised by nothing. A list that has to
+    be edited by hand every time a scenario lands is a list that silently
+    stops covering the thing it names.
+    """
+    import app.main  # noqa: F401  — importing seeds the demo scenarios
+
+    from app import game
+    from app.graph import entitystore
+    from app.store import STORE
+
+    return sorted(i.id for i in game.playable(STORE.all(), entitystore()))
+
+
+SCENARIOS = _playable() or ["INC-2026-0901"]
 
 
 @pytest.fixture(params=SCENARIOS)

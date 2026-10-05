@@ -47,6 +47,13 @@ export function IncidentView({
             )}
           </h2>
           <Badge status={statusForSeverity(incident.severity)}>{incident.severity}</Badge>
+          {/* Beside the severity, not in a footnote. An incident modelled on
+              somebody else's published outbreak must never be mistaken for
+              something this estate saw, and the reader meets that claim at the
+              same moment they meet the id (R118). */}
+          {incident.simulation_of && (
+            <Badge status="neutral">simulation</Badge>
+          )}
           <span className="text-[11px] uppercase tracking-wide text-[rgb(var(--muted))]">
             {incident.state.replace(/_/g, " ")}
           </span>
@@ -75,6 +82,40 @@ export function IncidentView({
           {CONFIDENCE_IS_STATED}
         </p>
       </Panel>
+
+      {incident.simulation_of && (
+        <Panel title="This is a simulation" aside="nothing here was observed">
+          <p className="text-sm leading-relaxed text-[rgb(var(--muted))]">
+            Written as a simulation of{" "}
+            <span className="text-[rgb(var(--ink))]">{incident.simulation_of}</span>, from the
+            published record. None of the telemetry below was observed — not on this estate and
+            not on anyone else&rsquo;s; it is what that shape of attack would look like in these
+            records. The sources are named so the shape can be checked against them.
+          </p>
+          {incident.sources && incident.sources.length > 0 && (
+            <ul className="mt-3 space-y-2 text-sm">
+              {incident.sources.map((source) => (
+                <li key={source.url} className="min-w-0">
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
+                  >
+                    {source.title}
+                  </a>
+                  {source.publisher && (
+                    <span className="text-[rgb(var(--faint))]"> · {source.publisher}</span>
+                  )}
+                  {source.note && (
+                    <p className="text-xs leading-relaxed text-[rgb(var(--faint))]">{source.note}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      )}
 
       {/* The chain as a chain.
           

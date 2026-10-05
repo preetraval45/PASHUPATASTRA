@@ -179,6 +179,29 @@ def offered_actions(incident: Incident, domain=None) -> list[dict[str, Any]]:
     ]
 
 
+def playable(incidents, graph) -> list[Incident]:
+    """The incidents the game can actually brief.
+
+    An incident needs two things to be an exercise: an opening alert, which is
+    its earliest cited signal resolved from the store, and a decoy — an
+    alternative something contradicts. The infrastructure demo incident has a
+    chain and a decoy and *no resolvable alert*, because its hypotheses cite
+    events that were never stored; offered anyway, it hands a player a briefing
+    with nothing to open.
+
+    One function so the route and its tests cannot disagree about what is on
+    offer. They did: `/game/scenarios` enumerated every incident in the store
+    while the suite named three by hand, so two scenarios were playable on the
+    deployed site and exercised by nothing, and one unplayable scenario was
+    offered in the infrastructure configuration and caught by nothing.
+    """
+    return [
+        incident
+        for incident in incidents
+        if _decoy(incident) is not None and opening_alert(incident, graph) is not None
+    ]
+
+
 def briefing(incident: Incident, graph, domain=None) -> dict[str, Any]:
     alert = opening_alert(incident, graph)
     return {

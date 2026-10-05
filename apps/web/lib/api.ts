@@ -80,6 +80,13 @@ export interface Incident {
   hypotheses: Hypothesis[];
   causal_chain: CausalLink[];
   plan: PlanStep[];
+  /** What this incident is a simulation of, when it is one. Set means nothing
+   *  here was observed anywhere — the account is modelled on the public record
+   *  of someone else's incident, and the page says so rather than leaving a
+   *  reader to infer it. */
+  simulation_of?: string | null;
+  /** Published work the account rests on, beyond our own telemetry. */
+  sources?: { title: string; url: string; publisher?: string; note?: string }[];
   transitions: {
     at: string;
     from_state: IncidentState | null;

@@ -3593,7 +3593,7 @@ nothing to a visitor whose filter stops at the front door.
   seeded, web typecheck and 34 node tests. Kavach and Kaal ratings in the
   review above predate this.*
 
-- [ ] **R118 — A NotPetya-shaped incident.** Needs: **R5, R50**.
+- [x] **R118 — A NotPetya-shaped incident.** Needs: **R5, R50**.
   Built from public reporting on the 2017 outbreak and labelled as a
   simulation modelled on it, not as Maersk's or anyone's real telemetry:
   entry through a trojanised software update, credential theft, spread over
@@ -3609,6 +3609,55 @@ nothing to a visitor whose filter stops at the front door.
   **Done when:** every step cites stored evidence, every technique id is
   valid in the pinned ATT&CK version, the page names its public sources, and
   `verifysite.py` walks it clean.
+  Done. `INC-2026-0905` — a signed vendor update carrying a binary the
+  vendor never published, deployment credentials read out of memory, spread
+  to a file server and a domain controller *both* with the stolen
+  credentials and by exploiting an unpatched SMB service, and boot records
+  overwritten behind a ransom note. Five chain steps, each citing stored
+  evidence: `T1195.002`, `T1003`, `T1021.002`, `T1210`, `T1561.002`.
+  **The alternative reading is the one the world believed for a day**, and
+  it is why this scenario earns its place rather than being a fifth of the
+  same thing. A ransom note invites exactly one response — pay, or wait for
+  a key — and here there is no key: the installation ID is random bytes
+  rather than anything derived from key material, and the boot record was
+  overwritten with no copy kept. Both of those are stored records, so the
+  separation rests on evidence and not on the confidence gap, which is the
+  rule `contest.py` already enforces one layer up.
+  **Two new fields, because a simulation must not have to be inferred from
+  prose.** `Incident.simulation_of` names what it is modelled on and
+  `Incident.sources` carries the published work the account rests on —
+  MITRE's NotPetya entry and CISA's contemporaneous advisory, both fetched
+  and confirmed to resolve before being written down. Kept apart from
+  `evidence` deliberately: an external analysis is not an observation of
+  this estate, and filing the two together would let a scenario borrow the
+  standing of something that was actually seen. The page meets the reader
+  with a *simulation* badge beside the severity and a panel saying nothing
+  here was observed anywhere.
+  `T1561.002` rather than its parent `T1561`, which the task named: what the
+  evidence shows is the boot record specifically, and mapping a step one
+  level vaguer than the evidence supports is a small invention in the
+  direction of looking more certain.
+  **Two things the work turned up, both the same shape — a count and a list
+  that nobody was checking.** The blast radius was first written as 5, the
+  number of affected entities, which is a different question from how far
+  isolating patient zero reaches; at 5 it crossed the escalation threshold
+  and `isolate_host` came back **denied**, which would have left the plan's
+  first step unable to be approved by anyone. The graph's answer is 3, the
+  tier is senior, and the number now follows the evidence rather than the
+  other way round. And `testgame.py` named three scenarios by hand while
+  `/game/scenarios` enumerated the whole store — so `0904` and `0905` were
+  playable on the deployed site and exercised by nothing, while the
+  infrastructure incident was *offered* and cannot be briefed at all, its
+  cited events having never been stored. `game.playable()` is now the one
+  answer to what can be played, used by the route and the suite alike.
+  *Evidence: 52 scenario invariants; 85 game tests, up from 51, because the
+  suite now derives what it plays; four route tests over the simulation
+  fields, the ransomware separation, the technique order and the tier; all
+  five source and technique URLs fetched and confirmed; seeded suite 527,
+  default 446, core 701, web typecheck, 34 node tests and the build clean;
+  `verifysite.py` crawls 95 pages with no broken link, no empty page and no
+  browser error, and the new page passes the width sweep and AA contrast in
+  both themes.*
 
 - [ ] **R119 — Numbers where a reviewer lands.** Needs: **R107**.
   Three to five measured figures on the landing page — from the PIB results
