@@ -54,6 +54,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
 OUT = ROOT / "apps" / "web" / "lib" / "evaluation.generated.json"
 CORPUS = ROOT / "benchmark" / "incidents" / "pib"
 RESULTS = ROOT / "benchmark" / "results"
+EXPERIMENTS = ROOT / "docs" / "research" / "experiments"
 
 #: The review, recorded as it was given. Each entry's `status` names what a
 #: reader can go and check, or states plainly that nothing has closed it —
@@ -173,8 +174,55 @@ def runs_on_disk() -> dict[str, dict[str, object]]:
     }
 
 
+def tracked_records() -> list[dict[str, object]]:
+    """Experiment records committed to the repository, if any.
+
+    `benchmark/results/` is gitignored, so an arm run leaves nothing a reader
+    can recompute from. Experiments that *are* committed live under
+    `docs/research/experiments/`, and this looks for them rather than assuming
+    either way — the note on the page is wrong the moment somebody commits a
+    record and the page keeps saying nothing is tracked.
+    """
+    if not EXPERIMENTS.exists():
+        return []
+    found: list[dict[str, object]] = []
+    for path in sorted(EXPERIMENTS.rglob("*")):
+        if path.is_file() and path.suffix in {".json", ".jsonl", ".csv"}:
+            lines = sum(1 for _ in path.open(encoding="utf-8", errors="replace"))
+            found.append(
+                {
+                    "path": path.relative_to(ROOT).as_posix(),
+                    "lines": lines,
+                    "bytes": path.stat().st_size,
+                }
+            )
+    return found
+
+
+def records_note(tracked: list[dict[str, object]]) -> str:
+    """What a reader can and cannot recompute from this repository."""
+    unchanged = (
+        "benchmark/results/ is gitignored, so the records behind any arm run "
+        "live on the machine that produced them and not in this repository. A "
+        "reader cannot recompute a published arm number from here — only "
+        "re-run the harness and compare."
+    )
+    if not tracked:
+        return (
+            f"{unchanged} Publishing them is a decision about size, and about "
+            "whether a run on one person's cluster is worth citing at all, and "
+            "it has not been made."
+        )
+    return (
+        f"{unchanged} The experiments under docs/research/experiments/ are the "
+        f"exception: {len(tracked)} record file(s) are committed, so every "
+        "number drawn from those can be recomputed from this repository."
+    )
+
+
 def main() -> int:
     corpus = load_corpus(str(CORPUS))
+    tracked_experiments = tracked_records()
     summary = report(corpus)
     scoreable = diagnosis.scoreable(corpus)
     options = diagnosis.labels(corpus)
@@ -271,15 +319,9 @@ def main() -> int:
         "arms_with_data": sum(1 for arm in arms if arm["records"]),
         # Said out loud, because it is the reproducibility question a reviewer
         # asks first and the repository's own .gitignore is the answer.
-        "records_are_tracked": False,
-        "records_note": (
-            "benchmark/results/ is gitignored, so the run records behind any "
-            "table in the paper live on the machine that produced them and not "
-            "in this repository. A reader cannot recompute a published number "
-            "from here — only re-run the harness and compare. Publishing the "
-            "records is a decision about size and about whether a run on one "
-            "person's cluster is worth citing at all, and it has not been made."
-        ),
+        "records_are_tracked": bool(tracked_experiments),
+        "tracked_experiments": tracked_experiments,
+        "records_note": records_note(tracked_experiments),
         "ablations": [a.value for a in Ablation],
         "injection": {
             "injectable": injectable,
