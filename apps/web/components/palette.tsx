@@ -70,6 +70,7 @@ const PAGES: SearchItem[] = [
   { kind: "page", label: "ATT&CK coverage", hint: "what the library observed, tactic by tactic", href: "/attack" },
   { kind: "page", label: "Detections", hint: "rules drafted from incidents, and written ones", href: "/detections" },
   { kind: "page", label: "Impact", hint: "what this has done, and where each number came from", href: "/impact" },
+  { kind: "page", label: "Press kit", hint: "a paragraph, screenshots and a contact line", href: "/press" },
   { kind: "page", label: "Ask", hint: "the assistant", href: "/ask" },
   { kind: "page", label: "Blue team", hint: "work one yourself", href: "/blue-team" },
 ];
