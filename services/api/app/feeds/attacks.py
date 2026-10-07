@@ -54,6 +54,29 @@ from .sources import FeedUnavailable, USER_AGENT, _now
 TIMEOUT = 45.0
 
 RANSOMWARE_URL = "https://api.ransomware.live/v2/recentvictims"
+
+RANSOMWARE_WITHDRAWN = (
+    "ransomware.live's free API is documented but not serving: every v2 path — "
+    "/info, /recentvictims, /groups — answers with the website's own HTML 404 "
+    "from api.ransomware.live, and data.ransomware.live returns the site for "
+    "any path. The publisher now offers a keyed PRO API. Either the free "
+    "endpoint comes back, or somebody takes a free PRO key and this feed is "
+    "rewritten against it — see docs/REBUILD.md R123."
+)
+"""Why this feed fails, in the words a reader of the Observatory needs.
+
+Probed on 7 October 2026 with two user agents and seven paths. The raw `404`
+it used to report is indistinguishable from a transient outage, and this one is
+not transient: a reader looking at a red feed should be able to tell whether
+the publisher moved or we are broken, and only one of those is worth waiting
+out.
+
+**Not wired to the PRO API on a guess.** Without a key the PRO base 404s too,
+so its real paths and its auth header cannot be determined from here — and a
+feed written against a guessed shape is R24's "dependency that fails in
+production and passes every test written around it". The key is an owner's
+decision, and the feed says so rather than pretending.
+"""
 FEODO_URL = "https://feodotracker.abuse.ch/downloads/ipblocklist.json"
 THREATFOX_URL = "https://threatfox.abuse.ch/export/json/recent/"
 HIBP_URL = "https://haveibeenpwned.com/api/v3/breaches"
@@ -118,9 +141,16 @@ def fetch_ransomware(limit: int = 25, since: str | None = None) -> list[Event]:
     one that most needs its verification label respected, because the source of
     the claim is the attacker.
     """
-    rows = _get(RANSOMWARE_URL)
+    try:
+        rows = _get(RANSOMWARE_URL)
+    except FeedUnavailable as error:
+        # The endpoint answers the website's HTML 404, which reaches here as an
+        # HTTP error or a decode failure depending on the day. Either way the
+        # useful message is *why*, not the status code: a raw 404 on the
+        # Observatory reads as a transient outage, and this one is not.
+        raise FeedUnavailable(RANSOMWARE_WITHDRAWN) from error
     if not isinstance(rows, list):
-        raise FeedUnavailable(f"{RANSOMWARE_URL}: expected a list")
+        raise FeedUnavailable(RANSOMWARE_WITHDRAWN)
 
     ordered = sorted(
         (row for row in rows if isinstance(row, dict)),

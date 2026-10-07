@@ -3824,7 +3824,7 @@ nothing to a visitor whose filter stops at the front door.
   shows every feed polled within the stale window, NVD is among them, and
   the live Observatory renders entries.
 
-- [ ] **R123 — ransomware.live moved.** Needs: nothing.
+- [~] **R123 — ransomware.live moved.** Needs: nothing.
   `https://api.ransomware.live/v2/recentvictims` answers 404 as of
   4 October 2026, so the *Leak sites* feed fails on every poll. Find the
   current endpoint in the publisher's documentation, adapt the connector,
@@ -3832,6 +3832,26 @@ nothing to a visitor whose filter stops at the front door.
   *unavailable* rather than as quiet.
   **Done when:** a live poll stores entries and the R88 connector tests pass
   against the new response shape.
+  Investigated 7 October 2026; the endpoint has not moved, it has stopped
+  serving. Two user agents and seven paths: every documented v2 endpoint —
+  `/info`, `/recentvictims`, `/groups` — answers with the website's own HTML
+  404 from `api.ransomware.live`, and `data.ransomware.live` returns the site
+  for any path. The documentation still says *no authentication required*;
+  the publisher now also offers a keyed PRO API, whose base 404s without a
+  key, so its paths and auth header cannot be determined from here.
+  **Not wired to the PRO API on a guess**, which is R24's rule: a feed
+  written against a shape nobody has seen is a dependency that fails in
+  production and passes every test written around it. What changed instead
+  is that the failure says *why*. A bare `404` on the Observatory is
+  indistinguishable from a transient outage and this one is not — a reader
+  looking at a red feed should be able to tell whether the publisher moved
+  or we are broken, because only one of those is worth waiting out.
+  **Left for the owner:** take a free PRO key and rewrite the feed against
+  it, or drop the feed. Until then it fails hourly, legibly, and the other
+  six are untouched — R88's per-feed handling doing its job.
+  *Evidence: two tests — the withdrawal reason reaches the ingest summary
+  rather than stopping at the log, and no API key appeared without the
+  endpoint being known. Seeded suite 536.*
 
 - [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
   R122** (R116, R118, R119, R123 when they land).

@@ -274,3 +274,45 @@ def _stamped(value):
     from app.feeds.attacks import _stamp
 
     return _stamp(value)
+
+def test_a_withdrawn_feed_says_why_rather_than_reporting_a_status_code(monkeypatch) -> None:
+    """R123. ransomware.live's free API is documented and not serving; every
+    v2 path answers the website's own HTML 404. A bare `404` on the Observatory
+    is indistinguishable from a transient outage, and this one is not — a
+    reader looking at a red feed should be able to tell whether the publisher
+    moved or we are broken, because only one of those is worth waiting out."""
+    from app.feeds import attacks
+    from app.feeds.attacks import RANSOMWARE_WITHDRAWN, fetch_ransomware
+    from app.feeds.ingest import MemoryCursors, run
+    from app.graphmemory import MemoryGraph
+
+    def html_404(url: str):
+        raise attacks.FeedUnavailable(f"{url}: HTTP Error 404: NOT FOUND")
+
+    monkeypatch.setattr(attacks, "_get", html_404)
+    with pytest.raises(attacks.FeedUnavailable) as raised:
+        fetch_ransomware(limit=2)
+    assert "documented but not serving" in str(raised.value)
+    assert "R123" in str(raised.value), "the reader is not told where the decision lives"
+
+    # And the reason reaches the status surface rather than stopping at the log.
+    from app.feeds import sources
+
+    monkeypatch.setattr(sources, "_get", lambda url: (_ for _ in ()).throw(sources.FeedUnavailable("skip")))
+    cursors = MemoryCursors()
+    summary = run(store=MemoryGraph(), cursors=cursors, limit=2)
+    assert "documented but not serving" in str(summary["ransomware-live"]["error"])
+    # Every other feed is untouched by it, which is R88's per-feed handling.
+    assert set(summary) - {"ransomware-live"}
+
+
+def test_the_pro_api_is_not_wired_on_a_guess() -> None:
+    """Without a key the PRO base 404s too, so its paths and auth header cannot
+    be determined. A feed written against a guessed shape is R24's dependency
+    that fails in production and passes every test written around it."""
+    from app.feeds import attacks
+
+    assert "api-pro" not in attacks.RANSOMWARE_URL
+    assert not any(
+        name.lower().endswith("api_key") for name in dir(attacks)
+    ), "a key appeared without the endpoint being known"
