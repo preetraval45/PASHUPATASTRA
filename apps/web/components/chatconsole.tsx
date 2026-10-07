@@ -127,29 +127,34 @@ export function ChatConsole({ incidents }: { incidents: Incident[] }) {
             ))
           )}
 
-          {busy && (
-            <p className="flex items-center gap-3 text-sm text-[rgb(var(--faint))]">
-              <span className="loose" aria-hidden="true" />
-              Reading the evidence…
-            </p>
-          )}
+          {busy && <Waiting />}
         </div>
 
-        {turns.length === 0 && (
-          <div className="flex flex-wrap gap-2 border-t border-[rgb(var(--edge))] px-4 py-3 sm:px-6">
-            {STARTERS.map((starter) => (
-              <button
-                key={starter}
-                type="button"
-                disabled={busy}
-                onClick={() => ask(starter)}
-                className="focusable rounded-full border border-[rgb(var(--edge-strong))] px-3 py-1.5 text-xs transition hover:bg-[rgb(var(--raised))] disabled:opacity-50"
-              >
-                {starter}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* The starters used to vanish after the first question, which is
+            exactly when a visitor has learned what this can do and wants
+            another one. They stay, and shrink: prominent on an empty console,
+            a quiet row once the conversation has started. */}
+        <div
+          className={`flex flex-wrap gap-2 border-t border-[rgb(var(--edge))] px-4 sm:px-6 ${
+            turns.length === 0 ? "py-3" : "py-2"
+          }`}
+        >
+          {STARTERS.map((starter) => (
+            <button
+              key={starter}
+              type="button"
+              disabled={busy}
+              onClick={() => ask(starter)}
+              className={`focusable rounded-full border transition disabled:opacity-50 ${
+                turns.length === 0
+                  ? "border-[rgb(var(--edge-strong))] px-3 py-1.5 text-xs hover:bg-[rgb(var(--raised))]"
+                  : "border-[rgb(var(--edge))] px-2.5 py-1 text-[11px] text-[rgb(var(--muted))] hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]"
+              }`}
+            >
+              {starter}
+            </button>
+          ))}
+        </div>
 
         <form
           onSubmit={(event) => {
@@ -260,5 +265,42 @@ function Context({ incident }: { incident: Incident }) {
         </p>
       </div>
     </aside>
+  );
+}
+
+/**
+ * What the console shows while a turn is in flight.
+ *
+ * It was one static line. The clock is the honest addition: a free-tier turn
+ * takes a few seconds and a reader with no feedback cannot tell a slow answer
+ * from a dead one — which is the same confusion the Observatory's freshness
+ * clock exists to prevent, one surface down.
+ *
+ * **It does not narrate stages it cannot see.** The tempting version lists
+ * "retrieving evidence… reading… answering", and the browser knows none of
+ * that: retrieval happens server-side before the model is asked, and the hops
+ * are in the trace that arrives *with* the answer. Inventing a progress
+ * sequence would be the one thing this console is arranged against, so what is
+ * shown is the two things that are true — it is working, and for how long.
+ */
+function Waiting() {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const started = Date.now();
+    const tick = setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 500);
+    return () => clearInterval(tick);
+  }, []);
+
+  return (
+    <p
+      data-waiting
+      aria-live="polite"
+      className="flex items-center gap-3 text-sm text-[rgb(var(--faint))]"
+    >
+      <span className="loose" aria-hidden="true" />
+      Reading the stored evidence
+      {seconds >= 2 && <span className="tnum text-xs">{seconds}s</span>}
+    </p>
   );
 }

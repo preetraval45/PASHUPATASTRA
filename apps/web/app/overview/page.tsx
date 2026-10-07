@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { Sparkline, StatusBar } from "@/components/charts";
 
+import { Live } from "@/components/live";
 import {
   Ago,
   Badge,
@@ -59,6 +60,12 @@ export default async function OverviewPage() {
     <Page
       title="Overview"
       description="System state, open incidents, and the autonomy posture currently in force."
+      // The refresh the site was built for. `components/live.tsx` has existed
+      // since R61 and was mounted nowhere, which is why a console whose whole
+      // claim is freshness sat perfectly still. Here, the observatory and
+      // impact only: an incident and the registry do not change while you read
+      // them, and refreshing those would be motion for its own sake.
+      actions={<Live />}
     >
       {/* The headline is a sentence, not a number. An operator arriving cold
           needs the verdict first and the metrics second. */}

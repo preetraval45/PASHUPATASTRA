@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Sparkline } from "@/components/charts";
 import { Cite } from "@/components/cite";
 import { Offline, Page, Panel, Stat } from "@/components/ui";
 import { getImpact, type Figure } from "@/lib/api";
@@ -43,6 +44,12 @@ export default async function ImpactPage() {
     <Page
       title="Impact"
       description="What this has done, counted from the things that did it."
+      /* No auto-refresh here, deliberately. `router.refresh()` is a request
+         for this route, and the middleware counts requests for this route —
+         a live panel would drive the "page renders" figure up four times a
+         minute for as long as a tab stayed open, and the number beside it
+         would be a measure of itself. The data is daily-grain project
+         history; it does not move while you read it. */
       actions={
         <p className="text-xs text-[rgb(var(--faint))]">
           as of {new Date(impact.as_of).toISOString().slice(0, 16).replace("T", " ")} UTC
@@ -69,6 +76,17 @@ export default async function ImpactPage() {
           label="Page renders"
           value={views ? views.total.toLocaleString() : "—"}
           hint={views ? `over ${views.days} day${views.days === 1 ? "" : "s"}` : impact.views.absent}
+          chart={
+            /* The shape of the days, not just their sum. `by_day` has been in
+               this response since R107 and was being added up and thrown away;
+               a total says how much and a line says whether it is growing. */
+            views && Object.keys(views.by_day).length > 1 ? (
+              <Sparkline
+                values={Object.keys(views.by_day).sort().map((day) => views.by_day[day])}
+                label={`renders a day over ${views.days} days`}
+              />
+            ) : undefined
+          }
         />
       </section>
 

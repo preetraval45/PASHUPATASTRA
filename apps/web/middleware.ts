@@ -1,6 +1,7 @@
 import { after, NextResponse, type NextRequest } from "next/server";
 
 import { recordView } from "@/lib/api";
+import { isAnArrival } from "@/lib/arrival";
 
 /**
  * Count one render, on the server, after the response has gone (R107).
@@ -29,6 +30,9 @@ import { recordView } from "@/lib/api";
  */
 export function middleware(request: NextRequest) {
   const route = request.nextUrl.pathname;
+  // What counts as a render, and what is the machinery talking to itself.
+  // The table in `lib/arrival.ts` records what was measured.
+  if (!isAnArrival(request.headers, route)) return NextResponse.next();
   after(async () => {
     try {
       await recordView(route);
@@ -42,7 +46,14 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Pages only. Static assets, the icons and the manifest are not renders a
-  // reader made, and counting them would turn one visit into six.
-  matcher: ["/((?!_next/|api/|.*\\.(?:png|ico|svg|webmanifest|xml|txt)$).*)"],
+  // Pages only, and "page" here means a path whose last segment has no dot.
+  //
+  // The previous version listed the extensions to exclude, and the list was
+  // missing `.webp` — which is the format the logo is in, and the logo is on
+  // every page. Every visit since R107 was therefore counted twice, and
+  // `by_route` carried `/logo.webp` as though it were somewhere a reader
+  // could go. A list of formats to exclude goes stale the next time somebody
+  // adds an asset, which is exactly how that happened; no route in this app
+  // has a dot in it, so that is the rule instead.
+  matcher: ["/((?!_next/|api/)[^.]*)"],
 };

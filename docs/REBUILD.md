@@ -3853,8 +3853,46 @@ nothing to a visitor whose filter stops at the front door.
   rather than stopping at the log, and no API key appeared without the
   endpoint being known. Seeded suite 536.*
 
+- [x] **R124 — A console that moves, and a counter that does not.** Needs: nothing.
+  Two halves, found together. `components/live.tsx` had existed since R61 and
+  was mounted on nothing — a console whose argument is freshness sat perfectly
+  still, and the component written to fix that was dead code. Mounting it
+  surfaced the second half: `router.refresh()` is a request for the route, and
+  the view counter counted requests for the route, so a live panel would have
+  driven `/impact`'s own headline up four times a minute for as long as a tab
+  stayed open. **The counter was measured rather than reasoned about**, with a
+  header probe in the middleware and a real browser, and it was already wrong
+  in a worse way: the matcher named the asset extensions to exclude and did not
+  name `.webp`, which is the logo's format, and the logo is on every page. Every
+  visit since R107 was counted twice and `by_route` carried `/logo.webp` as
+  somewhere a reader could go. Both fixed at the rule rather than the symptom —
+  arrivals only (a document load, or a fetch naming a route being left that is
+  not the one being asked for), and extensionless paths only, so the next asset
+  format cannot reintroduce it. The charts were the same kind of absence:
+  `/impact` returned a per-day series and `/ask` a fourteen-day window, both
+  added up and thrown away, now drawn — and `/ask`'s only when some day in it
+  is non-zero, because fourteen zeroes plot as a flat line that looks like a
+  chart of something. On the conversation: Sati's answer was the only turn with
+  no attribution on it, so the visitor's question rendered as a considered
+  bubble and the half carrying the citations rendered as bare text; it gets an
+  author line, a citation count and the room a cited answer needs. The waiting
+  state grew a clock and **deliberately did not grow a progress narration** —
+  retrieval happens server-side before the model is asked, so "reading
+  evidence… answering" would be a sequence the browser is inventing.
+  **Done when:** three arrivals through a real browser record exactly three
+  renders with the live refreshes in between discarded, and no asset path can
+  match the matcher.
+  *Evidence: measured 3 arrivals → delta 3 against `/impact`, with ~2 live
+  refreshes dropped; 6 new tests in `apps/web/lib/views.test.ts` covering the
+  refresh, the duplicate fetch beside a navigation and the asset matcher,
+  suite 43; `verifyui.py` clean across 65 page/viewport combinations.
+  `verifychat.py` could not exercise the Sati path locally — the API falls back
+  to the echo provider, which has no `chat_answer_v1` fixture — so the
+  `data-turn="sati"` / `data-answer` contract it depends on was checked by
+  reading it instead, and both attributes are untouched.*
+
 - [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
-  R122** (R116, R118, R119, R123 when they land).
+  R122** (R116, R118, R119, R123, R124 when they land).
   **Done when:** the R115 crawl passes on the deployed site, R116's second
   person can open it, and `verifysite.py` and `verifyui.py` pass with the new
   incidents included.

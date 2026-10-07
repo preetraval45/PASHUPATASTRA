@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { Sparkline } from "@/components/charts";
 import { ChatConsole } from "@/components/chatconsole";
 import { Offline, Page, Skeleton } from "@/components/ui";
 import { getIncidents, getUsage, type Usage } from "@/lib/api";
@@ -49,15 +50,35 @@ function Allowance({ usage }: { usage: Usage | null }) {
   const compact = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
   const cache =
     today.cache_hit_rate === null ? null : `${Math.round(today.cache_hit_rate * 100)}% from cache`;
+
+  // The window has been in this response since R104 and was being dropped.
+  // Drawn only once some day in it is non-zero: fourteen zeroes plot as a
+  // flat line along the axis, which looks like a chart of something and is a
+  // picture of nothing. `charts.tsx` will not invent a value and this will
+  // not ask it to.
+  const window = [...usage.days].sort((a, b) => a.day.localeCompare(b.day));
+  const series = window.map((day) => day.turns);
+  const worthDrawing = series.length > 1 && series.some((turns) => turns > 0);
+
   return (
-    <p
-      data-allowance
-      className="mono text-[11px] text-[rgb(var(--faint))]"
-      title={`${usage.spend_reason} Computed from ${usage.computed_from}.`}
-    >
-      today {compact(today.tokens)} of {compact(allowance.tokens_per_day)} tokens
-      {cache && ` · ${cache}`}
-      {today.turns === 0 && " · no questions yet"}
-    </p>
+    <div className="flex items-center gap-3">
+      <p
+        data-allowance
+        className="mono text-[11px] text-[rgb(var(--faint))]"
+        title={`${usage.spend_reason} Computed from ${usage.computed_from}.`}
+      >
+        today {compact(today.tokens)} of {compact(allowance.tokens_per_day)} tokens
+        {cache && ` · ${cache}`}
+        {today.turns === 0 && " · no questions yet"}
+      </p>
+      {worthDrawing && (
+        <span className="hidden w-24 sm:block" data-usage-chart>
+          <Sparkline
+            values={series}
+            label={`questions a day over the last ${series.length} days`}
+          />
+        </span>
+      )}
+    </div>
   );
 }

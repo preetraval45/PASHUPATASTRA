@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Fresh } from "@/components/fresh";
+import { Live } from "@/components/live";
 import { IntelGroupRow, sourceAbout, sourceName } from "@/components/intel";
 import { Ago, Empty, Offline, Page, Panel } from "@/components/ui";
 import {
@@ -51,7 +52,11 @@ export default async function ObservatoryPage({
   if (!result.ok) {
     if (observatoryState(result.failure, source) === "offline") return <Offline />;
     return (
-      <Page title="Observatory" description="Recent threat intelligence, as stored.">
+      <Page
+        title="Observatory"
+        description="Recent threat intelligence, as stored."
+        actions={<Live />}
+      >
         <Panel title="Unknown source">
           <Empty art="ledger" title={`No feed named "${source}".`}>
             {status && <>Known feeds: {Object.keys(status.feeds).join(", ")}. </>}
@@ -97,6 +102,7 @@ export default async function ObservatoryPage({
     <Page
       title="Observatory"
       description="What the wider world is reporting — polled hourly, stored here, and always linked back to whoever said it."
+      actions={<Live />}
     >
       <Panel
         title="Feeds"

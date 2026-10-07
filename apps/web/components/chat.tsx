@@ -239,6 +239,26 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
     // back as though it were the reply — a check that passed while testing
     // nothing.
     <div data-turn="sati" className="max-w-[95%] space-y-2">
+      {/* An answer needs an author and a standing before it is read.
+          The visitor's question was already a bubble and Sati's reply was bare
+          text in the flow, which put the less important half of the exchange in
+          the more considered shape. This is the header the answer was missing:
+          who said it, and how far to trust it, above the words rather than
+          scattered in small type below them. */}
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+        <span
+          aria-hidden="true"
+          className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[rgb(var(--astra))]"
+        />
+        <span className="font-medium text-[rgb(var(--astra))]">Sati</span>
+        <span className="text-[rgb(var(--faint))]">the investigation agent</span>
+        {answer.evidence_refs.length > 0 && (
+          <span className="text-[rgb(var(--faint))]">
+            · {answer.evidence_refs.length} citation
+            {answer.evidence_refs.length === 1 ? "" : "s"}
+          </span>
+        )}
+      </p>
       {/* A withheld turn is not an answer and is not set like one. The model
           said something it could not cite; the visitor gets the sentence saying
           so, in the register of a notice, and the text is in the audit trail. */}
@@ -248,7 +268,10 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
         className={
           answer.withheld
             ? "rounded-lg border border-dashed border-[rgb(var(--edge))] px-3 py-2 text-sm leading-relaxed text-[rgb(var(--muted))]"
-            : "whitespace-pre-wrap text-sm leading-relaxed"
+            // Larger and looser than the metadata around it. The answer is the
+            // thing the page exists to deliver and was set at the same size as
+            // its own footnotes.
+            : "whitespace-pre-wrap border-l-2 border-[rgb(var(--astra))]/40 pl-3 text-[0.9375rem] leading-relaxed"
         }
       >
         {answer.answer}
