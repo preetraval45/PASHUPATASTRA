@@ -243,10 +243,27 @@ def main() -> int:
                 "in a way nobody can argue about."
             ),
             "measured": None,
+            # Why there is no shortcut, which is the part a reader needs in
+            # order to judge how much work closing this gap actually is.
+            # Stated here rather than discovered: the obvious cheap version of
+            # this experiment is invalid, and a number produced that way would
+            # look like the missing result and would not be one.
+            "no_shortcut": (
+                "The scenario files cannot be used as the question. Each one "
+                "names its own fault — PIB-0001 is titled \"Connection pool "
+                "exhaustion via N+1 query deploy\" and its fault reads \"v4.21 "
+                "introduces an N+1 query in the checkout path\" — so a model "
+                "shown any of that is being asked to paraphrase an answer it "
+                "has already been given. The legitimate input is the telemetry "
+                "the fault produces once injected, which exists only while the "
+                "stack is running. That is the whole reason this needs a "
+                "cluster and not just a GPU."
+            ),
             "absent": (
-                "the scorer exists and no model has been run through it. The run "
-                "needs the injection stack, and the one GPU here is committed to "
-                "a live injection experiment until it finishes"
+                "the grader exists and has never graded anything. Running it "
+                "needs observable telemetry, which needs the five-service stack "
+                "the faults are injected into, and no Kubernetes cluster is "
+                "available on this checkout"
             ),
         },
         "arms": arms,

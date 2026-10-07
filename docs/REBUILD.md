@@ -3926,6 +3926,16 @@ nothing to a visitor whose filter stops at the front door.
   limitations breaks the suite rather than quietly improving the write-up.
   **No accuracy is reported**, because no model has been run through it: the
   run needs the injection cluster, and no cluster has been stood up here.
+  **The cheap version of the experiment is invalid, and the page says so.**
+  The obvious way to close the biggest finding without a cluster is to feed the
+  scenario files to a model and grade the answers. It cannot be done: each
+  scenario names its own fault — PIB-0001 is titled *Connection pool exhaustion
+  via N+1 query deploy* and its fault reads *v4.21 introduces an N+1 query in
+  the checkout path* — so a model shown any of that is paraphrasing an answer
+  it was handed. The legitimate input is the telemetry the fault produces once
+  injected, which exists only while the stack runs. **That is what needs a
+  cluster — not a GPU**, and the distinction matters because a number produced
+  the cheap way would look exactly like the missing result.
   **Done when:** every figure on the page equals an independent recount that
   does not read the manifest, every declared arm without runs says so rather
   than showing a zero, and no accuracy renders while no run exists behind one.

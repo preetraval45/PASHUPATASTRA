@@ -129,6 +129,10 @@ export default function EvaluationPage() {
           <span className="text-[rgb(var(--warn))]">No accuracy is reported</span> —{" "}
           <span className="text-[rgb(var(--muted))]">{diagnosis.absent}.</span>
         </p>
+        <p className="mt-4 text-sm leading-relaxed text-[rgb(var(--muted))]">
+          <span className="text-[rgb(var(--ink))]">And there is no cheap version of it.</span>{" "}
+          {diagnosis.no_shortcut}
+        </p>
         <p className="mt-4 text-xs leading-relaxed text-[rgb(var(--faint))]">
           The remaining {diagnosis.unscoreable} scenarios are not failures and not gaps:{" "}
           {diagnosis.unscoreable_reason}. Counting them as diagnosis misses would penalise a
