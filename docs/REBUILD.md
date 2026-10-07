@@ -3891,8 +3891,54 @@ nothing to a visitor whose filter stops at the front door.
   `data-turn="sati"` / `data-answer` contract it depends on was checked by
   reading it instead, and both attributes are untouched.*
 
+- [x] **R125 — Publish the review that says the evaluation is thin.** Needs: nothing.
+  A venue review of the paper landed on 7 October 2026: the writing is at a
+  publishable standard and the evaluation is not. Five findings — scenarios run
+  once each, arms with no data, no injection result, no outside users, and the
+  one it named the biggest gap, that **the language model is never tested**
+  because the benchmark substitutes a deterministic stand-in for it. The reflex
+  is to improve the page before improving the work, and `/evaluation` is built
+  so that cannot happen: `scripts/buildevaluation.py` recounts every figure from
+  the corpus on disk, the harness's own declarations and `benchmark/results/`,
+  so the page cannot report an arm as having data when the directory is empty.
+  **All six declared arms read "no data"** — the review said two of four, and the
+  truth on this checkout is worse, because `benchmark/results/` is gitignored and
+  the records behind any published table live on whichever machine produced them.
+  That is stated on the page rather than left for a reviewer to discover. The
+  review itself is published in full, each finding beside what has closed it,
+  which for three of five is nothing; a status names something checkable and
+  never says "in progress", which is what a project writes when it would rather
+  not answer.
+  **The missing instrument now exists.** `packages/core/pashupatastra/diagnosis.py`
+  grades a diagnosis against the answer key the corpus has carried all along:
+  60 scenarios whose root causes are 60 *distinct* labels, so naming the cause is
+  a one-in-sixty choice against a 1.7% baseline, and grading is an identity
+  comparison on a string — a model judging a model would break rule 1, and
+  fuzzy matching would make the grader take the decision the model was asked to
+  take. The 44 scenarios whose correct outcome is to do nothing or escalate are
+  excluded rather than scored as misses, because counting them would punish an
+  arm for being right and would drag any reported accuracy toward a third of its
+  true value. Chain credit is reported beside top-1 and never folded into it;
+  Wilson intervals, because an accuracy at n=60 quoted without one is not a
+  result; and `above_chance` is false unless the interval's floor clears the
+  baseline. The label set leaks — the options are descriptive English — and that
+  is a module constant with a test holding it in place, so deleting it from the
+  limitations breaks the suite rather than quietly improving the write-up.
+  **No accuracy is reported**, because no model has been run through it: the
+  run needs the injection cluster, and no cluster has been stood up here.
+  **Done when:** every figure on the page equals an independent recount that
+  does not read the manifest, every declared arm without runs says so rather
+  than showing a zero, and no accuracy renders while no run exists behind one.
+  *Evidence: `verifyevaluation.py` recounts scenarios, scoreable set, label
+  space, blocked fault types and arm count from source and matches the page on
+  all five; 19 tests in `packages/core/tests/testdiagnosis.py`, two of them
+  negative controls — a wrong answer loses, and an unscoreable scenario is
+  excluded rather than failed — core suite 720. `verifyui.py` extended to cover
+  `/impact` and `/evaluation`, 75 combinations clean on a production build;
+  `verifycontrast.py` AA in both themes.*
+
 - [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
-  R122** (R116, R118, R119, R123, R124 when they land).
+  R122** (R116, R118, R119, R123, R124, R125 when they land).
   **Done when:** the R115 crawl passes on the deployed site, R116's second
   person can open it, and `verifysite.py` and `verifyui.py` pass with the new
   incidents included.

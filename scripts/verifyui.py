@@ -39,7 +39,11 @@ VIEWPORTS = [
 # pages that render the most data are the ones a width sweep most needs.
 DEFAULT_ROUTES = ["/", "/how-it-works", "/overview", "/incidents",
                   "/incidents/INC-2026-0903", "/ask", "/observatory",
-                  "/blue-team", "/infrastructure", "/actions", "/audit", "/search", "/attack"]
+                  "/blue-team", "/infrastructure", "/actions", "/audit", "/search", "/attack",
+                  # The two pages that are nothing but numbers and the reasons
+                  # behind them. Both were outside this sweep, which is how a
+                  # page of figures ends up overflowing on a phone unnoticed.
+                  "/impact", "/evaluation"]
 
 
 def check(page, url: str, route: str, label: str, width: int) -> list[str]:

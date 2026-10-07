@@ -174,6 +174,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Link href="/how-it-works" className="focusable rounded hover:text-[rgb(var(--muted))]">
                 How it works
               </Link>
+              {/* Beside "how it works" for the same reason: somebody who has
+                  read a claim goes looking for the evidence next, and this is
+                  the page that says which claims have none yet. */}
+              <Link href="/evaluation" className="focusable rounded hover:text-[rgb(var(--muted))]">
+                Evaluation
+              </Link>
               {/* The only place `?` is advertised. A shortcut nobody can find is
                   the same as no shortcut, and this is also its mouse equivalent —
                   the list opens by click as well as by key. */}
