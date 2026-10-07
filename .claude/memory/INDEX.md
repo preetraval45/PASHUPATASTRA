@@ -38,3 +38,4 @@ Protocol: before every push, write a topic-named file from
 - [ReviewPass](ReviewPass.md) — R93, R98–R105, R108, R111: two reviews folded in and the O-1 map; the 503 was an unbounded partition read at API Gateway's limit, not a cold start — deploy pending credentials
 - [ReachableAndNamed](ReachableAndNamed.md) — R115, R120, R122: defanging in two layers, the approved origin note for the names, and production found serving an empty, memory-only API
 - [InjectionThatFails](InjectionThatFails.md) — R117: an incident whose evidence tells the AI to wipe a host; Kavach flags it, Dharma denies it, and the fix that every chat had been answering without the observations' text
+- [EvaluationAndLiveness](EvaluationAndLiveness.md) — R124, R125: the venue review published rather than waited out, the diagnosis grader the benchmark never had, and a view counter that had been double-counting every visit since R107
