@@ -3971,8 +3971,41 @@ nothing to a visitor whose filter stops at the front door.
   page/viewport combinations clean, `verifycontrast.py` AA in both themes,
   `verifyevaluation.py` still recounts, web suite 43.*
 
+- [x] **R127 — The jobs that were blocking the deploy.** Needs: nothing.
+  `deploy site` is gated on every test job, so two red jobs meant nothing had
+  shipped since the Vercel Git integration came off — the live site was still
+  serving a build from before R104, R120 and everything after. Three faults,
+  none of them where the job names pointed. **The `api` job failed on lint, not
+  tests**: an unused `RANSOMWARE_WITHDRAWN` import, unused because the test had
+  imported the constant and then asserted on substrings typed out again by
+  hand. Asserting on the constant found the defect underneath — the ingest
+  summary truncated the error at 200 characters and R123's withdrawal notice is
+  406, so the half saying *what to do about it*, R123 pointer included, never
+  reached the Observatory. A reason severed mid-sentence is worse than a status
+  code: a status code reads as a failure, a half-sentence reads as a system
+  confused about its own state. Cap raised to 500 and still bounded, because an
+  upstream error can be any length. **The audit job** had seven high
+  advisories; `npm audit fix` cleared sharp and source-map-js, and the five left
+  are all dev-only — the Tailwind 3 file-watching chain, whose npm-proposed fix
+  is tailwindcss@4, a major migration that moves configuration into CSS and
+  would rewrite the styling layer of every page. That is a decision, not a
+  patch. The gate is two gates now: production dependencies fail on high or
+  critical and are clean, build tooling fails on critical only and stays
+  visible rather than silenced. **And a test that was green only in UTC** —
+  `test_usage_is_recomputed_from_the_ledger` sliced ten characters off a stored
+  timestamp to read its date, but records carry a local offset, so it compared
+  a local date against a UTC one and passed only where the two agree. Red here
+  after 20:00, green on every CI runner. The product code was already right;
+  the test now normalises the way `usage._day` does.
+  **Done when:** every job CI runs is green when run the way CI runs it,
+  including the pinned ruff and the seeded configuration.
+  *Evidence: core 720, api 452 plain and 536 seeded, OpenAPI current, ruff
+  0.12.12 — the pinned version, not the newer local one — clean across
+  `packages/core`, `services/api` and `packages/connectors`, web suite 43, both
+  audit gates exit 0.*
+
 - [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
-  R122** (R116, R118, R119, R123, R124, R125, R126 when they land).
+  R122** (R116, R118, R119, R123, R124, R125, R126, R127 when they land).
   **Done when:** the R115 crawl passes on the deployed site, R116's second
   person can open it, and `verifysite.py` and `verifyui.py` pass with the new
   incidents included.
