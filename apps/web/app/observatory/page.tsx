@@ -142,12 +142,20 @@ export default async function ObservatoryPage({
         {status && (
           <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-[rgb(var(--edge))] pt-4 text-xs sm:grid-cols-2">
             {Object.entries(status.feeds).map(([name, feed]) => (
-              <div key={name} className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-                <dt className="text-[rgb(var(--muted))]">{sourceName(name)}</dt>
-                <dd className="min-w-0 flex-1">
-                  <FeedAge feed={feed} hours={status.stale_after_hours} />
-                </dd>
-                <dd className="w-full text-[rgb(var(--faint))] sm:w-auto">
+              /* Name and freshness on one line, what the feed is underneath —
+                 the same shape for every feed. The previous version let the
+                 freshness cell take the spare width, so a short description
+                 was flung to the right edge while a long one wrapped to its
+                 own line, and eight feeds produced eight different shapes
+                 that read as a broken table rather than a list. */
+              <div key={name} className="flex min-w-0 flex-col gap-0.5">
+                <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                  <dt className="text-[rgb(var(--muted))]">{sourceName(name)}</dt>
+                  <dd className="min-w-0">
+                    <FeedAge feed={feed} hours={status.stale_after_hours} />
+                  </dd>
+                </div>
+                <dd className="min-w-0 text-[rgb(var(--faint))]">
                   {sourceAbout(name)}
                 </dd>
               </div>
