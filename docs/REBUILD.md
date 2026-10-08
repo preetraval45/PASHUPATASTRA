@@ -3947,8 +3947,32 @@ nothing to a visitor whose filter stops at the front door.
   `/impact` and `/evaluation`, 75 combinations clean on a production build;
   `verifycontrast.py` AA in both themes.*
 
+- [x] **R126 — Look at it, rather than reading the markup.** Needs: nothing.
+  Every page passes the width sweep and the contrast check, and three of them
+  still looked wrong — because nothing overflowed, nothing clipped, and the
+  automated checks have no opinion about a layout that is merely ugly. Found by
+  screenshotting the pages at 1440 and looking. **The Observatory's feed panel
+  was the worst**: the freshness cell was `flex-1`, so it took whatever width
+  was spare, which flung a short description to the right edge of its row and
+  wrapped a long one to a line of its own — eight feeds producing eight
+  different shapes in one list, reading as a broken table. Name and freshness
+  on one line, description beneath, identically for every feed. **`/ask` had a
+  third of a screen of nothing** under its opening: the panel is tall on purpose
+  because a cited answer needs the room, but an empty one pinned the text to the
+  top, which reads as a component that failed to load rather than one waiting
+  for a question — centred while empty, top-aligned the moment a turn exists.
+  **`/evaluation`'s accuracy card** carried the whole four-sentence reason as its
+  hint and wrapped to five lines, so it stopped reading as a figure beside the
+  three next to it; one line now, pointing at the panel that already holds the
+  reason.
+  **Done when:** the three pages are looked at again after the change, and the
+  automated checks that had no opinion still pass.
+  *Evidence: before-and-after screenshots at 1440; `verifyui.py` 75
+  page/viewport combinations clean, `verifycontrast.py` AA in both themes,
+  `verifyevaluation.py` still recounts, web suite 43.*
+
 - [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
-  R122** (R116, R118, R119, R123, R124, R125 when they land).
+  R122** (R116, R118, R119, R123, R124, R125, R126 when they land).
   **Done when:** the R115 crawl passes on the deployed site, R116's second
   person can open it, and `verifysite.py` and `verifyui.py` pass with the new
   incidents included.
