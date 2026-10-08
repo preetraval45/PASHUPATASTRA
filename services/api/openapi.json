@@ -2507,6 +2507,55 @@
         "summary": "Incident Draft"
       }
     },
+    "/api/v1/incidents/{incident_id}/draft/{kind}/export": {
+      "get": {
+        "description": "The same draft as a file somebody can take away (R80).\n\nThe on-screen draft sits beside the evidence it cites. One pasted into a\nticket, mailed to a regulator or attached to a post-mortem does not, so the\nexported form has to be checkable by a reader who cannot see this system \u2014\nwhich is what the audit references are for.\n\n**The ledger has no opaque record id**, and this does not invent one.\n`AuditRecord` is identified by when it was written, what kind it is and who\nwrote it, so that triple is what travels; a reader can pull\n`/audit?incident_ref=...` and line them up. A generated id would look more\nofficial and would refer to nothing.\n\nServed as `text/markdown` with a filename, so a browser saves it rather\nthan rendering it \u2014 the point of the task is a document that leaves.",
+        "operationId": "incident_draft_export_api_v1_incidents__incident_id__draft__kind__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incident Draft Export"
+      }
+    },
     "/api/v1/incidents/{incident_id}/graph": {
       "get": {
         "description": "The sub-graph this incident's own evidence names.\n\nFiltered here rather than in the browser. The alternative is shipping the\nwhole estate to draw three nodes, which works at eleven entities and stops\nworking at the first real deployment \u2014 and the incident page is the one\nscreen that has to load while somebody is waiting.\n\nAn edge is included only when **both** ends are in the incident. A path from\none of these entities out to something the incident never mentions is real,\nand drawing it here would say the incident reached further than its evidence\nestablishes \u2014 the same rule R50 applied to inventing edges, applied to\nborrowing them.",

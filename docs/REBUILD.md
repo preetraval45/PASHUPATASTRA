@@ -2806,10 +2806,39 @@ or per-user persistence belongs to Phase 6, not to this one.
   than its highest step, and a playbook cannot execute a step whose own approval
   would have been refused. *Rule 2 has no chained-action exemption.*
 
-- [ ] **R80 — The post-incident report as an export.** Needs: **R70**.
+- [x] **R80 — The post-incident report as an export.** Needs: **R70**.
   Timeline, root cause and recommended follow-ups, as Markdown and PDF.
   **Done when:** an exported report carries its evidence references and the
   audit record ids, so it is checkable away from the site that produced it.
+  R70 built the documents; this is the part where one *leaves*. The distinction
+  is the task: a report read here sits beside the evidence it cites, and one
+  pasted into a ticket or mailed to a regulator does not, so the exported form
+  has to be checkable by a reader who cannot see this system at all.
+  **There is no opaque audit id, and this does not invent one.** `AuditRecord`
+  is identified by when it was written, its kind and its actor, so that triple
+  travels and a reader can line it up against `/audit?incident_ref=…`. A
+  generated id would look more official and refer to nothing — R24's rule
+  applied to a document instead of a feed.
+  **Markdown, and no PDF library.** Markdown is readable with no tool at all,
+  survives being pasted anywhere, diffs, and prints to PDF through the
+  browser — which keeps a document generator out of a security product's
+  dependency tree, where `npm audit` just spent a job explaining what that
+  costs. The link is a plain `<a>` to the route rather than a blob built in
+  the client, because a second rendering path is a second thing to drift.
+  **It is a draft in four places** — heading, notice, every section header,
+  footer — because the one thing a format conversion reliably strips is the
+  interface that was saying "draft" on the reader's behalf, and a file in a
+  shared folder six weeks later has only what is written on it. Empty sections
+  are kept and say so, for R70's reason: "nothing was verified" is a claim a
+  reader can check, and a missing heading is a lapse. The file is named
+  `…-draft.md` for the same reason.
+  *Evidence: 10 tests in `packages/core/tests/testexport.py` — every line and
+  every ref survives the render, no-audit-records is stated rather than
+  omitted, and an empty section does not disappear — plus 8 in
+  `services/api/tests/testexportroute.py` checking the ledger reaches the file
+  against an independent read of `/audit`, and that an unknown incident is a
+  404 rather than a well-formed empty report. Core 730, api 459 plain and 544
+  seeded, OpenAPI regenerated.*
 
 - [ ] **R81 — Framework mapping.** Needs: **R75**.
   Incidents and actions tagged against NIST CSF or ISO 27001 control families —

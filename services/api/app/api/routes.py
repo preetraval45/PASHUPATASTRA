@@ -6,7 +6,8 @@ import logging
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import PlainTextResponse
 from pashupatastra import (
     ActionSpec,
     Environment,
@@ -97,6 +98,54 @@ def get_incident(incident_id: str) -> Incident:
     if incident is None:
         raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
     return incident
+
+
+@router.get("/incidents/{incident_id}/draft/{kind}/export", response_class=PlainTextResponse)
+def incident_draft_export(incident_id: str, kind: str, request: Request) -> PlainTextResponse:
+    """The same draft as a file somebody can take away (R80).
+
+    The on-screen draft sits beside the evidence it cites. One pasted into a
+    ticket, mailed to a regulator or attached to a post-mortem does not, so the
+    exported form has to be checkable by a reader who cannot see this system —
+    which is what the audit references are for.
+
+    **The ledger has no opaque record id**, and this does not invent one.
+    `AuditRecord` is identified by when it was written, what kind it is and who
+    wrote it, so that triple is what travels; a reader can pull
+    `/audit?incident_ref=...` and line them up. A generated id would look more
+    official and would refer to nothing.
+
+    Served as `text/markdown` with a filename, so a browser saves it rather
+    than rendering it — the point of the task is a document that leaves.
+    """
+    from pashupatastra.drafts import build_draft
+    from pashupatastra.export import filename, to_markdown
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+    try:
+        draft = build_draft(kind, incident)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    references = tuple(
+        f"{record.at.isoformat()} · {record.kind} · {record.actor} — {record.summary}"
+        for record in AUDIT.records(incident_ref=incident_id, limit=200)
+    )
+    document = to_markdown(
+        draft,
+        generated_at=datetime.now(UTC).isoformat(),
+        source=str(request.url),
+        audit_ids=references,
+    )
+    return PlainTextResponse(
+        document,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename(draft)}"',
+        },
+    )
 
 
 @router.get("/incidents/{incident_id}/draft/{kind}")

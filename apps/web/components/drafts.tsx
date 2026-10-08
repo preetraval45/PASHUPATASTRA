@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Badge, Ident, Panel } from "@/components/ui";
 import { hrefFor } from "@/lib/refs";
-import { tierLabel, type Draft, type Verdict } from "@/lib/api";
+import { API_BASE, tierLabel, type Draft, type Verdict } from "@/lib/api";
 
 /**
  * A drafted playbook or post-incident report, and what adopting it would cost.
@@ -33,7 +33,23 @@ export function DraftPanel({
   return (
     <Panel
       title={draft.title}
-      aside={<Badge status="neutral">draft — not adopted</Badge>}
+      aside={
+        <span className="flex flex-wrap items-center gap-3">
+          <Badge status="neutral">draft — not adopted</Badge>
+          {/* R80. The document sits beside its evidence here; a copy pasted
+              into a ticket does not, so the exported form carries the audit
+              trail with it. A plain link rather than a click handler: the
+              browser already knows how to save a response that arrives with
+              a filename, and a blob built in JavaScript would be a second
+              rendering path that could drift from the first. */}
+          <a
+            href={`${API_BASE}/incidents/${encodeURIComponent(draft.incident_ref)}/draft/${encodeURIComponent(draft.kind)}/export`}
+            className="focusable rounded text-xs text-[rgb(var(--muted))] underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--ink))]"
+          >
+            export as Markdown
+          </a>
+        </span>
+      }
     >
       <div className="space-y-6">
         {draft.sections.map((section) => (
