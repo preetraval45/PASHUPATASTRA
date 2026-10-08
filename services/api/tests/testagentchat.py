@@ -1615,7 +1615,17 @@ def test_usage_is_recomputed_from_the_ledger(monkeypatch) -> None:
 
     records = client.get("/api/v1/audit?limit=1000").json()
     today = datetime.now(UTC).date().isoformat()
-    turns = [r for r in records if r["kind"] == "agent_turn" and r["at"][:10] == today]
+    # Normalised to UTC before the date is taken, the way `usage._day` does it.
+    # Slicing the first ten characters off the stored string reads the *local*
+    # date, so this test passed only on a machine whose local date happened to
+    # match UTC's — green on CI, red after 20:00 in New York — which is the
+    # shape of test that hides a regression rather than catching one.
+    turns = [
+        r
+        for r in records
+        if r["kind"] == "agent_turn"
+        and datetime.fromisoformat(r["at"]).astimezone(UTC).date().isoformat() == today
+    ]
     assert turns, "no turns were written"
     cached = [r for r in turns if r["detail"].get("cached")]
     tokens = sum(int(r["detail"].get("tokens") or 0) for r in turns if not r["detail"].get("cached"))

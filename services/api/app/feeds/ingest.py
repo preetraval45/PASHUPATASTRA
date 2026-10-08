@@ -56,7 +56,16 @@ def run(store, cursors, limit: int = DEFAULT_LIMIT) -> dict[str, object]:
             # see which feed is stale rather than wondering why it is quiet.
             log.warning("feed %s unavailable: %s", name, error)
             _record_sync(cursors, name, ok=False, error=str(error))
-            summary[name] = {"ok": False, "error": str(error)[:200], "stored": 0}
+            # Bounded, because an upstream failure can carry an arbitrarily
+            # long string and this lands in a status payload. Five hundred
+            # rather than two hundred because the messages this project
+            # *authors* are explanations: R123's withdrawal notice is 406
+            # characters and the old cap cut it after "data.ransomware.live
+            # re", losing the whole half that says what to do about it. A
+            # reason truncated mid-sentence is worse than a status code —
+            # a status code looks like a failure, and a severed explanation
+            # looks like the system is confused about its own state.
+            summary[name] = {"ok": False, "error": str(error)[:500], "stored": 0}
             continue
 
         # A poll that found nothing is a *successful* poll. Recording the sync

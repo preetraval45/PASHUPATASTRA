@@ -292,8 +292,13 @@ def test_a_withdrawn_feed_says_why_rather_than_reporting_a_status_code(monkeypat
     monkeypatch.setattr(attacks, "_get", html_404)
     with pytest.raises(attacks.FeedUnavailable) as raised:
         fetch_ransomware(limit=2)
-    assert "documented but not serving" in str(raised.value)
-    assert "R123" in str(raised.value), "the reader is not told where the decision lives"
+    # Against the constant itself, not a substring typed again here. The
+    # import was already present and unused, which is how this went green
+    # while asserting on a phrase that an edit to the real message could
+    # leave behind.
+    assert str(raised.value) == RANSOMWARE_WITHDRAWN
+    assert "documented but not serving" in RANSOMWARE_WITHDRAWN
+    assert "R123" in RANSOMWARE_WITHDRAWN, "the reader is not told where the decision lives"
 
     # And the reason reaches the status surface rather than stopping at the log.
     from app.feeds import sources
@@ -301,7 +306,7 @@ def test_a_withdrawn_feed_says_why_rather_than_reporting_a_status_code(monkeypat
     monkeypatch.setattr(sources, "_get", lambda url: (_ for _ in ()).throw(sources.FeedUnavailable("skip")))
     cursors = MemoryCursors()
     summary = run(store=MemoryGraph(), cursors=cursors, limit=2)
-    assert "documented but not serving" in str(summary["ransomware-live"]["error"])
+    assert RANSOMWARE_WITHDRAWN in str(summary["ransomware-live"]["error"])
     # Every other feed is untouched by it, which is R88's per-feed handling.
     assert set(summary) - {"ransomware-live"}
 
