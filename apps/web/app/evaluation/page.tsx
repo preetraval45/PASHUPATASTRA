@@ -35,7 +35,7 @@ export const metadata: Metadata = {
  * gitignored, which is itself one of the findings.
  */
 export default function EvaluationPage() {
-  const { corpus, diagnosis, arms, injection, review } = evaluation;
+  const { corpus, diagnosis, arms, injection, review, attacks } = evaluation;
   const percent = (n: number) => `${(n * 100).toFixed(1)}%`;
 
   return (
@@ -110,6 +110,96 @@ export default function EvaluationPage() {
           what a project writes when it would rather not answer.
         </p>
       </Panel>
+
+      {attacks && (
+        <Panel
+          title="Attacked, and what the attack actually tested"
+          aside={`${attacks.models.length} models swept · one worst case`}
+        >
+          {attacks.worst_case && (
+            <div className="rounded border border-[rgb(var(--edge))] bg-[rgb(var(--raised))] p-4">
+              <p className="text-sm leading-relaxed">
+                <span className="text-[rgb(var(--ink))]">The test that counts.</span>{" "}
+                {attacks.what_the_worst_case_shows}
+              </p>
+              <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {(
+                  [
+                    ["turns", attacks.worst_case.turns],
+                    ["registered actions", attacks.worst_case.registered_actions],
+                    ["executions", attacks.worst_case.execution_records],
+                    ["approvals", attacks.worst_case.approval_records],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div key={label} data-worst={label}>
+                    <dt className="label">{label}</dt>
+                    <dd
+                      className={`tnum mt-1 text-2xl ${
+                        value === 0 ? "text-[rgb(var(--ok))]" : ""
+                      }`}
+                    >
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+
+          <p className="mt-6 label">the live sweep, and what it does not show</p>
+          <ul className="mt-3 space-y-3">
+            {attacks.models.map((model) => (
+              <li key={model.model} data-attack-model={model.model} className="text-sm">
+                <span className="mono text-[rgb(var(--ink))]">{model.model}</span>
+                <span className="text-[rgb(var(--muted))]">
+                  {" "}— <span className="tnum">{model.flagged}</span> of{" "}
+                  <span className="tnum">{model.attack_turns}</span> attack turns flagged,{" "}
+                  <span className="tnum">{model.harmful_raw_proposals}</span> harmful actions
+                  proposed,{" "}
+                  <span className="tnum">{model.autonomous_harmful}</span> scored autonomous
+                  {model.kept_proposals > 0 && (
+                    <>
+                      {" "}
+                      ({model.kept_proposals} benign proposals kept:{" "}
+                      {Object.entries(model.kept_tiers)
+                        .map(([tier, n]) => `${n} ${tier}`)
+                        .join(", ")})
+                    </>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-5 rounded border border-[rgb(var(--edge))] p-3 text-sm leading-relaxed">
+            <span className="text-[rgb(var(--warn))]">
+              This sweep is not evidence that the controls hold.
+            </span>{" "}
+            <span className="text-[rgb(var(--muted))]">
+              {attacks.what_the_sweep_does_not_show}
+            </span>
+          </p>
+
+          <p className="mt-4 text-xs leading-relaxed text-[rgb(var(--faint))]">
+            <span className="text-[rgb(var(--ink))]">And a blind spot, stated.</span>{" "}
+            {attacks.kavach_blind_spot}
+          </p>
+
+          {attacks.policy && (
+            <p className="mt-3 text-xs leading-relaxed text-[rgb(var(--faint))]">
+              Separately, the policy engine was run over all{" "}
+              <span className="tnum">{attacks.policy.scenarios}</span> benchmark scenarios in{" "}
+              {attacks.policy.contexts} deployment contexts:{" "}
+              <span className="tnum text-[rgb(var(--ink))]">
+                {attacks.policy.forbidden_scored_autonomous}
+              </span>{" "}
+              forbidden actions scored autonomous. That is policy evaluation only — no
+              cluster, no model — so it says what the engine decides, not what the system
+              does end to end.
+            </p>
+          )}
+        </Panel>
+      )}
 
       <Panel
         title="Diagnosis, and why no number sits here yet"

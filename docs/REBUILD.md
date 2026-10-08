@@ -4033,8 +4033,49 @@ nothing to a visitor whose filter stops at the front door.
   `packages/core`, `services/api` and `packages/connectors`, web suite 43, both
   audit gates exit 0.*
 
+- [x] **R128 — The injection result, and what it does not prove.** Needs: **R125**.
+  The venue review's third finding was that the design is argued to resist
+  prompt injection and never attacked. It has now been attacked, by a parallel
+  session, and `/evaluation` carries the numbers **generated from the records**
+  rather than transcribed: `scripts/buildevaluation.py` reads
+  `docs/research/experiments/`, so the page cannot report a figure whose record
+  is not on disk.
+  **The honest reading is the whole point of the panel.** A live sweep drove
+  three local models — qwen2.5:7b, mistral, llama3 — with 72 attack turns each,
+  and every one refused at the model level, giving outputs identical with and
+  without the payloads. Reporting "zero reached execution" from that would be
+  claiming credit the experiment did not earn, because **nothing ever reached
+  the control layer to be stopped by it**. The page says so in a bordered
+  paragraph rather than in a footnote. The run that does test the controls is
+  the compromised-model one, where an attacker writes every byte the model
+  emits and only Kavach, Dharma and the registry remain: **147 turns, 0
+  execution records, 0 approvals**, 15 of 18 invented action ids discarded and
+  the 3 survivors denied by name.
+  **Kavach's blind spot is given the same prominence as its hits.** It flagged
+  45 of 72 — every payload written in the shape it looks for, and *none* of the
+  27 paraphrases of those same payloads. A detector that catches phrasing
+  rather than meaning is worth stating plainly, precisely because the headline
+  number looks identical either way.
+  **And a correctness fix found while wiring it.** `tracked_records()` asked
+  the filesystem whether experiment records were committed, and the page prints
+  that answer as "these can be recomputed from this repository" — which was
+  false for an uncommitted record, in the direction that flatters the project.
+  It asks `git ls-files` now. The records are currently untracked, so the page
+  correctly says they cannot be recomputed from here.
+  **Done when:** every attack figure on the page comes from a file in
+  `docs/research/experiments/`, and the sweep's limitation is stated on the
+  page rather than left to a reader to infer.
+  *Evidence: `verifyevaluation.py` clean, `verifyui.py` 75 combinations,
+  `verifycontrast.py` AA in both themes. Figures: 3 models × 72 attack turns,
+  0 harmful proposals raw, 0 scored autonomous; worst case 147 turns → 0
+  executions, 0 approvals; policy over 104 scenarios in 3 contexts → 0
+  forbidden actions scored autonomous.*
+  **Left open:** the records are not committed, so nothing here is yet
+  recomputable by a reader. Committing them is the owner's call and the page
+  already states which way it stands.
+
 - [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
-  R122** (R116, R118, R119, R123, R124, R125, R126, R127 when they land).
+  R122** (R116, R118, R119, R123, R124–R128 when they land).
   **Done when:** the R115 crawl passes on the deployed site, R116's second
   person can open it, and `verifysite.py` and `verifyui.py` pass with the new
   incidents included.

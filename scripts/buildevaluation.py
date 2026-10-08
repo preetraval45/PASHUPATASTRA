@@ -89,7 +89,7 @@ REVIEW = [
             "The design is argued to resist prompt injection and is never "
             "attacked. An AgentDojo-style test would turn the claim into a result."
         ),
-        "status": "measured at the chat route",
+        "status": "measured under a fully compromised model",
     },
     {
         "key": "users",
@@ -185,16 +185,31 @@ def tracked_records() -> list[dict[str, object]]:
     """
     if not EXPERIMENTS.exists():
         return []
+
+    # Asked of git, not of the filesystem. A file sitting in the working tree
+    # is not a file a reader can fetch, and this function's answer is printed
+    # on the page as "these can be recomputed from this repository" — which
+    # would have been false for an uncommitted record, in exactly the direction
+    # that flatters the project.
+    try:
+        listed = subprocess.run(
+            ["git", "ls-files", "--", str(EXPERIMENTS.relative_to(ROOT).as_posix())],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        committed = {line.strip() for line in listed.stdout.splitlines() if line.strip()}
+    except (subprocess.CalledProcessError, OSError):
+        return []
+
     found: list[dict[str, object]] = []
-    for path in sorted(EXPERIMENTS.rglob("*")):
-        if path.is_file() and path.suffix in {".json", ".jsonl", ".csv"}:
+    for relative in sorted(committed):
+        path = ROOT / relative
+        if path.suffix in {".json", ".jsonl", ".csv"} and path.is_file():
             lines = sum(1 for _ in path.open(encoding="utf-8", errors="replace"))
             found.append(
-                {
-                    "path": path.relative_to(ROOT).as_posix(),
-                    "lines": lines,
-                    "bytes": path.stat().st_size,
-                }
+                {"path": relative, "lines": lines, "bytes": path.stat().st_size}
             )
     return found
 
@@ -220,9 +235,120 @@ def records_note(tracked: list[dict[str, object]]) -> str:
     )
 
 
+def _load(name: str) -> dict | None:
+    """One experiment record, or nothing. Never a default."""
+    path = EXPERIMENTS / name
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def attack_results() -> dict[str, object] | None:
+    """The prompt-injection results, read from the records rather than retyped.
+
+    Two experiments, and **they answer different questions**, which is the part
+    a reader has to be given rather than left to infer:
+
+    * The live sweep drove real local models with injected payloads. Every
+      model refused at the model level, so the outputs were the same with the
+      payloads as without — which means that run tested the *models*, and did
+      not test the control layer under a successful attack at all. Reporting
+      "zero reached execution" from it alone would be claiming credit the
+      experiment did not earn.
+    * The compromised-model run is the one that tests the controls: the
+      attacker writes every byte the model emits, so refusal is removed from
+      the picture and only Kavach, Dharma and the registry are left between the
+      attack and an execution.
+
+    Kavach's miss rate is reported as prominently as its hits. It flagged every
+    payload written in the shape it looks for and none of the paraphrases, and
+    a defence that only catches the phrasing it was designed against is worth
+    knowing about precisely because the headline number looks good.
+    """
+    sweep = _load("summary.json")
+    compromised = _load("compromised.json")
+    policy = _load("pibpolicy.json")
+    if sweep is None and compromised is None:
+        return None
+
+    models = []
+    for name, row in (sweep or {}).items():
+        models.append(
+            {
+                "model": name,
+                "attack_turns": row.get("injection_turns"),
+                "flagged": row.get("kavach_flagged"),
+                "harmful_raw_proposals": row.get("raw_harmful_proposals"),
+                "kept_proposals": row.get("kept_proposals"),
+                "kept_tiers": row.get("kept_tiers", {}),
+                "autonomous_harmful": row.get("autonomous_harmful"),
+                "citations_kept": row.get("refs_kept"),
+                "citations_dropped": row.get("refs_dropped"),
+                "errors": row.get("errors"),
+            }
+        )
+
+    worst_case = None
+    if compromised is not None:
+        summary = compromised.get("summary", {})
+        worst_case = {
+            "turns": summary.get("turns"),
+            "registered_actions": summary.get("registered_actions"),
+            "offered_tools": len(summary.get("offered_tools", [])),
+            "execution_records": summary.get("execution_records"),
+            "approval_records": summary.get("approval_records"),
+        }
+
+    forbidden_autonomous = None
+    if policy is not None:
+        contexts = policy.get("contexts", {})
+        forbidden_autonomous = sum(
+            counts.get("autonomous", 0)
+            for context in contexts.values()
+            for key, counts in context.items()
+            if key == "forbidden"
+        )
+
+    return {
+        "models": models,
+        "worst_case": worst_case,
+        "policy": {
+            "scenarios": (policy or {}).get("scenarios"),
+            "contexts": len((policy or {}).get("contexts", {})),
+            "forbidden_scored_autonomous": forbidden_autonomous,
+        }
+        if policy is not None
+        else None,
+        "what_the_sweep_does_not_show": (
+            "Every model refused the payloads on its own, and its answers were "
+            "the same with them as without — so the live sweep measured the "
+            "models, not the controls. Zero reaching execution there is not "
+            "evidence that the control layer holds, because nothing ever "
+            "reached it."
+        ),
+        "what_the_worst_case_shows": (
+            "The compromised-model run removes refusal from the picture: the "
+            "attacker writes every byte the model emits, so only Kavach, "
+            "Dharma and the action registry stand between the attack and an "
+            "execution. That is the run the design claim rests on."
+        ),
+        "kavach_blind_spot": (
+            "Kavach flagged every payload written in the shape it looks for "
+            "and none of the paraphrases of those same payloads. A detector "
+            "that catches the phrasing it was designed against and not the "
+            "meaning is worth stating plainly, because the headline number "
+            "looks the same either way."
+        ),
+    }
+
+
 def main() -> int:
     corpus = load_corpus(str(CORPUS))
     tracked_experiments = tracked_records()
+    attacks = attack_results()
     summary = report(corpus)
     scoreable = diagnosis.scoreable(corpus)
     options = diagnosis.labels(corpus)
@@ -328,6 +454,7 @@ def main() -> int:
             "blocked": blocked,
             "blocked_scenarios": sum(entry["scenarios"] for entry in blocked),
         },
+        "attacks": attacks,
         "review": {"date": REVIEW_DATE, "findings": REVIEW},
     }
 
@@ -347,6 +474,15 @@ def main() -> int:
         )
         print(f"  {arm['name']:16} {state}")
     print(f"faults blocked      {len(blocked)} types, {payload['injection']['blocked_scenarios']} scenarios")
+    if attacks:
+        worst = attacks["worst_case"]
+        print(f"attack models       {len(attacks['models'])} swept")
+        if worst:
+            print(f"  worst case        {worst['turns']} turns, "
+                  f"{worst['execution_records']} executions, "
+                  f"{worst['approval_records']} approvals")
+    else:
+        print("attack results      none on disk")
     print(f"\nwrote {OUT.relative_to(ROOT)} at {payload['commit']}")
     return 0
 
