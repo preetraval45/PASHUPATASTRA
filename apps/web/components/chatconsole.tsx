@@ -114,10 +114,19 @@ export function ChatConsole({ incidents }: { incidents: Incident[] }) {
           </Link>
         </header>
 
+        {/* Centred while empty, top-aligned once there is a conversation.
+            The panel is tall on purpose — a cited answer needs the room — but
+            an empty one pinned the opening to the top and left a third of a
+            screen of nothing under it, which reads as a component that failed
+            to load rather than one waiting for a question. */}
         <div
           ref={log}
           aria-live="polite"
-          className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6"
+          className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 ${
+            turns.length === 0 && !busy
+              ? "flex flex-col justify-center"
+              : "space-y-5"
+          }`}
         >
           {turns.length === 0 ? (
             <Opening incident={incident} />
@@ -205,7 +214,7 @@ export function ChatConsole({ incidents }: { incidents: Incident[] }) {
  */
 function Opening({ incident }: { incident: Incident }) {
   return (
-    <div className="space-y-3 text-sm">
+    <div className="mx-auto max-w-prose space-y-3 text-sm">
       <p className="text-[rgb(var(--muted))]">
         Sati, the investigation agent, reads {incident.id} — its causal chain, the telemetry behind it, and
         the plan — and answers from that. Every claim carries a citation you can

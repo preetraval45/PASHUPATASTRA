@@ -64,10 +64,13 @@ export default function EvaluationPage() {
           value={`${evaluation.arms_with_data} of ${evaluation.arms_declared}`}
           hint="the review's first finding, recounted here"
         />
+        {/* The reason is four sentences long and belongs in the panel below,
+            not wrapped to five lines inside a figure card — a stat whose hint
+            is a paragraph stops reading as a stat. */}
         <Stat
           label="Diagnosis accuracy"
           value="—"
-          hint={diagnosis.absent ?? ""}
+          hint="not measured — the grader has never graded anything; why, below"
         />
       </section>
 
