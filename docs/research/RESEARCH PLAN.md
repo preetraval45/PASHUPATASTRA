@@ -123,13 +123,13 @@ Thanksgiving (26 Nov) and the holidays.
 | Engineering | Structured outputs, AI Gateway, generated tables, failure-first reporting — strong |
 | PIB | 104 scenarios; 31 executable (20 negative, 6 escalation, 5 remediate) |
 | Arms | `runbook`, `pashupatastra` have data; `naive-llm` gated off; `human` blocked |
-| Ablations | `no-policy`, `no-verification` implemented, **n = 0** — never run |
+| Ablations | `no-policy`, `no-verification` run at N = 3 (n = 93 each, 10 Oct, RP-01). Neither changes Correct (0.8387); `no-policy` changes nothing on this corpus, `no-verification` drops HIR 0.3548 → 0.1935 |
 | Diagnosis | Apparatus in [diagnosis.py](../../packages/core/pashupatastra/diagnosis.py); never measured |
 | Detection | 4 statistical strategies + harness ([benchdetect.py](../../scripts/benchdetect.py)) |
 | Smriti | Lexical `HashingEmbedder` |
 | Kaal | Simulation — named in the architecture, not built. **The incident generator (RP-17) becomes its first real piece.** |
 | Paper | §1, §3–§6, §9 written; §2, §7 prose, §8, §10 missing |
-| Compute | RTX 5070 Ti 16 GB (training) · Oracle A1 ARM, tokened Ollama (baselines) |
+| Compute | RTX 5070 Ti 16 GB (training) · Oracle A1 ARM, tokened Ollama (baselines) · PIB on GitHub Actions ([benchmark.yml](../../.github/workflows/benchmark.yml)), one kind cluster per variant — nothing runs on the owner's PC |
 
 ---
 
@@ -168,8 +168,9 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
 
 ### Block A — Foundations and baselines (Weeks 1–6)
 
-- [ ] **RP-01 · Run the two unrun ablations**
+- [x] **RP-01 · Run the two unrun ablations**
   **Claude** · 1 session + overnight · review 20 min · Depends: kind cluster up · Closes: backlog ROADMAP 5.4 "ablations run and recorded"
+  *Done 10 Oct 2026:* GitHub Actions run [38073266499](https://github.com/preetraval45/PASHUPATASTRA/actions/runs/38073266499), commit `cfc3d12`. All four variants (full, −no-policy, −no-verification, runbook) at N = 3, n = 93 each, on identical runners; records in the `pib-records` artifact. No `UNSTABLE` scenario. Deltas vs full: **−no-policy: none** — the deterministic proposer never proposes what Dharma would block on these 31 scenarios, so the corpus cannot show what policy is for. **−no-verification: HIR 0.3548 → 0.1935, Correct unchanged** — 5 fewer escalations per run, matching the 5 remediate scenarios, which already fail (`failed_to_escalate`); likely reading: without verification, failed remediations stop reaching a human, and the grader does not count that against the arm. A local −no-policy run on a different machine gave the same 78/93. The earlier n = 31 rows were 1 run per scenario; the N = 3 rates are identical.
   *Steps:*
   1. Run `kubectl get nodes`. If the cluster is down, stop and report; do not substitute anything.
   2. `python -m benchmark.harness.run --runs 3 --arm pashupatastra --ablation no-policy`, then `--ablation no-verification`.
@@ -527,7 +528,7 @@ When a backlog task is scheduled, give it an RP number above and delete it here.
 
 Items already covered by an RP task stay listed until that RP task closes them.
 
-### From ROADMAP (56 open)
+### From ROADMAP (55 open)
 
 
 **Phase 0 — Foundation · Weeks 1–2 · Aug 10 – Aug 23 › 0.6 Agent specification**
@@ -628,7 +629,6 @@ Items already covered by an RP task stay listed until that RP task closes them.
 - [ ] Without the hypothesis evidence requirement — **refuses to run.** It lives in the reasoning layer, which the benchmark arm never invokes; the shared proposer stands in for diagnosis because there is no model
 - [ ] Without Smriti retrieval — **refuses to run.** Not part of this arm's decision path; each scenario runs in a fresh namespace with no prior incidents to recall
 - [ ] Without topology-adjacency correlation — **refuses to run.** Correlation happens before an incident is formed, and the harness hands the arm one already-scoped fault
-- [ ] Both runnable ablations **run and recorded** *(added 9 October 2026)* — implemented, but Table 2 in [tables.md](tables.md) shows n = 0 for each. RP-01
 
 **Phase 5 — PIB · Benchmark · Weeks 18–20 · Dec 7 – Dec 27 › 5.5 Reporting**
 
