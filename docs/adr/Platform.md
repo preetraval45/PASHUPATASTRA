@@ -11,7 +11,7 @@ storage, Prometheus, Kubernetes — is deliberately generic. Every one of those 
 a managed AWS equivalent, and running them unmanaged during a 24-week build means
 spending the build on operations rather than on the thesis.
 
-There is a real tension. [ROADMAP.md](../ROADMAP.md) positions on-prem and hybrid
+There is a real tension. The roadmap (now [RESEARCH PLAN.md](../research/RESEARCH%20PLAN.md)) positions on-prem and hybrid
 deployment as the commercial wedge, because it is underserved relative to
 cloud-native and because the policy/audit story sells hardest to customers who
 cannot send telemetry outside their boundary. A build that hard-codes AWS into

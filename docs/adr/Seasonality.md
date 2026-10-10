@@ -1,7 +1,7 @@
 # ADR — Seasonality in statistical detection
 
 **Status:** Accepted · 17 August 2026
-**Supersedes the framing in:** [ROADMAP.md](../ROADMAP.md) §2.1
+**Supersedes the framing in:** the former ROADMAP.md §2.1 (git history)
 **Evidence:** `scripts/benchdetect.py`, 8 tests in `packages/core/tests/testevaluation.py`
 
 ## Context

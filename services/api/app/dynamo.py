@@ -4,7 +4,7 @@ The third implementation of the same seam, after Postgres and memory, and it
 exists for one reason: **DynamoDB's free allowance does not expire.** RDS is the
 better database for this shape of data and its free tier dies after twelve
 months, at which point a demo either starts costing money or starts lying about
-being durable. See docs/REBUILD.md.
+being durable. See docs/research/RESEARCH PLAN.md.
 
 The table layout is in `scripts/createdynamo.py`. Everything here is a lookup by
 id or a listing of one type in time order, which is why one table and one index

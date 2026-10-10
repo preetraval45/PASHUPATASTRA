@@ -220,7 +220,7 @@ def main() -> int:
     # No favicon.svg. The artwork is raster, and wrapping a PNG in an <svg>
     # gives none of the reasons to prefer one — it does not scale, it is not
     # smaller, and it is not editable. A real one needs the vector redraw
-    # docs/ROADMAP.md already records as owed.
+    # docs/research/RESEARCH PLAN.md already records as owed.
     return 0
 
 

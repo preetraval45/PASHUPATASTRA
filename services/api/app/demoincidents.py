@@ -3,7 +3,7 @@
 These are **written**, not observed. Nothing here came off a real network, and
 the deployment that serves them reports `degraded` and `dry run` for exactly
 that reason. The agent that watches a real machine is a separate deployment
-(docs/REBUILD.md, Phase A) and shares none of this data.
+(docs/research/RESEARCH PLAN.md, Phase A) and shares none of this data.
 
 Each scenario declares its telemetry *and* its incident, in that order, so that
 every evidence id an incident cites is an event that exists. The alternative is

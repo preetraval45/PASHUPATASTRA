@@ -97,7 +97,7 @@ these, the benchmark rewards acting over judging.
 | Naive LLM agent | Model with tool access, no policy layer, no verification |
 | Pashupatastra | Full architecture |
 
-Plus ablations — see [../docs/research/Paper Outline.md](../docs/research/Paper%20Outline.md).
+Plus ablations — see [../docs/research/PAPER.md](../docs/research/PAPER.md).
 
 ## Harness
 

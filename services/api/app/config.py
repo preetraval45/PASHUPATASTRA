@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     fall back to Postgres or to memory.
 
     Chosen over RDS for the demo because DynamoDB's free allowance does not
-    expire — see docs/REBUILD.md. A deployment with a real database should set
+    expire — see docs/research/RESEARCH PLAN.md. A deployment with a real database should set
     `database_url` and leave this unset."""
 
     dynamo_namespace: str = "prod"

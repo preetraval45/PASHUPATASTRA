@@ -340,7 +340,7 @@ export default function EvaluationPage() {
       <p className="text-xs leading-relaxed text-[rgb(var(--faint))]">
         {evaluation.note} The plan these gaps are tracked against is in{" "}
         <Link
-          href="https://github.com/preetraval45/PASHUPATASTRA/blob/main/docs/REBUILD.md"
+          href="https://github.com/preetraval45/PASHUPATASTRA/blob/main/docs/research/RESEARCH%20PLAN.md"
           className="focusable rounded underline decoration-dotted"
         >
           the delivery plan

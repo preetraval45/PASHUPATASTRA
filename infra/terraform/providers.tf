@@ -1,5 +1,5 @@
 # Terraform skeleton. Resources land in Phase 0.5 (data layer) and Phase 3
-# (execution IAM) — see docs/ROADMAP.md. Kept minimal on purpose: untested
+# (execution IAM) — see docs/research/RESEARCH PLAN.md. Kept minimal on purpose: untested
 # infrastructure code is a liability, not a head start.
 
 terraform {

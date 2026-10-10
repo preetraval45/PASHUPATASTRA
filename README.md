@@ -127,7 +127,7 @@ CloudTrail as an independent audit mirror. **The public demo runs smaller than
 that, on purpose:** Lambda behind an HTTP API, DynamoDB, EventBridge for the
 hourly feed poll, Vercel for the site, and a free-tier model provider through
 the same gateway — every piece inside a free tier, with the reasoning in
-[docs/REBUILD.md](docs/REBUILD.md).
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 IAM is the floor beneath the policy engine — an agent's IAM role mirrors its
 declared permissions, so a policy bug still cannot exceed what the role allows.
@@ -153,7 +153,7 @@ docs/                Architecture, ADRs, research
 
 ## Status
 
-Delivery is tracked task by task in [docs/REBUILD.md](docs/REBUILD.md) — each
+Delivery is tracked task by task in [docs/research/RESEARCH PLAN.md](docs/research/RESEARCH%20PLAN.md), the one plan file — each
 task is ticked only when its evidence exists, and the evidence is written
 beside it. In outline, on 12 September 2026:
 
@@ -167,8 +167,8 @@ beside it. In outline, on 12 September 2026:
 | The September review pass (Phase 5E) and evidence work (Phase 5F) | In progress |
 | Tenancy, sign-in, a product surface (Phases 6–8) | Not started |
 
-The platform roadmap — engines, connectors, benchmark — is
-[docs/ROADMAP.md](docs/ROADMAP.md).
+Everything still open — engines, connectors, benchmark, site, Kavach — is in
+that file's Backlog.
 
 ## Research
 
@@ -234,7 +234,7 @@ licence.
 
 The name has an existing commercial web presence. Trademark, corporate-name,
 and domain clearance must complete before any public launch commitment. Tracked
-in [docs/ROADMAP.md](docs/ROADMAP.md) under Phase 0.
+in the [plan](docs/research/RESEARCH%20PLAN.md) Backlog, under Phase 0.
 
 ## License
 

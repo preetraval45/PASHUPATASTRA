@@ -8,9 +8,7 @@ Start here.
 |----------|-----------------|
 | [../README.md](../README.md) | What is Pashupatastra and why does it exist |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | How the system is built and what it deliberately is not |
-| [ROADMAP.md](ROADMAP.md) | The 24-week plan of action, phase by phase, with exit criteria |
-| [KAVACH.md](KAVACH.md) | The cyber defense program — Phases 7–12, extending the roadmap |
-| [TASKS.md](TASKS.md) | Every phase broken down to task, subtask, and step |
+| [research/RESEARCH PLAN.md](research/RESEARCH%20PLAN.md) | **The only plan** — tasks, owners, day-by-day calendar, and the backlog of everything still open |
 | [REPOSITORY.md](REPOSITORY.md) | What every directory is for and where new code goes |
 | [GLOSSARY.md](GLOSSARY.md) | Every term and subsystem name, defined once |
 | [BRAND.md](BRAND.md) | The mark, tagline, palette, and what not to do with them |
@@ -37,7 +35,7 @@ Start here.
 
 | Document | What it covers |
 |----------|----------------|
-| [research/Paper Outline.md](research/Paper%20Outline.md) | The paper's structure, claims, and contribution |
+| [research/PAPER.md](research/PAPER.md) | The paper draft — structure, claims, and what it still needs |
 | [research/METRICS.md](research/METRICS.md) | Metric definitions — how each number is computed |
 | [../benchmark/README.md](../benchmark/README.md) | PIB — the incident benchmark |
 

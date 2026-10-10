@@ -17,7 +17,7 @@ PASHUPATASTRA/
 ├── docs/
 │   ├── README.md                 Documentation index — start here
 │   ├── ARCHITECTURE.md           Subsystems, data flow, non-goals
-│   ├── ROADMAP.md                24-week plan of action
+│   ├── research/RESEARCH PLAN.md The only plan file — tasks, calendar, backlog
 │   ├── REPOSITORY.md             This file
 │   ├── GLOSSARY.md               Every term, defined once
 │   ├── SECURITY.md               Threat model, trust boundaries

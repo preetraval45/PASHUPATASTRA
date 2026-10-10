@@ -46,7 +46,7 @@ not add deities, weapons, flames, or mythological flourish to UI copy, docs, or
 other assets, and do not translate the tagline into mystical language — it is a
 technical claim. Elsewhere the mythology stays subtle: names only.
 
-**The origin note** — approved by the owner on 4 October 2026 (REBUILD.md R120).
+**The origin note** — approved by the owner on 4 October 2026 (task R120; recorded in git history).
 One short passage on `/how-it-works`, and the *The names* section of
 [docs/BRAND.md](docs/BRAND.md), may say where the two names come from:
 Pashupatastra is Lord Shiva's weapon, which Arjuna earned and held back; Sati is
@@ -93,17 +93,21 @@ This keeps the on-prem/hybrid deployment path — the commercial wedge — open.
 managed-service feature without a self-hosted equivalent needs an explicit
 decision, not an assumption. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-## Roadmap protocol — required whenever work completes
+## Plan protocol — required whenever work completes
 
-[docs/ROADMAP.md](docs/ROADMAP.md) is the live status of the project, not a
-historical plan. When a task there is finished, tick its checkbox **in the same
+[docs/research/RESEARCH PLAN.md](docs/research/RESEARCH%20PLAN.md) is the
+project's **only** plan file and its live status, not a historical plan. The
+former ROADMAP.md, REBUILD.md, KAVACH.md and TASKS.md were merged into it on
+9 October 2026; their open tasks are its Backlog section.
+ When a task there is finished, tick its checkbox **in the same
 change that finished it** — never in a separate "update the roadmap" pass, which
 is how status drifts from reality.
 
 - `- [x]` only when the evidence exists: a passing test, an applied migration, a
   committed decision. "The code is written" is not evidence.
 - `- [~]` for partial work, with the line stating exactly what remains.
-- Update the phase status table at the top when a phase's counts change.
+- Update the timeline table at the top when a block's dates or counts change.
+- Do not create another plan, roadmap or task file. New work goes into this one.
 - If work lands that no task covers, add the task and tick it — the plan tracks
   reality, not the other way around.
 

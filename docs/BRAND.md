@@ -47,7 +47,7 @@ of that table at once. Until then, treat the current file as the working mark.
 ### Unresolved: provenance
 
 The artwork's origin and licensing have not been established. This matters more
-than a normal asset question, because [ROADMAP.md](ROADMAP.md) Phase 0.10 gates
+than a normal asset question, because the [plan](research/RESEARCH%20PLAN.md)'s Phase 0.10 gates
 public launch on trademark clearance, and a logo cannot be registered — or safely
 commercialised — without clear rights to it. **Resolve before any public launch,
 not after.** See the note in that section.
@@ -85,7 +85,7 @@ handled by context instead:
   a README), name the goddess explicitly: *named for Mata Sati, Shiva's
   consort*. Naming the source is what removes the ambiguity.
 - Whether that origin sentence appears **on the site** is gated by
-  [REBUILD.md](REBUILD.md) **R120**, because CLAUDE.md currently keeps the
+  task **R120**, because CLAUDE.md currently keeps the
   mythology to names only and the site copy follows CLAUDE.md.
 
 ## Tagline

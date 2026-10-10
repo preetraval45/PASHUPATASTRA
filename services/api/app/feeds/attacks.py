@@ -61,7 +61,7 @@ RANSOMWARE_WITHDRAWN = (
     "from api.ransomware.live, and data.ransomware.live returns the site for "
     "any path. The publisher now offers a keyed PRO API. Either the free "
     "endpoint comes back, or somebody takes a free PRO key and this feed is "
-    "rewritten against it — see docs/REBUILD.md R123."
+    "rewritten against it — see docs/research/RESEARCH PLAN.md R123."
 )
 """Why this feed fails, in the words a reader of the Observatory needs.
 

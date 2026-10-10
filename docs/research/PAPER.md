@@ -233,6 +233,7 @@ the results rather than derived from them.)*
 | Naive LLM arm | A configured model — and a fourth arm, Pashupatastra with the same LLM proposer, so the comparison changes one variable at a time |
 | Diagnosis quality (RCA@k) | 20 labelled incidents and a real model |
 | External validation | A benchmark this repository did not author |
-
-The order of work, with owners and dates, is [RESEARCH_PLAN.md](RESEARCH_PLAN.md).
+| Sati models vs general LLMs | The Kaal generator, Sati-RCA trained on it, and the head-to-head — the contribution this paper is moving toward |
 | Submission or preprint | Everything above; and it is the author's call, not a task to be completed on their behalf |
+
+The order of work, with owners and dates, is [RESEARCH PLAN.md](RESEARCH%20PLAN.md).

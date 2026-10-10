@@ -18,7 +18,7 @@ import { getFigures, getIncidents } from "@/lib/api";
  *
  * Every number here comes from the scenarios the demo actually serves, and the
  * page links to the incident it is describing. Nothing on this page is a
- * benchmark: `ROADMAP.md` records that MTTR is not computable in this
+ * benchmark: `RESEARCH PLAN.md` records that MTTR is not computable in this
  * deployment, so a measured time-saving claim would be an invention, and an
  * invented number on the front page would undo the thing the rest of the
  * product spends its effort proving.

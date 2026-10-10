@@ -4,7 +4,7 @@
 things this repository can produce, the things only the owner can do, and the
 order they have to happen in. It was written on 12 September 2026 from two
 outside reviews of the deployed site and an O-1A strategy document, all three
-of which are folded into [REBUILD.md](REBUILD.md) as Phases 5E and 5F.
+of which are folded into [RESEARCH PLAN.md](research/RESEARCH%20PLAN.md) as Phases 5E and 5F.
 
 **What it is not.** Legal advice. Whether any piece of evidence clears a
 criterion is an immigration attorney's judgement against the actual petition,
@@ -43,7 +43,7 @@ is not wasted, but it does not count here.
 ## The eight criteria, honestly
 
 "Today" is what exists on 12 September 2026, not what is planned. "Repo tasks"
-are the tasks in REBUILD.md that produce the evidence; "Owner" is what no
+are the tasks (formerly REBUILD.md, now the plan Backlog and git history) that produce the evidence; "Owner" is what no
 amount of engineering does on the owner's behalf.
 
 | # | Criterion | Today | What would count | Repo tasks | Owner |
@@ -181,5 +181,5 @@ the kind of evidence this whole file exists to avoid.
 
 What the repository does hold is the checkable half: the code, the benchmark
 runs, the generated tables, the study protocol and its report script, the
-citation file, and the tasks in REBUILD.md with their evidence lines. When a
+citation file, and the tasks (formerly REBUILD.md, now the plan Backlog and git history) with their evidence lines. When a
 letter says the architecture is novel, this is what it points at.

@@ -3,7 +3,7 @@
 **Provisioned, not on-demand, and that is the whole reason this is DynamoDB.**
 The always-free allowance is 25 read and 25 write capacity units on provisioned
 tables; on-demand has no perpetual free tier. RDS would have been the obvious
-choice and its free tier expires after twelve months — see docs/REBUILD.md.
+choice and its free tier expires after twelve months — see docs/research/RESEARCH PLAN.md.
 
 One table, because every access pattern here is a lookup by id or a listing of
 one type in time order, and a second table would buy nothing but a second thing
