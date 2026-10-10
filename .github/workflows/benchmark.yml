@@ -1,0 +1,86 @@
+name: Benchmark
+
+# PIB runs on GitHub's runners, not on anyone's PC: each variant gets its own
+# kind cluster on an identical ubuntu-latest machine, so the rows of a table
+# come from the same setup. RESEARCH PLAN.md RP-01.
+#
+# Run records stay gitignored (benchmark/results/) and are kept as the
+# `pib-records` artifact; only the generated tables are committed.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [.github/workflows/benchmark.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benchmark
+  cancel-in-progress: false
+
+jobs:
+  run:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: pashupatastra
+            args: --arm pashupatastra
+          - name: pashupatastra-no-policy
+            args: --arm pashupatastra --ablation no-policy
+          - name: pashupatastra-no-verification
+            args: --arm pashupatastra --ablation no-verification
+          - name: runbook
+            args: --arm runbook
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core
+      - uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: pashupatastra
+      - run: kubectl get nodes
+      - run: python -m benchmark.harness.run --runs 3 ${{ matrix.args }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: records-${{ matrix.name }}
+          path: benchmark/results/
+          if-no-files-found: error
+
+  tables:
+    needs: run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: records-*
+          path: benchmark/results
+          merge-multiple: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pib-records
+          path: benchmark/results/
+      - run: python scripts/papertables.py > docs/research/tables.md
+      - name: Commit regenerated tables
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/research/tables.md
+          if git diff --cached --quiet; then echo "tables unchanged"; exit 0; fi
+          git commit -m "docs(tables): regenerate from benchmark run ${{ github.run_id }}"
+          git pull --rebase origin main
+          git push origin HEAD:main
