@@ -3837,6 +3837,20 @@ nothing to a visitor whose filter stops at the front door.
 
 - [ ] **R122 — Production is serving nothing.** Needs: **AWS access** — the
   owner's, since this session's permissions do not reach the account.
+  **Re-measured 9 October, now that the site itself is current**, and the gap
+  is wider than "degraded": the Lambda is running code from before Phase 5D.
+  `/health` and `/incidents` answer 200; `/impact`, `/figures`, `/usage`,
+  `/detections` and `/attack/matrix` all answer **404** — every route added by
+  R75, R77, R104, R107 and R119. That is why `/impact` is the single remaining
+  failure in the deployed crawl, and why the landing page's four recountable
+  numbers have nothing behind them in production.
+  It also blocks **R115's deployed crawl**: `verifydefang.py` stops at *the API
+  holds no reachable indicators — nothing to prove absent*, and the crawl still
+  finds `network_flow:45.61.184.22` in an entity URL, the routable address R115
+  replaced with a documentation one. The defanging is correct in this
+  repository; production is serving the data from before it.
+  **One `sam deploy` (or equivalent) closes R122, R115's crawl and R121 at
+  once.** Nothing in the code is waiting on anything.
   Found while checking R115 against the live site, 4 October 2026: the
   deployed API (`265d0hsmwa.execute-api…/api/v1`) answers
   `status: degraded`, `audit_storage: memory`, every feed *has not polled
@@ -4077,8 +4091,28 @@ nothing to a visitor whose filter stops at the front door.
   rather than being told; `benchmark/results/` is still gitignored and the page
   still names the arm numbers as the part nobody can recompute.
 
-- [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
+- [~] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
   R122** (R116, R118, R119, R123, R124–R128 when they land).
+  **The site is deployed and current as of 9 October**; the API behind it is
+  not, and that is the whole of what remains.
+  **Why nothing had shipped for 26 days, found at last.** The Vercel project's
+  `rootDirectory` is unset, so every Git-triggered build ran `npm run build` at
+  the repository root, where there is no Next application. That is the "project
+  setting no log from outside the dashboard could name" this file has been
+  carrying since September — it took `vercel pull` to read it. Deploying from
+  `apps/web`, where the CLI treats that directory as the project root, goes
+  around it; **setting `rootDirectory` to `apps/web` in the dashboard is the
+  permanent fix** and would let the Git integration work again.
+  `vercel build --prebuilt` cannot be used from this machine: Windows refuses
+  the symlinks the output format needs without Developer Mode, so the deploy
+  uploads `apps/web` and Vercel builds it.
+  *Evidence: aliased to pashupatastra.vercel.app; `verifyui.py` 75 of 75
+  page/viewport combinations clean on the deployed site, `verifyevaluation.py`
+  recounts against it, `verifysite.py` crawls 60 pages with one failure —
+  `/impact`, caused by the stale API below. A React hydration error seen on
+  `/` in the first crawl did not reproduce on two later loads or on the second
+  crawl: it was the deploy still propagating, an old HTML shell meeting new
+  JavaScript.*
   **Done when:** the R115 crawl passes on the deployed site, R116's second
   person can open it, and `verifysite.py` and `verifyui.py` pass with the new
   incidents included.

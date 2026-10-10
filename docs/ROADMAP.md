@@ -40,8 +40,8 @@ Week 1 begins **Monday 10 August 2026**.
 | 2 — Buddhi + Smriti · Intelligence | 7–10 | Sep 21 – Oct 18 | **Mostly done** — 57 done, 6 open, each waiting on the Phase 5 corpus or real traffic |
 | 3 — Astra + Dharma · Action | 11–14 | Oct 19 – Nov 15 | **In progress** — 48 done, 10 open (3 added 4 Oct: §3.6, §3.7) |
 | 4 — Verification | 15–17 | Nov 16 – Dec 6 | **Nearly done** — 22 of 23 |
-| 5 — PIB · Benchmark | 18–20 | Dec 7 – Dec 27 | **In progress** — 30 done, 1 partial, 6 open |
-| 6 — Research & OSS release | 21–24 | Dec 28 – Jan 24 2027 | **Started** — 4 done, 1 partial, 9 open |
+| 5 — PIB · Benchmark | 18–20 | Dec 7 – Dec 27 | **In progress** — 30 done, 1 partial, 8 open (2 added 9 Oct) |
+| 6 — Research & OSS release | 21–24 | Dec 28 – Jan 24 2027 | **Started** — 4 done, 1 partial, 12 open (3 added 9 Oct; path in [RESEARCH_PLAN.md](research/RESEARCH_PLAN.md)) |
 
 *Counts recounted from the checkboxes on 4 October 2026; the previous statuses
 were written in August and had drifted well behind the work.* The public site's
@@ -618,6 +618,7 @@ injected faults, including deliberately wrong remediations.
 - [x] **Traditional runbook automation** — fires on a threshold, no policy evaluation, no verification, structurally cannot escalate
 - [x] **Pashupatastra, full architecture** — same proposal as the runbook arm, then Dharma decides and the result is verified. Holding the proposal constant is what isolates the architecture as the variable
 - [~] **Naive LLM agent** — implemented as a code path that **refuses to run without a configured model**. Driving it with the deterministic stub would produce a second runbook wearing a different label, and reporting that as an LLM baseline would be the one purely fabricated result in the benchmark
+- [ ] **Pashupatastra with an LLM proposer** *(added 9 October 2026)* — the fourth cell of a 2 × 2. Giving only `naive-llm` a model changes the proposer and the policy layer at once, so a difference could come from either; with this arm, rows isolate the proposer and columns the architecture. [RESEARCH_PLAN.md](research/RESEARCH_PLAN.md) RP-05, RP-06
 - [ ] **Human operator with standard dashboards** — not implementable. Blocked on recruiting operators; protocol and recording format are in `benchmark/results/human/`. A simulated human is this repository writing the number it wants the baseline to produce, in the one place nobody would check
 - [x] Diagnosis quality is deliberately **not** what separates the arms. It needs a real model, and scoring the stub would measure a fixture this repo wrote — so the shared proposer is identical across arms and only the architecture around it differs
 
@@ -628,6 +629,7 @@ injected faults, including deliberately wrong remediations.
 - [ ] Without the hypothesis evidence requirement — **refuses to run.** It lives in the reasoning layer, which the benchmark arm never invokes; the shared proposer stands in for diagnosis because there is no model
 - [ ] Without Smriti retrieval — **refuses to run.** Not part of this arm's decision path; each scenario runs in a fresh namespace with no prior incidents to recall
 - [ ] Without topology-adjacency correlation — **refuses to run.** Correlation happens before an incident is formed, and the harness hands the arm one already-scoped fault
+- [ ] Both runnable ablations **run and recorded** *(added 9 October 2026)* — implemented, but Table 2 in [tables.md](research/tables.md) shows n = 0 for each. RP-01
 - [x] An ablation the arm cannot exercise raises rather than running. Removing a stage that never ran produces an identical score and would be reported as *"no effect"* — the most misleading result available here, because it reads as evidence the component does not matter
 
 ### 5.5 Reporting
@@ -663,12 +665,18 @@ authored first, negative cases included, failure reported first.
 
 ### 6.1 Paper
 
+The task-by-task path through what remains here — with learning, owners and a
+day-by-day calendar to 31 January 2027 — is [RESEARCH_PLAN.md](research/RESEARCH_PLAN.md).
+
 - [~] Draft — [PAPER.md](research/PAPER.md). Architecture, bounded autonomy, verification and PIB are written; background, evaluation prose, failure analysis and conclusion are not, and the draft says which and why rather than reading as finished
 - [x] Results and ablation tables — **generated** by `scripts/papertables.py` from the run records and included, never transcribed. A number copied into prose stops tracking the data the moment either changes, and the stale number still looks like a number
 - [x] An arm with no data gets a row saying so. A four-column comparison with two columns silently missing reads as a two-arm study that always intended to be one
 - [x] Threats to validity stated plainly, and placed **before** the results discussion rather than after it — a limitations section following a favourable result is read as boilerplate
 - [x] The self-authored benchmark is stated as the first threat, together with the ordering confound that was found and corrected, since that confound is evidence the risk is real rather than theoretical
 - [ ] Failure analysis — what the escalation cases have in common. Needs the corrected corpus at N≥3; answering it from one run per scenario would be over-reading
+- [ ] §2 Related work *(added 9 October 2026)* — nothing blocks it; a reading log first, then prose. RP-03, RP-28
+- [ ] Diagnosis quality measured with real models — RCA@1/@3 with intervals on 20 labelled incidents, answer keys committed before any run *(added 9 October 2026)*. Also decides the Phase 2 exit criterion. RP-12 – RP-14
+- [ ] **A result on a benchmark this repository did not author** *(added 9 October 2026)* — OpenRCA, RCAEval, AIOpsLab or ITBench, subset pre-declared. The only answer to the self-authored threat that does not need a second author. RP-19 – RP-21
 - [ ] Submission or arXiv preprint — **the author's call, not a task to complete on their behalf**, and blocked on everything above
 
 ### 6.2 Open source

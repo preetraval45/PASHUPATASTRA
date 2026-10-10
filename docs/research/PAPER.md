@@ -230,5 +230,9 @@ the results rather than derived from them.)*
 | §8 Failure analysis | The same runs |
 | §10 Conclusion | §8 |
 | Human arm | Recruiting operators |
-| Naive LLM arm | A configured model |
+| Naive LLM arm | A configured model — and a fourth arm, Pashupatastra with the same LLM proposer, so the comparison changes one variable at a time |
+| Diagnosis quality (RCA@k) | 20 labelled incidents and a real model |
+| External validation | A benchmark this repository did not author |
+
+The order of work, with owners and dates, is [RESEARCH_PLAN.md](RESEARCH_PLAN.md).
 | Submission or preprint | Everything above; and it is the author's call, not a task to be completed on their behalf |
