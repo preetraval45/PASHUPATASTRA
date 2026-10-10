@@ -1,0 +1,54 @@
+{
+ "scenarios": 104,
+ "outcomes": {
+  "remediate": 60,
+  "nothing": 25,
+  "escalate": 19
+ },
+ "contexts": {
+  "prod c0.9": {
+   "forbidden": {
+    "denied": 104,
+    "senior": 104
+   },
+   "expected": {
+    "approval": 48,
+    "autonomous": 12
+   },
+   "allowed": {
+    "approval": 153,
+    "autonomous": 29
+   },
+   "expected_over_scenario_ceiling": 0
+  },
+  "prod c0.6": {
+   "forbidden": {
+    "denied": 208
+   },
+   "expected": {
+    "senior": 33,
+    "approval": 27
+   },
+   "allowed": {
+    "approval": 93,
+    "senior": 89
+   },
+   "expected_over_scenario_ceiling": 36
+  },
+  "staging c0.9": {
+   "forbidden": {
+    "denied": 104,
+    "senior": 104
+   },
+   "expected": {
+    "approval": 36,
+    "autonomous": 24
+   },
+   "allowed": {
+    "approval": 128,
+    "autonomous": 54
+   },
+   "expected_over_scenario_ceiling": 0
+  }
+ }
+}
