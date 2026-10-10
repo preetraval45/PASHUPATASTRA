@@ -141,12 +141,18 @@ jobs:
 
   deploy-site:
     name: deploy site
-    # The site is built here — the same build the `web` job just proved — and
-    # handed to Vercel prebuilt, so Vercel never builds it and its Git
-    # integration is switched off in vercel.json. Every Git-triggered Vercel
-    # build had failed since before September, on a project setting no log
-    # from outside the dashboard could name; a deploy that happens where the
-    # tests happen is one that can be read.
+    # A fallback, not the primary path any more. Every Git-triggered Vercel
+    # build failed from September to 9 October on a project setting no log
+    # from outside the dashboard could name — the Root Directory was unset, so
+    # Vercel ran `npm run build` at the repository root, which has no
+    # package.json. That is fixed in the dashboard and Git deploys are on
+    # again, so a push normally deploys itself.
+    #
+    # This job stays because it is the readable path: the site is built here,
+    # from the same tree the `web` job just proved, and handed over prebuilt.
+    # It only runs when all three secrets are set, so it is inert unless
+    # somebody deliberately turns it on — and if they do, note that a push
+    # would then deploy twice, once from here and once from Git.
     #
     # Gated on every test job. Needs three repository secrets: VERCEL_TOKEN
     # (Account → Settings → Tokens), VERCEL_ORG_ID (Team → Settings → General,

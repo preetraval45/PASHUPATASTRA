@@ -1,4 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "git": { "deploymentEnabled": false }
+  "//": [
+    "Vercel's Root Directory is apps/web, so the configuration it reads is",
+    "apps/web/vercel.json, not this file. This one exists to say so, and to",
+    "avoid a stale `deploymentEnabled: false` sitting here contradicting it.",
+    "Git deploys were off from 12 September to 9 October because every",
+    "Git-triggered build ran `npm run build` at this directory, which has no",
+    "package.json. The Root Directory setting is the fix; the flag was the",
+    "symptom being held down."
+  ]
 }
