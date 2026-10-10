@@ -398,7 +398,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
 
 ### Block D — External validity and analysis (Weeks 22–24)
 
-- [ ] **RP-31 · Choose an external benchmark**
+- [~] **RP-31 · Choose an external benchmark** — *Claude's feasibility note done 10 Oct: [ExternalBenchmark.md](../adr/ExternalBenchmark.md), Proposed, recommends RCAEval (RE2 first). Remains: the owner reads the four papers and decides.*
   **Both** · You 4 h; Claude 1 session · Depends: —
   *Steps:* **You** read OpenRCA (Xu et al., ICLR 2025), RCAEval (Pham et al., 2025), AIOpsLab (Chen et al., 2025) and ITBench (IBM, 2025). **Claude** writes a feasibility note: licence, size, whether it runs on one machine, and how its data maps to Sati-RCA's inputs. **You** decide. RCAEval is likely the best fit, because its metrics-and-topology data matches Sati-RCA's inputs.
   *Done when:* `docs/adr/ExternalBenchmark.md` is committed. The chosen benchmark joins the contamination guard.
