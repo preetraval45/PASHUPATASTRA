@@ -187,14 +187,14 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   3. Vaswani et al. 2017, *Attention Is All You Need*, §3.
   *Done when:* your notebook trains a tiny character-level GPT and generates text, and a one-page note in your own words explains tokens → embeddings → attention → next-token distribution.
 
-- [ ] **RP-03 · Related-work log**
+- [~] **RP-03 · Related-work log** — *Claude's part done 10 Oct: [related-work.md](related-work.md) with the four citations, checked against Crossref/arXiv. Remains: the owner's four entries.*
   **Both** · Claude 1 session; You 4 h · Depends: —
   *Steps:*
   1. **Claude** creates `docs/research/related-work.md`. Each entry has: citation, question, data, baselines, metrics, what it does *not* claim, how Sati differs, and *my takeaway* (blank). Claude fills the citations only.
   2. **You** read and fill these four: Ahmed et al. ICSE 2023 (LLM root cause for cloud incidents); Chen et al. EuroSys 2024 (RCACopilot); Soldani & Brogi 2022 (*Anomaly Detection and Failure Root Cause Analysis in (Micro)Service-Based Cloud Applications: A Survey*, ACM CSUR); Greshake et al. 2023 (indirect prompt injection).
   *Done when:* four complete entries, written in your words.
 
-- [ ] **RP-04 · ADR: the Sati model family**
+- [~] **RP-04 · ADR: the Sati model family** — *Draft committed 10 Oct: [SatiModels.md](../adr/SatiModels.md), status Proposed. Remains: owner decides names, weights release and licence; then CLAUDE.md and GLOSSARY.md are updated to match.*
   **Both** · Claude draft 1 session; You 1 h decisions · Depends: —
   *Why:* CLAUDE.md defines Sati as *the agent*. Training models called Sati is a naming and architecture decision, and those are made in ADRs, not assumed.
   *Steps:*

@@ -43,3 +43,4 @@ Protocol: before every push, write a topic-named file from
 - [OnePlan](OnePlan.md) — one plan file (RESEARCH PLAN.md, 45 RP tasks + 239-item backlog); Sati runs on models trained here, Oracle Ollama is backup and baseline
 - [BenchmarkInTheCloud](BenchmarkInTheCloud.md) — RP-01: PIB moved to GitHub Actions (free, public repo, nothing on the owner's PC); all four variants rerun so Table 1 isn't blanked
 - [AblationsMeasured](AblationsMeasured.md) — RP-01 closed: −no-policy has no effect on this corpus (proposer never trips Dharma); −no-verification hides the 5 failed remediations from humans while Correct is unchanged
+- [SatiModelsDraft](SatiModelsDraft.md) — RP-04 ADR drafted (Proposed, 3 owner decisions open); RP-03 log seeded with verified citations; RP-02 kept the owner's at their choice
