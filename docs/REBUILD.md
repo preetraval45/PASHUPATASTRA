@@ -3849,8 +3849,20 @@ nothing to a visitor whose filter stops at the front door.
   finds `network_flow:45.61.184.22` in an entity URL, the routable address R115
   replaced with a documentation one. The defanging is correct in this
   repository; production is serving the data from before it.
-  **One `sam deploy` (or equivalent) closes R122, R115's crawl and R121 at
-  once.** Nothing in the code is waiting on anything.
+  **One credentialed command closes R122, R115's crawl and R121 at once.**
+  Nothing in the code is waiting on anything — the archive is already built and
+  checked: `python scripts/buildlambda.py` produces `dist/api.zip` (6.2 MB, 903
+  files) with no AWS access at all, and it was verified to carry every route
+  production answers 404 for, plus R80's export route and R125's grader. What
+  remains needs credentials this session does not have:
+
+      python scripts/deploylambda.py --role <execution-role-arn>           --cors https://pashupatastra.vercel.app
+
+  (Earlier drafts of this line said `sam deploy`. There is no SAM template
+  here; the API is a zip archive built by `scripts/buildlambda.py` and shipped
+  by `scripts/deploylambda.py`, and `scripts/deployapigateway.py` fronts it —
+  production is on API Gateway rather than the Function URL that script's
+  docstring describes as the demo tier.)
   Found while checking R115 against the live site, 4 October 2026: the
   deployed API (`265d0hsmwa.execute-api…/api/v1`) answers
   `status: degraded`, `audit_storage: memory`, every feed *has not polled
