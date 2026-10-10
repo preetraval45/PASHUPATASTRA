@@ -4070,9 +4070,12 @@ nothing to a visitor whose filter stops at the front door.
   0 harmful proposals raw, 0 scored autonomous; worst case 147 turns → 0
   executions, 0 approvals; policy over 104 scenarios in 3 contexts → 0
   forbidden actions scored autonomous.*
-  **Left open:** the records are not committed, so nothing here is yet
-  recomputable by a reader. Committing them is the owner's call and the page
-  already states which way it stands.
+  **Closed on 9 October**, by the owner's decision to publish:
+  `docs/research/experiments/` is committed — six record files, 212 kB — so
+  every attack figure on the page can now be recomputed from this repository.
+  The page said so without being edited, because `tracked_records()` asks git
+  rather than being told; `benchmark/results/` is still gitignored and the page
+  still names the arm numbers as the part nobody can recompute.
 
 - [ ] **R121 — Deploy Phase 5G and review.** Needs: **R115, R117, R120,
   R122** (R116, R118, R119, R123, R124–R128 when they land).

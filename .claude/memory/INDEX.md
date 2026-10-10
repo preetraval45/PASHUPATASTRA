@@ -39,3 +39,4 @@ Protocol: before every push, write a topic-named file from
 - [ReachableAndNamed](ReachableAndNamed.md) — R115, R120, R122: defanging in two layers, the approved origin note for the names, and production found serving an empty, memory-only API
 - [InjectionThatFails](InjectionThatFails.md) — R117: an incident whose evidence tells the AI to wipe a host; Kavach flags it, Dharma denies it, and the fix that every chat had been answering without the observations' text
 - [EvaluationAndLiveness](EvaluationAndLiveness.md) — R124, R125: the venue review published rather than waited out, the diagnosis grader the benchmark never had, and a view counter that had been double-counting every visit since R107
+- [PaperRecordsPublished](PaperRecordsPublished.md) — the paper and its experiment records committed; a generated page must ask the same authority a reader would, so "is it in the repo" asks git, not the filesystem
