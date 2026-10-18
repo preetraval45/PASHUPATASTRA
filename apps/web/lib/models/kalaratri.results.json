@@ -1,1 +1,89 @@
-{ "pending": "the first training run has not finished" }
+{
+  "model": "sati-kalaratri-v0",
+  "dataset": {
+    "name": "LogHub HDFS_v1",
+    "zenodo_record": "8196385",
+    "blocks": 575061,
+    "anomaly_share": 0.0293,
+    "split": {
+      "train": 345036,
+      "validation": 115012,
+      "test": 115013,
+      "order": "as logged"
+    }
+  },
+  "vocabulary": 28,
+  "test": {
+    "kalaratri-v0": {
+      "precision": 1.0,
+      "recall": 0.9345,
+      "f1": 0.9661,
+      "false_positive_rate": 0.0,
+      "tp": 1569,
+      "fp": 0,
+      "fn": 110,
+      "tn": 113334
+    },
+    "pca (Xu et al. 2009)": {
+      "precision": 0.7657,
+      "recall": 0.9964,
+      "f1": 0.8659,
+      "false_positive_rate": 0.00452,
+      "tp": 1673,
+      "fp": 512,
+      "fn": 6,
+      "tn": 112822
+    },
+    "unseen-template rule": {
+      "precision": 1.0,
+      "recall": 0.4324,
+      "f1": 0.6037,
+      "false_positive_rate": 0.0,
+      "tp": 726,
+      "fp": 0,
+      "fn": 953,
+      "tn": 113334
+    }
+  },
+  "thresholds": {
+    "kalaratri-v0": 0.9996684324889528,
+    "pca": 0.20397068696625942
+  },
+  "top_features": [
+    {
+      "feature": "distinct_share",
+      "gain": 2748627.9
+    },
+    {
+      "feature": "length",
+      "gain": 1795887.2
+    },
+    {
+      "feature": "E26",
+      "gain": 1324242.3
+    },
+    {
+      "feature": "E2",
+      "gain": 648486.5
+    },
+    {
+      "feature": "E4",
+      "gain": 618408.2
+    },
+    {
+      "feature": "E27",
+      "gain": 215732.2
+    },
+    {
+      "feature": "E3",
+      "gain": 201849.1
+    },
+    {
+      "feature": "E20",
+      "gain": 191618.2
+    }
+  ],
+  "weights_published": false,
+  "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",
+  "seconds": 218.3
+}
