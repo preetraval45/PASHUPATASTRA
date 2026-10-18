@@ -171,12 +171,11 @@ def test_the_stack_is_not_on_every_page() -> None:
     assert "BuiltWith" not in root
     assert "buildinfo.generated" not in root
 
-    # Two shells since RP-48: the public site's header and footer, and the
-    # console's sidebar. The credit has to be in both, and the stack in neither.
-    for shell in (web / "app" / "(site)" / "layout.tsx", web / "components" / "sidebar.tsx"):
-        source = shell.read_text(encoding="utf-8")
-        assert "BuiltWith" not in source, shell
-        assert "Attribution" in source, shell
+    # One frame for every page since RP-48: the sidebar in `ConsoleFrame`. The
+    # credit lives at the foot of the rail, and the stack is not in it.
+    shell = (web / "components" / "sidebar.tsx").read_text(encoding="utf-8")
+    assert "BuiltWith" not in shell
+    assert "Attribution" in shell
 
 
 def test_the_stack_shows_names_without_versions() -> None:

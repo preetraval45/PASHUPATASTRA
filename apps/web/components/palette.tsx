@@ -72,8 +72,9 @@ const PAGES: SearchItem[] = [
   { kind: "page", label: "Impact", hint: "what this has done, and where each number came from", href: "/impact" },
   { kind: "page", label: "Evaluation", hint: "what has been measured, what has not, and the review that said so", href: "/evaluation" },
   { kind: "page", label: "Press kit", hint: "a paragraph, screenshots and a contact line", href: "/press" },
-  { kind: "page", label: "Ask", hint: "the assistant", href: "/ask" },
-  { kind: "page", label: "Blue team", hint: "work one yourself", href: "/blue-team" },
+  { kind: "page", label: "Sati AI", hint: "ask the investigation agent", href: "/ask" },
+  { kind: "page", label: "Training", hint: "cyber defence practice, scored", href: "/training" },
+  { kind: "page", label: "Analytics", hint: "activity, risk and usage, charted", href: "/analytics" },
 ];
 
 const KIND_LABEL: Record<string, string> = {

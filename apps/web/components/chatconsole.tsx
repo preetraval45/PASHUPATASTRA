@@ -382,11 +382,10 @@ function Welcome({
       <span className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/10 text-[rgb(var(--astra))]">
         <Icon name="chat" className="h-7 w-7" />
       </span>
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-        Ask Sati, the investigation agent
-      </h1>
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Sati AI</h1>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-[rgb(var(--muted))] sm:text-[0.9375rem]">
-        It reads <span className="mono text-[rgb(var(--ink))]">{incident.id}</span> — the causal
+        Sati, the investigation agent, reads{" "}
+        <span className="mono text-[rgb(var(--ink))]">{incident.id}</span> — the causal
         chain, the telemetry behind it and the plan — and answers from that. Every claim carries a
         citation you can follow. It cannot act: ask it to isolate a host and it names the action and
         sends it to a human for approval.

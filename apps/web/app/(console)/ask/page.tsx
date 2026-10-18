@@ -7,7 +7,7 @@ import { Offline, Skeleton } from "@/components/ui";
 import { getIncidents, getModels, getUsage, type Usage } from "@/lib/api";
 
 export const metadata: Metadata = {
-  title: "Ask",
+  title: "Sati AI",
   description:
     "Ask about an open incident and get an answer grounded in the stored evidence, with every claim cited and checkable.",
 };

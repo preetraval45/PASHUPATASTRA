@@ -7,7 +7,7 @@ import { Offline, Page } from "@/components/ui";
 import { getBriefing, getScenarios } from "@/lib/api";
 
 export const metadata: Metadata = {
-  title: "Blue team",
+  title: "Training drill",
   description: "Work this incident forwards from a single alert.",
 };
 
@@ -36,7 +36,7 @@ export default async function PlayPage({
       description="One alert. Investigate what you would look at, commit to an explanation and a response, then see what you missed."
       actions={
         <Link
-          href="/blue-team"
+          href="/training"
           className="focusable rounded border border-[rgb(var(--edge-strong))] px-3 py-1.5 text-sm hover:bg-[rgb(var(--raised))]"
         >
           ← Scenarios

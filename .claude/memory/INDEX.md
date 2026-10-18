@@ -49,3 +49,4 @@ Protocol: before every push, write a topic-named file from
 - [ExpiredFixtureAndUI](ExpiredFixtureAndUI.md) — core CI red from a test fixture that aged past 90-day retention on 16 Oct (blocked deploy job); dark-theme <select> fixed; Block G UI tasks added
 - [ConsoleAsApp](ConsoleAsApp.md) — RP-48–50 on branch ui-redesign: (site)/(console) route groups, sidebar shell, full-screen Ask, /models allow-list + picker
 - [ShellMovedTests](ShellMovedTests.md) — CI red after the shell merge: moved page path in waves.test.ts, Attribution missing from console; run both API pytest modes + npm test before pushing to main
+- [OneSiteAnalyticsTraining](OneSiteAnalyticsTraining.md) — one sidebar frame for all pages, Ask→Sati AI, /analytics (real data, interactive), /training; prod API is weeks stale; Claude now builds+trains all models

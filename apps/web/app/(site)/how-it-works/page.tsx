@@ -310,7 +310,7 @@ export default async function HowItWorksPage() {
           </li>
           <li>
             <Link
-              href="/blue-team"
+              href="/training"
               className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]"
             >
               Blue team mode

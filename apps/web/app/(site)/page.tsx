@@ -108,7 +108,7 @@ export default async function LandingPage() {
               Or today&rsquo;s real attacks
             </Link>
             <Link
-              href="/blue-team"
+              href="/training"
               className="focusable rounded-lg border border-[rgb(var(--edge))] px-5 py-2.5 text-sm text-[rgb(var(--muted))] transition hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]"
             >
               Work one yourself
@@ -332,7 +332,7 @@ export default async function LandingPage() {
             A worked incident
           </Link>
           <Link
-            href="/blue-team"
+            href="/training"
             className="focusable rounded border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]"
           >
             Work one yourself

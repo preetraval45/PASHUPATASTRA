@@ -465,7 +465,7 @@ function Marked({
           Try this one again
         </button>
         <Link
-          href="/blue-team"
+          href="/training"
           className="focusable rounded border border-[rgb(var(--edge))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]"
         >
           Another scenario

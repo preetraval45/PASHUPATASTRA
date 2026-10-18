@@ -22,22 +22,37 @@ import { Mark, Sigil } from "@/components/chrome";
 import { Search } from "@/components/search";
 import { ThemeToggle } from "@/components/theme";
 
-type Item = { href: string; label: string; icon: keyof typeof ICONS };
+type Item = { href: string; label: string; icon: keyof typeof ICONS; hint?: string; exact?: boolean };
 
 /**
- * Grouped by the operator's verb rather than by subsystem. Infrastructure and
- * Audit were kept out of the old top bar because a stranger would not go
- * looking for them; in an app's rail they cost nothing, and an operator does.
+ * One rail for the whole site since the owner's review of RP-48: the public
+ * pages and the console had become two products with two headers, and moving
+ * between them felt like leaving. Grouped by what a person is doing — finding
+ * their feet, operating, analysing, responding, governing, learning.
  */
 const SECTIONS: { title: string; items: Item[] }[] = [
+  {
+    title: "Start",
+    items: [
+      { href: "/", label: "Home", icon: "home", exact: true },
+      { href: "/how-it-works", label: "How it works", icon: "book" },
+    ],
+  },
   {
     title: "Operate",
     items: [
       { href: "/overview", label: "Overview", icon: "grid" },
       { href: "/incidents", label: "Incidents", icon: "alert" },
-      { href: "/ask", label: "Ask", icon: "chat" },
+      // "Sati AI" is the owner's name for the page. The sub-label is BRAND.md's
+      // rule that a page's first mention of Sati says what it is, because the
+      // bare word has an unrelated common meaning in English.
+      { href: "/ask", label: "Sati AI", icon: "chat", hint: "investigation agent" },
       { href: "/observatory", label: "Observatory", icon: "radar" },
     ],
+  },
+  {
+    title: "Analyze",
+    items: [{ href: "/analytics", label: "Analytics", icon: "chart" }],
   },
   {
     title: "Respond",
@@ -55,10 +70,25 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     ],
   },
   {
-    title: "Practice",
-    items: [{ href: "/blue-team", label: "Blue team", icon: "target" }],
+    title: "Learn",
+    items: [
+      { href: "/training", label: "Training", icon: "cap", hint: "cyber defence practice" },
+      { href: "/evaluation", label: "Evaluation", icon: "check" },
+    ],
   },
 ];
+
+/** Secondary pages, at the foot of the rail rather than in a section. */
+const FOOTER: Item[] = [
+  { href: "/impact", label: "Impact", icon: "pulse" },
+  { href: "/press", label: "Press", icon: "news" },
+];
+
+function isCurrent(item: Item, pathname: string): boolean {
+  if (item.exact) return pathname === item.href;
+  if (item.href === "/training") return pathname.startsWith("/training") || pathname.startsWith("/blue-team");
+  return pathname.startsWith(item.href);
+}
 
 const STORAGE_KEY = "pashu.sidebar";
 
@@ -182,7 +212,7 @@ function Rail({
             <ul className="space-y-0.5">
               {section.items.map((item) => (
                 <li key={item.href}>
-                  <RailLink item={item} current={pathname.startsWith(item.href)} collapsed={collapsed} />
+                  <RailLink item={item} current={isCurrent(item, pathname)} collapsed={collapsed} />
                 </li>
               ))}
             </ul>
@@ -191,8 +221,9 @@ function Rail({
       </nav>
 
       <div className="shrink-0 space-y-0.5 border-t border-[rgb(var(--edge))] px-2.5 py-3">
-        <RailLink item={{ href: "/how-it-works", label: "How it works", icon: "book" }} current={false} collapsed={collapsed} />
-        <RailLink item={{ href: "/", label: "Back to the site", icon: "home" }} current={false} collapsed={collapsed} />
+        {FOOTER.map((item) => (
+          <RailLink key={item.href} item={item} current={isCurrent(item, pathname)} collapsed={collapsed} />
+        ))}
         {onToggle && (
           <button
             type="button"
@@ -239,7 +270,19 @@ function RailLink({ item, current, collapsed }: { item: Item; current: boolean; 
       <span className={current ? "text-[rgb(var(--astra))]" : "text-[rgb(var(--faint))] group-hover:text-[rgb(var(--ink))]"}>
         <Icon name={item.icon} />
       </span>
-      {collapsed ? <span className="sr-only">{item.label}</span> : <span className="truncate">{item.label}</span>}
+      {collapsed ? (
+        <span className="sr-only">
+          {item.label}
+          {item.hint && `, ${item.hint}`}
+        </span>
+      ) : (
+        <span className="min-w-0">
+          <span className="block truncate">{item.label}</span>
+          {item.hint && (
+            <span className="block truncate text-[10.5px] leading-tight text-[rgb(var(--faint))]">{item.hint}</span>
+          )}
+        </span>
+      )}
       <Pending />
     </Link>
   );
@@ -257,9 +300,8 @@ function Pending() {
 }
 
 function titleFor(pathname: string): string {
-  for (const section of SECTIONS) {
-    const hit = section.items.find((item) => pathname.startsWith(item.href));
-    if (hit) return hit.label;
+  for (const item of [...SECTIONS.flatMap((section) => section.items), ...FOOTER]) {
+    if (isCurrent(item, pathname)) return item.label;
   }
   if (pathname.startsWith("/entity")) return "Entity";
   if (pathname.startsWith("/evidence")) return "Evidence";
@@ -285,6 +327,11 @@ const ICONS = {
   collapse: "M15 6l-6 6 6 6M5 4v16",
   expand: "M9 6l6 6-6 6M19 4v16",
   menu: "M4 7h16M4 12h16M4 17h16",
+  chart: "M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3M20 16V6",
+  cap: "M2 9l10-5 10 5-10 5L2 9zM6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5M22 9v6",
+  check: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M8 12l3 3 5-6",
+  pulse: "M3 12h4l3-7 4 14 3-7h4",
+  news: "M4 5h13v14H6a2 2 0 0 1-2-2V5zM17 9h3v8a2 2 0 0 1-2 2M8 9h5M8 13h5M8 17h3",
 } as const;
 
 export function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS; className?: string }) {
