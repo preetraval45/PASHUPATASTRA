@@ -594,6 +594,57 @@ export async function getModels(): Promise<ModelChoice[] | null> {
   return body?.models ?? null;
 }
 
+/** A general answer from Sati AI (`/agent/ask`): any question, nothing from
+ *  the estate behind it, labelled as general knowledge. `area` is the Navadurga
+ *  area the question was routed to — a framing, not a separate model. */
+export interface GeneralAnswer {
+  answer: string;
+  topic: "security" | "general";
+  area: string;
+  declined: boolean;
+  grounded: false;
+  model: string;
+  provider: string;
+  tokens: number;
+}
+
+export async function askGeneral(
+  message: string,
+  history: { question: string; answer: string }[],
+  model?: string,
+): Promise<{ answer: GeneralAnswer } | { error: string; retryable: boolean }> {
+  try {
+    const response = await fetch(`${API_BASE}/agent/ask`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message,
+        history: history.slice(-6),
+        ...(model && model !== "default" ? { model } : {}),
+      }),
+      cache: "no-store",
+    });
+    if (response.ok) return { answer: (await response.json()) as GeneralAnswer };
+    if (response.status === 404) {
+      return {
+        error:
+          "General questions need the latest API, which has not been deployed to AWS yet. Pick an incident to ask about meanwhile.",
+        retryable: false,
+      };
+    }
+    const detail = await response
+      .json()
+      .then((body: { detail?: string }) => body.detail)
+      .catch(() => null);
+    return {
+      error: detail ?? "The assistant is unavailable right now.",
+      retryable: response.status === 429 || response.status >= 500,
+    };
+  } catch {
+    return { error: "Could not reach the API.", retryable: true };
+  }
+}
+
 export async function askAgent(
   incidentId: string,
   message: string,

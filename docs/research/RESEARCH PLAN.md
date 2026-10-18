@@ -86,7 +86,7 @@ cannot train anything. Cloud GPU training is possible later, but costs money.
 
 ## How to use this plan
 
-**Every task has an ID (`RP-01` … `RP-67`) and an owner.**
+**Every task has an ID (`RP-01` … `RP-68`) and an owner.**
 
 | Owner | Meaning |
 |---|---|
@@ -509,6 +509,7 @@ are generated files; models are disclosed as AI-built. Splits per [adr/RealDataM
 - [ ] **RP-65 · Sati-LM — every answer from our own model** — a small decoder trained on the LogHub corpus and incident text (Kaggle GPU), fine-tuned to the hypothesis schema with constrained decoding; when it passes citation verification, it answers Sati AI and the external LLM becomes baseline only.
 - [~] **RP-66 · Navadurga — the nine Sati models, on the site** — *Built 18 Oct (owner decision, [adr/Navadurga](../adr/Navadurga.md)): nine models named for Navadurga, each with the job that fits its form; `/models` shows all nine with status, and Katyayani's real-data results as interactive model-vs-baseline charts with intervals, the pooled table, the ablation and a cited ranking — read from the workflow's results file, refreshed on every retrain. Remains: confirm live.*
 - [~] **RP-67 · Training as a course: learn, apply, test, practise** — *Built 18 Oct (owner: "training where users learn and apply cyber security in real life, with an evaluation of what they learn"): six modules (incident response lifecycle, phishing, credential attacks, C2 and lateral movement, threat intel, ATT&CK), each with lessons sourced from NIST SP 800-61 / MITRE ATT&CK / CISA, a real-life checklist, technique links, a scored quiz (28 questions, every answer explained, pass mark 80%) and a linked practice drill; `/training` shows the learner's evaluation (per-module best, passed, average), kept in their browser. Content tests guard the quizzes. Remains: confirm live.*
+- [~] **RP-68 · Sati AI: history and any question** — *Built 18 Oct (owner: "history of chat instead of the incident list; answer any cyber or general question"): the rail is conversation history (new chat, delete, per-browser); each conversation is General or one incident. `POST /agent/ask` answers any question with nothing from the estate in reach, visitor text fenced as untrusted, answers labelled general knowledge and routed to one of the nine Navadurga areas (a framing, not a separate model); 5 tests. Remains: the API deploy — until AWS is live, general questions say so instead of answering.*
 
 ---
 
