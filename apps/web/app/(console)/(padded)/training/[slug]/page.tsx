@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Quiz } from "@/components/course";
 import { Page, Panel } from "@/components/ui";
+import { MODELS as NAVADURGA } from "@/lib/navadurga";
 import { MODULES, moduleBySlug, PASS_MARK } from "@/lib/training";
 
 type Params = Promise<{ slug: string }>;
@@ -25,6 +26,7 @@ export default async function ModulePage({ params }: { params: Params }) {
   if (!m) notFound();
 
   const index = MODULES.findIndex((x) => x.slug === m.slug);
+  const nature = NAVADURGA.find((x) => x.name === m.form)?.nature;
   const next = MODULES[index + 1];
 
   return (
@@ -32,9 +34,9 @@ export default async function ModulePage({ params }: { params: Params }) {
       <p className="-mt-4 flex flex-wrap items-center gap-2 text-xs text-[rgb(var(--faint))]">
         <Link href="/training" className="focusable rounded hover:text-[rgb(var(--ink))]">← Training</Link>
         <span>·</span>
-        <span>Module {index + 1} of {MODULES.length}</span>
+        <span>Level {m.level} of {MODULES.length} · {m.form}{nature ? ` — ${nature}` : ""}</span>
         <span>·</span>
-        <span>{m.level}</span>
+        <span>{m.tier}</span>
         <span>·</span>
         <span>about {m.minutes} minutes</span>
       </p>
@@ -114,7 +116,7 @@ export default async function ModulePage({ params }: { params: Params }) {
           className="focusable lift flex items-center justify-between rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-5 transition hover:border-[rgb(var(--astra))]/50"
         >
           <span>
-            <span className="label">Next module</span>
+            <span className="label">Next level · {next.form}</span>
             <span className="mt-1 block font-medium">{next.title}</span>
           </span>
           <span aria-hidden="true" className="text-xl text-[rgb(var(--astra))]">→</span>

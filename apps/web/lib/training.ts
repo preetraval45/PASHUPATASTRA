@@ -19,10 +19,13 @@ export type Lesson = { heading: string; body: string[] };
 
 export type Module = {
   slug: string;
+  /** Awareness level 1–9, one per Navadurga form (adr/Navadurga). */
+  level: number;
+  form: string;
   title: string;
   summary: string;
   minutes: number;
-  level: "Foundation" | "Practitioner";
+  tier: "Foundation" | "Practitioner" | "Mastery";
   lessons: Lesson[];
   realLife: string[];
   attack?: { id: string; name: string }[];
@@ -36,10 +39,12 @@ export const PASS_MARK = 0.8;
 export const MODULES: Module[] = [
   {
     slug: "incident-response",
+    level: 1,
+    form: "Shailaputri",
     title: "The incident response lifecycle",
     summary: "What a defender does, in order, from the first alert to the lesson learned.",
     minutes: 12,
-    level: "Foundation",
+    tier: "Foundation",
     lessons: [
       {
         heading: "Four phases",
@@ -80,10 +85,12 @@ export const MODULES: Module[] = [
   },
   {
     slug: "phishing",
+    level: 3,
+    form: "Chandraghanta",
     title: "Phishing and look-alike domains",
     summary: "How phishing works, how to recognise a forged sender, and what to do when someone clicks.",
     minutes: 10,
-    level: "Foundation",
+    tier: "Foundation",
     attack: [
       { id: "T1566", name: "Phishing" },
       { id: "T1566.002", name: "Spearphishing Link" },
@@ -128,10 +135,12 @@ export const MODULES: Module[] = [
   },
   {
     slug: "credential-attacks",
+    level: 5,
+    form: "Skandamata",
     title: "Credential attacks and account takeover",
     summary: "Brute force, password spraying and credential stuffing — how they differ and what stops each.",
     minutes: 10,
-    level: "Foundation",
+    tier: "Foundation",
     attack: [
       { id: "T1110", name: "Brute Force" },
       { id: "T1110.003", name: "Password Spraying" },
@@ -177,10 +186,12 @@ export const MODULES: Module[] = [
   },
   {
     slug: "c2-and-lateral-movement",
+    level: 6,
+    form: "Katyayani",
     title: "Command and control, and lateral movement",
     summary: "How a compromised machine phones home, and how an attacker spreads from it.",
     minutes: 12,
-    level: "Practitioner",
+    tier: "Practitioner",
     attack: [
       { id: "T1071.001", name: "Application Layer Protocol: Web Protocols" },
       { id: "T1021.002", name: "Remote Services: SMB/Windows Admin Shares" },
@@ -225,10 +236,12 @@ export const MODULES: Module[] = [
   },
   {
     slug: "threat-intel",
+    level: 4,
+    form: "Kushmanda",
     title: "Indicators and threat intelligence",
     summary: "Indicators of compromise, sharing them safely, and using real feeds like CISA KEV.",
     minutes: 8,
-    level: "Practitioner",
+    tier: "Practitioner",
     lessons: [
       {
         heading: "Indicators are evidence, not verdicts",
@@ -265,10 +278,12 @@ export const MODULES: Module[] = [
   },
   {
     slug: "att-and-ck",
+    level: 2,
+    form: "Brahmacharini",
     title: "Reading MITRE ATT&CK",
     summary: "Tactics, techniques and IDs — the shared language defenders use to describe attacks.",
     minutes: 8,
-    level: "Foundation",
+    tier: "Foundation",
     lessons: [
       {
         heading: "Why and how",
@@ -297,7 +312,144 @@ export const MODULES: Module[] = [
       { q: "Mapping detections to ATT&CK mainly helps you…", options: ["Speed up servers", "See which techniques you cannot detect", "Avoid writing documentation", "Encrypt logs"], answer: 1, why: "Coverage mapping makes the gaps visible." },
     ],
   },
+  {
+    slug: "logs-and-detection",
+    level: 7,
+    form: "Kalaratri",
+    title: "Logs and detection",
+    summary: "What to log, what normal looks like, and how a detection rule finds what hides in the noise.",
+    minutes: 10,
+    tier: "Practitioner",
+    attack: [{ id: "T1078", name: "Valid Accounts" }],
+    lessons: [
+      {
+        heading: "Log what an investigation will ask for",
+        body: [
+          "Authentication (successes and failures), process creation, network connections, DNS queries and administrative changes answer most investigation questions. Send them to one place, with synchronised clocks (NTP), and keep them long enough. Many intrusions are found weeks after they began.",
+          "On Windows, event ID 4624 is a successful logon and 4625 a failed one; process creation is 4688 (or Sysmon event 1). Knowing the few IDs that matter makes a log readable.",
+        ],
+      },
+      {
+        heading: "Anomaly means unusual for this system",
+        body: [
+          "A baseline is what normal looks like for a host, account or service, including its daily and weekly rhythm. The same login count can be routine at 10:00 on a Monday and alarming at 03:00 on a Sunday.",
+          "Too many low-value alerts cause alert fatigue: real alerts get missed in the noise. Tuning a detection to fire less, but on the right thing, is detection engineering, not laziness.",
+        ],
+      },
+      {
+        heading: "Detection rules you can share",
+        body: [
+          "Sigma is an open, generic format for detection rules. A rule written once converts to the query language of many SIEMs. Test a rule against known-bad and known-good activity before trusting it, and map it to an ATT&CK technique so coverage is visible.",
+        ],
+      },
+    ],
+    realLife: [
+      "Make sure authentication, process, network and DNS logs reach one place with synced clocks.",
+      "Learn the handful of event IDs your platform uses for logons and process starts.",
+      "Before adding an alert, ask what someone will do when it fires. If nothing, leave it out.",
+      "Test every new detection on known-good activity to measure its false positives.",
+    ],
+    drill: { href: "/detections", label: "Read the Sigma rules drafted from incidents" },
+    quiz: [
+      { q: "Why must log sources have synchronised clocks?", options: ["To save storage", "So events from different systems can be put in the right order", "Attackers cannot read them", "It is faster"], answer: 1, why: "Correlating an attack across systems depends on ordering events correctly; skewed clocks scramble the timeline." },
+      { q: "On Windows, which event ID records a successful logon?", options: ["4625", "4624", "4688", "7045"], answer: 1, why: "4624 is a successful logon. 4625 is a failed logon, 4688 is process creation, and 7045 is a service install." },
+      { q: "What is alert fatigue?", options: ["Servers overheating", "So many low-value alerts that real ones get missed", "Analysts working at night", "A type of malware"], answer: 1, why: "Noise trains people to ignore alerts. Fewer, better alerts protect the ones that matter." },
+      { q: "What is Sigma?", options: ["A SIEM product", "An open, generic format for detection rules that converts to many SIEM queries", "A malware family", "A log shipper"], answer: 1, why: "Sigma rules are written once and translated to each SIEM's query language." },
+      { q: "Why does an anomaly depend on a baseline?", options: ["It doesn't", "Unusual only means something relative to what is normal for that system and time", "Baselines are required by law", "Anomalies are always attacks"], answer: 1, why: "The same activity can be routine or alarming depending on the system's normal pattern." },
+    ],
+  },
+  {
+    slug: "recovery-and-verification",
+    level: 8,
+    form: "Mahagauri",
+    title: "Recovery and verification",
+    summary: "Removing the attacker, restoring from backups that survive, and proving the fix worked.",
+    minutes: 10,
+    tier: "Practitioner",
+    attack: [{ id: "T1486", name: "Data Encrypted for Impact" }],
+    lessons: [
+      {
+        heading: "Eradicate, then restore",
+        body: [
+          "Before restoring service, remove what the attacker left: persistence such as scheduled tasks or new accounts, the entry point (patch it), and every credential they may hold (reset and revoke sessions). Restoring onto a host the attacker still controls invites them straight back.",
+        ],
+      },
+      {
+        heading: "Backups that survive an attacker",
+        body: [
+          "The 3-2-1 rule: three copies of the data, on two different types of media, with one copy offsite. Against ransomware, at least one copy must also be offline or immutable, because attackers deliberately find and destroy reachable backups before encrypting.",
+          "An untested backup is a hope, not a backup. Restore from it regularly and time how long it takes.",
+        ],
+      },
+      {
+        heading: "Verify, don't assume",
+        body: [
+          "Recovery is finished when the observed state matches the expected state: services healthy, the indicators gone, no beacon, no new persistence. Keep watching for a while, because re-infection often shows up days later. Close the incident only once that is verified.",
+        ],
+      },
+    ],
+    realLife: [
+      "Keep at least one offline or immutable backup, and test a restore every quarter.",
+      "Before restoring, remove persistence and reset every credential the attacker could hold.",
+      "Write down what recovered looks like, then check each item before closing.",
+      "Watch recovered systems closely for a week afterwards.",
+    ],
+    drill: { href: "/how-it-works", label: "See how verification and rollback work in the loop" },
+    quiz: [
+      { q: "The 3-2-1 backup rule means…", options: ["3 backups a day, 2 admins, 1 password", "3 copies, on 2 types of media, 1 offsite", "Back up every 3 hours for 2 days", "3 servers in 2 regions with 1 backup"], answer: 1, why: "Three copies, two media types and one offsite copy, so no single failure destroys all of them." },
+      { q: "Why keep an offline or immutable backup against ransomware?", options: ["It is cheaper", "Attackers find and destroy reachable backups before encrypting", "Ransomware cannot read tape", "It is faster to restore"], answer: 1, why: "A backup the attacker can reach is a backup the attacker can delete or encrypt." },
+      { q: "What must happen before restoring a compromised host?", options: ["Nothing; restore immediately", "Remove persistence, close the entry point and reset credentials", "Email the attacker", "Delete all logs"], answer: 1, why: "Otherwise the attacker returns through what they left behind." },
+      { q: "When is recovery complete?", options: ["When the server reboots", "When the observed state is verified to match the expected state", "When the ticket is closed", "After 24 hours"], answer: 1, why: "Verification compares what is actually observed with what 'fixed' was defined to mean." },
+      { q: "What is an untested backup worth?", options: ["The same as a tested one", "Unknown; you don't know whether it restores", "More, because it is newer", "Nothing; delete it"], answer: 1, why: "Only a successful restore proves a backup works." },
+    ],
+  },
+  {
+    slug: "capstone",
+    level: 9,
+    form: "Siddhidatri",
+    title: "Capstone — the whole loop",
+    summary: "Scenario questions that need every level: detect, investigate, contain, recover and learn.",
+    minutes: 12,
+    tier: "Mastery",
+    lessons: [
+      {
+        heading: "Putting it together",
+        body: [
+          "Every real incident uses more than one skill. A credential attack is found in logs (level 7), confirmed by spotting the success among the failures (level 5), scoped by following what the account did next (level 6), contained in proportion (level 1), recovered and verified (level 8), and turned into a better detection (level 7 again).",
+          "These questions are scenarios. Read each one as a defender would: what do I know, what don't I know yet, and what is the proportionate next step?",
+        ],
+      },
+    ],
+    realLife: [
+      "Run a tabletop exercise: walk through one of these scenarios with your team.",
+      "After every real incident, note which level's skill would have caught it sooner.",
+    ],
+    drill: { href: "/training#drills", label: "Clear every practice drill" },
+    quiz: [
+      { q: "412 failed sign-ins from one new network, then one success. What comes first?", options: ["Block the whole country", "Investigate what the successful account did, and revoke its sessions", "Wait for more failures", "Reset every password in the company"], answer: 1, why: "The success is the incident: that account is now in the attacker's hands." },
+      { q: "A workstation beacons every 60 s to a rare domain and has new SMB peers. What do you do?", options: ["Isolate the workstation and close the case", "Scope which hosts are involved, then contain all of them", "Ignore it; HTTPS is encrypted", "Reboot the workstation"], answer: 1, why: "Movement has already happened. Containing one host while the attacker holds another tips them off." },
+      { q: "A user approved an OAuth consent on a phishing page, and a token read their mailbox. What must be revoked?", options: ["Only the password", "The OAuth grant and its tokens", "The user's laptop", "Nothing; it was only consent"], answer: 1, why: "The token, not the password, is what has access. A password reset leaves an OAuth grant working." },
+      { q: "Two vulnerabilities: one CVSS 9.8 with no known exploitation, one CVSS 7.5 listed in CISA KEV. Patch which first?", options: ["The 9.8", "The KEV-listed one", "Neither", "Whichever is older"], answer: 1, why: "KEV means attackers are exploiting it now. Active exploitation outranks theoretical severity." },
+      { q: "Ransomware hits; the backups were on a file share in the same domain. What is the likely problem?", options: ["None", "The backups were reachable and are probably encrypted too", "Backups are too slow", "The share was full"], answer: 1, why: "Reachable backups are a target. That is why one copy must be offline or immutable." },
+      { q: "An alert matches an IP from an 18-month-old threat feed. What is it?", options: ["Proof of compromise", "A lead to check, since the address may have changed hands", "A false alarm to ignore", "A reason to shut down the network"], answer: 1, why: "Indicators age. Check context and current ownership before acting." },
+      { q: "You find T1053.005 on a host. What has the attacker done?", options: ["Encrypted files", "Set up persistence with a scheduled task", "Sent phishing", "Stolen a password from a browser"], answer: 1, why: "T1053.005 is Scheduled Task, a persistence mechanism." },
+      { q: "Before isolating a production database server, what must be ready?", options: ["Nothing", "The rollback, the expected state afterwards, and approval proportionate to the risk", "A press release", "A new server"], answer: 1, why: "Isolating production is high impact: define the way back and get the right approval first." },
+    ],
+  },
 ];
+
+MODULES.sort((a, b) => a.level - b.level);
+
+/** The awareness level reached: the highest level with every level below it
+ *  passed too. 0 means not started. */
+export function levelReached(passed: (slug: string) => boolean): number {
+  let level = 0;
+  for (const m of MODULES) {
+    if (m.level === level + 1 && passed(m.slug)) level = m.level;
+    else break;
+  }
+  return level;
+}
 
 export function moduleBySlug(slug: string): Module | undefined {
   return MODULES.find((m) => m.slug === slug);

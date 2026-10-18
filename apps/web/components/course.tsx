@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui";
-import { MODULES, PASS_MARK, type Question } from "@/lib/training";
+import { levelReached, MODULES, PASS_MARK, type Question } from "@/lib/training";
 
 const KEY = "pashu.training.v1";
 
@@ -189,9 +189,37 @@ export function Evaluation() {
     ? attempted.reduce((sum, m) => sum + store[m.slug].best, 0) / attempted.length
     : null;
   const share = Math.round((passed / MODULES.length) * 100);
+  const level = levelReached((slug) => Boolean(store[slug]?.passed));
+  const reached = MODULES.find((m) => m.level === level);
 
   return (
     <div data-evaluation className="space-y-5">
+      <div data-level={level} className="rounded-xl border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/5 p-4">
+        <p className="label">Your awareness level</p>
+        <p className="mt-1 text-2xl font-semibold">
+          {level === 0 ? "Not started" : `Level ${level} · ${reached?.form}`}
+        </p>
+        <ol className="mt-3 flex gap-1" aria-label="Nine levels">
+          {MODULES.map((m) => (
+            <li
+              key={m.slug}
+              title={`Level ${m.level} · ${m.form} — ${m.title}`}
+              className={`h-2 flex-1 rounded-full ${
+                store[m.slug]?.passed
+                  ? m.level <= level
+                    ? "bg-[rgb(var(--astra))]"
+                    : "bg-[rgb(var(--astra))]/40"
+                  : "bg-[rgb(var(--raised))]"
+              }`}
+            />
+          ))}
+        </ol>
+        <p className="mt-2 text-xs text-[rgb(var(--faint))]">
+          {level < MODULES.length
+            ? `Next: level ${level + 1} — ${MODULES[level]?.title}`
+            : "All nine levels passed."}
+        </p>
+      </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--ground))] p-4">
           <p className="label">Modules passed</p>
@@ -210,7 +238,7 @@ export function Evaluation() {
         <div className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--ground))] p-4">
           <p className="label">Status</p>
           <p className="mt-1 text-2xl font-semibold">
-            {passed === MODULES.length ? "Course complete" : passed > 0 ? "In progress" : "Not started"}
+            {passed === MODULES.length ? "All nine passed" : passed > 0 ? "In progress" : "Not started"}
           </p>
           <p className="mt-0.5 text-xs text-[rgb(var(--faint))]">pass mark {PASS_MARK * 100}% per module</p>
         </div>
@@ -221,8 +249,8 @@ export function Evaluation() {
           const r = store[m.slug];
           return (
             <li key={m.slug} className="flex items-center gap-3 text-sm">
-              <Link href={`/training/${m.slug}`} className="focusable w-56 shrink-0 truncate rounded hover:text-[rgb(var(--astra))]">
-                {m.title}
+              <Link href={`/training/${m.slug}`} className="focusable w-64 shrink-0 truncate rounded hover:text-[rgb(var(--astra))]">
+                <span className="tnum text-[rgb(var(--faint))]">{m.level}.</span> {m.title}
               </Link>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgb(var(--raised))]" aria-hidden="true">
                 <div

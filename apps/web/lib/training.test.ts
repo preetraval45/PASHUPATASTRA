@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MODULES, PASS_MARK } from "./training.ts";
+import { levelReached, MODULES, PASS_MARK } from "./training.ts";
 
 test("module slugs are unique", () => {
   const slugs = MODULES.map((m) => m.slug);
@@ -36,4 +36,16 @@ test("ATT&CK ids are well formed", () => {
   for (const m of MODULES) {
     for (const t of m.attack ?? []) assert.match(t.id, /^T\d{4}(\.\d{3})?$/, `${m.slug}: ${t.id}`);
   }
+});
+
+test("nine levels, one per Navadurga form, in order", () => {
+  assert.deepEqual(MODULES.map((m) => m.level), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.equal(new Set(MODULES.map((m) => m.form)).size, 9);
+});
+
+test("a level counts only with every level below it passed", () => {
+  const passed = new Set(["incident-response", "att-and-ck", "threat-intel"]);
+  assert.equal(levelReached((slug) => passed.has(slug)), 2);
+  assert.equal(levelReached(() => false), 0);
+  assert.equal(levelReached(() => true), 9);
 });

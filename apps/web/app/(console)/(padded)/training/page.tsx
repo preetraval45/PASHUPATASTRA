@@ -35,7 +35,7 @@ export default async function TrainingPage() {
     >
       <section className="grid gap-4 md:grid-cols-4">
         {[
-          { n: "1", t: "Learn", b: `${MODULES.length} modules, about ${minutes} minutes in all` },
+          { n: "1", t: "Learn", b: `${MODULES.length} levels, about ${minutes} minutes in all` },
           { n: "2", t: "Apply", b: "a real-life checklist with every module" },
           { n: "3", t: "Test", b: `${questions} questions, each answer explained` },
           { n: "4", t: "Practise", b: "scored drills on full incidents" },
@@ -57,9 +57,16 @@ export default async function TrainingPage() {
       </Panel>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold tracking-tight">Course modules</h2>
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Nine levels of cyber awareness</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
+            One level for each of the nine Sati models&rsquo; forms, from Shailaputri, the foundation, to
+            Siddhidatri, mastery. Pass a level&rsquo;s test to reach it; your level is the highest one with
+            every level below it passed.
+          </p>
+        </div>
         <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {MODULES.map((m, i) => (
+          {MODULES.map((m) => (
             <li key={m.slug}>
               <Link
                 href={`/training/${m.slug}`}
@@ -67,8 +74,8 @@ export default async function TrainingPage() {
                 className="focusable lift group flex h-full flex-col rounded-xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] p-5 transition hover:border-[rgb(var(--astra))]/50"
               >
                 <span className="flex items-center gap-2">
-                  <span className="label">Module {i + 1}</span>
-                  <span className="text-xs text-[rgb(var(--faint))]">· {m.level} · {m.minutes} min</span>
+                  <span className="label">Level {m.level} · {m.form}</span>
+                  <span className="text-xs text-[rgb(var(--faint))]">· {m.minutes} min</span>
                   <span className="ml-auto"><ModuleStatus slug={m.slug} /></span>
                 </span>
                 <span className="mt-3 text-base font-semibold group-hover:text-[rgb(var(--astra))]">{m.title}</span>
@@ -89,7 +96,7 @@ export default async function TrainingPage() {
         </ol>
       </section>
 
-      <section className="space-y-4">
+      <section id="drills" className="scroll-mt-24 space-y-4">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Practice drills</h2>
           <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
