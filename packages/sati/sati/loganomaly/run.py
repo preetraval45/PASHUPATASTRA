@@ -1,6 +1,6 @@
 """Train and test Kalaratri v0 — log anomaly detection on LogHub HDFS.
 
-    python -m sati.logs.run --cache .cache/loghub --out results/kalaratri
+    python -m sati.loganomaly.run --cache .cache/loghub --out results/kalaratri
 
 **Split by time, never at random.** Blocks are taken in the order the log
 produced them: the first 60% train, the next 20% choose the threshold, the last

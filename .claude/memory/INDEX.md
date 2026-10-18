@@ -63,3 +63,4 @@ Protocol: before every push, write a topic-named file from
 - [DiagnosisHarness](DiagnosisHarness.md) — RP-14 done: model-agnostic diagnose.py + benchdiagnosis.py; needs root_cause_label/options keys from RP-13
 - [Shailaputri](Shailaputri.md) — RP-60: NAB detector (causal features, LightGBM, leave-one-family-out vs 4 statistical), CI job, Models page section
 - [Kalaratri](Kalaratri.md) — RP-62: LogHub HDFS log-anomaly model, time split, PCA + unseen baselines, metrics only (research-only data)
+- [Kushmanda](Kushmanda.md) — RP-65: own LM (permissive corpus, own BPE, from-scratch GPT) trained on Kaggle via kaggle-kushmanda.yml; needs KAGGLE_API_TOKEN + KAGGLE_USERNAME secrets

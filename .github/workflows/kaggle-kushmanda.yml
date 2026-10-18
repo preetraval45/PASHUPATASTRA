@@ -1,0 +1,116 @@
+name: Train Kushmanda on Kaggle
+
+# Kushmanda (adr/Navadurga, model 4) is a language model, and training one
+# needs a GPU. Kaggle gives a free one; this workflow sends the training script
+# there, waits for it, and commits the results — nothing runs on anyone's PC.
+#
+# Inert until two repository secrets exist: KAGGLE_API_TOKEN (Kaggle → Settings
+# → API → Create New Token) and KAGGLE_USERNAME. The Kaggle account needs a
+# verified phone number for GPU and internet access in notebooks.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - packages/sati/sati/lm/**
+      - kaggle/kushmanda/**
+      - .github/workflows/kaggle-kushmanda.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kaggle-kushmanda
+  cancel-in-progress: false
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+    steps:
+      - name: secrets present?
+        id: gate
+        run: |
+          if [ -z "$KAGGLE_API_TOKEN" ] || [ -z "$KAGGLE_USERNAME" ]; then
+            echo "::warning::KAGGLE_API_TOKEN and KAGGLE_USERNAME are not set — Kushmanda was not trained"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.gate.outputs.ready == 'true'
+        uses: actions/checkout@v4
+      - if: steps.gate.outputs.ready == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: steps.gate.outputs.ready == 'true'
+        run: pip install "kaggle>=1.7"
+      - name: prepare the kernel
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          mkdir -p build/kernel
+          sed "s/__COMMIT__/${GITHUB_SHA}/" kaggle/kushmanda/run.py > build/kernel/run.py
+          cat > build/kernel/kernel-metadata.json <<JSON
+          {
+            "id": "${KAGGLE_USERNAME}/sati-kushmanda",
+            "title": "sati-kushmanda",
+            "code_file": "run.py",
+            "language": "python",
+            "kernel_type": "script",
+            "is_private": true,
+            "enable_gpu": true,
+            "enable_internet": true,
+            "dataset_sources": [],
+            "competition_sources": [],
+            "kernel_sources": []
+          }
+          JSON
+      - name: push to Kaggle
+        if: steps.gate.outputs.ready == 'true'
+        run: kaggle kernels push -p build/kernel
+      - name: wait for the GPU run
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          for i in $(seq 1 120); do
+            status=$(kaggle kernels status "${KAGGLE_USERNAME}/sati-kushmanda" 2>&1 | tail -1)
+            echo "$(date -u +%H:%M) $status"
+            case "$status" in
+              *complete*|*COMPLETE*) exit 0 ;;
+              *error*|*ERROR*|*cancel*|*CANCEL*) exit 1 ;;
+            esac
+            sleep 150
+          done
+          echo "timed out waiting for Kaggle"; exit 1
+      - name: download the outputs
+        if: always() && steps.gate.outputs.ready == 'true'
+        run: |
+          mkdir -p results/kushmanda
+          kaggle kernels output "${KAGGLE_USERNAME}/sati-kushmanda" -p results/kushmanda || true
+          find results/kushmanda -maxdepth 3 -type f | head -50
+      - if: always() && steps.gate.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kushmanda
+          path: results/kushmanda/
+      - name: commit the generated results
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          RESULTS=$(find results/kushmanda -name results.json | head -1)
+          [ -n "$RESULTS" ] || { echo "no results.json in the Kaggle output"; exit 1; }
+          mkdir -p docs/research/models apps/web/lib/models
+          cp "$RESULTS" docs/research/models/kushmanda.results.json
+          cp "$RESULTS" apps/web/lib/models/kushmanda.results.json
+          (cd packages/sati && python -m sati.lm.report "../../$RESULTS") > docs/research/models/kushmanda.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/research/models apps/web/lib/models
+          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
+          git commit -m "docs(models): Kushmanda v0 results from Kaggle, run ${{ github.run_id }}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            sleep 10
+          done

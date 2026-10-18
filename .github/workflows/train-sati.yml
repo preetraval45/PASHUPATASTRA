@@ -34,6 +34,8 @@ jobs:
       # packages/core is a dependency and is not on PyPI, so it is installed
       # from the tree in the same command.
       - run: pip install -e packages/core -e "packages/sati[dev]"
+      # CPU PyTorch for Kushmanda's model tests; training itself runs on Kaggle.
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - run: ruff check packages/sati
       - run: pytest packages/sati -q
 
