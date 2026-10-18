@@ -251,3 +251,73 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-api:
+    name: deploy api
+    # The API on Lambda had drifted weeks behind main — /usage, /figures,
+    # /impact, /attack/matrix, /detections and /models all answered 404 in
+    # production on 18 October while the site linked to them — because the only
+    # deploy path was a command run by hand from a machine with AWS keys. The
+    # owner wants nothing run from their machine, so it runs here, after every
+    # test job, from the tree those jobs just proved.
+    #
+    # Inert until two repository secrets exist: AWS_ACCESS_KEY_ID and
+    # AWS_SECRET_ACCESS_KEY (the IAM user made for this project). Without them
+    # the job says so and stops, rather than failing the run.
+    #
+    # Safe to re-run: deploylambda.py carries the model key already on the
+    # function forward, because update-function-configuration replaces the
+    # whole environment block; createdynamo.py leaves an existing table alone;
+    # and a DynamoDB the role cannot reach falls back to memory, never to errors.
+    needs: [core, api, connectors, web, dependencies, secrets]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-api
+      cancel-in-progress: false
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+      API: https://265d0hsmwa.execute-api.us-east-1.amazonaws.com/api/v1
+    steps:
+      - name: secrets present?
+        id: gate
+        run: |
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "::warning::AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set — the API was tested but not deployed"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.gate.outputs.ready == 'true'
+        uses: actions/checkout@v4
+      - if: steps.gate.outputs.ready == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: who is deploying
+        if: steps.gate.outputs.ready == 'true'
+        run: aws sts get-caller-identity --query Arn --output text
+      - name: build the archive
+        if: steps.gate.outputs.ready == 'true'
+        run: python scripts/buildlambda.py
+      - name: the table it persists to
+        if: steps.gate.outputs.ready == 'true'
+        run: python scripts/createdynamo.py
+      - name: deploy
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          ROLE=$(aws lambda get-function-configuration --function-name pashupatastra-api --query Role --output text)
+          python scripts/deploylambda.py --role "$ROLE" --cors https://pashupatastra.vercel.app
+      - name: the routes the site needs answer
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          sleep 10
+          for path in health usage figures impact models attack/matrix detections; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$API/$path")
+            echo "$path -> $code"
+            [ "$code" = "200" ] || exit 1
+          done
+          curl -s "$API/health"

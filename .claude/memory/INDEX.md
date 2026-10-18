@@ -50,3 +50,4 @@ Protocol: before every push, write a topic-named file from
 - [ConsoleAsApp](ConsoleAsApp.md) — RP-48–50 on branch ui-redesign: (site)/(console) route groups, sidebar shell, full-screen Ask, /models allow-list + picker
 - [ShellMovedTests](ShellMovedTests.md) — CI red after the shell merge: moved page path in waves.test.ts, Attribution missing from console; run both API pytest modes + npm test before pushing to main
 - [OneSiteAnalyticsTraining](OneSiteAnalyticsTraining.md) — one sidebar frame for all pages, Ask→Sati AI, /analytics (real data, interactive), /training; prod API is weeks stale; Claude now builds+trains all models
+- [ApiDeploysFromCI](ApiDeploysFromCI.md) — RP-57: CI deploys the Lambda API once AWS key secrets exist; /blue-team 308→/training
