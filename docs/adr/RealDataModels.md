@@ -28,14 +28,14 @@ free services are used.
 | Model | Job | Real training / test data | Licence of the data |
 |---|---|---|---|
 | **Sati-RCA** | Rank the root-cause service of an incident, and name the fault type | **RCAEval** RE1 + RE2 — 645 real fault-injection cases on Online Boutique, Sock Shop, Train Ticket | MIT (Hugging Face copy) |
-| **Sati-Detect (metrics)** | Anomaly scoring on metric series | **NAB** and **SMD** — real server and application metrics with labelled anomalies | NAB: AGPL-3.0 (code) / data per repo · SMD: MIT (OmniAnomaly) |
-| **Sati-Detect (network)** | Flag intrusion traffic | **UNSW-NB15** and **CIC-IDS2017** — real captured traffic with labelled attacks | research use with citation (UNSW, UNB CIC) |
+| **Sati-Detect (metrics)** | Anomaly scoring on metric series | **NAB** and **SMD** — real server and application metrics with labelled anomalies | MIT (both) |
+| **Sati-Detect (network)** | Flag intrusion traffic | **UNSW-NB15** and **CIC-IDS2017** — real captured traffic with labelled attacks | research use; UNSW-NB15 commercial use by the authors' agreement |
 | **Sati-Detect (logs)** | Flag anomalous log sequences | **LogHub** HDFS and BGL — real system logs with anomaly labels | research use with citation (LogPAI) |
 | **Sati-Embed** | Incident text → vectors for Smriti | LogHub + incident narratives from the above | as above |
 | **Sati-LM** *(later)* | Write the structured hypothesis | LogHub corpus + the above | as above |
 
-Each dataset gets a datasheet before training (source, licence, size, labels,
-known flaws). A dataset whose licence forbids publishing derived weights is
+Each dataset gets a datasheet before training ([datasheets.md](../research/datasheets.md):
+source, licence, size, labels, known flaws). A dataset whose licence forbids publishing derived weights is
 used for evaluation only.
 
 ### Splits that test diagnosis, not memory
