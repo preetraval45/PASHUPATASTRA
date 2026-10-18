@@ -7,6 +7,7 @@
  */
 
 import katyayani from "./models/katyayani.results.json";
+import shailaputri from "./models/shailaputri.results.json";
 
 export type ModelStatus = "trained" | "training" | "planned";
 
@@ -25,7 +26,7 @@ export interface SatiModel {
 }
 
 export const MODELS: SatiModel[] = [
-  { n: 1, id: "sati-shailaputri", name: "Shailaputri", nature: "the steady foundation", job: "Metric anomaly detection — learns what normal looks like for every series", stage: "Observe", data: ["NAB", "SMD"], status: "planned", task: "RP-60" },
+  { n: 1, id: "sati-shailaputri", name: "Shailaputri", nature: "the steady foundation", job: "Metric anomaly detection — learns what normal looks like for every series", stage: "Observe", data: ["NAB", "SMD"], status: "training", task: "RP-60" },
   { n: 2, id: "sati-brahmacharini", name: "Brahmacharini", nature: "discipline and study", job: "Embeddings for memory — finds the past incident this one resembles", stage: "Remember", data: ["LogHub", "incident text"], status: "planned", task: "RP-64" },
   { n: 3, id: "sati-chandraghanta", name: "Chandraghanta", nature: "the bell that warns", job: "Network intrusion alerting — flags attack traffic by family", stage: "Observe", data: ["UNSW-NB15", "CIC-IDS2017"], status: "planned", task: "RP-61" },
   { n: 4, id: "sati-kushmanda", name: "Kushmanda", nature: "the creator", job: "Writes the structured hypothesis and explanation — Sati's own language model", stage: "Explain", data: ["LogHub corpus", "incident text"], status: "planned", task: "RP-65" },
@@ -60,3 +61,21 @@ export interface RcaResults {
 }
 
 export const KATYAYANI = katyayani as unknown as RcaResults;
+
+type DetectMetrics = { f1: number; precision: number; recall: number; false_alarms_per_1000: number; mean_lead: number };
+
+export interface DetectResults {
+  pending?: string;
+  dataset: { name: string; repo: string; revision: string; series: number; families: string[] };
+  folds: { held_out: string; series: number; threshold: number; detectors: Record<string, DetectMetrics> }[];
+  mean_across_families: Record<string, DetectMetrics>;
+  model_sha256: string;
+}
+
+export const SHAILAPUTRI = shailaputri as unknown as DetectResults;
+
+/** A model counts as trained only when its results file says so. */
+export function statusOf(model: SatiModel): ModelStatus {
+  if (model.id === "sati-shailaputri") return SHAILAPUTRI.pending ? "training" : "trained";
+  return model.status;
+}

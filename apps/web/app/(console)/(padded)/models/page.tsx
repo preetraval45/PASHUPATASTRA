@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
-import { KATYAYANI, MODELS, STAGES, type ModelStatus } from "@/lib/navadurga";
+import { KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
 export const metadata: Metadata = {
   title: "Sati models",
@@ -34,7 +34,26 @@ const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
 export default function ModelsPage() {
   const r = KATYAYANI;
   const loso = r.pooled["leave-one-system-out"];
-  const trained = MODELS.filter((m) => m.status === "trained").length;
+  const trained = MODELS.filter((m) => statusOf(m) === "trained").length;
+  const s = SHAILAPUTRI.pending ? null : SHAILAPUTRI;
+  const statistical = s
+    ? Object.keys(s.mean_across_families).filter((k) => k !== "shailaputri-v0")
+    : [];
+  const bestStatistical = s
+    ? statistical.reduce((best, k) =>
+        s.mean_across_families[k].f1 > s.mean_across_families[best].f1 ? k : best,
+      statistical[0])
+    : null;
+  const detectRows: CompareRow[] =
+    s && bestStatistical
+      ? s.folds.map((f) => ({
+          label: f.held_out,
+          hint: `family never seen in training · best statistical: ${bestStatistical}`,
+          model: { value: f.detectors["shailaputri-v0"].f1, ci: [] },
+          baseline: { value: f.detectors[bestStatistical].f1, ci: [] },
+          n: f.series,
+        }))
+      : [];
 
   const systemRows: CompareRow[] = r.splits
     .filter((s) => s.scheme === "leave-one-system-out")
@@ -88,7 +107,7 @@ export default function ModelsPage() {
                   <li key={m.id} className="flex items-center gap-1.5 text-sm">
                     <span
                       aria-hidden="true"
-                      className={`h-1.5 w-1.5 rounded-full ${m.status === "trained" ? "bg-[rgb(var(--ok))]" : "bg-[rgb(var(--edge-strong))]"}`}
+                      className={`h-1.5 w-1.5 rounded-full ${statusOf(m) === "trained" ? "bg-[rgb(var(--ok))]" : "bg-[rgb(var(--edge-strong))]"}`}
                     />
                     <a href={`#${m.id}`} className="focusable rounded hover:text-[rgb(var(--astra))]">{m.name}</a>
                   </li>
@@ -106,7 +125,7 @@ export default function ModelsPage() {
             id={m.id}
             data-model={m.id}
             className={`scroll-mt-24 rounded-xl border bg-[rgb(var(--panel))] p-5 ${
-              m.status === "trained" ? "border-[rgb(var(--astra))]/50" : "border-[rgb(var(--edge))]"
+              statusOf(m) === "trained" ? "border-[rgb(var(--astra))]/50" : "border-[rgb(var(--edge))]"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -115,7 +134,7 @@ export default function ModelsPage() {
               </span>
               <span className="label">{m.stage}</span>
               <span className="ml-auto">
-                <Badge status={STATUS[m.status].status}>{STATUS[m.status].label}</Badge>
+                <Badge status={STATUS[statusOf(m)].status}>{STATUS[statusOf(m)].label}</Badge>
               </span>
             </div>
             <p className="mt-3 text-[0.9375rem] leading-snug text-[rgb(var(--ink))]">{m.job}</p>
@@ -142,6 +161,54 @@ export default function ModelsPage() {
           </li>
         ))}
       </ul>
+
+      {s && (
+        <section id="shailaputri-results" className="scroll-mt-24 space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Shailaputri — anomalies in real metric series</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              Trained on {s.dataset.series} real series from NAB, each family of series held out in turn, and scored
+              online by the same harness as the four statistical detectors on exactly the same series. F1 is
+              read together with false alarms per 1000 points, never alone.
+            </p>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Panel title="F1 on a family it never saw" aside="vs the best statistical detector">
+              <CompareBars rows={detectRows} metric="Episode recall and point precision combined; the threshold was chosen on training families only." />
+            </Panel>
+            <Panel title="Mean across held-out families">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                      <th className="py-2 pr-3 font-normal">Detector</th>
+                      <th className="py-2 pr-3 text-right font-normal">F1</th>
+                      <th className="py-2 pr-3 text-right font-normal">Recall</th>
+                      <th className="py-2 pr-3 text-right font-normal">False alarms / 1000</th>
+                      <th className="py-2 text-right font-normal">Lead</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[rgb(var(--edge))]">
+                    {Object.entries(s.mean_across_families).map(([name, m]) => (
+                      <tr key={name}>
+                        <td className="py-2 pr-3">{name === "shailaputri-v0" ? <strong>Shailaputri</strong> : name}</td>
+                        <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>
+                        <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
+                        <td className="tnum py-2 pr-3 text-right">{m.false_alarms_per_1000.toFixed(1)}</td>
+                        <td className="tnum py-2 text-right">{m.mean_lead.toFixed(1)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-[rgb(var(--faint))]">
+                NAB&rsquo;s labels are windows, and Wu &amp; Keogh (2021) show several NAB series are trivial or mislabelled;
+                these numbers inherit those limits.
+              </p>
+            </Panel>
+          </div>
+        </section>
+      )}
 
       <section id="katyayani-results" className="scroll-mt-24 space-y-6">
         <div>

@@ -31,7 +31,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e "packages/sati[dev]"
+      # packages/core is a dependency and is not on PyPI, so it is installed
+      # from the tree in the same command.
+      - run: pip install -e packages/core -e "packages/sati[dev]"
       - run: ruff check packages/sati
       - run: pytest packages/sati -q
 
@@ -46,7 +48,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e packages/sati
+      - run: pip install -e packages/core -e packages/sati
       # The download is cached per dataset revision inside the cache directory,
       # so a new upload to RCAEval is fetched fresh rather than mixed in.
       - uses: actions/cache@v4
@@ -76,3 +78,45 @@ jobs:
           git commit -m "docs(models): Sati-RCA v0 results from run ${{ github.run_id }}"
           git pull --rebase origin main
           git push origin HEAD:main
+
+  shailaputri:
+    # Model 1 of the nine (adr/Navadurga): metric anomaly detection on NAB's
+    # real series, leave-one-family-out, against the four statistical detectors.
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/nab
+          key: nab-v1
+      - name: train and evaluate on NAB
+        working-directory: packages/sati
+        run: python -m sati.detect.run --cache ../../.cache/nab --out ../../results/shailaputri
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shailaputri
+          path: results/shailaputri/
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models apps/web/lib/models
+          cp results/shailaputri/results.json docs/research/models/shailaputri.results.json
+          cp results/shailaputri/shailaputri-v0.meta.json docs/research/models/shailaputri-v0.meta.json
+          cp results/shailaputri/results.json apps/web/lib/models/shailaputri.results.json
+          (cd packages/sati && python -m sati.detect.report ../../results/shailaputri/results.json) > docs/research/models/shailaputri.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/research/models apps/web/lib/models
+          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
+          git commit -m "docs(models): Shailaputri v0 results from run ${{ github.run_id }}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            sleep 10
+          done
