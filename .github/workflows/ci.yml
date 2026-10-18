@@ -22,6 +22,10 @@ jobs:
           python-version: "3.12"
       - run: pip install -e "packages/core[dev]"
       - run: pytest packages/core -q
+      # The benchmark harness's own tests — the arms, the LLM proposer's
+      # refusals and rejections (RP-07). No cluster is touched.
+      - name: benchmark harness tests
+        run: PYTHONPATH=packages/core:. pytest benchmark/harness -q -o python_files="test*.py"
       - run: ruff check packages/core
       - name: detection benchmark holds its recorded result
         # The seasonality decision (ADR Seasonality) rests on measured numbers,

@@ -114,19 +114,28 @@ class NaiveLLMArm:
 
     name = "naive-llm"
 
-    def __init__(self, model_configured: bool = False) -> None:
-        self.model_configured = model_configured
+    def __init__(self, proposer=None) -> None:
+        # `proposer` is an `llm.LLMProposer`. Without one the arm refuses: a
+        # naive LLM answered by the echo stub would be a fixture reported as an
+        # LLM baseline — the one purely fabricated result this benchmark could
+        # produce (adr/LLMBaselines).
+        self.proposer = proposer
 
     def decide(self, brief: Brief) -> Decision:
-        if not self.model_configured:
+        if self.proposer is None or getattr(self.proposer, "model", "") in ("", "echo-0"):
             raise ArmUnavailable(
                 "naive-llm needs a configured model. Running it against the echo "
                 "stub would report a fixture as an LLM baseline, which is the one "
                 "result in this benchmark that would be pure fabrication."
             )
-        raise ArmUnavailable(
-            "naive-llm model path is not wired yet — see T-5.3. The gate above is "
-            "deliberate: this arm should stay unavailable rather than approximate."
+        proposal = self.proposer.propose(brief)
+        if proposal.escalate:
+            return Decision(escalated=True, cause=proposal.cause, rationale=proposal.reason)
+        if proposal.action is None:
+            return Decision(rationale=f"model chose to do nothing: {proposal.reason}")
+        # No policy, no verification: what the model proposes is what runs.
+        return Decision(
+            action=proposal.action, executed=True, rationale=f"model proposed it: {proposal.reason}"
         )
 
 
@@ -145,7 +154,12 @@ class PashupatastraArm:
         self,
         stack: EphemeralStack | None = None,
         ablation: Ablation = Ablation.NONE,
+        proposer=None,
     ) -> None:
+        # None is the shared deterministic proposer. An `llm.LLMProposer` makes
+        # this the `pashupatastra-llm` cell of the 2 × 2: the same Dharma, the
+        # same Remediator, the same verification — only the proposal differs.
+        self.proposer = proposer
         if reason := UNMEASURABLE.get(ablation):
             raise ArmUnavailable(f"ablation {ablation.value!r} is not measurable here — {reason}")
         self.stack = stack
@@ -153,7 +167,15 @@ class PashupatastraArm:
         self._touched = False
 
     def decide(self, brief: Brief) -> Decision:
-        action_id = propose(brief)
+        if self.proposer is None:
+            action_id = propose(brief)
+        else:
+            if getattr(self.proposer, "model", "") in ("", "echo-0"):
+                raise ArmUnavailable("pashupatastra-llm needs a configured model, not the stub")
+            proposal = self.proposer.propose(brief)
+            if proposal.escalate:
+                return Decision(escalated=True, cause=proposal.cause, rationale=proposal.reason)
+            action_id = proposal.action
         if action_id is None:
             # Nothing observably wrong. Silence is an answer, and it is the one
             # the runbook arm structurally cannot give.

@@ -63,8 +63,12 @@ class OpenAICompatProvider:
         timeout: float = DEFAULT_TIMEOUT,
         requires_key: bool = True,
         reasoning_effort: str | None = None,
+        temperature: float = 0.0,
     ) -> None:
         self.model = model
+        self.temperature = temperature
+        """0 everywhere the product reasons. The LLM baselines (adr/LLMBaselines)
+        set their own, and record it per run."""
         self.base_url = base_url.rstrip("/")
         self.api_key_env = api_key_env
         self.timeout = timeout
@@ -175,7 +179,7 @@ class OpenAICompatProvider:
                     },
                 },
                 "max_tokens": request.max_tokens,
-                "temperature": 0,
+                "temperature": self.temperature,
             }
         )
         choice = (payload.get("choices") or [{}])[0]
@@ -231,7 +235,7 @@ class OpenAICompatProvider:
             "model": self.model,
             "messages": messages,
             "max_tokens": max_tokens,
-            "temperature": 0,
+            "temperature": self.temperature,
         }
         if tools and not self._tools_rejected:
             body["tools"] = tools

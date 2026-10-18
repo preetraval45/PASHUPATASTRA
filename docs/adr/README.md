@@ -18,6 +18,7 @@ in the filename.
 | [ExternalBenchmark](ExternalBenchmark.md) — feasibility of RCAEval, OpenRCA, AIOpsLab, ITBench; RCAEval chosen | 2026-10-18 | Accepted |
 | [RealDataModels](RealDataModels.md) — Claude builds and trains every Sati model on real public data, on free cloud compute; splits that test diagnosis, not memory | 2026-10-18 | Accepted |
 | [Navadurga](Navadurga.md) — the nine Sati models, named for Navadurga, each with the job that fits its form; Katyayani (root cause) trained first | 2026-10-18 | Accepted |
+| [LLMBaselines](LLMBaselines.md) — 2 × 2: {deterministic, LLM} proposer × {no policy, Dharma + verification}; LLMs are baselines only | 2026-10-18 | Accepted |
 
 ## Planned
 

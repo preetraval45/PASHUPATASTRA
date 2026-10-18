@@ -210,13 +210,13 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* the Hugging Face LLM Course chapters on generation (temperature, top-p, greedy decoding). Then read [gateway.py](../../packages/core/pashupatastra/gateway.py) and `services/api/app/engines/providers/openaicompat.py`, and map each failure mode (refusal, truncation, invalid JSON) to where the code handles it.
   *Done when:* you can explain why temperature 0 is still not fully deterministic on a GPU. You will need this for constrained decoding in Sati-LM.
 
-- [ ] **RP-06 · ADR: LLM baselines (2 × 2)**
+- [x] **RP-06 · ADR: LLM baselines (2 × 2)** — *Done 18 Oct: [adr/LLMBaselines](../adr/LLMBaselines.md) Accepted. The plan's defaults applied at the owner's instruction to proceed (qwen2.5:7b, mistral 7B, llama3 8B; temperature 0.2; N = 3) — changeable before RP-09. Since 18 Oct the LLMs are the baseline Sati models must beat, never the brain.*
   **Both** · Claude draft; You 1 h · Depends: RP-04, RP-05
   *Why:* if only `naive-llm` gets a model, the comparison changes two variables at once. A 2 × 2 — {deterministic proposer, LLM proposer} × {no policy, Dharma + verification} — isolates each. Later, Sati becomes a third proposer row (RP-28).
   *Steps:* **Claude** drafts `docs/adr/LLMBaselines.md`, covering: the identical `Brief` and prompt for both LLM arms; the call goes through the Gateway to the Oracle Ollama endpoint, with the token from env, never the repo; temperature and seed recorded per run; LLM errors graded separately from wrong answers. **You** choose the models (default `qwen2.5:7b`, `mistral` 7B, `llama3` 8B) and the temperature (default 0.2).
   *Done when:* the ADR is committed with your decisions in it.
 
-- [ ] **RP-07 · Build the LLM baseline arms**
+- [~] **RP-07 · Build the LLM baseline arms** — *Built 18 Oct: `benchmark/harness/llm.py` (`LLMProposer` over the Gateway, `proposal_v1`, only allowed ids / do_nothing / escalate; `llm_error` and `off_list` kept apart from wrong answers), `naive-llm` wired, `pashupatastra-llm` = the same Dharma + Remediator + verification with the LLM proposer; both refuse the stub and refuse without `PASHU_BASELINE_BASE_URL`. 7 new tests, all 25 harness tests now in CI. Remains: three scenarios producing clean records against the Oracle endpoint — needs the endpoint URL and token as `PASHU_BASELINE_*`.*
   **Claude** · 1–2 sessions · review 1 h · Depends: RP-06
   *Steps:*
   1. Build a proposer behind the Gateway that takes a `Brief` and returns a validated proposal, restricted to `allowed_actions`, do-nothing or escalate.

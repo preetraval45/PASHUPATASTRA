@@ -193,12 +193,29 @@ GENERAL_ANSWER_V1: dict[str, Any] = {
 }
 
 
+PROPOSAL_V1: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["action", "reason"],
+    "properties": {
+        "action": {
+            "type": "string",
+            "description": "Exactly one of the allowed action ids in the brief, or "
+            "'do_nothing' when nothing is wrong, or 'escalate' to hand to a human. "
+            "Anything else is rejected (adr/LLMBaselines).",
+        },
+        "reason": {"type": "string", "description": "One sentence: why this action."},
+    },
+}
+
+
 SCHEMAS: dict[str, dict[str, Any]] = {
     "hypothesis_v1": HYPOTHESIS_V1,
     "summary_v1": SUMMARY_V1,
     "injection_report_v1": INJECTION_REPORT_V1,
     "chat_answer_v1": CHAT_ANSWER_V1,
     "general_answer_v1": GENERAL_ANSWER_V1,
+    "proposal_v1": PROPOSAL_V1,
 }
 
 

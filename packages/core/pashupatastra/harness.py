@@ -32,6 +32,9 @@ class Arm(StrEnum):
 
     PASHUPATASTRA = "pashupatastra"
     NAIVE_LLM = "naive_llm"
+    PASHUPATASTRA_LLM = "pashupatastra_llm"
+    """The full architecture with an LLM proposer — the fourth cell of the
+    2 × 2 in adr/LLMBaselines."""
     RUNBOOK = "runbook"
     HUMAN = "human"
 

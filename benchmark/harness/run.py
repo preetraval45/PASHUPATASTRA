@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -27,6 +28,7 @@ from benchmark.harness.arms import (  # noqa: E402
     GATED,
     Ablation,
     ArmUnavailable,
+    NaiveLLMArm,
     PashupatastraArm,
     RunbookArm,
 )
@@ -71,14 +73,24 @@ def build_arm(name: str, stack: EphemeralStack | None, ablation: str = "none"):
         return RunbookArm()
     if name == "pashupatastra":
         return PashupatastraArm(stack=stack, ablation=Ablation(ablation))
+    if name in ("naive-llm", "pashupatastra-llm"):
+        # adr/LLMBaselines. The model comes from PASHU_BASELINE_MODEL; there is
+        # no stub fallback — baseline_gateway refuses without a real endpoint.
+        from benchmark.harness.llm import LLMProposer, baseline_gateway
+
+        proposer = LLMProposer(baseline_gateway(os.environ.get("PASHU_BASELINE_MODEL", "qwen2.5:7b")))
+        if name == "naive-llm":
+            return NaiveLLMArm(proposer)
+        return PashupatastraArm(stack=stack, ablation=Ablation(ablation), proposer=proposer)
     return GATED[name]()
 
 
-ARM_NAMES = ("none", "always-act", "runbook", "pashupatastra", "naive-llm", "human")
+ARM_NAMES = ("none", "always-act", "runbook", "pashupatastra", "naive-llm", "pashupatastra-llm", "human")
 ARM_KIND = {
     "runbook": Arm.RUNBOOK,
     "pashupatastra": Arm.PASHUPATASTRA,
     "naive-llm": Arm.NAIVE_LLM,
+    "pashupatastra-llm": Arm.PASHUPATASTRA_LLM,
     "human": Arm.HUMAN,
 }
 
@@ -130,13 +142,18 @@ def main() -> int:
     if args.plan:
         return 0
 
-    if args.arm in GATED:
+    if args.arm in GATED or args.arm.endswith("-llm"):
         try:
-            build_arm(args.arm, None).decide(
-                Brief(scenario_id="probe", stack="", allowed_actions=(),
-                      forbidden_actions=(), risk_ceiling=0)
-            )
-        except ArmUnavailable as error:
+            built = build_arm(args.arm, None)
+            # The LLM arms are probed by building them — which fails without a
+            # real endpoint — not by asking the model about an empty brief,
+            # which would spend a call to learn nothing.
+            if not args.arm.endswith("-llm"):
+                built.decide(
+                    Brief(scenario_id="probe", stack="", allowed_actions=(),
+                          forbidden_actions=(), risk_ceiling=0)
+                )
+        except (ArmUnavailable, RuntimeError) as error:
             print(f"\nARM UNAVAILABLE — {args.arm}\n  {error}")
             return 2
 

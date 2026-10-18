@@ -46,11 +46,12 @@ def test_the_naive_llm_arm_refuses_without_a_configured_model() -> None:
         NaiveLLMArm().decide(brief(DEGRADED))
 
 
-def test_the_naive_llm_arm_still_refuses_once_a_model_is_claimed() -> None:
-    """The model path is not wired. Failing loudly beats silently behaving like
-    a second runbook under an LLM label."""
-    with pytest.raises(ArmUnavailable, match="not wired"):
-        NaiveLLMArm(model_configured=True).decide(brief(DEGRADED))
+def test_the_naive_llm_arm_refuses_without_a_real_model() -> None:
+    """Wired in RP-07, and still refuses without a model: failing loudly beats
+    silently behaving like a second runbook under an LLM label. The full set of
+    LLM-arm properties is in testllm.py."""
+    with pytest.raises(ArmUnavailable, match="needs a configured model"):
+        NaiveLLMArm().decide(brief(DEGRADED))
 
 
 def test_the_human_arm_cannot_be_simulated() -> None:
