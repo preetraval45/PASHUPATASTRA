@@ -101,7 +101,9 @@ jobs:
           key: nab-v1
       - name: train and evaluate on NAB
         working-directory: packages/sati
-        run: python -m sati.detect.run --cache ../../.cache/nab --out ../../results/shailaputri
+        # Pinned: the commit every reported number was measured at. Bumping it
+        # is a deliberate change, not something a rerun does on its own.
+        run: python -m sati.detect.run --cache ../../.cache/nab --out ../../results/shailaputri --revision ea702d75cc2258d9d7dd35ca8e5e2539d71f3140
       - uses: actions/upload-artifact@v4
         with:
           name: shailaputri

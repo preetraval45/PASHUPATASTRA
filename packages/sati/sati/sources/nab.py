@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import time
 import urllib.request
 from pathlib import Path
@@ -30,7 +31,13 @@ REAL_FAMILIES = ("realAWSCloudwatch", "realAdExchange", "realKnownCause", "realT
 
 
 def revision() -> str:
-    with urllib.request.urlopen(f"https://api.github.com/repos/{REPO}/commits/master", timeout=60) as r:
+    """NAB's current commit. Authenticated when a token is present: anonymous
+    calls share one rate limit across every job on a CI runner's address, and
+    the training run failed on it once."""
+    request = urllib.request.Request(f"https://api.github.com/repos/{REPO}/commits/master")
+    if token := os.environ.get("GITHUB_TOKEN"):
+        request.add_header("Authorization", f"Bearer {token}")
+    with urllib.request.urlopen(request, timeout=60) as r:
         return json.load(r)["sha"]
 
 
