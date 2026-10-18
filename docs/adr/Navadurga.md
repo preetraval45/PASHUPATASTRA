@@ -22,7 +22,7 @@ language and no iconography in the UI, docs or assets.
 | # | Name | The form's nature, in one line | The model's job | Real data | Status |
 |---|---|---|---|---|---|
 | 1 | **Shailaputri** | the mountain's daughter — the steady foundation | Metric anomaly detection: knows what normal looks like | NAB (SMD next) | **trained** (RP-60) |
-| 2 | **Brahmacharini** | discipline and study | Embeddings for Smriti recall: maps observed behaviour to the known technique it resembles | MITRE ATT&CK procedure examples | training (RP-64) |
+| 2 | **Brahmacharini** | discipline and study | Embeddings for Smriti recall: maps observed behaviour to the known technique it resembles | MITRE ATT&CK procedure examples | **trained** (RP-64) |
 | 3 | **Chandraghanta** | the bell that warns | Network intrusion alerting | UNSW-NB15, CIC-IDS2017 | planned (RP-61) |
 | 4 | **Kushmanda** | the creator | Writes the structured hypothesis and explanation: Sati's own language model | MITRE ATT&CK + CAPEC, CISA KEV, this repo's writing | built; trains on Kaggle once secrets exist (RP-65) |
 | 5 | **Skandamata** | the protecting mother | Proposes the protective response. Dharma still authorises it | incident → action labels (to be sourced) | planned |

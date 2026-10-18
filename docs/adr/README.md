@@ -20,6 +20,7 @@ in the filename.
 | [Navadurga](Navadurga.md) — the nine Sati models, named for Navadurga, each with the job that fits its form; Katyayani (root cause) trained first | 2026-10-18 | Accepted |
 | [LLMBaselines](LLMBaselines.md) — 2 × 2: {deterministic, LLM} proposer × {no policy, Dharma + verification}; LLMs are baselines only | 2026-10-18 | Accepted |
 | [SatiDetect](SatiDetect.md) — Shailaputri v0 beats every statistical detector on F1 but not on lead time; statistical default stays, model is a second opinion | 2026-10-18 | Accepted |
+| [SatiEmbed](SatiEmbed.md) — Brahmacharini adopted for behaviour→technique recall (R@1 0.609 vs BM25 0.270); incident recall waits for a measurement | 2026-10-18 | Accepted |
 
 ## Planned
 
