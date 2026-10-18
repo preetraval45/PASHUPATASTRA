@@ -75,6 +75,7 @@ const PAGES: SearchItem[] = [
   { kind: "page", label: "Sati AI", hint: "ask the investigation agent", href: "/ask" },
   { kind: "page", label: "Training", hint: "cyber defence practice, scored", href: "/training" },
   { kind: "page", label: "Analytics", hint: "activity, risk and usage, charted", href: "/analytics" },
+  { kind: "page", label: "Sati models", hint: "the nine models, and their real-data results", href: "/models" },
 ];
 
 const KIND_LABEL: Record<string, string> = {

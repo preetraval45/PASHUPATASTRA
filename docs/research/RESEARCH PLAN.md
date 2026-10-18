@@ -86,7 +86,7 @@ cannot train anything. Cloud GPU training is possible later, but costs money.
 
 ## How to use this plan
 
-**Every task has an ID (`RP-01` … `RP-65`) and an owner.**
+**Every task has an ID (`RP-01` … `RP-66`) and an owner.**
 
 | Owner | Meaning |
 |---|---|
@@ -205,7 +205,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   3. **Claude** then updates the CLAUDE.md naming table and [GLOSSARY.md](../GLOSSARY.md) to match. That change is yours to approve, because CLAUDE.md is an owner document.
   *Done when:* the ADR is committed, and CLAUDE.md agrees with it.
 
-- [ ] **RP-05 · Learn: sampling and structured output**
+- [~] **RP-05 · Learn: sampling and structured output** — *Study notes and code map prepared 18 Oct at the owner's request: [notes/RP-05](notes/RP-05-sampling-and-structured-output.md) — sampling settings, why temperature 0 is not deterministic on a GPU, and every failure mode mapped to the line that handles it. Remains: the owner reads it and answers its three check-yourself questions in their own words.*
   **You** · 3 h · Depends: RP-02
   *Steps:* the Hugging Face LLM Course chapters on generation (temperature, top-p, greedy decoding). Then read [gateway.py](../../packages/core/pashupatastra/gateway.py) and `services/api/app/engines/providers/openaicompat.py`, and map each failure mode (refusal, truncation, invalid JSON) to where the code handles it.
   *Done when:* you can explain why temperature 0 is still not fully deterministic on a GPU. You will need this for constrained decoding in Sati-LM.
@@ -507,6 +507,7 @@ are generated files; models are disclosed as AI-built. Splits per [adr/RealDataM
 - [ ] **RP-63 · Serve Sati-RCA as a Gateway provider** — the trained artefact (versioned, hashed) loaded by the API; its ranking becomes the hypothesis with citations to the metric series; LLM kept as baseline and labelled backup (supersedes RP-28's model source).
 - [ ] **RP-64 · Sati-Embed on real text** — a small encoder trained contrastively on LogHub templates and incident narratives (Kaggle GPU); recall@k against `HashingEmbedder` and BM25.
 - [ ] **RP-65 · Sati-LM — every answer from our own model** — a small decoder trained on the LogHub corpus and incident text (Kaggle GPU), fine-tuned to the hypothesis schema with constrained decoding; when it passes citation verification, it answers Sati AI and the external LLM becomes baseline only.
+- [~] **RP-66 · Navadurga — the nine Sati models, on the site** — *Built 18 Oct (owner decision, [adr/Navadurga](../adr/Navadurga.md)): nine models named for Navadurga, each with the job that fits its form; `/models` shows all nine with status, and Katyayani's real-data results as interactive model-vs-baseline charts with intervals, the pooled table, the ablation and a cited ranking — read from the workflow's results file, refreshed on every retrain. Remains: confirm live.*
 
 ---
 

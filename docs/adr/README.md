@@ -17,6 +17,7 @@ in the filename.
 | [SatiModels](SatiModels.md) — Sati stays the agent; Sati-Detect/-RCA/-Embed/-LM are the models it runs on, trained here | 2026-10-18 | Accepted |
 | [ExternalBenchmark](ExternalBenchmark.md) — feasibility of RCAEval, OpenRCA, AIOpsLab, ITBench; RCAEval chosen | 2026-10-18 | Accepted |
 | [RealDataModels](RealDataModels.md) — Claude builds and trains every Sati model on real public data, on free cloud compute; splits that test diagnosis, not memory | 2026-10-18 | Accepted |
+| [Navadurga](Navadurga.md) — the nine Sati models, named for Navadurga, each with the job that fits its form; Katyayani (root cause) trained first | 2026-10-18 | Accepted |
 
 ## Planned
 

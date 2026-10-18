@@ -39,7 +39,11 @@ Dharma authorises.
 **Sati models** are the models Sati runs on, designed and trained in this
 repository: `Sati-Detect`, `Sati-RCA`, `Sati-Embed`, `Sati-LM`
 ([adr/SatiModels](docs/adr/SatiModels.md)). "Sati" alone always means the agent;
-a model is always named with its suffix. Model code lives in `packages/sati/`
+a model is always named with its suffix. Since 18 October 2026 the family is
+nine models named for the nine forms of Navadurga, each doing the job that fits
+its form — Katyayani (root cause), Shailaputri (metric anomalies), and so on —
+by owner decision ([adr/Navadurga](docs/adr/Navadurga.md)): names only, the job
+always stated first, no imagery or devotional language. Model code lives in `packages/sati/`
 (PyTorch allowed); `packages/core` stays torch-free. Models are served as an AI
 Gateway provider and get no exemption from rules 1–6.
 
