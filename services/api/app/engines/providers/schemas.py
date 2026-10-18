@@ -209,6 +209,27 @@ PROPOSAL_V1: dict[str, Any] = {
 }
 
 
+DIAGNOSIS_V1: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["ranked", "abstain", "evidence_refs"],
+    "properties": {
+        "ranked": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Up to three option labels, most likely first, copied exactly "
+            "from the options given. Empty when abstaining.",
+        },
+        "abstain": {"type": "boolean", "description": "True when the evidence does not support a choice."},
+        "evidence_refs": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Refs of the evidence items the first choice rests on.",
+        },
+    },
+}
+
+
 SCHEMAS: dict[str, dict[str, Any]] = {
     "hypothesis_v1": HYPOTHESIS_V1,
     "summary_v1": SUMMARY_V1,
@@ -216,6 +237,7 @@ SCHEMAS: dict[str, dict[str, Any]] = {
     "chat_answer_v1": CHAT_ANSWER_V1,
     "general_answer_v1": GENERAL_ANSWER_V1,
     "proposal_v1": PROPOSAL_V1,
+    "diagnosis_v1": DIAGNOSIS_V1,
 }
 
 

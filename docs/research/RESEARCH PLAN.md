@@ -268,7 +268,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   These 20 are **test-only, forever.**
   *Done when:* all 20 validate, and the answer-key commit predates every run.
 
-- [ ] **RP-14 · Model-agnostic diagnosis harness**
+- [x] **RP-14 · Model-agnostic diagnosis harness** — *Done 18 Oct: `benchmark/harness/diagnose.py` (a diagnoser is anything with `diagnose(case)`; RCA@1/@3, precision when answering, abstention, grounding, errors kept apart; Wilson intervals; JSONL per answer; refuses the stub) and `scripts/benchdiagnosis.py --diagnoser llm:<model>` with `diagnosis_v1`. Six tests score five fake diagnosers exactly. Cases need `root_cause_label` + `options` in the labelled fixtures — none have them yet, so it reports 0 scoreable until RP-13's answer keys.*
   **Claude** · 1 session · review 45 min · Depends: RP-07
   *Why:* the same harness must score an LLM and Sati-RCA identically, or the comparison is unfair.
   *Steps:* `scripts/benchdiagnosis.py --diagnoser <llm:model | sati-rca:version>`. It reports RCA@1, RCA@3, precision-when-answering, grounding, abstention rate and Wilson intervals via `diagnosis.py`, writes JSONL, and refuses on the stub.

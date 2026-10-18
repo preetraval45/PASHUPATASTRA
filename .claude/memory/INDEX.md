@@ -60,3 +60,4 @@ Protocol: before every push, write a topic-named file from
 - [NineLevels](NineLevels.md) — RP-69: course is nine Navadurga levels (3 new modules, 46 questions), awareness level = highest contiguous pass
 - [WorldData](WorldData.md) — RP-70: daily GitHub snapshot of KEV/ransomware.live/Feodo/HIBP → /world page (aggregates only, no victim names)
 - [LlmBaselineArms](LlmBaselineArms.md) — RP-06 ADR accepted (plan defaults), RP-07 LLM arms built (proposer, refusals, 7 tests, harness tests in CI); RP-09 needs Ollama endpoint secrets
+- [DiagnosisHarness](DiagnosisHarness.md) — RP-14 done: model-agnostic diagnose.py + benchdiagnosis.py; needs root_cause_label/options keys from RP-13
