@@ -21,13 +21,13 @@ language and no iconography in the UI, docs or assets.
 
 | # | Name | The form's nature, in one line | The model's job | Real data | Status |
 |---|---|---|---|---|---|
-| 1 | **Shailaputri** | the mountain's daughter — the steady foundation | Metric anomaly detection: knows what normal looks like | NAB, SMD | planned (RP-60) |
+| 1 | **Shailaputri** | the mountain's daughter — the steady foundation | Metric anomaly detection: knows what normal looks like | NAB (SMD next) | **trained** (RP-60) |
 | 2 | **Brahmacharini** | discipline and study | Embeddings for Smriti recall: maps observed behaviour to the known technique it resembles | MITRE ATT&CK procedure examples | training (RP-64) |
 | 3 | **Chandraghanta** | the bell that warns | Network intrusion alerting | UNSW-NB15, CIC-IDS2017 | planned (RP-61) |
-| 4 | **Kushmanda** | the creator | Writes the structured hypothesis and explanation: Sati's own language model | LogHub corpus, incident text | planned (RP-65) |
+| 4 | **Kushmanda** | the creator | Writes the structured hypothesis and explanation: Sati's own language model | MITRE ATT&CK + CAPEC, CISA KEV, this repo's writing | built; trains on Kaggle once secrets exist (RP-65) |
 | 5 | **Skandamata** | the protecting mother | Proposes the protective response. Dharma still authorises it | incident → action labels (to be sourced) | planned |
 | 6 | **Katyayani** | the warrior who finds the adversary | Root-cause ranking: names the service at fault and the fault type | RCAEval | **trained** (RP-58) |
-| 7 | **Kalaratri** | the night that dispels darkness | Log anomaly detection: what hides in the noise | LogHub HDFS, BGL | planned (RP-62) |
+| 7 | **Kalaratri** | the night that dispels darkness | Log anomaly detection: what hides in the noise | LogHub HDFS (BGL next) | **trained** (RP-62) |
 | 8 | **Mahagauri** | calm restored | Verification: confirms a system has returned to normal after an action | recovery windows (to be sourced) | planned |
 | 9 | **Siddhidatri** | completion | Fusion: combines the other eight into one calibrated verdict | outputs of 1–8 | planned |
 
