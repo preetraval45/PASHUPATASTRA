@@ -47,3 +47,4 @@ Protocol: before every push, write a topic-named file from
 - [ExternalBenchmarkFeasibility](ExternalBenchmarkFeasibility.md) — RP-31 feasibility: RCAEval recommended (label = root-cause service, MIT/CC-BY data, fits free runners); OpenRCA too big and data unlicensed
 - [OpenCoreLicence](OpenCoreLicence.md) — RP-04/RP-31 closed: Apache-2.0 for core/sati/sdk/benchmark only (LICENSING.md, not a root LICENSE); RCAEval chosen
 - [ExpiredFixtureAndUI](ExpiredFixtureAndUI.md) — core CI red from a test fixture that aged past 90-day retention on 16 Oct (blocked deploy job); dark-theme <select> fixed; Block G UI tasks added
+- [ConsoleAsApp](ConsoleAsApp.md) — RP-48–50 on branch ui-redesign: (site)/(console) route groups, sidebar shell, full-screen Ask, /models allow-list + picker

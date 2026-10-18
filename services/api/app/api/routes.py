@@ -1746,6 +1746,24 @@ def usage() -> dict[str, object]:
 class ChatRequest(BaseModel):
     incident_id: str
     message: str
+    model: str | None = None
+    """An `id` from `GET /models`. Omitted means the configured default."""
+
+
+@router.get("/models")
+def models() -> dict[str, object]:
+    """The models the Ask console may choose from (RP-50).
+
+    Built from server configuration only, so it is an allow-list: the chat route
+    accepts an `id` from here and refuses anything else. A visitor can pick which
+    configured model answers; they cannot point the server at a model or an
+    endpoint of their own.
+    """
+    from dataclasses import asdict
+
+    from ..engines.buddhi import model_choices
+
+    return {"models": [asdict(choice) for choice in model_choices()]}
 
 
 @router.post("/agent/chat")
@@ -1772,13 +1790,25 @@ def agent_chat(request: ChatRequest) -> dict[str, object]:
         # bounds the conversation; this bounds what one POST can put into it.
         raise HTTPException(status_code=422, detail="message is too long")
 
+    if request.model and request.model != "default":
+        from ..engines.buddhi import gateway_for
+
+        try:
+            chosen = gateway_for(request.model)
+        except KeyError:
+            raise HTTPException(
+                status_code=422, detail=f"unknown model {request.model!r}; see /models"
+            ) from None
+    else:
+        chosen = gateway()
+
     incident = STORE.get(request.incident_id)
     if incident is None:
         raise HTTPException(
             status_code=404, detail=f"unknown incident {request.incident_id}"
         )
 
-    provider = gateway().provider
+    provider = chosen.provider
     if not getattr(provider, "available", lambda: True)():
         # 503 rather than a fabricated reply. A chat panel that invents answers
         # when unconfigured is worse than one that is visibly switched off.
@@ -1794,7 +1824,7 @@ def agent_chat(request: ChatRequest) -> dict[str, object]:
             store=STORE,
             graph=entitystore(),
             audit=AUDIT,
-            gateway=gateway(),
+            gateway=chosen,
         )
     except GatewayError as error:
         # Never the provider's own words. A rate-limit body from Groq carries

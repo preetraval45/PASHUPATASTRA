@@ -270,6 +270,17 @@
           "message": {
             "title": "Message",
             "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
           }
         },
         "required": [
@@ -2803,6 +2814,27 @@
           }
         },
         "summary": "Intel Status"
+      }
+    },
+    "/api/v1/models": {
+      "get": {
+        "description": "The models the Ask console may choose from (RP-50).\n\nBuilt from server configuration only, so it is an allow-list: the chat route\naccepts an `id` from here and refuses anything else. A visitor can pick which\nconfigured model answers; they cannot point the server at a model or an\nendpoint of their own.",
+        "operationId": "models_api_v1_models_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Models Api V1 Models Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Models"
       }
     },
     "/api/v1/policy/approvals/fatigue": {

@@ -579,15 +579,35 @@ export type ChatAnswer = {
  * needs to be told to wait rather than shown a dead assistant, and those two
  * are the same `null`.
  */
+/** One model the Ask console may choose (RP-50). The server builds the list
+ *  from its own configuration; a request can only name an `id` from it. */
+export type ModelChoice = {
+  id: string;
+  label: string;
+  provider: string;
+  model: string;
+  default: boolean;
+};
+
+export async function getModels(): Promise<ModelChoice[] | null> {
+  const body = await get<{ models: ModelChoice[] }>("/models");
+  return body?.models ?? null;
+}
+
 export async function askAgent(
   incidentId: string,
   message: string,
+  model?: string,
 ): Promise<{ answer: ChatAnswer } | { error: string; retryable: boolean }> {
   try {
     const response = await fetch(`${API_BASE}/agent/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ incident_id: incidentId, message }),
+      body: JSON.stringify(
+        model && model !== "default"
+          ? { incident_id: incidentId, message, model }
+          : { incident_id: incidentId, message },
+      ),
       cache: "no-store",
     });
     if (response.ok) return { answer: (await response.json()) as ChatAnswer };

@@ -43,16 +43,16 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
  * sections for arithmetic.
  */
 const NAV = [
-  // The landing page, as a tab as well as through the wordmark. A logo that
-  // goes home is a convention people who build sites know and people who use
-  // them guess at; a labelled tab is the version nobody has to guess.
+  // The public site's tabs since RP-48. The console's sections moved into its
+  // own sidebar (`components/sidebar.tsx`), so this row is for a visitor
+  // deciding whether the thing is real: what it is, how it works, what has been
+  // measured, and what it has done. The way in is the "Open the console" button
+  // beside it, not a seventh label.
   { href: "/", label: "Home" },
-  { href: "/overview", label: "Overview" },
-  { href: "/incidents", label: "Incidents" },
-  { href: "/ask", label: "Ask" },
-  { href: "/blue-team", label: "Blue team" },
-  { href: "/observatory", label: "Observatory" },
-  { href: "/actions", label: "Actions" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/evaluation", label: "Evaluation" },
+  { href: "/impact", label: "Impact" },
+  { href: "/press", label: "Press" },
 ];
 
 

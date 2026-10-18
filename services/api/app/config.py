@@ -119,6 +119,13 @@ class Settings(BaseSettings):
     `None` means there is no fallback and a rate limit is simply an error."""
 
     fallback_model: str = "qwen2.5:7b"
+
+    chat_models: str = ""
+    """Further models on the fallback endpoint to offer in the Ask picker,
+    comma-separated (`mistral,llama3`). Each must already be pulled on that box.
+    Empty offers the default chain and `fallback_model` only. The picker can
+    choose from this list and nothing else (RP-50)."""
+
     fallback_api_key_env: str = "PASHU_FALLBACK_API_KEY"
     fallback_requires_key: bool = False
     fallback_timeout: float = 180.0

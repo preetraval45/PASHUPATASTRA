@@ -3,8 +3,8 @@ import { Suspense } from "react";
 
 import { Sparkline } from "@/components/charts";
 import { ChatConsole } from "@/components/chatconsole";
-import { Offline, Page, Skeleton } from "@/components/ui";
-import { getIncidents, getUsage, type Usage } from "@/lib/api";
+import { Offline, Skeleton } from "@/components/ui";
+import { getIncidents, getModels, getUsage, type Usage } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Ask",
@@ -14,23 +14,33 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Full screen since RP-49: no page header, no centred column. The console's
+ * frame supplies the chrome; this fills the rest of the window.
+ */
 export default async function AskPage() {
-  const [incidents, usage] = await Promise.all([getIncidents(), getUsage()]);
-  if (incidents === null) return <Offline />;
+  const [incidents, usage, models] = await Promise.all([getIncidents(), getUsage(), getModels()]);
+  if (incidents === null) {
+    return (
+      <main id="main" className="min-h-0 flex-1 overflow-y-auto p-6">
+        <Offline />
+      </main>
+    );
+  }
 
   return (
-    <Page
-      title="Ask"
-      description="Questions about an open incident, answered from the evidence on file."
-      actions={<Allowance usage={usage} />}
-    >
-      {/* `useSearchParams` in the console needs a boundary, and the fallback is
-          a skeleton rather than nothing: this page is mostly one tall panel, so
-          an empty frame reads as a failed load. */}
-      <Suspense fallback={<Skeleton rows={6} />}>
-        <ChatConsole incidents={incidents} />
+    <main id="main" className="flex min-h-0 flex-1">
+      {/* `useSearchParams` in the console needs a boundary. */}
+      <Suspense
+        fallback={
+          <div className="w-full p-6">
+            <Skeleton rows={6} />
+          </div>
+        }
+      >
+        <ChatConsole incidents={incidents} models={models ?? []} allowance={<Allowance usage={usage} />} />
       </Suspense>
-    </Page>
+    </main>
   );
 }
 
@@ -61,7 +71,7 @@ function Allowance({ usage }: { usage: Usage | null }) {
   const worthDrawing = series.length > 1 && series.some((turns) => turns > 0);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between gap-3">
       <p
         data-allowance
         className="mono text-[11px] text-[rgb(var(--faint))]"
