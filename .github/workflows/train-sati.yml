@@ -142,13 +142,13 @@ jobs:
           key: loghub-hdfs-v1
       - name: train and evaluate on LogHub HDFS
         working-directory: packages/sati
-        run: python -m sati.logs.run --cache ../../.cache/loghub --out ../../results/kalaratri
+        run: python -m sati.loganomaly.run --cache ../../.cache/loghub --out ../../results/kalaratri
       - name: commit the generated results
         run: |
           mkdir -p docs/research/models apps/web/lib/models
           cp results/kalaratri/results.json docs/research/models/kalaratri.results.json
           cp results/kalaratri/results.json apps/web/lib/models/kalaratri.results.json
-          (cd packages/sati && python -m sati.logs.report ../../results/kalaratri/results.json) > docs/research/models/kalaratri.md
+          (cd packages/sati && python -m sati.loganomaly.report ../../results/kalaratri/results.json) > docs/research/models/kalaratri.md
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/research/models apps/web/lib/models

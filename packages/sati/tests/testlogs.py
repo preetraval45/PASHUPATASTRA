@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from sati.logs.run import best_threshold, featurise, metrics, pca_scores
+from sati.loganomaly.run import best_threshold, featurise, metrics, pca_scores
 
 
 def test_templates_outside_the_training_vocabulary_are_counted_as_unseen():
