@@ -11,7 +11,7 @@ import { test } from "node:test";
  * `Promise.all`s are allowed — the id-only wave and the wave that needs what
  * the first returned — and nothing else may be awaited on its own.
  */
-const source = readFileSync(new URL("../app/incidents/[id]/page.tsx", import.meta.url), "utf-8");
+const source = readFileSync(new URL("../app/(console)/(padded)/incidents/[id]/page.tsx", import.meta.url), "utf-8");
 const body = source.slice(source.indexOf("export default async function IncidentDetailPage"));
 
 test("the incident page awaits exactly two Promise.all waves", () => {

@@ -17,6 +17,7 @@ import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 
+import { Attribution } from "@/components/attribution";
 import { Mark, Sigil } from "@/components/chrome";
 import { Search } from "@/components/search";
 import { ThemeToggle } from "@/components/theme";
@@ -205,6 +206,13 @@ function Rail({
             <Icon name={collapsed ? "expand" : "collapse"} />
             {!collapsed && <span>Collapse</span>}
           </button>
+        )}
+        {/* The credit is one line and belongs on every page (testbuildinfo);
+            the console has no footer, so it lives at the foot of the rail. */}
+        {!collapsed && (
+          <p className="flex flex-wrap gap-x-3 gap-y-1 px-2.5 pt-2 text-[11px] text-[rgb(var(--faint))]">
+            <Attribution />
+          </p>
         )}
       </div>
     </>
