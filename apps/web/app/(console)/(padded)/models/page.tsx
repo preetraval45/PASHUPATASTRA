@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
-import { KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
+import { KALARATRI, KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
 export const metadata: Metadata = {
   title: "Sati models",
@@ -207,6 +207,46 @@ export default function ModelsPage() {
               </p>
             </Panel>
           </div>
+        </section>
+      )}
+
+      {!KALARATRI.pending && (
+        <section id="kalaratri-results" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Kalaratri — anomalies hidden in real logs</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              {KALARATRI.dataset.name}: {KALARATRI.dataset.blocks.toLocaleString()} Hadoop blocks, split by time — trained on
+              the first {KALARATRI.dataset.split.train.toLocaleString()}, tested on the last{" "}
+              {KALARATRI.dataset.split.test.toLocaleString()} — against two classic detectors on the same blocks.
+            </p>
+          </div>
+          <Panel title="Held-out test blocks" aside="later in time than anything trained on">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                    <th className="py-2 pr-3 font-normal">Detector</th>
+                    <th className="py-2 pr-3 text-right font-normal">Precision</th>
+                    <th className="py-2 pr-3 text-right font-normal">Recall</th>
+                    <th className="py-2 pr-3 text-right font-normal">F1</th>
+                    <th className="py-2 text-right font-normal">False-positive rate</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[rgb(var(--edge))]">
+                  {Object.entries(KALARATRI.test).map(([name, m]) => (
+                    <tr key={name}>
+                      <td className="py-2 pr-3">{name.startsWith("kalaratri") ? <strong>Kalaratri</strong> : name}</td>
+                      <td className="tnum py-2 pr-3 text-right">{m.precision.toFixed(3)}</td>
+                      <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
+                      <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>
+                      <td className="tnum py-2 text-right">{m.false_positive_rate.toFixed(4)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-xs text-[rgb(var(--faint))]">{KALARATRI.weights_note}</p>
+          </Panel>
         </section>
       )}
 

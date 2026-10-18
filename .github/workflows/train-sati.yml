@@ -120,3 +120,41 @@ jobs:
             git pull --rebase origin main && git push origin HEAD:main && break
             sleep 10
           done
+
+  kalaratri:
+    # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
+    # split by time. LogHub is research-use only, so this job publishes metrics
+    # and no weights (datasheets.md).
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/loghub
+          key: loghub-hdfs-v1
+      - name: train and evaluate on LogHub HDFS
+        working-directory: packages/sati
+        run: python -m sati.logs.run --cache ../../.cache/loghub --out ../../results/kalaratri
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models apps/web/lib/models
+          cp results/kalaratri/results.json docs/research/models/kalaratri.results.json
+          cp results/kalaratri/results.json apps/web/lib/models/kalaratri.results.json
+          (cd packages/sati && python -m sati.logs.report ../../results/kalaratri/results.json) > docs/research/models/kalaratri.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/research/models apps/web/lib/models
+          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
+          git commit -m "docs(models): Kalaratri v0 results from run ${{ github.run_id }}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            sleep 10
+          done

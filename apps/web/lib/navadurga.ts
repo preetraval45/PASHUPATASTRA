@@ -7,6 +7,7 @@
  */
 
 import katyayani from "./models/katyayani.results.json";
+import kalaratri from "./models/kalaratri.results.json";
 import shailaputri from "./models/shailaputri.results.json";
 
 export type ModelStatus = "trained" | "training" | "planned";
@@ -32,7 +33,7 @@ export const MODELS: SatiModel[] = [
   { n: 4, id: "sati-kushmanda", name: "Kushmanda", nature: "the creator", job: "Writes the structured hypothesis and explanation — Sati's own language model", stage: "Explain", data: ["LogHub corpus", "incident text"], status: "planned", task: "RP-65" },
   { n: 5, id: "sati-skandamata", name: "Skandamata", nature: "the protecting mother", job: "Proposes the protective response — Dharma still authorises it", stage: "Act", data: ["to be sourced"], status: "planned", task: "—" },
   { n: 6, id: "sati-katyayani", name: "Katyayani", nature: "the warrior who finds the adversary", job: "Root-cause ranking — names the service at fault and the fault type, citing the metric series", stage: "Understand", data: ["RCAEval"], status: "trained", task: "RP-58" },
-  { n: 7, id: "sati-kalaratri", name: "Kalaratri", nature: "the night that dispels darkness", job: "Log anomaly detection — what hides in the noise", stage: "Observe", data: ["LogHub HDFS", "LogHub BGL"], status: "planned", task: "RP-62" },
+  { n: 7, id: "sati-kalaratri", name: "Kalaratri", nature: "the night that dispels darkness", job: "Log anomaly detection — what hides in the noise", stage: "Observe", data: ["LogHub HDFS", "LogHub BGL"], status: "training", task: "RP-62" },
   { n: 8, id: "sati-mahagauri", name: "Mahagauri", nature: "calm restored", job: "Verification — confirms a system has truly returned to normal after an action", stage: "Verify", data: ["to be sourced"], status: "planned", task: "—" },
   { n: 9, id: "sati-siddhidatri", name: "Siddhidatri", nature: "completion", job: "Fusion — combines the other eight into one calibrated verdict", stage: "Decide", data: ["outputs of 1–8"], status: "planned", task: "—" },
 ];
@@ -74,8 +75,20 @@ export interface DetectResults {
 
 export const SHAILAPUTRI = shailaputri as unknown as DetectResults;
 
+type BinaryMetrics = { precision: number; recall: number; f1: number; false_positive_rate: number };
+
+export interface LogResults {
+  pending?: string;
+  dataset: { name: string; blocks: number; anomaly_share: number; split: { train: number; validation: number; test: number } };
+  test: Record<string, BinaryMetrics>;
+  weights_note: string;
+}
+
+export const KALARATRI = kalaratri as unknown as LogResults;
+
 /** A model counts as trained only when its results file says so. */
 export function statusOf(model: SatiModel): ModelStatus {
   if (model.id === "sati-shailaputri") return SHAILAPUTRI.pending ? "training" : "trained";
+  if (model.id === "sati-kalaratri") return KALARATRI.pending ? "training" : "trained";
   return model.status;
 }
