@@ -1,0 +1,21 @@
+{
+  "model": "sati-shailaputri-v0",
+  "sha256": "5ccd3bb42fcd5ae86919bcaa7d89c414f67f1c540a2b6dd82dc9bf51a925ee45",
+  "threshold": 0.75,
+  "features": [
+    "z_12",
+    "z_72",
+    "z_288",
+    "z_diff",
+    "volatility_ratio",
+    "z_season",
+    "abs_max"
+  ],
+  "trained_on": {
+    "dataset": "NAB",
+    "revision": "ea702d75cc2258d9d7dd35ca8e5e2539d71f3140",
+    "series": 47
+  },
+  "lightgbm": "4.7.0",
+  "python": "3.12.15"
+}
