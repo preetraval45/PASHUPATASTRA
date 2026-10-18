@@ -1,0 +1,48 @@
+{
+  "model": "sati-rca-v0",
+  "sha256": "1386769bf585a2ecd32671a5f267a10be61e4dd7381c94c7677c3867ee78ce8e",
+  "features": [
+    "n_series",
+    "shift_cpu",
+    "peak_cpu",
+    "onset_cpu",
+    "shift_mem",
+    "peak_mem",
+    "onset_mem",
+    "shift_traffic",
+    "peak_traffic",
+    "onset_traffic",
+    "shift_latency",
+    "peak_latency",
+    "onset_latency",
+    "shift_error",
+    "peak_error",
+    "onset_error",
+    "shift_other",
+    "peak_other",
+    "onset_other",
+    "peak_any",
+    "shift_any",
+    "onset_any",
+    "families_moved",
+    "rank_peak_any",
+    "rank_shift_any",
+    "rank_onset_any",
+    "rank_shift_cpu",
+    "rank_shift_mem",
+    "rank_shift_latency",
+    "rank_shift_traffic",
+    "rank_shift_error",
+    "rank_shift_other"
+  ],
+  "trained_on": {
+    "suites": [
+      "RE1",
+      "RE2"
+    ],
+    "cases": 645,
+    "dataset_revision": "afeacb11bcc94dadfd1c8f483ee4377b2b8b614e"
+  },
+  "lightgbm": "4.7.0",
+  "python": "3.12.15"
+}
