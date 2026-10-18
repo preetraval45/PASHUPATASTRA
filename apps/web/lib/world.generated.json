@@ -1,7 +1,510 @@
 {
-  "as_of": null,
-  "kev": { "ok": false, "absent": "the first daily snapshot has not run yet" },
-  "ransomware": { "ok": false, "absent": "the first daily snapshot has not run yet" },
-  "c2": { "ok": false, "absent": "the first daily snapshot has not run yet" },
-  "breaches": { "ok": false, "absent": "the first daily snapshot has not run yet" }
+  "as_of": "2026-10-18T21:42:58+00:00",
+  "kev": {
+    "ok": true,
+    "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+    "catalog_version": "2026.10.16",
+    "total": 1748,
+    "added_last_30_days": 35,
+    "known_ransomware_use": 361,
+    "by_month": [
+      {
+        "label": "2025-10",
+        "value": 12
+      },
+      {
+        "label": "2025-11",
+        "value": 11
+      },
+      {
+        "label": "2025-12",
+        "value": 20
+      },
+      {
+        "label": "2026-01",
+        "value": 17
+      },
+      {
+        "label": "2026-02",
+        "value": 28
+      },
+      {
+        "label": "2026-03",
+        "value": 26
+      },
+      {
+        "label": "2026-04",
+        "value": 31
+      },
+      {
+        "label": "2026-05",
+        "value": 21
+      },
+      {
+        "label": "2026-06",
+        "value": 23
+      },
+      {
+        "label": "2026-07",
+        "value": 26
+      },
+      {
+        "label": "2026-08",
+        "value": 31
+      },
+      {
+        "label": "2026-09",
+        "value": 43
+      },
+      {
+        "label": "2026-10",
+        "value": 18
+      }
+    ],
+    "top_vendors": [
+      {
+        "label": "Microsoft",
+        "value": 390
+      },
+      {
+        "label": "Cisco",
+        "value": 101
+      },
+      {
+        "label": "Apple",
+        "value": 95
+      },
+      {
+        "label": "Adobe",
+        "value": 82
+      },
+      {
+        "label": "Google",
+        "value": 75
+      },
+      {
+        "label": "Oracle",
+        "value": 46
+      },
+      {
+        "label": "Apache",
+        "value": 41
+      },
+      {
+        "label": "Ivanti",
+        "value": 36
+      },
+      {
+        "label": "Fortinet",
+        "value": 32
+      },
+      {
+        "label": "Linux",
+        "value": 31
+      }
+    ],
+    "latest": [
+      {
+        "cve": "CVE-2026-102764",
+        "vendor": "BeyondTrust",
+        "product": "Remote Support",
+        "name": "BeyondTrust Remote Support Authentication Bypass by Spoofing Vulnerability",
+        "added": "2026-10-16",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2025-61624",
+        "vendor": "Fortinet",
+        "product": "Multiple Products",
+        "name": "Fortinet Multiple Products Path Traversal Vulnerability",
+        "added": "2026-10-16",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-21589",
+        "vendor": "Atlassian",
+        "product": "Multiple Products",
+        "name": "Atlassian Multiple Products Files or Directories Accessible to External Parties Vulnerability",
+        "added": "2026-10-15",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-105134",
+        "vendor": "Ahsay",
+        "product": "AhsayCBS",
+        "name": "Ahsay AhsayCBS Command Injection Vulnerability",
+        "added": "2026-10-14",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-76519",
+        "vendor": "Cisco",
+        "product": "Secure Email Gateway",
+        "name": "Cisco Secure Email Gateway Relative Path Traversal Vulnerability",
+        "added": "2026-10-14",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-105133",
+        "vendor": "Ahsay",
+        "product": "AhsayCBS",
+        "name": "Ahsay AhsayCBS Improper Authentication Vulnerability",
+        "added": "2026-10-14",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-0322",
+        "vendor": "Palo Alto Networks",
+        "product": "PAN-OS",
+        "name": "Palo Alto Networks PAN-OS Code Injection Vulnerability",
+        "added": "2026-10-14",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-104935",
+        "vendor": "Ivanti",
+        "product": "Connect Secure",
+        "name": "Ivanti Connect Secure Authentication Bypass by Spoofing Vulnerability",
+        "added": "2026-10-13",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-96951",
+        "vendor": "Microsoft",
+        "product": "Windows",
+        "name": "Microsoft Windows Command Injection Vulnerability",
+        "added": "2026-10-13",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2015-5477",
+        "vendor": "ISC",
+        "product": "BIND",
+        "name": " ISC BIND Data Processing Errors Vulnerability",
+        "added": "2026-10-08",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2016-3081",
+        "vendor": "Apache",
+        "product": "Struts",
+        "name": "Apache Struts Command Injection Vulnerability",
+        "added": "2026-10-08",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2023-22894",
+        "vendor": "Strapi",
+        "product": "Strapi",
+        "name": "Strapi Cleartext Storage of Sensitive Information Vulnerability",
+        "added": "2026-10-08",
+        "ransomware": false
+      }
+    ]
+  },
+  "ransomware": {
+    "ok": true,
+    "source": "https://api.ransomware.live/v2/recentvictims",
+    "victims": 100,
+    "by_day": [
+      {
+        "label": "2026-10-15",
+        "value": 25
+      },
+      {
+        "label": "2026-10-16",
+        "value": 35
+      },
+      {
+        "label": "2026-10-17",
+        "value": 21
+      },
+      {
+        "label": "2026-10-18",
+        "value": 19
+      }
+    ],
+    "by_group": [
+      {
+        "label": "N0n",
+        "value": 32
+      },
+      {
+        "label": "qilin",
+        "value": 16
+      },
+      {
+        "label": "THE SEVEN DEADLY SINS",
+        "value": 7
+      },
+      {
+        "label": "Helix",
+        "value": 6
+      },
+      {
+        "label": "lockbit5",
+        "value": 6
+      },
+      {
+        "label": "iah6477",
+        "value": 4
+      },
+      {
+        "label": "everest",
+        "value": 4
+      },
+      {
+        "label": "play",
+        "value": 4
+      },
+      {
+        "label": "thegentlemen",
+        "value": 4
+      },
+      {
+        "label": "incransom",
+        "value": 4
+      }
+    ],
+    "by_country": [
+      {
+        "label": "US",
+        "value": 48
+      },
+      {
+        "label": "EG",
+        "value": 3
+      },
+      {
+        "label": "IT",
+        "value": 3
+      },
+      {
+        "label": "BR",
+        "value": 3
+      },
+      {
+        "label": "MY",
+        "value": 2
+      },
+      {
+        "label": "NL",
+        "value": 2
+      },
+      {
+        "label": "DE",
+        "value": 2
+      },
+      {
+        "label": "KR",
+        "value": 2
+      },
+      {
+        "label": "TH",
+        "value": 2
+      }
+    ],
+    "by_sector": [
+      {
+        "label": "Not Found",
+        "value": 28
+      },
+      {
+        "label": "Manufacturing",
+        "value": 17
+      },
+      {
+        "label": "Technology",
+        "value": 13
+      },
+      {
+        "label": "Healthcare",
+        "value": 8
+      },
+      {
+        "label": "Professional Services",
+        "value": 7
+      },
+      {
+        "label": "Energy & Utilities",
+        "value": 5
+      },
+      {
+        "label": "Transportation",
+        "value": 5
+      },
+      {
+        "label": "Financial Services",
+        "value": 5
+      },
+      {
+        "label": "Education",
+        "value": 4
+      },
+      {
+        "label": "Other",
+        "value": 3
+      }
+    ]
+  },
+  "c2": {
+    "ok": true,
+    "source": "https://feodotracker.abuse.ch/downloads/ipblocklist.json",
+    "c2_servers": 5,
+    "online": 1,
+    "by_malware": [
+      {
+        "label": "QakBot",
+        "value": 4
+      },
+      {
+        "label": "Emotet",
+        "value": 1
+      }
+    ],
+    "by_country": [
+      {
+        "label": "US",
+        "value": 3
+      },
+      {
+        "label": "GB",
+        "value": 1
+      },
+      {
+        "label": "JP",
+        "value": 1
+      }
+    ]
+  },
+  "breaches": {
+    "ok": true,
+    "source": "https://haveibeenpwned.com/api/v3/breaches",
+    "breaches": 1046,
+    "accounts": 17846480593,
+    "top_data_classes": [
+      {
+        "label": "Email addresses",
+        "value": 1039
+      },
+      {
+        "label": "Passwords",
+        "value": 674
+      },
+      {
+        "label": "Names",
+        "value": 565
+      },
+      {
+        "label": "Usernames",
+        "value": 485
+      },
+      {
+        "label": "IP addresses",
+        "value": 387
+      },
+      {
+        "label": "Phone numbers",
+        "value": 382
+      },
+      {
+        "label": "Physical addresses",
+        "value": 308
+      },
+      {
+        "label": "Dates of birth",
+        "value": 287
+      },
+      {
+        "label": "Genders",
+        "value": 198
+      },
+      {
+        "label": "Geographic locations",
+        "value": 152
+      }
+    ],
+    "latest": [
+      {
+        "title": "Gîtes de France",
+        "domain": "gites-de-france.com",
+        "breach_date": "2026-05-16",
+        "added": "2026-10-18",
+        "accounts": 117574,
+        "verified": true
+      },
+      {
+        "title": "Crunchbase",
+        "domain": "crunchbase.com",
+        "breach_date": "2026-01-22",
+        "added": "2026-10-14",
+        "accounts": 559908,
+        "verified": true
+      },
+      {
+        "title": "Sharecare",
+        "domain": "sharecare.com",
+        "breach_date": "2026-08-12",
+        "added": "2026-10-12",
+        "accounts": 318185,
+        "verified": true
+      },
+      {
+        "title": "Neogen",
+        "domain": "neogen.com",
+        "breach_date": "2026-08-29",
+        "added": "2026-10-09",
+        "accounts": 435963,
+        "verified": true
+      },
+      {
+        "title": "CyrusOne",
+        "domain": "cyrusone.com",
+        "breach_date": "2026-08-05",
+        "added": "2026-10-07",
+        "accounts": 373460,
+        "verified": true
+      },
+      {
+        "title": "Double Counter",
+        "domain": "doublecounter.gg",
+        "breach_date": "2026-10-04",
+        "added": "2026-10-07",
+        "accounts": 274922,
+        "verified": true
+      },
+      {
+        "title": "Angel One",
+        "domain": "angelone.in",
+        "breach_date": "2023-04-01",
+        "added": "2026-10-07",
+        "accounts": 6765054,
+        "verified": true
+      },
+      {
+        "title": "Medela",
+        "domain": "medela.com",
+        "breach_date": "2026-09-07",
+        "added": "2026-09-30",
+        "accounts": 423947,
+        "verified": true
+      },
+      {
+        "title": "LimeLeads",
+        "domain": "limeleads.com",
+        "breach_date": "2019-08-01",
+        "added": "2026-09-22",
+        "accounts": 17838396,
+        "verified": true
+      },
+      {
+        "title": "Burger King Russia",
+        "domain": "burgerkingrus.ru",
+        "breach_date": "2024-08-25",
+        "added": "2026-09-21",
+        "accounts": 3155792,
+        "verified": true
+      }
+    ]
+  }
 }
