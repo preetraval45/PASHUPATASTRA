@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Icon } from "@/components/sidebar";
 import { getFigures, getIncidents } from "@/lib/api";
 
 /**
@@ -31,6 +32,17 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
+
+/** Where to go from Home. The first mention of Sati on this page is here, so
+ *  it says what Sati is (BRAND.md). */
+const DESTINATIONS = [
+  { href: "/ask", icon: "chat", title: "Sati AI", body: "Ask Sati, the investigation agent, about an incident. Every claim is cited; it can propose but never act." },
+  { href: "/overview", icon: "grid", title: "Overview", body: "The live state of the system: open incidents, posture, and what it has been doing." },
+  { href: "/analytics", icon: "chart", title: "Analytics", body: "Activity, incident severity, response risk and feed health, charted from the live API." },
+  { href: "/training", icon: "cap", title: "Training", body: "Cyber defence drills: start from one alert, investigate, diagnose, respond — and get scored." },
+  { href: "/observatory", icon: "radar", title: "Observatory", body: "Real attacks, polled hourly: ransomware leak sites, botnet controllers, exploited CVEs." },
+  { href: "/evaluation", icon: "check", title: "Evaluation", body: "What has been measured, what has not, and the models trained on real data." },
+] as const;
 
 const LOOP = ["Observe", "Understand", "Predict", "Decide", "Act", "Verify", "Learn"];
 
@@ -97,7 +109,7 @@ export default async function LandingPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href={demo}
-              className="focusable rounded-lg border border-[rgb(var(--astra))]/50 bg-[rgb(var(--astra))]/10 px-5 py-2.5 text-sm font-medium transition hover:bg-[rgb(var(--astra))]/20"
+              className="focusable rounded-lg bg-[rgb(var(--astra))] px-5 py-2.5 text-sm font-medium text-[rgb(var(--ground))] shadow-sm transition hover:brightness-110"
             >
               Open a worked incident →
             </Link>
@@ -140,6 +152,35 @@ export default async function LandingPage() {
             Most tools stop after the second one.
           </li>
         </ol>
+      </section>
+
+      {/* --- jump in ----------------------------------------------------- */}
+      {/* The landing page sits inside the app frame now (RP-51), so after the
+          one-paragraph pitch it does what an app's home does: shows the places
+          to go, each with what you will find there. */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Jump in</h2>
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {DESTINATIONS.map((place) => (
+            <li key={place.href}>
+              <Link
+                href={place.href}
+                data-destination={place.href}
+                className="focusable lift group flex h-full gap-4 rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-5 transition hover:border-[rgb(var(--astra))]/50"
+              >
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--astra))]/10 text-[rgb(var(--astra))]">
+                  <Icon name={place.icon} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-medium text-[rgb(var(--ink))] group-hover:text-[rgb(var(--astra))]">
+                    {place.title} <span aria-hidden="true">→</span>
+                  </span>
+                  <span className="mt-1 block text-sm leading-relaxed text-[rgb(var(--muted))]">{place.body}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* --- four numbers, each recountable ------------------------------- */}
