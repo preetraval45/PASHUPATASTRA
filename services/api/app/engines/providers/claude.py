@@ -74,7 +74,7 @@ class ClaudeProvider:
                     message = stream.get_final_message()
             else:
                 message = self._client.messages.create(**params)
-        except Exception as error:  # noqa: BLE001 — mapped to the gateway's vocabulary below
+        except Exception as error:
             raise self._translate(error) from error
 
         return self._read(message, request)

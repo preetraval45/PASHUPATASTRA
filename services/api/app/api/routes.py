@@ -1850,6 +1850,99 @@ def agent_chat(request: ChatRequest) -> dict[str, object]:
     return result.model_dump(mode="json")
 
 
+class GeneralRequest(BaseModel):
+    message: str
+    model: str | None = None
+    """An `id` from `GET /models`. Omitted means the configured default."""
+    history: list[dict[str, str]] = []
+    """Earlier exchanges of this conversation, `{question, answer}`, oldest
+    first. Kept by the browser; only the last few are sent to the model."""
+
+
+@router.post("/agent/ask")
+def agent_ask(request: GeneralRequest) -> dict[str, object]:
+    """Ask Sati AI anything — cyber security or general (owner request).
+
+    Unlike `/agent/chat`, this is not scoped to an incident, and so it is given
+    nothing from the estate: no evidence, no tools, no action path. That is what
+    makes an open question box on a public site safe — there is nothing behind
+    it to enumerate or to act on. Answers are labelled general knowledge, and
+    the question and history are fenced as untrusted text (`agent/general.py`).
+    """
+    from ..agent import general
+    from ..engines.buddhi import gateway
+    from pashupatastra.gateway import GatewayError
+
+    message = request.message.strip()
+    if not message:
+        raise HTTPException(status_code=422, detail="message must not be empty")
+    if len(message) > 2000:
+        raise HTTPException(status_code=422, detail="message is too long")
+
+    if request.model and request.model != "default":
+        from ..engines.buddhi import gateway_for
+
+        try:
+            chosen = gateway_for(request.model)
+        except KeyError:
+            raise HTTPException(
+                status_code=422, detail=f"unknown model {request.model!r}; see /models"
+            ) from None
+    else:
+        chosen = gateway()
+
+    if not getattr(chosen.provider, "available", lambda: True)():
+        raise HTTPException(
+            status_code=503,
+            detail="no model is configured; set the model API key to enable chat",
+        )
+
+    history = [
+        general.Exchange(question=str(turn.get("question", "")), answer=str(turn.get("answer", "")))
+        for turn in request.history[-general.MAX_HISTORY :]
+        if turn.get("question")
+    ]
+    try:
+        result = general.answer(
+            message, history, chosen, max_tokens=get_settings().chat_answer_tokens
+        )
+    except GatewayError as error:
+        logging.getLogger(__name__).warning("general chat unavailable: %s", error)
+        rate_limited = "429" in str(error) or "rate limit" in str(error).lower()
+        raise HTTPException(
+            status_code=429 if rate_limited else 503,
+            detail=(
+                "The assistant is busy right now — the free model allowance is "
+                "per minute. Try again shortly."
+                if rate_limited
+                else "The assistant is unavailable right now."
+            ),
+        ) from error
+
+    AUDIT.append(
+        AuditRecord(
+            at=datetime.now().astimezone(),
+            kind=AuditKind.AGENT_TURN,
+            actor="sati.analyst",
+            incident_ref=None,
+            summary=(
+                f"answered a general question · {result.model} · {result.tokens} tokens"
+                + (" · DECLINED" if result.declined else "")
+            ),
+            detail={
+                "asked": _asked(message),
+                "mode": "general",
+                "topic": result.topic,
+                "model": result.model,
+                "provider": result.provider,
+                "tokens": result.tokens,
+                "declined": result.declined,
+            },
+        )
+    )
+    return result.model_dump(mode="json")
+
+
 MAX_RECORDED_QUESTION = 240
 
 

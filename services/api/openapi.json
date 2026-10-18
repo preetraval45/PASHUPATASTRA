@@ -601,6 +601,41 @@
         "title": "ExecutionResult",
         "type": "object"
       },
+      "GeneralRequest": {
+        "properties": {
+          "history": {
+            "default": [],
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "GeneralRequest",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1617,6 +1652,47 @@
           }
         },
         "summary": "Remediate Action"
+      }
+    },
+    "/api/v1/agent/ask": {
+      "post": {
+        "description": "Ask Sati AI anything \u2014 cyber security or general (owner request).\n\nUnlike `/agent/chat`, this is not scoped to an incident, and so it is given\nnothing from the estate: no evidence, no tools, no action path. That is what\nmakes an open question box on a public site safe \u2014 there is nothing behind\nit to enumerate or to act on. Answers are labelled general knowledge, and\nthe question and history are fenced as untrusted text (`agent/general.py`).",
+        "operationId": "agent_ask_api_v1_agent_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneralRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Agent Ask Api V1 Agent Ask Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Agent Ask"
       }
     },
     "/api/v1/agent/chat": {

@@ -43,6 +43,13 @@ class EchoProvider:
                 }
             case "injection_report_v1":
                 output = {"instructions_found": False, "evidence_refs": refs}
+            case "general_answer_v1":
+                output = {
+                    "answer": "No model is configured; this is the deterministic stub provider.",
+                    "topic": "general",
+                    "area": "brahmacharini",
+                    "declined": False,
+                }
             case _:
                 raise SchemaViolation(
                     f"echo provider has no fixture for schema {request.schema_name!r}"

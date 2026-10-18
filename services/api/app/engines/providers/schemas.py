@@ -158,11 +158,47 @@ CHAT_ANSWER_V1: dict[str, Any] = {
 }
 
 
+GENERAL_ANSWER_V1: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["answer", "topic", "area", "declined"],
+    "properties": {
+        "answer": {
+            "type": "string",
+            "description": "The answer, in plain prose. General knowledge only — "
+            "nothing here is drawn from the visitor's systems, and it must not "
+            "claim to be.",
+        },
+        "topic": {
+            "type": "string",
+            "enum": ["security", "general"],
+            "description": "Whether the question is about cyber security.",
+        },
+        "area": {
+            "type": "string",
+            "enum": [
+                "shailaputri", "brahmacharini", "chandraghanta", "kushmanda", "skandamata",
+                "katyayani", "kalaratri", "mahagauri", "siddhidatri",
+            ],
+            "description": "Which of the nine Navadurga areas (adr/Navadurga) the "
+            "question belongs to; the answer is framed by that specialism.",
+        },
+        "declined": {
+            "type": "boolean",
+            "description": "True when the request asked for something harmful "
+            "(working malware, intrusion into systems the asker does not own) "
+            "and the answer explains why it was not given.",
+        },
+    },
+}
+
+
 SCHEMAS: dict[str, dict[str, Any]] = {
     "hypothesis_v1": HYPOTHESIS_V1,
     "summary_v1": SUMMARY_V1,
     "injection_report_v1": INJECTION_REPORT_V1,
     "chat_answer_v1": CHAT_ANSWER_V1,
+    "general_answer_v1": GENERAL_ANSWER_V1,
 }
 
 
