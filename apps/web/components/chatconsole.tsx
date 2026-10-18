@@ -95,7 +95,7 @@ export function ChatConsole({ incidents }: { incidents: Incident[] }) {
             onChange={(event) =>
               router.replace(`/ask?incident=${encodeURIComponent(event.target.value)}`)
             }
-            className="focusable mono min-w-0 rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--bg))] px-2 py-1 text-sm"
+            className="focusable mono min-w-0 rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-2 py-1 text-sm"
           >
             {incidents.map((candidate) => (
               <option key={candidate.id} value={candidate.id}>
@@ -189,7 +189,7 @@ export function ChatConsole({ incidents }: { incidents: Incident[] }) {
               }
             }}
             placeholder={`Ask about ${incident.id}…`}
-            className="focusable min-h-[2.75rem] flex-1 resize-none rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--bg))] px-3 py-2.5 text-sm placeholder:text-[rgb(var(--faint))]"
+            className="focusable min-h-[2.75rem] flex-1 resize-none rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-3 py-2.5 text-sm placeholder:text-[rgb(var(--faint))]"
           />
           <button
             type="submit"

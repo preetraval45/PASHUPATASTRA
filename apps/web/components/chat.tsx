@@ -194,7 +194,7 @@ export function ChatPanel({ incident }: { incident: Incident }) {
             }
           }}
           placeholder="Ask about this incident…"
-          className="focusable min-h-[2.5rem] flex-1 resize-none rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--bg))] px-3 py-2 text-sm placeholder:text-[rgb(var(--faint))]"
+          className="focusable min-h-[2.5rem] flex-1 resize-none rounded border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-3 py-2 text-sm placeholder:text-[rgb(var(--faint))]"
         />
         <button
           type="submit"

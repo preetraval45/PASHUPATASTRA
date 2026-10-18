@@ -86,7 +86,7 @@ cannot train anything. Cloud GPU training is possible later, but costs money.
 
 ## How to use this plan
 
-**Every task has an ID (`RP-01` … `RP-45`) and an owner.**
+**Every task has an ID (`RP-01` … `RP-53`) and an owner.**
 
 | Owner | Meaning |
 |---|---|
@@ -143,6 +143,7 @@ Thanksgiving (26 Nov) and the holidays.
 | D · External validity + analysis | 22–24 | Mar 8 – Mar 28 | RP-31 – RP-35 | Sati on a benchmark this repo did not write; §8 |
 | E · Paper | 24–26 | Mar 22 – Apr 11 | RP-36 – RP-40 | Full draft, model cards, venue decision |
 | F · Sati-LM *(stretch)* | 27–34 | Apr 12 – Jun 6 | RP-41 – RP-45 | Your own language model behind the Gateway |
+| G · Product UI *(parallel)* | from wk 2 | Oct 18 → | RP-46 – RP-53 | The site works as an app: full-screen Ask, model choice, interactive dashboards, a real welcome — the demo behind the O-1 *original contribution* evidence |
 
 The overlapping weeks are intended: Claude's plumbing runs ahead of your reading.
 
@@ -462,6 +463,23 @@ and starting it before Sati-RCA works would put both at risk.
 - [ ] **RP-43 · Pretrain Sati-LM** — **You** · 15 h + 🌙 · Train a 20–50M-parameter decoder from scratch, starting from your RP-02 GPT. Track validation loss; size it to fit 16 GB. *Done when:* the loss curve is recorded, and the model completes log lines sensibly.
 - [ ] **RP-44 · Teach it the schema** — **You** (Claude builds the constrained decoder) · 12 h · Fine-tune the model on (evidence + Sati-RCA output → hypothesis JSON). Constrained decoding guarantees the output parses into the Gateway schema. *Done when:* 100% of outputs validate, and citation verification passes.
 - [ ] **RP-45 · Sati-LM in the loop** — **Both** · Serve it as a Gateway provider, then compare Sati-RCA + Sati-LM against the LLM baselines on explanation faithfulness and diagnosis. *Done when:* there is a generated table, and you decide whether it becomes paper 2.
+
+
+### Block G — Product UI *(parallel; Claude-owned; added 18 October 2026)*
+
+The owner wants the site to read as a product, not a document: attractive, interactive, and the demo
+behind the O-1A *original contribution* evidence. Built on a branch with Vercel preview links; nothing
+merges to main (which deploys) until the owner has seen the preview. BRAND.md still holds: real data
+only, no ornament, colour always with a glyph or word, the logo never animated or recoloured.
+
+- [x] **RP-46 · CI repair: a test that expired on a date** — *Done 18 Oct.* `core` CI went red on 83613f4, which blocked the deploy job. Cause: a Smriti fixture dated 30 days before a fixed 17 Aug while `recall` applies the 90-day retention against the wall clock, so it expired on 16 Oct. Fixture now relative to now; 730 core tests pass.
+- [~] **RP-47 · Native controls readable in the dark theme** — *Fix pushed 18 Oct; remains: confirm on the deployed site.* The Ask page's incident `<select>` opened white with near-white text. Added `color-scheme` per theme and explicit `<option>` colours, and replaced the undefined `--bg` token used by three inputs.
+- [ ] **RP-48 · App shell** — persistent left sidebar for the console pages (collapsible, icons + labels, keyboard), compact page headers; public pages (/, how-it-works, evaluation, press) keep the site layout. Keeps every `data-*` hook the `scripts/verify*.py` checks use.
+- [ ] **RP-49 · Ask, full screen** — conversation fills the viewport, input pinned at the bottom, incident + conversation history in a side rail, starter questions in the empty state, conversations kept per browser.
+- [ ] **RP-50 · Choose the model** — API lists the models the server is configured for (`GET /models`), `/agent/chat` accepts one from that allow-list, and every answer and audit record names the model and provider that produced it (rules 5, 6). Picker in the Ask header. Sati models join the list when RP-28 serves them.
+- [ ] **RP-51 · A real welcome** — landing that says what it does in one screen, one primary action into the console, a live system-state strip from `/health` and `/figures`, then the loop explained.
+- [ ] **RP-52 · Interactive dashboards** — Overview as a dashboard: KPI tiles with trends, audit activity over time, incidents by severity, usage by day, intel by source; hover tooltips, time-range switch, click-through to the record. Charts from real API data only (`/usage`, `/impact`, `/audit`, `/intel`, `/figures`).
+- [ ] **RP-53 · Interaction across the console** — filters/sort on incidents, audit, detections and observatory; inline approve/deny wired to `/policy/approve|deny` (backlog 3.4); empty and loading states designed, not default.
 
 ---
 

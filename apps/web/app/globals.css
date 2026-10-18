@@ -38,6 +38,19 @@
   --crit: 251 113 133;
 
   --radius: 8px;
+
+  /* Native controls (select menus, scrollbars, date pickers) are drawn by the
+     browser, not by these tokens. Without this they render light-theme
+     defaults on a dark page: a <select>'s open list came up white with
+     near-white text. */
+  color-scheme: dark;
+}
+
+/* The open list of a native <select> ignores the select's own colours in most
+   browsers, so its options are coloured explicitly. */
+option {
+  background-color: rgb(var(--panel));
+  color: rgb(var(--ink));
 }
 
 /* Light theme.
@@ -48,6 +61,7 @@
    Dark stays the default: this is an operations console, usually opened at
    night, and the map reads better on a dark ground. */
 :root[data-theme="light"] {
+  color-scheme: light;
   --ground: 247 247 245;
   --panel: 255 255 255;
   --raised: 240 240 238;

@@ -413,7 +413,10 @@ def a_memory_store(*, outcome: Outcome | None = None, entities: tuple[str, ...] 
             kind=MemoryKind.INCIDENT,
             text="connection pool exhausted on checkout-api after a deploy",
             source="incident-store",
-            at=T0 - timedelta(days=30),
+            # Relative to the wall clock, not T0: `recall` applies retention
+            # against the real now, so a memory pinned to a fixed date silently
+            # expires once that date is 90 days old (it did, on 16 Oct 2026).
+            at=datetime.now().astimezone() - timedelta(days=30),
             entities=frozenset(entities or ("service:checkout-api",)),
             signals=frozenset(("connection_pool_saturation",)),
             outcome=outcome,
