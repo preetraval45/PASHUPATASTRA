@@ -2,7 +2,7 @@
 
 # Sati-RCA v0 — results on real fault-injection data
 
-Trained and tested on **RCAEval** (phamquiluan/RCAEval @ `afeacb11bcc9`), 735 real fault-injection cases on three microservice systems. Model `sati-rca-v0`, sha256 `81b6e96ea87a4d78…`. Root cause absent from the candidate services in 0 case(s) — counted as misses.
+Trained and tested on **RCAEval** (phamquiluan/RCAEval @ `afeacb11bcc9`), 735 real fault-injection cases on three microservice systems. Model `sati-rca-v0`, sha256 `1386769bf585a2ec…`. Root cause absent from the candidate services in 0 case(s) — counted as misses.
 
 AC@k is the share of incidents whose true root-cause service is ranked in the top k; Avg@5 is the mean of AC@1–AC@5 (RCAEval's headline). Brackets are Wilson 95% intervals. **Baseline** ranks services by their largest robust shift, with no learning — the number a model has to beat to be worth being a model.
 
@@ -10,11 +10,11 @@ AC@k is the share of incidents whose true root-cause service is ranked in the to
 
 | Split | Model | AC@1 | AC@3 | AC@5 | Avg@5 | n |
 |---|---|---:|---:|---:|---:|---:|
-| Leave one system out | **Sati-RCA v0** | 88.4 (85.7–90.6) | 96.7 (95.1–97.9) | 98.8 (97.6–99.4) | 95.3 | 645 |
+| Leave one system out | **Sati-RCA v0** | 88.4 (85.7–90.6) | 96.9 (95.3–98.0) | 98.9 (97.8–99.5) | 95.3 | 645 |
 | Leave one system out | baseline | 57.0 (53.2–60.8) | 87.1 (84.3–89.5) | 93.6 (91.5–95.3) | 81.3 | 645 |
-| Held-out fault type | **Sati-RCA v0** | 89.3 (86.7–91.5) | 97.0 (95.5–98.1) | 99.4 (98.4–99.8) | 95.9 | 645 |
+| Held-out fault type | **Sati-RCA v0** | 89.8 (87.2–91.9) | 97.0 (95.5–98.1) | 99.4 (98.4–99.8) | 96.1 | 645 |
 | Held-out fault type | baseline | 57.0 (53.2–60.8) | 87.1 (84.3–89.5) | 93.6 (91.5–95.3) | 81.3 | 645 |
-| Held-out repetition | **Sati-RCA v0** | 91.5 (86.3–94.9) | 98.2 (94.8–99.4) | 99.4 (96.7–99.9) | 97.1 | 165 |
+| Held-out repetition | **Sati-RCA v0** | 90.3 (84.8–93.9) | 98.2 (94.8–99.4) | 99.4 (96.7–99.9) | 96.9 | 165 |
 | Held-out repetition | baseline | 61.2 (53.6–68.3) | 90.3 (84.8–93.9) | 95.8 (91.5–97.9) | 84.6 | 165 |
 
 ## Per fold
@@ -22,15 +22,15 @@ AC@k is the share of incidents whose true root-cause service is ranked in the to
 | Split | Held out | Train cases | Sati AC@1 | Baseline AC@1 | Sati Avg@5 | Baseline Avg@5 | Fault type acc. | n |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | leave-one-system-out | `ob` | 430 | 87.9 (82.9–91.6) | 57.2 (50.5–63.6) | 94.9 | 83.3 | 57.2 | 215 |
-| leave-one-system-out | `ss` | 430 | 94.9 (91.1–97.1) | 76.7 (70.7–81.9) | 98.7 | 92.9 | 57.7 | 215 |
-| leave-one-system-out | `tt` | 430 | 82.3 (76.7–86.8) | 37.2 (31.0–43.8) | 92.2 | 67.8 | 55.4 | 215 |
+| leave-one-system-out | `ss` | 430 | 95.3 (91.6–97.5) | 76.7 (70.7–81.9) | 98.8 | 92.9 | 58.1 | 215 |
+| leave-one-system-out | `tt` | 430 | 81.9 (76.2–86.4) | 37.2 (31.0–43.8) | 92.4 | 67.8 | 56.3 | 215 |
 | held-out-fault | `cpu` | 525 | 96.7 (91.7–98.7) | 58.3 (49.4–66.8) | 98.7 | 81.3 | — | 120 |
-| held-out-fault | `delay` | 525 | 79.2 (71.0–85.5) | 54.2 (45.3–62.8) | 92.5 | 80.2 | — | 120 |
+| held-out-fault | `delay` | 525 | 80.8 (72.9–86.9) | 54.2 (45.3–62.8) | 93.3 | 80.2 | — | 120 |
 | held-out-fault | `disk` | 525 | 100.0 (96.9–100.0) | 64.2 (55.3–72.2) | 100.0 | 88.2 | — | 120 |
-| held-out-fault | `loss` | 525 | 66.7 (57.8–74.5) | 36.7 (28.6–45.6) | 86.8 | 66.2 | — | 120 |
+| held-out-fault | `loss` | 525 | 67.5 (58.7–75.2) | 36.7 (28.6–45.6) | 87.0 | 66.2 | — | 120 |
 | held-out-fault | `mem` | 525 | 100.0 (96.9–100.0) | 68.3 (59.6–76.0) | 100.0 | 89.5 | — | 120 |
 | held-out-fault | `socket` | 600 | 100.0 (92.1–100.0) | 66.7 (52.1–78.6) | 100.0 | 84.9 | — | 45 |
-| held-out-repetition | `last` | 480 | 91.5 (86.3–94.9) | 61.2 (53.6–68.3) | 97.1 | 84.6 | — | 165 |
+| held-out-repetition | `last` | 480 | 90.3 (84.8–93.9) | 61.2 (53.6–68.3) | 96.9 | 84.6 | — | 165 |
 
 ## Ablation — without the series-count feature
 
@@ -38,8 +38,8 @@ AC@k is the share of incidents whose true root-cause service is ranked in the to
 
 | Features | AC@1 | AC@3 | Avg@5 | n |
 |---|---:|---:|---:|---:|
-| all | 88.4 (85.7–90.6) | 96.7 (95.1–97.9) | 95.3 | 645 |
-| without `n_series` | 88.7 (86.0–90.9) | 97.0 (95.5–98.1) | 95.4 | 645 |
+| all | 88.4 (85.7–90.6) | 96.9 (95.3–98.0) | 95.3 | 645 |
+| without `n_series` | 88.5 (85.8–90.8) | 97.0 (95.5–98.1) | 95.3 | 645 |
 
 ## Stress test — RE3, code-level faults, never trained on
 
@@ -54,9 +54,9 @@ Case `re1ob_adservice_cpu_1`, root cause `adservice` — the features that ranke
 
 | Feature | Contribution | Value | Series |
 |---|---:|---:|---|
-| `shift_cpu` | 3.5509 | 6.7158 | `adservice_cpu` |
-| `shift_any` | 2.444 | 6.7158 | `adservice_cpu` |
-| `rank_shift_any` | 1.7611 | 0.0714 | `adservice_cpu` |
+| `shift_cpu` | 3.5726 | 6.7158 | `adservice_cpu` |
+| `shift_any` | 2.4533 | 6.7158 | `adservice_cpu` |
+| `rank_shift_any` | 1.7763 | 0.0714 | `adservice_cpu` |
 
 ## How to read this
 
