@@ -1,101 +1,111 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Evaluation, ModuleStatus } from "@/components/course";
 import { TrainingBoard } from "@/components/training";
-import { Offline, Page } from "@/components/ui";
+import { Page, Panel } from "@/components/ui";
 import { getScenarios } from "@/lib/api";
+import { MODULES } from "@/lib/training";
 
 export const metadata: Metadata = {
   title: "Training",
   description:
-    "Cyber defence practice: work an incident from a single alert — investigate, diagnose, respond in proportion — and get scored on how you got there.",
+    "A cyber defence course: learn a skill you will use in real life, test it, then practise it on a scored investigation.",
 };
 
 export const dynamic = "force-dynamic";
 
 /**
- * Cyber defence training. The drills are the Blue team exercises, presented as
- * what they are for a learner: a scored practice loop with a record, and the
- * skills it exercises named rather than implied.
+ * Cyber defence training: learn → test → practise → see your evaluation.
+ *
+ * Learn and test are the course modules (content in `lib/training.ts`, every
+ * fact from NIST, MITRE ATT&CK or CISA). Practise is the scored drills, which
+ * start from one alert on a full incident. The evaluation is the learner's own
+ * record, kept in their browser.
  */
 export default async function TrainingPage() {
   const scenarios = await getScenarios();
-  if (scenarios === null) return <Offline />;
+  const minutes = MODULES.reduce((sum, m) => sum + m.minutes, 0);
+  const questions = MODULES.reduce((sum, m) => sum + m.quiz.length, 0);
 
   return (
     <Page
       title="Training"
-      description="Cyber defence practice. One alert, and the investigation is yours: open the evidence, find the real cause, choose a proportionate response — and see what you missed."
+      description="A cyber defence course you can use at work tomorrow. Each module teaches one skill, shows how to apply it in real life, and tests you on it — then the drills let you practise on a full investigation."
     >
-      <section className="grid gap-4 md:grid-cols-3">
-        <Step
-          n={1}
-          title="Investigate"
-          points={20}
-          body="Open the entities behind the alert. Points go to opening the evidence that rules the wrong explanation out — being right by luck scores less."
-        />
-        <Step
-          n={2}
-          title="Diagnose"
-          points={50}
-          body="Pick the explanation the evidence supports. One option is always plausible and wrong; it is the one a hurried analyst picks."
-        />
-        <Step
-          n={3}
-          title="Respond"
-          points={30}
-          body="Choose the action. Proportionality counts both ways: doing too little and doing too much are both marked down, the way policy would."
-        />
+      <section className="grid gap-4 md:grid-cols-4">
+        {[
+          { n: "1", t: "Learn", b: `${MODULES.length} modules, about ${minutes} minutes in all` },
+          { n: "2", t: "Apply", b: "a real-life checklist with every module" },
+          { n: "3", t: "Test", b: `${questions} questions, each answer explained` },
+          { n: "4", t: "Practise", b: "scored drills on full incidents" },
+        ].map((step) => (
+          <div key={step.t} className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-4">
+            <p className="flex items-center gap-2">
+              <span className="tnum inline-flex h-7 w-7 items-center justify-center rounded-full bg-[rgb(var(--astra))]/15 text-sm font-semibold text-[rgb(var(--astra))]">
+                {step.n}
+              </span>
+              <span className="font-semibold">{step.t}</span>
+            </p>
+            <p className="mt-2 text-sm text-[rgb(var(--muted))]">{step.b}</p>
+          </div>
+        ))}
       </section>
 
-      <TrainingBoard scenarios={scenarios} />
+      <Panel title="Your evaluation" aside="kept in this browser only">
+        <Evaluation />
+      </Panel>
 
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-5">
-          <h2 className="text-base font-semibold">Skills these drills exercise</h2>
-          <ul className="mt-3 space-y-2 text-sm text-[rgb(var(--muted))]">
-            <li><strong className="text-[rgb(var(--ink))]">Triage under ambiguity</strong> — starting from one alert, not a finished report.</li>
-            <li><strong className="text-[rgb(var(--ink))]">Evidence-led diagnosis</strong> — every conclusion tied to something you opened.</li>
-            <li><strong className="text-[rgb(var(--ink))]">Ruling out the plausible wrong answer</strong> — the habit that separates analysis from guessing.</li>
-            <li><strong className="text-[rgb(var(--ink))]">Proportionate response</strong> — choosing an action a policy engine would authorise, and no more.</li>
-          </ul>
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight">Course modules</h2>
+        <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {MODULES.map((m, i) => (
+            <li key={m.slug}>
+              <Link
+                href={`/training/${m.slug}`}
+                data-module={m.slug}
+                className="focusable lift group flex h-full flex-col rounded-xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] p-5 transition hover:border-[rgb(var(--astra))]/50"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="label">Module {i + 1}</span>
+                  <span className="text-xs text-[rgb(var(--faint))]">· {m.level} · {m.minutes} min</span>
+                  <span className="ml-auto"><ModuleStatus slug={m.slug} /></span>
+                </span>
+                <span className="mt-3 text-base font-semibold group-hover:text-[rgb(var(--astra))]">{m.title}</span>
+                <span className="mt-1.5 flex-1 text-sm leading-relaxed text-[rgb(var(--muted))]">{m.summary}</span>
+                {m.attack && (
+                  <span className="mt-3 flex flex-wrap gap-1.5">
+                    {m.attack.map((t) => (
+                      <span key={t.id} className="mono rounded border border-[rgb(var(--edge))] px-1.5 py-0.5 text-[10.5px] text-[rgb(var(--faint))]">
+                        {t.id}
+                      </span>
+                    ))}
+                  </span>
+                )}
+                <span className="mt-3 text-xs text-[rgb(var(--faint))]">{m.quiz.length}-question test</span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Practice drills</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
+            One alert, and the investigation is yours. Investigate (20 points for opening the evidence
+            that rules the wrong explanation out), diagnose (50 — one option is always plausible and
+            wrong), respond (30 — doing too little and too much are both marked down).
+          </p>
         </div>
-        <div className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-5">
-          <h2 className="text-base font-semibold">Go deeper</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            <Further href="/attack" title="ATT&CK coverage" body="The adversary techniques the incident library has observed, tactic by tactic." />
-            <Further href="/detections" title="Detection rules" body="Sigma rules drafted from incidents — read what catches each technique." />
-            <Further href="/actions" title="The action registry" body="Every response action, its risk score, and its rollback." />
-            <Further href="/ask" title="Sati AI" body="Ask the investigation agent how it reached a diagnosis, with citations." />
-          </ul>
-        </div>
+        {scenarios === null ? (
+          <p className="rounded-xl border border-dashed border-[rgb(var(--edge))] p-6 text-sm text-[rgb(var(--faint))]">
+            The drills come from the live API, which did not answer. The course above works without it.
+          </p>
+        ) : (
+          <TrainingBoard scenarios={scenarios} />
+        )}
       </section>
     </Page>
-  );
-}
-
-function Step({ n, title, points, body }: { n: number; title: string; points: number; body: string }) {
-  return (
-    <div className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-5">
-      <p className="flex items-center gap-2">
-        <span className="tnum inline-flex h-7 w-7 items-center justify-center rounded-full bg-[rgb(var(--astra))]/15 text-sm font-semibold text-[rgb(var(--astra))]">
-          {n}
-        </span>
-        <span className="font-semibold">{title}</span>
-        <span className="tnum ml-auto text-xs text-[rgb(var(--faint))]">{points} pts</span>
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-[rgb(var(--muted))]">{body}</p>
-    </div>
-  );
-}
-
-function Further({ href, title, body }: { href: string; title: string; body: string }) {
-  return (
-    <li>
-      <Link href={href} className="focusable group block rounded-lg px-2 py-1.5 -mx-2 hover:bg-[rgb(var(--raised))]">
-        <span className="font-medium text-[rgb(var(--ink))] group-hover:text-[rgb(var(--astra))]">{title} →</span>
-        <span className="block text-xs text-[rgb(var(--faint))]">{body}</span>
-      </Link>
-    </li>
   );
 }

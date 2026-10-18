@@ -55,3 +55,4 @@ Protocol: before every push, write a topic-named file from
 - [OneLookEverywhere](OneLookEverywhere.md) — panels restyled site-wide (rounded cards, real headings), Overview activity chart; datasheets: 3 datasets research-only
 - [SatiRcaFirstResults](SatiRcaFirstResults.md) — RP-58 results: LOSO AC@1 88.4% vs 57.0% baseline; RE3 80% vs 49%; Sati-RCA is infra RCA, site incidents are security → needs security models + Sati-LM
 - [NavadurgaModels](NavadurgaModels.md) — RP-66: nine Sati models named for Navadurga (Katyayani = RCA, trained); /models page with real results; RP-05 notes; AWS still blocked on secrets
+- [TrainingCourse](TrainingCourse.md) — RP-67: /training is a 6-module course (learn, apply, quiz with explanations, drill) + learner evaluation; content tests

@@ -86,7 +86,7 @@ cannot train anything. Cloud GPU training is possible later, but costs money.
 
 ## How to use this plan
 
-**Every task has an ID (`RP-01` … `RP-66`) and an owner.**
+**Every task has an ID (`RP-01` … `RP-67`) and an owner.**
 
 | Owner | Meaning |
 |---|---|
@@ -508,6 +508,7 @@ are generated files; models are disclosed as AI-built. Splits per [adr/RealDataM
 - [ ] **RP-64 · Sati-Embed on real text** — a small encoder trained contrastively on LogHub templates and incident narratives (Kaggle GPU); recall@k against `HashingEmbedder` and BM25.
 - [ ] **RP-65 · Sati-LM — every answer from our own model** — a small decoder trained on the LogHub corpus and incident text (Kaggle GPU), fine-tuned to the hypothesis schema with constrained decoding; when it passes citation verification, it answers Sati AI and the external LLM becomes baseline only.
 - [~] **RP-66 · Navadurga — the nine Sati models, on the site** — *Built 18 Oct (owner decision, [adr/Navadurga](../adr/Navadurga.md)): nine models named for Navadurga, each with the job that fits its form; `/models` shows all nine with status, and Katyayani's real-data results as interactive model-vs-baseline charts with intervals, the pooled table, the ablation and a cited ranking — read from the workflow's results file, refreshed on every retrain. Remains: confirm live.*
+- [~] **RP-67 · Training as a course: learn, apply, test, practise** — *Built 18 Oct (owner: "training where users learn and apply cyber security in real life, with an evaluation of what they learn"): six modules (incident response lifecycle, phishing, credential attacks, C2 and lateral movement, threat intel, ATT&CK), each with lessons sourced from NIST SP 800-61 / MITRE ATT&CK / CISA, a real-life checklist, technique links, a scored quiz (28 questions, every answer explained, pass mark 80%) and a linked practice drill; `/training` shows the learner's evaluation (per-module best, passed, average), kept in their browser. Content tests guard the quizzes. Remains: confirm live.*
 
 ---
 
