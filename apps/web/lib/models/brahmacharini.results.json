@@ -1,1 +1,101 @@
-{ "pending": "the first training run has not finished" }
+{
+  "model": "sati-brahmacharini-v0",
+  "dataset": {
+    "name": "MITRE ATT&CK enterprise procedure examples",
+    "techniques": 706,
+    "procedures": {
+      "train": 14183,
+      "validation": 1649,
+      "test": 1727
+    },
+    "test_sources_unseen": 115
+  },
+  "task": "rank all techniques for an observed behaviour",
+  "test": {
+    "brahmacharini-v0": {
+      "recall@1": 0.6086,
+      "recall@5": 0.7904,
+      "recall@10": 0.8448,
+      "mrr": 0.6905,
+      "n": 1727
+    },
+    "bm25": {
+      "recall@1": 0.2698,
+      "recall@5": 0.4812,
+      "recall@10": 0.5773,
+      "mrr": 0.373,
+      "n": 1727
+    },
+    "hashing-embedder (Smriti today)": {
+      "recall@1": 0.1123,
+      "recall@5": 0.2125,
+      "recall@10": 0.2687,
+      "mrr": 0.1676,
+      "n": 1727
+    }
+  },
+  "best_epoch_by_validation": 10,
+  "curve": [
+    {
+      "epoch": 1,
+      "loss": 1.0326,
+      "val_mrr": 0.5892
+    },
+    {
+      "epoch": 2,
+      "loss": 0.1968,
+      "val_mrr": 0.6514
+    },
+    {
+      "epoch": 3,
+      "loss": 0.3055,
+      "val_mrr": 0.6857
+    },
+    {
+      "epoch": 4,
+      "loss": 0.0462,
+      "val_mrr": 0.6806
+    },
+    {
+      "epoch": 5,
+      "loss": 0.0151,
+      "val_mrr": 0.6874
+    },
+    {
+      "epoch": 6,
+      "loss": 0.0302,
+      "val_mrr": 0.694
+    },
+    {
+      "epoch": 7,
+      "loss": 0.0059,
+      "val_mrr": 0.6958
+    },
+    {
+      "epoch": 8,
+      "loss": 0.0395,
+      "val_mrr": 0.7029
+    },
+    {
+      "epoch": 9,
+      "loss": 0.074,
+      "val_mrr": 0.7004
+    },
+    {
+      "epoch": 10,
+      "loss": 0.0039,
+      "val_mrr": 0.7056
+    },
+    {
+      "epoch": 11,
+      "loss": 0.0025,
+      "val_mrr": 0.7033
+    },
+    {
+      "epoch": 12,
+      "loss": 0.005,
+      "val_mrr": 0.7
+    }
+  ],
+  "seconds": 312.6
+}
