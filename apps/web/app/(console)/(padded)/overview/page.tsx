@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Sparkline, StatusBar } from "@/components/charts";
+import { TimeBars } from "@/components/analytics";
 
 import { Live } from "@/components/live";
 import {
@@ -139,6 +140,18 @@ export default async function OverviewPage() {
           aside={<Link href="/infrastructure" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">the map →</Link>}
         >
           <StatusBar segments={posture} />
+        </Panel>
+      )}
+
+      {/* The same interactive chart as Analytics, on the page an operator lands
+          on: what the system has been doing, by kind, with the exact counts on
+          hover. The full breakdowns are one click further. */}
+      {audit && audit.length > 0 && (
+        <Panel
+          title="Activity"
+          aside={<Link href="/analytics" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">all analytics →</Link>}
+        >
+          <TimeBars events={audit.map((record) => ({ at: record.at, group: record.kind }))} height={160} />
         </Panel>
       )}
 

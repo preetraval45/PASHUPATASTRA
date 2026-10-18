@@ -128,8 +128,11 @@ export function Panel({
   return (
     <section id={id} className={`panel scroll-mt-24 ${className}`}>
       {(title || aside) && (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-[rgb(var(--edge))] px-4 py-3 sm:px-5">
-          {title && <h2 className="label">{title}</h2>}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-[rgb(var(--edge))] px-4 py-3.5 sm:px-5">
+          {/* A heading, not a caption. Panel titles were 11px uppercase labels,
+              which made every page a stack of footnotes; the new pages use a
+              real heading and the old ones now match them (RP-54). */}
+          {title && <h2 className="text-[0.9375rem] font-semibold tracking-tight">{title}</h2>}
           {aside && <div className="text-xs text-[rgb(var(--muted))]">{aside}</div>}
         </div>
       )}

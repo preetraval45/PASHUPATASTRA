@@ -112,13 +112,12 @@ body {
      console: nothing had weight. A shallow gradient and a soft shadow give the
      surface a top and a bottom, so panels sit *above* the page instead of being
      drawn onto it. */
+  /* The card every page is built from. Rounded and flat-filled since the
+     app redesign (RP-54), so the older pages read as the same product as
+     Analytics and Training rather than as a different site. */
   .panel {
-    @apply rounded-lg border border-[rgb(var(--edge))];
-    background-image: linear-gradient(
-      180deg,
-      rgb(var(--raised) / 0.75) 0%,
-      rgb(var(--panel)) 62%
-    );
+    @apply rounded-xl border border-[rgb(var(--edge))];
+    background-color: rgb(var(--panel));
     box-shadow:
       0 1px 0 0 rgb(255 255 255 / 0.03) inset,
       0 1px 2px rgb(0 0 0 / 0.25),
