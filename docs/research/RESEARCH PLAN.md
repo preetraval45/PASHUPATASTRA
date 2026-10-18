@@ -86,7 +86,7 @@ cannot train anything. Cloud GPU training is possible later, but costs money.
 
 ## How to use this plan
 
-**Every task has an ID (`RP-01` … `RP-69`) and an owner.**
+**Every task has an ID (`RP-01` … `RP-70`) and an owner.**
 
 | Owner | Meaning |
 |---|---|
@@ -511,6 +511,7 @@ are generated files; models are disclosed as AI-built. Splits per [adr/RealDataM
 - [~] **RP-67 · Training as a course: learn, apply, test, practise** — *Built 18 Oct (owner: "training where users learn and apply cyber security in real life, with an evaluation of what they learn"): six modules (incident response lifecycle, phishing, credential attacks, C2 and lateral movement, threat intel, ATT&CK), each with lessons sourced from NIST SP 800-61 / MITRE ATT&CK / CISA, a real-life checklist, technique links, a scored quiz (28 questions, every answer explained, pass mark 80%) and a linked practice drill; `/training` shows the learner's evaluation (per-module best, passed, average), kept in their browser. Content tests guard the quizzes. Remains: confirm live.*
 - [~] **RP-68 · Sati AI: history and any question** — *Built 18 Oct (owner: "history of chat instead of the incident list; answer any cyber or general question"): the rail is conversation history (new chat, delete, per-browser); each conversation is General or one incident. `POST /agent/ask` answers any question with nothing from the estate in reach, visitor text fenced as untrusted, answers labelled general knowledge and routed to one of the nine Navadurga areas (a framing, not a separate model); 5 tests. Remains: the API deploy — until AWS is live, general questions say so instead of answering.*
 - [~] **RP-69 · Nine levels of cyber awareness** — *Built 18 Oct (owner: "based on the 9 Durga models, the levels of cyber security awareness"): the course is nine levels, one per Navadurga form — Shailaputri (incident response) → Brahmacharini (ATT&CK) → Chandraghanta (phishing) → Kushmanda (threat intel) → Skandamata (credentials) → Katyayani (C2 and lateral movement) → Kalaratri (logs and detection, new) → Mahagauri (recovery and verification, new) → Siddhidatri (capstone scenarios, new); 46 questions; the learner's level is the highest with every level below it passed. Tests guard order and the level rule. Remains: confirm live.*
+- [~] **RP-70 · World threat landscape** — *Built 18 Oct (owner: "only 3 incidents — I want whole-world data"): `world-data.yml` takes a daily snapshot on GitHub's runners from CISA KEV, ransomware.live, abuse.ch Feodo Tracker and Have I Been Pwned (`scripts/worldsnapshot.py`, each source independent, failures recorded); `/world` charts exploited CVEs per month, top vendors, ransomware posts per day and by group/country/sector, botnet C2 by family/country, and the latest KEV and breach entries. Victim names and raw indicators deliberately omitted. Remains: the first snapshot run.*
 
 ---
 

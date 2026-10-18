@@ -54,6 +54,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     title: "Analyze",
     items: [
       { href: "/analytics", label: "Analytics", icon: "chart" },
+      { href: "/world", label: "World threats", icon: "globe", hint: "daily, from public sources" },
       { href: "/models", label: "Sati models", icon: "cube", hint: "nine, trained on real data" },
     ],
   },
@@ -330,6 +331,7 @@ const ICONS = {
   collapse: "M15 6l-6 6 6 6M5 4v16",
   expand: "M9 6l6 6-6 6M19 4v16",
   menu: "M4 7h16M4 12h16M4 17h16",
+  globe: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z",
   cube: "M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 12l8-4.5M12 12v9M12 12L4 7.5",
   chart: "M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3M20 16V6",
   cap: "M2 9l10-5 10 5-10 5L2 9zM6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5M22 9v6",

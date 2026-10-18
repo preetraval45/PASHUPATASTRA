@@ -1,0 +1,43 @@
+name: World threat data
+
+# A daily snapshot of the world's threat landscape from public sources (CISA
+# KEV, ransomware.live, abuse.ch Feodo Tracker, Have I Been Pwned), committed
+# as apps/web/lib/world.generated.json for the /world page. Vercel redeploys on
+# the commit. Runs on GitHub's runners — nothing on anyone's machine.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/worldsnapshot.py
+      - .github/workflows/world-data.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: world-data
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/worldsnapshot.py --out apps/web/lib/world.generated.json
+      - name: commit the snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/lib/world.generated.json
+          if git diff --cached --quiet; then echo "unchanged"; exit 0; fi
+          git commit -m "data(world): threat landscape snapshot from run ${{ github.run_id }}"
+          git pull --rebase origin main
+          git push origin HEAD:main

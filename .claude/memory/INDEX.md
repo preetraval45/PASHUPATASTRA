@@ -58,3 +58,4 @@ Protocol: before every push, write a topic-named file from
 - [TrainingCourse](TrainingCourse.md) — RP-67: /training is a 6-module course (learn, apply, quiz with explanations, drill) + learner evaluation; content tests
 - [SatiAiGeneral](SatiAiGeneral.md) — RP-68: Sati AI history rail + General scope; /agent/ask (no estate, fenced, Navadurga area framing); waits on AWS deploy
 - [NineLevels](NineLevels.md) — RP-69: course is nine Navadurga levels (3 new modules, 46 questions), awareness level = highest contiguous pass
+- [WorldData](WorldData.md) — RP-70: daily GitHub snapshot of KEV/ransomware.live/Feodo/HIBP → /world page (aggregates only, no victim names)

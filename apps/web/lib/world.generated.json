@@ -1,0 +1,7 @@
+{
+  "as_of": null,
+  "kev": { "ok": false, "absent": "the first daily snapshot has not run yet" },
+  "ransomware": { "ok": false, "absent": "the first daily snapshot has not run yet" },
+  "c2": { "ok": false, "absent": "the first daily snapshot has not run yet" },
+  "breaches": { "ok": false, "absent": "the first daily snapshot has not run yet" }
+}
