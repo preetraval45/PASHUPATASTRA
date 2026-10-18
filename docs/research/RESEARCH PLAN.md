@@ -342,7 +342,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   4. Ask Claude to review the code for leakage (for example, normalisation fitted on test data).
   *Done when:* all are scored in one generated table alongside the statistical four, and the review is clean.
 
-- [ ] **RP-23 · ADR: detection decision**
+- [x] **RP-23 · ADR: detection decision** — *Done 18 Oct: [adr/SatiDetect](../adr/SatiDetect.md). On NAB, leave-one-family-out, Shailaputri v0 has the best F1 (0.457 vs 0.312 for seasonal-robust-z) but only ties on false alarms per 1000 (226.5 vs 228.7) and flags later (lead 195 vs 241) — so by RP-23's own test, not yet: SeasonalRobustZ stays default, Shailaputri is a second opinion. Closes backlog 2.1 ML detection.*
   **Both** · Depends: RP-22 · Closes: backlog ROADMAP 2.1 "ML detection"
   *Steps:* does Sati-Detect beat `SeasonalRobustZ` on false alarms per 1000 and on lead time, and not only on F1? Record the answer in `docs/adr/SatiDetect.md`. "No" closes the item too.
   *Done when:* the ADR is committed.
@@ -501,7 +501,7 @@ are generated files; models are disclosed as AI-built. Splits per [adr/RealDataM
 
 - [x] **RP-58 · Sati-RCA v0 on RCAEval** — *Done 18 Oct, run 39166644199, table [models/sati-rca.md](models/sati-rca.md): on a system never seen in training AC@1 **88.4%** (85.7–90.6) vs 57.0% for the no-learning baseline, n = 645; held-out fault type 89.8%; RE3 code-level faults, never trained on, 80.0% vs 48.9% (n = 90). Fault type end to end ~57%. Caveats in the table: injection time is given (RCAEval's setting), and a series-count ablation is added to measure how much is "which kind of service".*
 - [x] **RP-59 · Dataset datasheets** — *Done 18 Oct: [datasheets.md](datasheets.md), terms read from each source. RCAEval, NAB, SMD are MIT; UNSW-NB15, CIC-IDS2017 and LogHub are research-only, so weights from them cannot ship under Apache-2.0 without an owner decision (research-only release, or ask the UNSW authors).*
-- [~] **RP-60 · Shailaputri (Sati-Detect, metrics) on NAB and SMD** — *Built 18 Oct: NAB loader (real families only, pinned commit), strictly causal scale-free features, LightGBM point classifier with threshold chosen on training families, `Replay` strategy scored by the core `evaluate()` against robust-z / EWMA / seasonal-naive / seasonal-robust-z on the same series, leave-one-family-out; 4 tests incl. a no-look-ahead test; `shailaputri` job in train-sati.yml; Models page shows it when results land. Remains: the first run's table; SMD as v1.*
+- [~] **RP-60 · Shailaputri (Sati-Detect, metrics) on NAB and SMD** — *Built 18 Oct: NAB loader (real families only, pinned commit), strictly causal scale-free features, LightGBM point classifier with threshold chosen on training families, `Replay` strategy scored by the core `evaluate()` against robust-z / EWMA / seasonal-naive / seasonal-robust-z on the same series, leave-one-family-out; 4 tests incl. a no-look-ahead test; `shailaputri` job in train-sati.yml; Models page shows it when results land. First run done (run 39169841856, [models/shailaputri.md](models/shailaputri.md)): F1 0.457, best of five; ties on false alarms; later lead. Remains: SMD as v1, and onset-labelled training for earlier flags.*
 - [ ] **RP-61 · Sati-Detect (network) on UNSW-NB15 and CIC-IDS2017** — UNSW-NB15's own train/test files; CIC-IDS2017 split by day so attacks on later days are unseen; per-attack-family recall and false-positive rate.
 - [ ] **RP-62 · Sati-Detect (logs) on LogHub HDFS and BGL** — split by time, not by shuffled window; precision/recall/F1 per dataset.
 - [ ] **RP-63 · Serve Sati-RCA as a Gateway provider** — the trained artefact (versioned, hashed) loaded by the API; its ranking becomes the hypothesis with citations to the metric series; LLM kept as baseline and labelled backup (supersedes RP-28's model source).
@@ -617,7 +617,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 **Phase 2 — Buddhi + Smriti · Intelligence · Weeks 7–10 · Sep 21 – Oct 18 › 2.1 Detection**
 
 - [ ] Period detection by autocorrelation, to make the opt-in automatic and safe *(Phase 5 — needs labelled scenarios to validate against)*
-- [ ] ML detection — only if it beats the best statistical strategy on the benchmark *(Phase 5 decides)*
+- [x] ML detection — decided 18 Oct ([adr/SatiDetect](../adr/SatiDetect.md)): Shailaputri v0 wins on F1 but not on lead time and only ties on false alarms, so the statistical default stays and the model is a second opinion. RP-23
 
 **Phase 2 — Buddhi + Smriti · Intelligence · Weeks 7–10 · Sep 21 – Oct 18 › 2.2 Correlation**
 

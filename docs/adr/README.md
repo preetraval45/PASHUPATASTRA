@@ -19,6 +19,7 @@ in the filename.
 | [RealDataModels](RealDataModels.md) — Claude builds and trains every Sati model on real public data, on free cloud compute; splits that test diagnosis, not memory | 2026-10-18 | Accepted |
 | [Navadurga](Navadurga.md) — the nine Sati models, named for Navadurga, each with the job that fits its form; Katyayani (root cause) trained first | 2026-10-18 | Accepted |
 | [LLMBaselines](LLMBaselines.md) — 2 × 2: {deterministic, LLM} proposer × {no policy, Dharma + verification}; LLMs are baselines only | 2026-10-18 | Accepted |
+| [SatiDetect](SatiDetect.md) — Shailaputri v0 beats every statistical detector on F1 but not on lead time; statistical default stays, model is a second opinion | 2026-10-18 | Accepted |
 
 ## Planned
 

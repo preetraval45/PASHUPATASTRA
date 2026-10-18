@@ -1,0 +1,64 @@
+# Sati-Detect (Shailaputri) — does the learned detector earn its place?
+
+- **Status:** Accepted · 18 October 2026 (RP-23; Claude, on the generated results)
+- **Date:** 2026-10-18
+- **Evidence:** [models/shailaputri.md](../research/models/shailaputri.md), train-sati run 39169841856
+
+## Context
+
+Backlog item 2.1 said ML detection ships "only if it beats the best statistical
+strategy on the benchmark", and RP-23 sharpened that: beating
+`SeasonalRobustZ` on **false alarms per 1000 and lead time**, not only on F1.
+Shailaputri v0 has now been trained and tested on NAB's 47 real series, with
+each family held out in turn, and scored online by the same harness as the
+four statistical strategies on exactly the same series.
+
+## What the measurement found
+
+Mean across held-out families:
+
+| Detector | F1 | Recall | False alarms / 1000 | Lead |
+|---|---:|---:|---:|---:|
+| **Shailaputri v0** | **0.457** | 0.824 | 226.5 | 195.2 |
+| seasonal-robust-z | 0.312 | 0.761 | 228.7 | 241.3 |
+| seasonal-naive | 0.346 | 0.930 | 372.2 | 240.0 |
+| robust-z | 0.325 | 0.911 | 656.5 | 234.1 |
+| EWMA | 0.261 | 0.900 | 568.3 | 229.0 |
+
+- **F1: yes, clearly.** It is the best of the five, and better than
+  seasonal-robust-z by about 0.15.
+- **False alarms: a tie.** 226.5 against 228.7 per 1000. It is no quieter than
+  the quietest statistical detector, though it is far quieter than the other
+  three.
+- **Lead time: no.** About 46 points later than seasonal-robust-z, so it
+  confirms an anomaly later in the window.
+- **Absolute level:** every detector raises more than 200 false alarms per
+  1000 points under NAB's window labelling. None of them should page a person
+  on its own.
+
+## Decision
+
+**By RP-23's own test, the answer is "not yet".** Shailaputri v0 does not
+beat seasonal-robust-z on lead time, and it only ties on false alarms.
+
+- `SeasonalRobustZ` stays the default detector in `packages/core`.
+- Shailaputri v0 is offered as a **second opinion**: it scores anomalies, and
+  where it agrees with the statistical detector, that agreement raises
+  confidence. It does not replace the statistical detector.
+- Backlog 2.1 "ML detection" closes with this answer. A "no" closes the item,
+  as RP-23 says.
+
+## What would change it
+
+- **Earlier flags.** Train on onset rather than whole-window membership. The
+  label is currently "inside the window", which rewards confirming late.
+- **SMD (multivariate)** as v1, where correlated metrics give a learned model
+  something a univariate statistic cannot see.
+- A threshold chosen for a **target false-alarm rate** rather than for F1.
+
+## Consequences
+
+**Enables:** an honest paper paragraph. A learned detector wins on F1 and
+loses on timeliness, and here is why.
+
+**Rules out:** claiming "ML detection beats statistics" from F1 alone.
