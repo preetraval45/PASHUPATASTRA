@@ -69,6 +69,19 @@ def main(path: str) -> int:
         )
     w("")
 
+    if "ablation_no_n_series" in r:
+        a = r["ablation_no_n_series"]["sati"]
+        full = r["pooled"]["leave-one-system-out"]["sati"]
+        w("## Ablation — without the series-count feature\n")
+        w("`n_series` counts a service's metrics. RCAEval's root causes are always application "
+          "services, which tend to carry more series than databases, so a model can lean on "
+          "*which kind of service* rather than *what changed*. Leave-one-system-out without it:\n")
+        w("| Features | AC@1 | AC@3 | Avg@5 | n |")
+        w("|---|---:|---:|---:|---:|")
+        w(f"| all | {cell(full, 1)} | {cell(full, 3)} | {pct(full['avg@5'])} | {full['n']} |")
+        w(f"| without `n_series` | {cell(a, 1)} | {cell(a, 3)} | {pct(a['avg@5'])} | {a['n']} |")
+        w("")
+
     if "stress_re3" in r:
         s, b = r["stress_re3"]["sati"], r["stress_re3"]["baseline"]
         w("## Stress test — RE3, code-level faults, never trained on\n")

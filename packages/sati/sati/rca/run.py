@@ -31,10 +31,10 @@ from pathlib import Path
 import lightgbm as lgb
 import pandas as pd
 
-from sati.sources import rcaeval
 from sati.rca import features as feats
 from sati.rca import model
 from sati.rca.evaluate import score
+from sati.sources import rcaeval
 
 TRAIN_SUITES = ("RE1", "RE2")
 STRESS_SUITE = "RE3"
@@ -168,6 +168,19 @@ def main() -> int:
     results["pooled"] = {
         scheme: {"sati": score(b["sati"]), "baseline": score(b["baseline"])} for scheme, b in pooled.items()
     }
+
+    # Ablation. `n_series` counts a service's metrics, and in RCAEval the root
+    # cause is always an application service, never a database — which tend to
+    # carry fewer series. A model can lean on that prior without diagnosing
+    # anything, so leave-one-system-out is re-run without it and both are
+    # reported. The gap is how much of the score is "which kind of service".
+    lean = [f for f in features if f != "n_series"]
+    ablated: list[int | None] = []
+    for scheme, _fold, mask in splits(train_pool):
+        if scheme != "leave-one-system-out":
+            continue
+        ablated += evaluate_fold(train_pool[~mask], train_pool[mask], lean)["sati"]
+    results["ablation_no_n_series"] = {"scheme": "leave-one-system-out", "sati": score(ablated)}
 
     # The model that serves: trained on everything in RE1 and RE2.
     final = model.train_ranker(train_pool, features)
