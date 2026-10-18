@@ -14,8 +14,8 @@ in the filename.
 | [Graph](Graph.md) — topology store: Postgres, p99 18ms vs. a 200ms target | 2026-08-11 | Accepted |
 | [Seasonality](Seasonality.md) — seasonal strategy opt-in, and mis-specification reported | 2026-08-17 | Accepted |
 | [Smriti](Smriti.md) — hybrid retrieval, and the match basis reported rather than blended | 2026-08-17 | Accepted |
-| [SatiModels](SatiModels.md) — Sati stays the agent; Sati-Detect/-RCA/-Embed/-LM are the models it runs on, trained here | 2026-10-10 | Proposed |
-| [ExternalBenchmark](ExternalBenchmark.md) — feasibility of RCAEval, OpenRCA, AIOpsLab, ITBench; RCAEval recommended | 2026-10-10 | Proposed |
+| [SatiModels](SatiModels.md) — Sati stays the agent; Sati-Detect/-RCA/-Embed/-LM are the models it runs on, trained here | 2026-10-18 | Accepted |
+| [ExternalBenchmark](ExternalBenchmark.md) — feasibility of RCAEval, OpenRCA, AIOpsLab, ITBench; RCAEval chosen | 2026-10-18 | Accepted |
 
 ## Planned
 

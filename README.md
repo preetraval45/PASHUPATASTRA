@@ -238,7 +238,8 @@ in the [plan](docs/research/RESEARCH%20PLAN.md) Backlog, under Phase 0.
 
 ## License
 
-Not yet decided, and stated rather than implied: the core is intended for open
-source and the cloud platform is commercial, and the file arrives when that
-decision does. Until then the repository is public source without a licence,
-which means all rights reserved — read it, cite it, and ask before reusing it.
+Open core, decided 18 October 2026. `packages/core`, `packages/sati` (including
+trained Sati model weights when released), `packages/sdk` and `benchmark/` are
+**Apache-2.0**. Everything else, including the API, the web app and the logo
+artwork, stays all rights reserved for now. [LICENSING.md](LICENSING.md) has
+the path-by-path table.

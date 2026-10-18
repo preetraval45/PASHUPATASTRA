@@ -1,6 +1,6 @@
 # Sati models — the models Sati runs on, trained here
 
-- **Status:** Proposed — drafted by Claude for RP-04; three owner decisions open (below)
+- **Status:** Accepted · 18 October 2026 (drafted by Claude for RP-04; decisions below are the owner's)
 - **Date:** 2026-10-10
 - **Phase:** Research plan, Block A
 
@@ -72,14 +72,16 @@ fallback.
    No training or tuning on them. A guard fails the build on any match (RP-18).
 2. Splits are by **topology** and by **fault type**, never random.
 
-## Owner decisions — open
+## Owner decisions — 18 October 2026
 
-These are the owner's, and the ADR is not Accepted until they are filled in.
-
-- **Names.** Keep `Sati-Detect`, `Sati-RCA`, `Sati-Embed`, `Sati-LM`? *(decision: …)*
-- **Weights.** Release trained weights publicly, privately, or not at all? *(decision: …)*
-- **Licence for weights.** The repository has no licence yet (README). Released
-  weights need one; code and weights may differ. *(decision: …)*
+- **Names:** kept: `Sati-Detect`, `Sati-RCA`, `Sati-Embed`, `Sati-LM`.
+- **Weights:** released **publicly**, with each model's card (RP-39). A model
+  is released only after its evaluation is in a generated table.
+- **Licence:** **Apache-2.0**, scoped to the open core: `packages/core`,
+  `packages/sati` (code and weights), `packages/sdk` and `benchmark/`.
+  `services/`, `apps/`, `infra/`, `packages/connectors/` and the logo stay
+  all rights reserved until the open-source split. See
+  [LICENSING.md](../../LICENSING.md).
 
 ## Consequences
 

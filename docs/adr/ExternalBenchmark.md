@@ -1,6 +1,6 @@
 # External benchmark — a result on data this repository did not write
 
-- **Status:** Proposed — feasibility by Claude for RP-31; the choice is the owner's
+- **Status:** Accepted · 18 October 2026 (feasibility by Claude; the choice is the owner's)
 - **Date:** 2026-10-10
 - **Phase:** Research plan, Block D
 
@@ -75,7 +75,7 @@ logs and traces; 270 cases, six fault types), then RE1 for n. Its labels are the
 ones Sati-RCA predicts, it runs on free runners, its data licence is explicit,
 and it has published baselines to compare against.
 
-Decision: *…*
+**Decision (owner, 18 October 2026): RCAEval**, starting with RE2. It is test-only and zero-shot, and its three topologies join the RP-18 contamination guard. The owner's reading of the four papers is still to be logged in [related-work.md](../research/related-work.md).
 
 ## Consequences
 

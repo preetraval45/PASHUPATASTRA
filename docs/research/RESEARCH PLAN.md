@@ -194,7 +194,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   2. **You** read and fill these four: Ahmed et al. ICSE 2023 (LLM root cause for cloud incidents); Chen et al. EuroSys 2024 (RCACopilot); Soldani & Brogi 2022 (*Anomaly Detection and Failure Root Cause Analysis in (Micro)Service-Based Cloud Applications: A Survey*, ACM CSUR); Greshake et al. 2023 (indirect prompt injection).
   *Done when:* four complete entries, written in your words.
 
-- [~] **RP-04 · ADR: the Sati model family** — *Draft committed 10 Oct: [SatiModels.md](../adr/SatiModels.md), status Proposed. Remains: owner decides names, weights release and licence; then CLAUDE.md and GLOSSARY.md are updated to match.*
+- [x] **RP-04 · ADR: the Sati model family** — *Done 18 Oct: [SatiModels.md](../adr/SatiModels.md) Accepted. Owner kept the four names, chose public weights and Apache-2.0 scoped to the open core ([LICENSING.md](../../LICENSING.md)). CLAUDE.md and GLOSSARY.md updated to match.*
   **Both** · Claude draft 1 session; You 1 h decisions · Depends: —
   *Why:* CLAUDE.md defines Sati as *the agent*. Training models called Sati is a naming and architecture decision, and those are made in ADRs, not assumed.
   *Steps:*
@@ -398,7 +398,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
 
 ### Block D — External validity and analysis (Weeks 22–24)
 
-- [~] **RP-31 · Choose an external benchmark** — *Claude's feasibility note done 10 Oct: [ExternalBenchmark.md](../adr/ExternalBenchmark.md), Proposed, recommends RCAEval (RE2 first). Remains: the owner reads the four papers and decides.*
+- [x] **RP-31 · Choose an external benchmark** — *Done 18 Oct: [ExternalBenchmark.md](../adr/ExternalBenchmark.md) Accepted, owner chose **RCAEval** (RE2 first). Carried forward: its three topologies go into the RP-18 guard; the owner's notes on the four papers go into the related-work log.*
   **Both** · You 4 h; Claude 1 session · Depends: —
   *Steps:* **You** read OpenRCA (Xu et al., ICLR 2025), RCAEval (Pham et al., 2025), AIOpsLab (Chen et al., 2025) and ITBench (IBM, 2025). **Claude** writes a feasibility note: licence, size, whether it runs on one machine, and how its data maps to Sati-RCA's inputs. **You** decide. RCAEval is likely the best fit, because its metrics-and-topology data matches Sati-RCA's inputs.
   *Done when:* `docs/adr/ExternalBenchmark.md` is committed. The chosen benchmark joins the contamination guard.
@@ -647,7 +647,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 **Phase 6 — Research & Open-Source Release · Weeks 21–24 · Dec 28 – Jan 24 2027 › 6.2 Open source**
 
 - [ ] Split the monorepo — core, agent, sdk, connectors, benchmark, docs, ui, examples
-- [ ] License, contribution guide, vulnerability disclosure process
+- [~] License, contribution guide, vulnerability disclosure process — *licence done 18 Oct: Apache-2.0 for the open core ([LICENSING.md](../../LICENSING.md)). Remains: licence for the rest at the split, a contribution guide, and a disclosure process*
 - [ ] Reproducibility: benchmark runnable by a third party on release day
 
 **Phase 6 — Research & Open-Source Release · Weeks 21–24 · Dec 28 – Jan 24 2027 › 6.3 Commercial**

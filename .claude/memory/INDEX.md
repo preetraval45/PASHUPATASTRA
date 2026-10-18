@@ -45,3 +45,4 @@ Protocol: before every push, write a topic-named file from
 - [AblationsMeasured](AblationsMeasured.md) — RP-01 closed: −no-policy has no effect on this corpus (proposer never trips Dharma); −no-verification hides the 5 failed remediations from humans while Correct is unchanged
 - [SatiModelsDraft](SatiModelsDraft.md) — RP-04 ADR drafted (Proposed, 3 owner decisions open); RP-03 log seeded with verified citations; RP-02 kept the owner's at their choice
 - [ExternalBenchmarkFeasibility](ExternalBenchmarkFeasibility.md) — RP-31 feasibility: RCAEval recommended (label = root-cause service, MIT/CC-BY data, fits free runners); OpenRCA too big and data unlicensed
+- [OpenCoreLicence](OpenCoreLicence.md) — RP-04/RP-31 closed: Apache-2.0 for core/sati/sdk/benchmark only (LICENSING.md, not a root LICENSE); RCAEval chosen

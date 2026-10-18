@@ -16,6 +16,21 @@
 Names are load-bearing in code — module prefixes, not decoration. Brand tone is
 "ancient concept → modern intelligence"; no religious or fantasy imagery.
 
+### Sati models
+
+*Added 18 October 2026 ([adr/SatiModels](adr/SatiModels.md)).* The models Sati
+runs on, trained in this repository and served through the AI Gateway:
+
+| Model | Job |
+|---|---|
+| **Sati-Detect** | Anomaly scoring on metrics |
+| **Sati-RCA** | Ranks the root-cause service and fault type, citing the event IDs behind it |
+| **Sati-Embed** | Turns incident text into vectors for Smriti recall |
+| **Sati-LM** *(stretch)* | Writes the structured hypothesis |
+
+"Sati" alone means the agent. A model is always named with its suffix, so a
+claim about a classifier is never read as a claim about the decision loop.
+
 ### Sati and the engines
 
 The engines are capabilities. **Sati is the actor that uses them.** Drishti

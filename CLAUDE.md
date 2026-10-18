@@ -36,6 +36,13 @@ one identity — `sati.sentinel`, `sati.hunter`, `sati.analyst` — not shipped 
 separate agents. Nothing about this exempts it from rule 2 below: Sati proposes,
 Dharma authorises.
 
+**Sati models** are the models Sati runs on, designed and trained in this
+repository: `Sati-Detect`, `Sati-RCA`, `Sati-Embed`, `Sati-LM`
+([adr/SatiModels](docs/adr/SatiModels.md)). "Sati" alone always means the agent;
+a model is always named with its suffix. Model code lives in `packages/sati/`
+(PyTorch allowed); `packages/core` stays torch-free. Models are served as an AI
+Gateway provider and get no exemption from rules 1–6.
+
 Brand tone is "ancient concept → modern intelligence". The **logo is illustrated
 artwork** — the Pashupatastra spear — by an owner decision on 17 August 2026 that
 reversed the earlier geometric-mark rule. See [docs/BRAND.md](docs/BRAND.md) for
