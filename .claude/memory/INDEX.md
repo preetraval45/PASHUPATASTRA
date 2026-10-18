@@ -64,3 +64,4 @@ Protocol: before every push, write a topic-named file from
 - [Shailaputri](Shailaputri.md) — RP-60: NAB detector (causal features, LightGBM, leave-one-family-out vs 4 statistical), CI job, Models page section
 - [Kalaratri](Kalaratri.md) — RP-62: LogHub HDFS log-anomaly model, time split, PCA + unseen baselines, metrics only (research-only data)
 - [Kushmanda](Kushmanda.md) — RP-65: own LM (permissive corpus, own BPE, from-scratch GPT) trained on Kaggle via kaggle-kushmanda.yml; needs KAGGLE_API_TOKEN + KAGGLE_USERNAME secrets
+- [Brahmacharini](Brahmacharini.md) — RP-64: ATT&CK procedure→technique dual encoder vs BM25/HashingEmbedder; never run local ruff --fix on sati (strips CI-needed noqa)

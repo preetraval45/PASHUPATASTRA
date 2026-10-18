@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
-import { KALARATRI, KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
+import { BRAHMACHARINI, KALARATRI, KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
 export const metadata: Metadata = {
   title: "Sati models",
@@ -207,6 +207,46 @@ export default function ModelsPage() {
               </p>
             </Panel>
           </div>
+        </section>
+      )}
+
+      {!BRAHMACHARINI.pending && (
+        <section id="brahmacharini-results" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Brahmacharini — from behaviour to the technique it is</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              Each test query is a real description of how an attacker behaved, written about one of{" "}
+              {BRAHMACHARINI.dataset.test_sources_unseen} groups, malware families or tools never seen in training. The
+              model ranks all {BRAHMACHARINI.dataset.techniques} ATT&amp;CK techniques; the same queries go to BM25 and to
+              the embedder Smriti uses today.
+            </p>
+          </div>
+          <Panel title="Held-out behaviour descriptions" aside={`n = ${Object.values(BRAHMACHARINI.test)[0]?.n ?? 0}`}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                    <th className="py-2 pr-3 font-normal">Retriever</th>
+                    <th className="py-2 pr-3 text-right font-normal">Recall@1</th>
+                    <th className="py-2 pr-3 text-right font-normal">Recall@5</th>
+                    <th className="py-2 pr-3 text-right font-normal">Recall@10</th>
+                    <th className="py-2 text-right font-normal">MRR</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[rgb(var(--edge))]">
+                  {Object.entries(BRAHMACHARINI.test).map(([name, m]) => (
+                    <tr key={name}>
+                      <td className="py-2 pr-3">{name.startsWith("brahmacharini") ? <strong>Brahmacharini</strong> : name}</td>
+                      <td className="tnum py-2 pr-3 text-right">{m["recall@1"].toFixed(3)}</td>
+                      <td className="tnum py-2 pr-3 text-right">{m["recall@5"].toFixed(3)}</td>
+                      <td className="tnum py-2 pr-3 text-right">{m["recall@10"].toFixed(3)}</td>
+                      <td className="tnum py-2 text-right">{m.mrr.toFixed(3)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
         </section>
       )}
 

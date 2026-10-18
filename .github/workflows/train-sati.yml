@@ -162,3 +162,46 @@ jobs:
             git pull --rebase origin main && git push origin HEAD:main && break
             sleep 10
           done
+
+  brahmacharini:
+    # Model 2 of the nine (adr/Navadurga): embeddings for memory and recall,
+    # trained contrastively on ATT&CK procedure examples, tested on sources
+    # never seen in training. Small enough for CPU.
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - uses: actions/cache@v4
+        with:
+          path: .cache/corpus
+          key: attack-corpus-v1
+      - name: train and evaluate on ATT&CK procedure examples
+        working-directory: packages/sati
+        run: python -m sati.embed.run --cache ../../.cache/corpus --out ../../results/brahmacharini
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brahmacharini
+          path: results/brahmacharini/
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models apps/web/lib/models
+          cp results/brahmacharini/results.json docs/research/models/brahmacharini.results.json
+          cp results/brahmacharini/results.json apps/web/lib/models/brahmacharini.results.json
+          (cd packages/sati && python -m sati.embed.report ../../results/brahmacharini/results.json) > docs/research/models/brahmacharini.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/research/models apps/web/lib/models
+          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
+          git commit -m "docs(models): Brahmacharini v0 results from run ${{ github.run_id }}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            sleep 10
+          done

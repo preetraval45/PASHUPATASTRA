@@ -7,6 +7,7 @@
  */
 
 import katyayani from "./models/katyayani.results.json";
+import brahmacharini from "./models/brahmacharini.results.json";
 import kalaratri from "./models/kalaratri.results.json";
 import shailaputri from "./models/shailaputri.results.json";
 
@@ -28,7 +29,7 @@ export interface SatiModel {
 
 export const MODELS: SatiModel[] = [
   { n: 1, id: "sati-shailaputri", name: "Shailaputri", nature: "the steady foundation", job: "Metric anomaly detection — learns what normal looks like for every series", stage: "Observe", data: ["NAB", "SMD"], status: "training", task: "RP-60" },
-  { n: 2, id: "sati-brahmacharini", name: "Brahmacharini", nature: "discipline and study", job: "Embeddings for memory — finds the past incident this one resembles", stage: "Remember", data: ["LogHub", "incident text"], status: "planned", task: "RP-64" },
+  { n: 2, id: "sati-brahmacharini", name: "Brahmacharini", nature: "discipline and study", job: "Embeddings for memory — maps observed behaviour to the known technique it resembles", stage: "Remember", data: ["MITRE ATT&CK procedures"], status: "training", task: "RP-64" },
   { n: 3, id: "sati-chandraghanta", name: "Chandraghanta", nature: "the bell that warns", job: "Network intrusion alerting — flags attack traffic by family", stage: "Observe", data: ["UNSW-NB15", "CIC-IDS2017"], status: "planned", task: "RP-61" },
   { n: 4, id: "sati-kushmanda", name: "Kushmanda", nature: "the creator", job: "Writes the structured hypothesis and explanation — Sati's own language model", stage: "Explain", data: ["LogHub corpus", "incident text"], status: "planned", task: "RP-65" },
   { n: 5, id: "sati-skandamata", name: "Skandamata", nature: "the protecting mother", job: "Proposes the protective response — Dharma still authorises it", stage: "Act", data: ["to be sourced"], status: "planned", task: "—" },
@@ -86,9 +87,20 @@ export interface LogResults {
 
 export const KALARATRI = kalaratri as unknown as LogResults;
 
+type Retrieval = { "recall@1": number; "recall@5": number; "recall@10": number; mrr: number; n: number };
+
+export interface EmbedResults {
+  pending?: string;
+  dataset: { name: string; techniques: number; procedures: { train: number; validation: number; test: number }; test_sources_unseen: number };
+  test: Record<string, Retrieval>;
+}
+
+export const BRAHMACHARINI = brahmacharini as unknown as EmbedResults;
+
 /** A model counts as trained only when its results file says so. */
 export function statusOf(model: SatiModel): ModelStatus {
   if (model.id === "sati-shailaputri") return SHAILAPUTRI.pending ? "training" : "trained";
   if (model.id === "sati-kalaratri") return KALARATRI.pending ? "training" : "trained";
+  if (model.id === "sati-brahmacharini") return BRAHMACHARINI.pending ? "training" : "trained";
   return model.status;
 }
