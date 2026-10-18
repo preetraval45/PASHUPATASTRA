@@ -31,7 +31,7 @@ from pathlib import Path
 import lightgbm as lgb
 import pandas as pd
 
-from sati.data import rcaeval
+from sati.sources import rcaeval
 from sati.rca import features as feats
 from sati.rca import model
 from sati.rca.evaluate import score

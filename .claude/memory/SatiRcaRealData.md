@@ -10,7 +10,7 @@
   model on real public data, and all of Sati's AI should be the project's own.
   Recorded in adr/RealDataModels.md and as plan Block H (RP-58 to RP-65).
 - packages/sati, the first model:
-  - `data/rcaeval.py` downloads RCAEval from Hugging Face, pinned to the dataset
+  - `sources/rcaeval.py` downloads RCAEval from Hugging Face, pinned to the dataset
     commit.
   - `rca/features.py` computes per-service robust shift, peak and onset for each
     metric family (cpu, mem, latency, traffic, error, other). Values are
