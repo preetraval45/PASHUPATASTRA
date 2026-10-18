@@ -51,3 +51,4 @@ Protocol: before every push, write a topic-named file from
 - [ShellMovedTests](ShellMovedTests.md) — CI red after the shell merge: moved page path in waves.test.ts, Attribution missing from console; run both API pytest modes + npm test before pushing to main
 - [OneSiteAnalyticsTraining](OneSiteAnalyticsTraining.md) — one sidebar frame for all pages, Ask→Sati AI, /analytics (real data, interactive), /training; prod API is weeks stale; Claude now builds+trains all models
 - [ApiDeploysFromCI](ApiDeploysFromCI.md) — RP-57: CI deploys the Lambda API once AWS key secrets exist; /blue-team 308→/training
+- [SatiRcaRealData](SatiRcaRealData.md) — RP-58: packages/sati Sati-RCA v0 (RCAEval, LOSO/held-out fault/repetition, baseline), train-sati.yml on Actions; ADR RealDataModels; Block H RP-58–65

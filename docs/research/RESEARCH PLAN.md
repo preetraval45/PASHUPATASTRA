@@ -86,7 +86,7 @@ cannot train anything. Cloud GPU training is possible later, but costs money.
 
 ## How to use this plan
 
-**Every task has an ID (`RP-01` … `RP-53`) and an owner.**
+**Every task has an ID (`RP-01` … `RP-65`) and an owner.**
 
 | Owner | Meaning |
 |---|---|
@@ -144,6 +144,7 @@ Thanksgiving (26 Nov) and the holidays.
 | E · Paper | 24–26 | Mar 22 – Apr 11 | RP-36 – RP-40 | Full draft, model cards, venue decision |
 | F · Sati-LM *(stretch)* | 27–34 | Apr 12 – Jun 6 | RP-41 – RP-45 | Your own language model behind the Gateway |
 | G · Product UI *(parallel)* | from wk 2 | Oct 18 → | RP-46 – RP-53 | The site works as an app: full-screen Ask, model choice, interactive dashboards, a real welcome — the demo behind the O-1 *original contribution* evidence |
+| H · Real-data models | from wk 2 | Oct 18 → | RP-58 – RP-65 | Sati models trained and tested on real data (RCAEval, NAB/SMD, UNSW-NB15/CIC-IDS2017, LogHub); all of Sati's AI the project's own |
 
 The overlapping weeks are intended: Claude's plumbing runs ahead of your reading.
 
@@ -320,6 +321,13 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
 
 ### Block C — The Sati models (Weeks 13–22)
 
+> **Changed 18 October 2026 ([adr/RealDataModels](../adr/RealDataModels.md)).** The owner asked
+> Claude to build and train every Sati model, on **real public data**, on free cloud compute, and
+> for all of Sati's AI to be the project's own. The owner-only rule for model code below is
+> superseded for model work; learning tasks stay the owner's. The real-data tasks are RP-58 – RP-65
+> in [Block H](#block-h--real-data-models-added-18-october-2026); the Kaal-generated tasks above
+> them remain, as augmentation rather than the primary source.
+
 - [ ] **RP-21 · Detection data loaders**
   **Claude** · 1 session · Depends: RP-20
   *Steps:* loaders for NAB, SMD (Su et al. KDD 2019) and Kaal-generated metric series into `evaluation.py`'s `Series`, under `packages/sati/`. Every split is time-ordered.
@@ -484,6 +492,21 @@ only, no ornament, colour always with a glyph or word, the logo never animated o
 - [x] **RP-55 · Training** — *Built 18 Oct: `/training`, a cyber-defence drill hub over the scored Blue team scenarios — the drill loop and its points, every drill with this browser's record, the skills exercised, and where to go deeper. `/blue-team` redirects there; drills keep their URLs. Live on pashupatastra.vercel.app since 99be63f (CI green).*
 - [x] **RP-56 · Sati AI** — *Built 18 Oct: the Ask page is named "Sati AI" (owner's request) in the rail, title and palette; the rail's sub-label "investigation agent" keeps BRAND.md's first-mention rule. Live on pashupatastra.vercel.app since 99be63f (CI green).*
 - [~] **RP-57 · The API deploys itself** — *Added 18 Oct: a `deploy api` job in CI, after every test job, on main only — builds the Lambda archive, ensures the DynamoDB table, deploys with the model key carried forward, then requires 200 from every route the site uses. Production had drifted weeks behind main (six routes 404). Remains: the owner adds `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` as GitHub repository secrets; until then the job reports "not deployed" and stops.*
+
+
+### Block H — Real-data models *(added 18 October 2026)*
+
+Claude builds, trains and evaluates; training runs on GitHub Actions (CPU) and Kaggle (GPU); results
+are generated files; models are disclosed as AI-built. Splits per [adr/RealDataModels](../adr/RealDataModels.md).
+
+- [~] **RP-58 · Sati-RCA v0 on RCAEval** — *Built 18 Oct: `packages/sati` (loader pinned to the dataset revision, per-service robust-shift features with series provenance, LightGBM lambdarank, fault-type head), 10 tests, `train-sati.yml`. Scored on leave-one-system-out, held-out fault, held-out repetition, and RE3 never trained on — each against a no-learning baseline on the same incidents. Remains: the first workflow run's generated table ([models/sati-rca.md](models/sati-rca.md)).*
+- [ ] **RP-59 · Dataset datasheets** — one per dataset (source, licence, size, labels, known flaws), before each is trained on; a licence that forbids weight release makes that dataset evaluation-only.
+- [ ] **RP-60 · Sati-Detect (metrics) on NAB and SMD** — time-ordered splits, normalisation fitted on train only; against the four statistical strategies in `benchdetect.py`; false alarms per 1000 and lead time, not only F1 (Wu & Keogh's critique applies to NAB and is reported).
+- [ ] **RP-61 · Sati-Detect (network) on UNSW-NB15 and CIC-IDS2017** — UNSW-NB15's own train/test files; CIC-IDS2017 split by day so attacks on later days are unseen; per-attack-family recall and false-positive rate.
+- [ ] **RP-62 · Sati-Detect (logs) on LogHub HDFS and BGL** — split by time, not by shuffled window; precision/recall/F1 per dataset.
+- [ ] **RP-63 · Serve Sati-RCA as a Gateway provider** — the trained artefact (versioned, hashed) loaded by the API; its ranking becomes the hypothesis with citations to the metric series; LLM kept as baseline and labelled backup (supersedes RP-28's model source).
+- [ ] **RP-64 · Sati-Embed on real text** — a small encoder trained contrastively on LogHub templates and incident narratives (Kaggle GPU); recall@k against `HashingEmbedder` and BM25.
+- [ ] **RP-65 · Sati-LM — every answer from our own model** — a small decoder trained on the LogHub corpus and incident text (Kaggle GPU), fine-tuned to the hypothesis schema with constrained decoding; when it passes citation verification, it answers Sati AI and the external LLM becomes baseline only.
 
 ---
 

@@ -1,0 +1,75 @@
+name: Train Sati models
+
+# Sati models are trained here, on GitHub's runners, on real public data —
+# never on the owner's machine (adr/RealDataModels). The repository is public,
+# so these minutes are free.
+#
+# Test, then train and evaluate on every split, then commit the generated
+# results table. The trained model and the full results are kept as the
+# `sati-rca` artifact.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - packages/sati/**
+      - .github/workflows/train-sati.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: train-sati
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e "packages/sati[dev]"
+      - run: ruff check packages/sati
+      - run: pytest packages/sati -q
+
+  sati-rca:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/sati
+      # The download is cached per dataset revision inside the cache directory,
+      # so a new upload to RCAEval is fetched fresh rather than mixed in.
+      - uses: actions/cache@v4
+        with:
+          path: .cache/rcaeval
+          key: rcaeval-v1
+      - name: train and evaluate on RCAEval
+        working-directory: packages/sati
+        run: python -m sati.rca.run --cache ../../.cache/rcaeval --out ../../results/sati-rca
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sati-rca
+          path: results/sati-rca/
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models
+          cp results/sati-rca/results.json docs/research/models/sati-rca.results.json
+          cp results/sati-rca/sati-rca-v0.meta.json docs/research/models/sati-rca-v0.meta.json
+          (cd packages/sati && python -m sati.rca.report ../../results/sati-rca/results.json) > docs/research/models/sati-rca.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/research/models
+          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
+          git commit -m "docs(models): Sati-RCA v0 results from run ${{ github.run_id }}"
+          git pull --rebase origin main
+          git push origin HEAD:main
