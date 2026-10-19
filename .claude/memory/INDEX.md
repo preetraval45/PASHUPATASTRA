@@ -67,3 +67,4 @@ Protocol: before every push, write a topic-named file from
 - [Brahmacharini](Brahmacharini.md) — RP-64: ATT&CK procedure→technique dual encoder vs BM25/HashingEmbedder; never run local ruff --fix on sati (strips CI-needed noqa)
 - [LlmBaselineRun](LlmBaselineRun.md) — RP-09 runs on Actions with Ollama (6 jobs, pre-declared matrix), RP-10 significance in core + Table 5; Kaggle offline dataset workaround; bash heredoc mangles non-ASCII
 - [SatiProviderOwnModels](SatiProviderOwnModels.md) — RP-63: sati Gateway provider (own models only, Brahmacharini retrieval, cited, declines), export pipeline; prod deployed w/ DynamoDB (root aws login — replace)
+- [SatiProviderLive](SatiProviderLive.md) — production answers from own models; always buildlambda before deploy

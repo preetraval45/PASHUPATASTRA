@@ -739,8 +739,9 @@ class DynamoStore:
         """
         response = self.table.update_item(
             Key={"PK": self._pk("META"), "SK": f"VIEW#{day}#{route}"},
-            UpdateExpression="ADD views :one SET #at = :at",
-            ExpressionAttributeNames={"#at": "at"},
+            UpdateExpression="ADD #views :one SET #at = :at",
+            # "views" is a DynamoDB reserved word, so it needs a placeholder too.
+            ExpressionAttributeNames={"#views": "views", "#at": "at"},
             ExpressionAttributeValues={":one": 1, ":at": datetime.now().astimezone().isoformat()},
             ReturnValues="ALL_NEW",
         )
