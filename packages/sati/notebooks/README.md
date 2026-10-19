@@ -1,8 +1,24 @@
 # Sati notebooks
 
-The owner's learning and model notebooks. Everything in this folder is written
-by the owner. Claude reviews it for bugs and leakage, and does not write it
-(RESEARCH PLAN.md, *How to use this plan*).
+Two kinds, kept apart:
+
+- **`models/`** — one notebook per trained Sati model, written by Claude at the
+  owner's request (18 October 2026). Each one explains the data, features and
+  model, then runs the real pipeline end to end on Kaggle or Colab — clone,
+  install, load the real data, train, evaluate against the baselines, plot.
+  They mirror the committed results tables in `docs/research/models/`.
+
+  | Notebook | Model |
+  |---|---|
+  | `01-katyayani-root-cause.ipynb` | Katyayani — root cause on RCAEval |
+  | `02-shailaputri-anomaly-detection.ipynb` | Shailaputri — anomalies on NAB |
+  | `03-kalaratri-log-anomalies.ipynb` | Kalaratri — log anomalies on LogHub HDFS |
+  | `04-brahmacharini-embeddings.ipynb` | Brahmacharini — behaviour → ATT&CK technique |
+  | `05-kushmanda-language-model.ipynb` | Kushmanda — Sati's own language model (GPU) |
+
+- **This folder's root** — the owner's own learning work (RP-02 and on), which
+  stays the owner's: Claude reviews it for bugs and leakage and does not
+  write it.
 
 ## RP-02 — Learn transformers by building one
 
