@@ -19,3 +19,7 @@ Those workflows commit results with GITHUB_TOKEN, and pushes made with that toke
 ## Next session should
 
 - Ask the owner to add the AWS secrets, ideally for a scoped deploy role rather than root, so deploys stop depending on a manual run.
+
+## Follow-up
+
+The first `workflow_run` CI run failed in the secret scan, because gitleaks-action rejects that event. The gitleaks step is now skipped on `workflow_run`. Those runs only follow bot commits of generated results, and every human push is still scanned.

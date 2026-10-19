@@ -260,7 +260,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # gitleaks-action rejects the workflow_run event. Those runs only follow
+      # bot commits of generated results; every human push is scanned here.
       - uses: gitleaks/gitleaks-action@v2
+        if: github.event_name != 'workflow_run'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
