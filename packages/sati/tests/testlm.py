@@ -55,3 +55,28 @@ def test_the_held_out_split_is_by_document_and_stable():
     assert not {d["id"] for d in train} & {d["id"] for d in test}
     assert 50 <= len(test) <= 150
     assert split(docs)[1] == test
+
+
+def test_answer_only_loss_ignores_the_question():
+    """SFT masks the prompt: changing only question tokens' targets must not
+    change the loss."""
+    torch.manual_seed(0)
+    model = Kushmanda(TINY).eval()
+    x = torch.randint(0, 50, (1, 12))
+    y = torch.randint(0, 50, (1, 12))
+    mask = torch.zeros(1, 12, dtype=torch.long)
+    mask[0, 8:] = 1
+    y2 = y.clone()
+    y2[0, :8] = (y2[0, :8] + 3) % 50
+    _, a = model(x, y, mask)
+    _, b = model(x, y2, mask)
+    assert torch.allclose(a, b)
+
+
+def test_rotary_positions_make_attention_relative():
+    from sati.lm.model import rope_tables, rotate
+
+    cos, sin = rope_tables(8, 32, 10000.0)
+    q, k = torch.randn(8), torch.randn(8)
+    dot = lambda i, j: (rotate(q, cos[i], sin[i]) * rotate(k, cos[j], sin[j])).sum()  # noqa: E731
+    assert torch.allclose(dot(3, 1), dot(12, 10), atol=1e-5)

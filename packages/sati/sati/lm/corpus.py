@@ -27,6 +27,7 @@ from pathlib import Path
 ATTACK = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
 CAPEC = "https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json"
 KEV = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+CWE = "https://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
 
 CITATION = re.compile(r"\(Citation: [^)]*\)")
 MARKUP = re.compile(r"<[^>]+>")
@@ -83,6 +84,52 @@ def kev_documents(cache: Path) -> list[dict]:
     ]
 
 
+def procedure_documents(cache: Path) -> list[dict]:
+    """ATT&CK procedure examples: how a named group, malware family, tool or
+    campaign used a technique, in an analyst's words."""
+    bundle = json.loads(_get(ATTACK, cache))
+    objects = {o["id"]: o for o in bundle["objects"]}
+    docs = []
+    for o in bundle["objects"]:
+        if o.get("type") != "relationship" or o.get("relationship_type") != "uses" or o.get("revoked"):
+            continue
+        source, target = objects.get(o["source_ref"]), objects.get(o["target_ref"])
+        if not source or not target or target.get("type") != "attack-pattern":
+            continue
+        text = _clean(o.get("description", ""))
+        if len(text) >= 60:
+            docs.append({"source": "mitre-attack-procedure", "id": o["id"], "text": f"{target.get('name', '')}: {text}"})
+    return docs
+
+
+def cwe_documents(cache: Path) -> list[dict]:
+    """MITRE CWE weaknesses — free for research, development and commercial use
+    with MITRE's copyright notice retained (datasheets.md)."""
+    import io
+    import xml.etree.ElementTree as ET
+    import zipfile
+
+    with zipfile.ZipFile(io.BytesIO(_get(CWE, cache))) as zf:
+        xml = zf.read(next(n for n in zf.namelist() if n.endswith(".xml")))
+    root = ET.fromstring(xml)
+    ns = {"c": root.tag.split("}")[0].strip("{")} if root.tag.startswith("{") else {}
+    prefix = "c:" if ns else ""
+    docs = []
+    for weakness in root.iter(f"{{{ns['c']}}}Weakness" if ns else "Weakness"):
+        if weakness.get("Status") == "Deprecated":
+            continue
+        parts = [
+            " ".join("".join(el.itertext()).split())
+            for tag in ("Description", "Extended_Description")
+            for el in weakness.findall(f"{prefix}{tag}", ns)
+        ]
+        text = " ".join(p for p in parts if p)
+        if len(text) >= 80:
+            docs.append({"source": "mitre-cwe", "id": f"CWE-{weakness.get('ID')}",
+                         "text": f"CWE-{weakness.get('ID')} {weakness.get('Name', '')}\n{text}"})
+    return docs
+
+
 def repo_documents(root: Path) -> list[dict]:
     docs = []
     for path in sorted([*root.glob("docs/**/*.md"), root / "apps" / "web" / "lib" / "training.ts"]):
@@ -96,13 +143,22 @@ def repo_documents(root: Path) -> list[dict]:
     return docs
 
 
-def build(cache: Path, root: Path) -> list[dict]:
-    return [
+def build(cache: Path, root: Path, clean: bool = True) -> list[dict]:
+    docs = [
         *stix_documents(ATTACK, "mitre-attack", cache),
+        *procedure_documents(cache),
         *stix_documents(CAPEC, "mitre-capec", cache),
+        *cwe_documents(cache),
         *kev_documents(cache),
         *repo_documents(root),
     ]
+    if not clean:
+        return docs
+    from sati.lm.clean import deduplicate
+
+    kept, stats = deduplicate(docs)
+    print(f"cleaning: {stats}")
+    return kept
 
 
 def split(docs: list[dict], held_out: float = 0.05) -> tuple[list[dict], list[dict]]:
