@@ -35,6 +35,7 @@ TABLES = [
             ("sati-rca", "rca"),
             ("shailaputri", "detect"),
             ("kalaratri", "loganomaly"),
+            ("kalaratri-bgl", "loganomaly"),
             ("brahmacharini", "embed"),
             ("kushmanda", "lm"),
         )

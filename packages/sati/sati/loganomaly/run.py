@@ -1,6 +1,10 @@
 """Train and test Kalaratri v0 — log anomaly detection on LogHub HDFS.
 
     python -m sati.loganomaly.run --cache .cache/loghub --out results/kalaratri
+    python -m sati.loganomaly.run --dataset bgl --cache .cache/loghub-bgl --out results/kalaratri-bgl
+
+HDFS is grouped by block. BGL has no blocks, so it is cut into fixed windows of
+100 consecutive lines (`loghub.bgl_windows`). Everything after that is shared.
 
 **Split by time, never at random.** Blocks are taken in the order the log
 produced them: the first 60% train, the next 20% choose the threshold, the last
@@ -54,9 +58,17 @@ ROUNDS = 300
 SPLIT = (0.6, 0.2, 0.2)
 
 
-def featurise(events: pd.Series, vocab: list[str]) -> pd.DataFrame:
+DATASETS = {
+    "hdfs": {"model": "sati-kalaratri-v0", "name": "LogHub HDFS_v1", "unit": "HDFS blocks", "dtype": float},
+    # float32: BGL's vocabulary is wider, and float64 would not fit a runner.
+    "bgl": {"model": "sati-kalaratri-bgl-v0", "name": "LogHub BGL", "unit": "windows of 100 lines",
+            "dtype": np.float32},
+}
+
+
+def featurise(events: pd.Series, vocab: list[str], dtype: type = float) -> pd.DataFrame:
     index = {e: i for i, e in enumerate(vocab)}
-    matrix = np.zeros((len(events), len(vocab) + 3), dtype=float)
+    matrix = np.zeros((len(events), len(vocab) + 3), dtype=dtype)
     for row, seq in enumerate(events):
         counts = Counter(seq)
         for event, n in counts.items():
@@ -111,17 +123,20 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--cache", type=Path, default=Path(".cache/loghub"))
     parser.add_argument("--out", type=Path, default=Path("results/kalaratri"))
+    parser.add_argument("--dataset", choices=sorted(DATASETS), default="hdfs")
     args = parser.parse_args()
+    spec = DATASETS[args.dataset]
 
     started = time.time()
-    data = loghub.blocks(args.cache)
+    data = loghub.blocks(args.cache) if args.dataset == "hdfs" else loghub.bgl_windows(args.cache)
     n = len(data)
     a, b = int(n * SPLIT[0]), int(n * (SPLIT[0] + SPLIT[1]))
     train, val, test = data.iloc[:a], data.iloc[a:b], data.iloc[b:]
-    print(f"HDFS_v1: {n} blocks ({data['anomaly'].mean():.2%} anomalous); train {len(train)}, val {len(val)}, test {len(test)}")
+    print(f"{spec['name']}: {n} {spec['unit']} ({data['anomaly'].mean():.2%} anomalous); "
+          f"train {len(train)}, val {len(val)}, test {len(test)}")
 
     vocab = sorted({e for seq in train["events"] for e in seq})
-    Xtr, Xva, Xte = (featurise(part["events"], vocab) for part in (train, val, test))
+    Xtr, Xva, Xte = (featurise(part["events"], vocab, spec["dtype"]) for part in (train, val, test))
     ytr, yva, yte = (part["anomaly"].to_numpy() for part in (train, val, test))
 
     booster = lgb.train({**PARAMS, "scale_pos_weight": float((ytr == 0).sum() / max(1, (ytr == 1).sum()))},
@@ -138,13 +153,14 @@ def main() -> int:
 
     importance = sorted(zip(Xtr.columns, booster.feature_importance("gain"), strict=True), key=lambda x: -x[1])[:8]
     results = {
-        "model": "sati-kalaratri-v0",
-        "dataset": {"name": "LogHub HDFS_v1", "zenodo_record": loghub.RECORD, "blocks": n,
+        "model": spec["model"],
+        "dataset": {"name": spec["name"], "zenodo_record": loghub.RECORD, "blocks": n,
+                    **({} if args.dataset == "hdfs" else {"unit": spec["unit"]}),
                     "anomaly_share": round(float(data["anomaly"].mean()), 4),
                     "split": {"train": len(train), "validation": len(val), "test": len(test), "order": "as logged"}},
         "vocabulary": len(vocab),
-        "test": {"kalaratri-v0": kalaratri, "pca (Xu et al. 2009)": pca, "unseen-template rule": unseen},
-        "thresholds": {"kalaratri-v0": t_model, "pca": t_pca},
+        "test": {spec["model"].removeprefix("sati-"): kalaratri, "pca (Xu et al. 2009)": pca, "unseen-template rule": unseen},
+        "thresholds": {spec["model"].removeprefix("sati-"): t_model, "pca": t_pca},
         "top_features": [{"feature": f, "gain": round(float(g), 1)} for f, g in importance],
         "weights_published": False,
         "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",

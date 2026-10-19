@@ -34,3 +34,30 @@ def test_the_threshold_is_chosen_from_scores_not_labels_alone():
     scores = np.concatenate([np.linspace(0, 0.4, 90), np.linspace(0.8, 1.0, 10)])
     t = best_threshold(y, scores)
     assert metrics(y, (scores >= t).astype(int))["f1"] == 1.0
+
+
+def test_bgl_templates_mask_every_token_with_a_digit_and_read_the_label():
+    from sati.sources.loghub import bgl_line
+
+    head = "2005.06.11 R30-M0-N9-C:J16-U01 2005-06-11-17.32.07.581048 R30-M0-N9-C:J16-U01 RAS KERNEL"
+    assert bgl_line(f"KERNDTLB 1118536327 {head} FATAL data TLB error interrupt at 0x0b85eee0 core 2") == (
+        1, "data TLB error interrupt at <*> core <*>")
+    assert bgl_line(f"- 1118536327 {head} INFO instruction cache parity error corrected") == (
+        0, "instruction cache parity error corrected")
+    assert bgl_line("too short") is None
+
+
+def test_bgl_windows_are_consecutive_and_anomalous_if_any_line_is(tmp_path, monkeypatch):
+    import zipfile
+
+    from sati.sources import loghub
+
+    head = "1 2005.06.03 N 2005-06-03-15.42.50.363779 N RAS KERNEL INFO"
+    lines = [f"- {head} normal event {i}" for i in range(250)]
+    lines[150] = f"KERNDTLB {head} bad event 7"
+    with zipfile.ZipFile(tmp_path / "BGL.zip", "w") as zf:
+        zf.writestr("BGL.log", "\n".join(lines) + "\n")
+    monkeypatch.setattr(loghub, "archive", lambda cache, *a, **k: tmp_path / "BGL.zip")
+    windows = loghub.bgl_windows(tmp_path, size=100)
+    assert list(windows["anomaly"]) == [0, 1]  # the last 50 lines do not fill a window
+    assert len(set(windows["events"][0])) == 1  # "normal event <*>" is one template
