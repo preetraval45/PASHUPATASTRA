@@ -69,3 +69,4 @@ Protocol: before every push, write a topic-named file from
 - [SatiProviderOwnModels](SatiProviderOwnModels.md) — RP-63: sati Gateway provider (own models only, Brahmacharini retrieval, cited, declines), export pipeline; prod deployed w/ DynamoDB (root aws login — replace)
 - [SatiProviderLive](SatiProviderLive.md) — production answers from own models; always buildlambda before deploy
 - [Reproducibility](Reproducibility.md) — reproduce.py --check; benchmark records now committed
+- [KalaratriBGL](KalaratriBGL.md) — BGL loader/windows; lint notebooks with CI's ruff<0.13
