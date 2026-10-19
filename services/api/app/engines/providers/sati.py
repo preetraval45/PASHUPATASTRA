@@ -36,9 +36,14 @@ from .schemas import schema_for
 
 MODELS = Path(__file__).resolve().parents[2] / "sati_models"
 WORD = re.compile(r"[a-z0-9][a-z0-9\-\.]*")
+CVE = re.compile(r"CVE-\d{4}-\d{4,}", re.IGNORECASE)
 
-#: Below this cosine, the best match is not about the question.
+#: Below this cosine, a piece of incident evidence is not about the question.
 RELEVANT = 0.28
+
+#: Below this hybrid score (keyword + meaning, 0–1), a knowledge-base passage
+#: is not an answer to the question.
+ANSWERABLE = 0.55
 
 #: Requests the general mode declines — explaining attacks is fine; building
 #: working ones against others is not.
@@ -86,8 +91,31 @@ class Brahmacharini:
         return [x / norm for x in out]
 
 
+STOP = frozenset(
+    "a an and are as at be by can do does for from how i in is it of on or should the to was what when "
+    "where which who why with you your my me we our this that these those explain about tell simple terms".split()
+)
+
+
+def terms(text: str) -> list[str]:
+    return [w for w in WORD.findall(text.lower()) if w not in STOP and len(w) > 1]
+
+
 class Knowledge:
-    """The permissively licensed knowledge base, with precomputed embeddings."""
+    """The permissively licensed knowledge base: BM25 index plus embeddings.
+
+    **Hybrid retrieval.** Brahmacharini's embedding alone is fooled by "hub"
+    passages that sit close to everything, and by short questions unlike the
+    behaviour text it was trained on — "what is the capital of France?" scored
+    0.70 against a vulnerability entry. So a passage is a candidate only if it
+    shares an informative word with the question (BM25 > 0); candidates are
+    then ranked by keyword score and embedding similarity together. A question
+    with no lexical foothold in the knowledge base gets no answer, which is the
+    honest result.
+    """
+
+    K1, B = 1.5, 0.75
+    LEXICAL, SEMANTIC = 0.65, 0.35
 
     def __init__(self, folder: Path = MODELS) -> None:
         self.passages = json.loads((folder / "knowledge.json").read_text(encoding="utf-8"))
@@ -98,13 +126,53 @@ class Knowledge:
         self.vectors = [
             [v * scales[i] for v in array("b", body[i * dim : (i + 1) * dim])] for i in range(count)
         ]
+        # Titles count twice: "Credential Stuffing" should beat a passage that
+        # merely mentions credentials.
+        self.postings: dict[str, dict[int, int]] = {}
+        self.lengths: list[int] = []
+        for i, p in enumerate(self.passages):
+            words = terms(f"{p['id']} {p['id']} {p['title']} {p['title']} {p['text']}")
+            self.lengths.append(len(words))
+            for w in words:
+                self.postings.setdefault(w, {}).setdefault(i, 0)
+                self.postings[w][i] += 1
+        self.average = sum(self.lengths) / max(1, len(self.lengths))
 
-    def search(self, query: list[float], k: int = 3) -> list[tuple[float, dict]]:
-        scored = sorted(
-            ((sum(a * b for a, b in zip(query, vec, strict=True)), i) for i, vec in enumerate(self.vectors)),
-            reverse=True,
-        )[:k]
-        return [(score, self.passages[i]) for score, i in scored]
+    def bm25(self, question: str) -> dict[int, float]:
+        n = len(self.passages)
+        scores: dict[int, float] = {}
+        for w in set(terms(question)):
+            docs = self.postings.get(w)
+            if not docs:
+                continue
+            idf = math.log(1 + (n - len(docs) + 0.5) / (len(docs) + 0.5))
+            for i, tf in docs.items():
+                norm = tf * (self.K1 + 1) / (tf + self.K1 * (1 - self.B + self.B * self.lengths[i] / self.average))
+                scores[i] = scores.get(i, 0.0) + idf * norm
+        return scores
+
+    def search(self, query: list[float], k: int = 3, question: str = "") -> list[tuple[float, dict]]:
+        lexical = self.bm25(question)
+        # A product-specific vulnerability answers only a question that names
+        # it: its CVE, or its vendor. Otherwise "a small company" finds "Cisco
+        # Small Business" entries, which is word matching, not understanding.
+        asked = set(terms(question))
+        named_cve = bool(CVE.search(question))
+        lexical = {
+            i: v for i, v in lexical.items()
+            if self.passages[i]["kind"] != "exploited vulnerability"
+            or named_cve
+            or (terms(self.passages[i]["title"])[:1] and terms(self.passages[i]["title"])[0] in asked)
+        }
+        if not lexical:
+            return []
+        top = max(lexical.values())
+        scored = []
+        for i, lex in lexical.items():
+            cos = max(0.0, sum(a * b for a, b in zip(query, self.vectors[i], strict=True)))
+            scored.append((self.LEXICAL * lex / top + self.SEMANTIC * cos, i))
+        scored.sort(reverse=True)
+        return [(round(score, 4), self.passages[i]) for score, i in scored[:k]]
 
 
 @lru_cache
@@ -167,8 +235,8 @@ class SatiProvider:
                 "area": "skandamata",
                 "declined": True,
             }
-        hits = knowledge().search(embedder().embed(question), k=3)
-        if not hits or hits[0][0] < RELEVANT:
+        hits = knowledge().search(embedder().embed(question), k=3, question=question)
+        if not hits or hits[0][0] < ANSWERABLE:
             return {
                 "answer": "That is outside what Sati's own models know so far. Today they know MITRE ATT&CK "
                 "techniques and mitigations, CAPEC attack patterns and the CISA catalogue of exploited "
@@ -184,7 +252,7 @@ class SatiProvider:
             "",
             first_sentences(best["text"]),
         ]
-        related = [p for s, p in hits[1:] if s >= RELEVANT]
+        related = [p for s, p in hits[1:] if s >= ANSWERABLE]
         if related:
             lines += ["", "Related: " + "; ".join(f"{p['title']} ({p['id']})" for p in related) + "."]
         lines += ["", "Sources: " + " · ".join(p["url"] for _, p in hits if p.get("url"))]
