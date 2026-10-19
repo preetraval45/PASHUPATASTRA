@@ -148,6 +148,12 @@ def _model_env() -> dict[str, str]:
     it is not configured — honest, but indistinguishable from an outage, and
     silently caused by every unrelated deploy.
     """
+    # The owner's decision (18 Oct 2026): Sati answers from its own models only.
+    # `sati` needs no key and no endpoint, and no third-party key is carried
+    # forward onto the function once it is chosen.
+    if os.environ.get("PASHU_MODEL_PROVIDER") == "sati":
+        return {"PASHU_MODEL_PROVIDER": "sati", "PASHU_MODEL_ID": "sati-brahmacharini-serve-v0"}
+
     key = os.environ.get("PASHU_MODEL_API_KEY", "") or _key_already_deployed()
     if not key:
         return {"PASHU_MODEL_PROVIDER": "echo"}

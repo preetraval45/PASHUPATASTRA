@@ -466,12 +466,22 @@ class Gateway:
         prompt = render_conversation(request)
 
         if not getattr(self.provider, "supports_tools", False) or not offered:
+            # A provider that reads evidence as items rather than as prose — the
+            # project's own `sati` provider — gets them as items, with the
+            # visitor's message as one more untrusted item. Others keep the
+            # rendered prompt alone, so their evidence is not sent twice.
+            structured = getattr(self.provider, "structured_evidence", False)
             answer = self.complete(
                 ModelRequest(
                     purpose=request.purpose,
                     instructions=prompt,
                     question="Answer now, using only the evidence above.",
                     schema_name=request.schema_name,
+                    evidence=(
+                        [*request.evidence, Evidence(ref="visitor", source="visitor", content=request.visitor_message)]
+                        if structured
+                        else []
+                    ),
                     incident_id=request.incident_id,
                     agent=request.agent,
                     max_tokens=request.max_tokens,

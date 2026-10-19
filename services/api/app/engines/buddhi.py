@@ -87,6 +87,8 @@ def model_choices() -> list[ModelChoice]:
     default_label = settings.model_id
     if settings.model_provider == "echo":
         default_label = "echo (deterministic stub)"
+    elif settings.model_provider == "sati":
+        default_label = "Sati — the project's own models"
     elif settings.model_provider == "failover" and settings.fallback_base_url:
         default_label = f"{settings.model_id}, falling back to {settings.fallback_model}"
 

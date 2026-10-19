@@ -186,6 +186,9 @@ jobs:
       - name: train and evaluate on ATT&CK procedure examples
         working-directory: packages/sati
         run: python -m sati.embed.run --cache ../../.cache/corpus --out ../../results/brahmacharini
+      - name: export the served model for the API
+        working-directory: packages/sati
+        run: python -m sati.embed.export --cache ../../.cache/corpus --out ../../services/api/app/sati_models
       - uses: actions/upload-artifact@v4
         with:
           name: brahmacharini
@@ -198,9 +201,9 @@ jobs:
           (cd packages/sati && python -m sati.embed.report ../../results/brahmacharini/results.json) > docs/research/models/brahmacharini.md
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/research/models apps/web/lib/models
+          git add docs/research/models apps/web/lib/models services/api/app/sati_models
           if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
-          git commit -m "docs(models): Brahmacharini v0 results from run ${{ github.run_id }}"
+          git commit -m "docs(models): Brahmacharini v0 results and served model from run ${{ github.run_id }}"
           for attempt in 1 2 3; do
             git pull --rebase origin main && git push origin HEAD:main && break
             sleep 10

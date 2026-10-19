@@ -46,6 +46,12 @@ def build_provider(
             from .echo import EchoProvider
 
             return EchoProvider()
+        case "sati":
+            # The project's own models only (adr/RealDataModels, owner decision
+            # 18 Oct 2026): no external LLM answers a user.
+            from .sati import SatiProvider
+
+            return SatiProvider()
         case "openai-compat":
             # Groq, Ollama, vLLM, LM Studio, OpenRouter. One name, because what
             # separates them is a base URL rather than a protocol.

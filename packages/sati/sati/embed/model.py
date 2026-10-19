@@ -24,16 +24,17 @@ BUCKETS = 1 << 18
 WORD = re.compile(r"[a-z0-9][a-z0-9\-\.]*")
 
 
-def hashed(text: str) -> list[int]:
+def hashed(text: str, buckets: int = BUCKETS) -> list[int]:
     words = WORD.findall(text.lower())
     grams = words + [f"{a} {b}" for a, b in zip(words, words[1:], strict=False)]
-    return [zlib.crc32(g.encode()) % BUCKETS for g in grams] or [0]
+    return [zlib.crc32(g.encode()) % buckets for g in grams] or [0]
 
 
 class Encoder(nn.Module):
-    def __init__(self, dim: int = 128, width: int = 256) -> None:
+    def __init__(self, dim: int = 128, width: int = 256, buckets: int = BUCKETS) -> None:
         super().__init__()
-        self.bag = nn.EmbeddingBag(BUCKETS, width, mode="mean")
+        self.buckets = buckets
+        self.bag = nn.EmbeddingBag(buckets, width, mode="mean")
         self.proj = nn.Linear(width, dim)
         nn.init.normal_(self.bag.weight, std=0.05)
 
@@ -41,7 +42,7 @@ class Encoder(nn.Module):
         ids, offsets = [], []
         for text in texts:
             offsets.append(len(ids))
-            ids.extend(hashed(text))
+            ids.extend(hashed(text, self.buckets))
         flat = torch.tensor(ids, dtype=torch.long)
         starts = torch.tensor(offsets, dtype=torch.long)
         return F.normalize(self.proj(self.bag(flat, starts)), dim=-1)
