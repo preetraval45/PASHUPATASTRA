@@ -70,3 +70,4 @@ Protocol: before every push, write a topic-named file from
 - [SatiProviderLive](SatiProviderLive.md) — production answers from own models; always buildlambda before deploy
 - [Reproducibility](Reproducibility.md) — reproduce.py --check; benchmark records now committed
 - [KalaratriBGL](KalaratriBGL.md) — BGL loader/windows; lint notebooks with CI's ruff<0.13
+- [DeployOnResults](DeployOnResults.md) — CI runs on workflow_run so bot result commits deploy

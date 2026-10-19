@@ -5,6 +5,14 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Results committed by these workflows are pushed with GITHUB_TOKEN, which
+  # never triggers another workflow. Without this, a retrained model (for
+  # example Brahmacharini's served files in services/api/app/sati_models)
+  # would sit on main and never reach Lambda. Checkout takes main's head.
+  workflow_run:
+    workflows: ["Train Sati models", "Benchmark", "Train Kushmanda on Kaggle", "World threat data"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
@@ -163,7 +171,7 @@ jobs:
     # "Team ID") and VERCEL_PROJECT_ID (Project → Settings → General). Without
     # them the job says so and stops, rather than failing the run.
     needs: [core, api, connectors, web, dependencies, secrets]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_run') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -274,7 +282,7 @@ jobs:
     # whole environment block; createdynamo.py leaves an existing table alone;
     # and a DynamoDB the role cannot reach falls back to memory, never to errors.
     needs: [core, api, connectors, web, dependencies, secrets]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_run') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-api
