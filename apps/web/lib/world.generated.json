@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-10-18T21:42:58+00:00",
+  "as_of": "2026-10-19T13:21:22+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.10.16",
     "total": 1748,
-    "added_last_30_days": 35,
+    "added_last_30_days": 32,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -209,7 +209,7 @@
     "by_day": [
       {
         "label": "2026-10-15",
-        "value": 25
+        "value": 13
       },
       {
         "label": "2026-10-16",
@@ -217,37 +217,33 @@
       },
       {
         "label": "2026-10-17",
-        "value": 21
+        "value": 20
       },
       {
         "label": "2026-10-18",
-        "value": 19
+        "value": 24
+      },
+      {
+        "label": "2026-10-19",
+        "value": 8
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 32
+        "value": 37
       },
       {
         "label": "qilin",
-        "value": 16
+        "value": 13
+      },
+      {
+        "label": "Helix",
+        "value": 7
       },
       {
         "label": "THE SEVEN DEADLY SINS",
         "value": 7
-      },
-      {
-        "label": "Helix",
-        "value": 6
-      },
-      {
-        "label": "lockbit5",
-        "value": 6
-      },
-      {
-        "label": "iah6477",
-        "value": 4
       },
       {
         "label": "everest",
@@ -264,24 +260,32 @@
       {
         "label": "incransom",
         "value": 4
+      },
+      {
+        "label": "Storm",
+        "value": 3
+      },
+      {
+        "label": "aurora",
+        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 48
+        "value": 52
+      },
+      {
+        "label": "KR",
+        "value": 3
+      },
+      {
+        "label": "DE",
+        "value": 3
       },
       {
         "label": "EG",
-        "value": 3
-      },
-      {
-        "label": "IT",
-        "value": 3
-      },
-      {
-        "label": "BR",
-        "value": 3
+        "value": 2
       },
       {
         "label": "MY",
@@ -292,53 +296,53 @@
         "value": 2
       },
       {
-        "label": "DE",
-        "value": 2
-      },
-      {
-        "label": "KR",
+        "label": "IT",
         "value": 2
       },
       {
         "label": "TH",
+        "value": 2
+      },
+      {
+        "label": "BR",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 28
+        "value": 32
       },
       {
         "label": "Manufacturing",
-        "value": 17
+        "value": 15
       },
       {
         "label": "Technology",
-        "value": 13
-      },
-      {
-        "label": "Healthcare",
-        "value": 8
-      },
-      {
-        "label": "Professional Services",
-        "value": 7
-      },
-      {
-        "label": "Energy & Utilities",
-        "value": 5
+        "value": 12
       },
       {
         "label": "Transportation",
-        "value": 5
+        "value": 7
       },
       {
         "label": "Financial Services",
-        "value": 5
+        "value": 7
+      },
+      {
+        "label": "Healthcare",
+        "value": 7
       },
       {
         "label": "Education",
+        "value": 5
+      },
+      {
+        "label": "Professional Services",
+        "value": 5
+      },
+      {
+        "label": "Energy & Utilities",
         "value": 4
       },
       {
