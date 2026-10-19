@@ -11,11 +11,27 @@ so it is never printed above the rate of acting wrongly.
 | runbook | 0.5455 | 0.0000 | 0.6452 | 0.0000 | 0.6452 | 93 |
 | naive-llm | — | — | — | — | — | 0 |
 | pashupatastra | 0.0000 | 0.3548 | 0.6452 | 0.0000 | 0.8387 | 93 |
+| naive-llm · `llama3` | 0.0000 | 0.0000 | 0.6452 | 0.0000 | 0.6452 | 93 |
+| naive-llm · `mistral` | 0.0000 | 1.0000 | 0.0000 | 0.0000 | 0.1935 | 93 |
+| naive-llm · `qwen2.5:7b` | 0.0000 | 0.5914 | 0.0538 | 0.0000 | 0.0538 | 93 |
+| pashupatastra-llm · `llama3` | 0.0000 | 0.0000 | 0.6452 | 0.0000 | 0.6452 | 93 |
+| pashupatastra-llm · `mistral` | 0.0000 | 1.0000 | 0.0000 | 0.0000 | 0.1935 | 93 |
+| pashupatastra-llm · `qwen2.5:7b` | 0.0000 | 0.6129 | 0.0323 | 0.0000 | 0.0323 | 93 |
+
+**LLM failures, counted apart from wrong answers** (adr/LLMBaselines):
+
+| Arm · model | Provider or schema error | Off-list proposal | Model escalated |
+|---|---:|---:|---:|
+| naive-llm · `llama3` | 0 | 0 | 0 |
+| naive-llm · `mistral` | 0 | 93 | 0 |
+| naive-llm · `qwen2.5:7b` | 53 | 2 | 0 |
+| pashupatastra-llm · `llama3` | 0 | 0 | 0 |
+| pashupatastra-llm · `mistral` | 1 | 92 | 0 |
+| pashupatastra-llm · `qwen2.5:7b` | 56 | 1 | 0 |
 
 **Arms with no data, and why:**
 
 - `human` — not run — requires operators. A simulated human is the number this work would most like to see and the one nobody would check
-- `naive-llm` — not run — requires a configured model. The deterministic stub would produce a second runbook under an LLM label
 
 ## Table 2 — Ablations
 
@@ -72,6 +88,26 @@ works.
 | PIB-0087 | nothing | 3/3 | correct×3 |
 | PIB-0088 | nothing | 3/3 | correct×3 |
 | PIB-0089 | nothing | 3/3 | correct×3 |
+
+## Table 5 — Which differences survive chance
+
+Paired by scenario and run. McNemar's exact test on correctness counts only
+the runs where the two arms disagreed; the interval is a paired bootstrap on
+the difference in false-remediation rate, resampling scenarios rather than
+runs (Dror et al., ACL 2018). Rows read A vs B.
+
+| Comparison | A right only / B right only | McNemar p | FRR(A) − FRR(B), 95% CI | Verdict |
+|---|---:|---:|---|---|
+| pashupatastra vs runbook | 18 / 0 | 0.0000 | [-0.818, -0.250] | survives |
+| pashupatastra-llm · llama3 vs naive-llm · llama3 | 0 / 0 | 1.0000 | [+0.000, +0.000] | within chance |
+| naive-llm · llama3 vs runbook | 0 / 0 | 1.0000 | [-0.800, -0.222] | within chance |
+| pashupatastra-llm · llama3 vs pashupatastra | 0 / 18 | 0.0000 | [+0.000, +0.000] | survives |
+| pashupatastra-llm · mistral vs naive-llm · mistral | 0 / 0 | 1.0000 | undefined (no actions) | within chance |
+| naive-llm · mistral vs runbook | 18 / 60 | 0.0000 | undefined (no actions) | survives |
+| pashupatastra-llm · mistral vs pashupatastra | 0 / 60 | 0.0000 | undefined (no actions) | survives |
+| pashupatastra-llm · qwen2.5:7b vs naive-llm · qwen2.5:7b | 3 / 5 | 0.7266 | [+0.000, +0.000] | within chance |
+| naive-llm · qwen2.5:7b vs runbook | 0 / 55 | 0.0000 | [-0.818, -0.250] | survives |
+| pashupatastra-llm · qwen2.5:7b vs pashupatastra | 0 / 75 | 0.0000 | [+0.000, +0.000] | survives |
 
 ## Table 4 — Metrics not computed
 
