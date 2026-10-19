@@ -55,6 +55,9 @@ class RunRecord:
     cause: str
     verified: bool
     duration_seconds: float
+    model: str = ""
+    """The LLM behind the proposal, for the LLM arms (adr/LLMBaselines); empty
+    for deterministic arms. Records from different models are never pooled."""
 
     @property
     def acted(self) -> bool:
@@ -100,6 +103,7 @@ class RunRecord:
             cause=data.get("cause", ""),
             verified=bool(data.get("verified", False)),
             duration_seconds=float(data.get("duration_seconds", 0.0)),
+            model=data.get("model", ""),
         )
 
 

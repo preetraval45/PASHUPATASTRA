@@ -65,3 +65,4 @@ Protocol: before every push, write a topic-named file from
 - [Kalaratri](Kalaratri.md) — RP-62: LogHub HDFS log-anomaly model, time split, PCA + unseen baselines, metrics only (research-only data)
 - [Kushmanda](Kushmanda.md) — RP-65: own LM (permissive corpus, own BPE, from-scratch GPT) trained on Kaggle via kaggle-kushmanda.yml; needs KAGGLE_API_TOKEN + KAGGLE_USERNAME secrets
 - [Brahmacharini](Brahmacharini.md) — RP-64: ATT&CK procedure→technique dual encoder vs BM25/HashingEmbedder; never run local ruff --fix on sati (strips CI-needed noqa)
+- [LlmBaselineRun](LlmBaselineRun.md) — RP-09 runs on Actions with Ollama (6 jobs, pre-declared matrix), RP-10 significance in core + Table 5; Kaggle offline dataset workaround; bash heredoc mangles non-ASCII

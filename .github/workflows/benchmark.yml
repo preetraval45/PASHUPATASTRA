@@ -54,8 +54,53 @@ jobs:
           path: benchmark/results/
           if-no-files-found: error
 
+  llm:
+    # RP-07 / RP-09 (adr/LLMBaselines): the two LLM arms x three models, N = 3.
+    # Ollama runs on the GitHub runner itself (CPU, 16 GB) - slow, free, and
+    # needing no endpoint or secret. Each job pulls one model and brings up its
+    # own kind cluster, so a model's rows never share a machine with another's.
+    name: ${{ matrix.arm }} · ${{ matrix.model }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [naive-llm, pashupatastra-llm]
+        model: ["qwen2.5:7b", "mistral", "llama3"]
+    env:
+      PASHU_BASELINE_BASE_URL: http://localhost:11434/v1
+      PASHU_BASELINE_MODEL: ${{ matrix.model }}
+      PASHU_BASELINE_TEMPERATURE: "0.2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core
+      - name: Ollama, serving one model on CPU
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          (ollama serve > /tmp/ollama.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 2; done
+          ollama pull "${{ matrix.model }}"
+          ollama --version
+      - uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: pashupatastra
+      - run: kubectl get nodes
+      - run: python -m benchmark.harness.run --runs 3 --arm ${{ matrix.arm }}
+      - name: name the artifact after the model
+        id: slug
+        run: echo "slug=$(echo '${{ matrix.model }}' | tr -c 'a-zA-Z0-9' '_')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: records-${{ matrix.arm }}-${{ steps.slug.outputs.slug }}
+          path: benchmark/results/
+          if-no-files-found: error
+
   tables:
-    needs: run
+    needs: [run, llm]
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: write

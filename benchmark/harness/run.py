@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import sys
 import time
 from pathlib import Path
@@ -193,6 +194,15 @@ def _write_records(args, results, exclusions) -> Path:
     directory = Path("benchmark/results") / args.arm
     directory.mkdir(parents=True, exist_ok=True)
     suffix = "" if args.ablation == "none" else f"-{args.ablation}"
+    # The LLM arms are one arm per model (adr/LLMBaselines): each model gets
+    # its own file, and every record says which model, temperature and
+    # hardware produced it, because RP-09 compares them.
+    model = temperature = ""
+    if args.arm.endswith("-llm"):
+        model = os.environ.get("PASHU_BASELINE_MODEL", "qwen2.5:7b")
+        temperature = os.environ.get("PASHU_BASELINE_TEMPERATURE", "0.2")
+        suffix += "-" + "".join(c if c.isalnum() else "_" for c in model)
+    hardware = f"{platform.machine()} · {os.cpu_count()} CPU · {platform.system()}"
     path = directory / f"runs{suffix}.jsonl"
 
     with path.open("w", encoding="utf-8") as handle:
@@ -210,6 +220,9 @@ def _write_records(args, results, exclusions) -> Path:
                 "cause": result.cause,
                 "verified": result.verdict.value == "correct" and result.executed,
                 "duration_seconds": result.duration_seconds,
+                "model": model,
+                "temperature": temperature,
+                "hardware": hardware,
             }) + "\n")
 
     with (directory / f"exclusions{suffix}.jsonl").open("w", encoding="utf-8") as handle:

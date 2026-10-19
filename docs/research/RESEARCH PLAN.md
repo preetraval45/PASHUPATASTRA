@@ -216,7 +216,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* **Claude** drafts `docs/adr/LLMBaselines.md`, covering: the identical `Brief` and prompt for both LLM arms; the call goes through the Gateway to the Oracle Ollama endpoint, with the token from env, never the repo; temperature and seed recorded per run; LLM errors graded separately from wrong answers. **You** choose the models (default `qwen2.5:7b`, `mistral` 7B, `llama3` 8B) and the temperature (default 0.2).
   *Done when:* the ADR is committed with your decisions in it.
 
-- [~] **RP-07 · Build the LLM baseline arms** — *Built 18 Oct: `benchmark/harness/llm.py` (`LLMProposer` over the Gateway, `proposal_v1`, only allowed ids / do_nothing / escalate; `llm_error` and `off_list` kept apart from wrong answers), `naive-llm` wired, `pashupatastra-llm` = the same Dharma + Remediator + verification with the LLM proposer; both refuse the stub and refuse without `PASHU_BASELINE_BASE_URL`. 7 new tests, all 25 harness tests now in CI. Remains: three scenarios producing clean records against the Oracle endpoint — needs the endpoint URL and token as `PASHU_BASELINE_*`.*
+- [~] **RP-07 · Build the LLM baseline arms** — *Built 18 Oct (LLMProposer, naive-llm, pashupatastra-llm, refusals, 7 tests). The clean-records step now runs inside RP-09's benchmark jobs, against Ollama on GitHub's runners instead of the Oracle box (no secrets needed). Remains: those records.*
   **Claude** · 1–2 sessions · review 1 h · Depends: RP-06
   *Steps:*
   1. Build a proposer behind the Gateway that takes a `Brief` and returns a validated proposal, restricted to `allowed_actions`, do-nothing or escalate.
@@ -229,12 +229,12 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   4. Confirm the CI gate still passes, with no SDK in core.
   *Done when:* all tests pass, and three scenarios (one negative, one escalation, one remediate) produce clean records against the Oracle endpoint.
 
-- [ ] **RP-08 · Learn: PyTorch and backpropagation**
+- [~] **RP-08 · Learn: PyTorch and backpropagation** — *Study notes prepared 18 Oct: [notes/RP-08](notes/RP-08-pytorch-and-backprop.md), mapped onto this repository's own training loops. Remains: the owner writes the loop from memory and trains it.*
   **You** · 8 h · Depends: RP-02
   *Steps:* the PyTorch "Learn the Basics" tutorial end to end; 3Blue1Brown's *Neural Networks* backpropagation episodes; Karpathy's "micrograd" video, coding along.
   *Done when:* you write a full training loop from memory (Dataset, DataLoader, model, loss, optimizer, train and validation, checkpoint) and train it on any small public dataset.
 
-- [ ] **RP-09 · Full baseline run**
+- [~] **RP-09 · Full baseline run** — *Running from 18 Oct: matrix pre-declared in [experiments/llm-baselines-matrix.md](experiments/llm-baselines-matrix.md) before any result (558 runs, 31 × 2 arms × 3 models × N = 3); six `llm` jobs in benchmark.yml, each Ollama on CPU plus its own kind cluster; records carry model, temperature and hardware; papertables gains one row per (arm, model) and LLM-error counts. Deviation stated: Ollama on GitHub's runners, not the Oracle box. Remains: the jobs finishing and Table 1 showing all four arms.*
   **Claude** · 1 session + overnights · review 1 h · Depends: RP-07
   *Steps:*
   1. Commit the run matrix *before* running: 31 scenarios × 2 LLM arms × 3 models × N = 3.
@@ -243,7 +243,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   The Oracle box is CPU-only, so expect this to take days. Record the hardware in the run records.
   *Done when:* Table 1 shows all four arms with n.
 
-- [ ] **RP-10 · Significance between arms**
+- [~] **RP-10 · Significance between arms** — *Claude's part done 18 Oct: `pashupatastra.significance` (exact McNemar; paired bootstrap resampling scenarios), 7 tests, Table 5 in papertables. Remains: the owner reads Dror et al. 2018, and RP-09's records fill the table.*
   **Both** · You 3 h; Claude 1 session · Depends: RP-09
   *Steps:* **You** read Dror et al. ACL 2018, *The Hitchhiker's Guide to Testing Statistical Significance in NLP*. **Claude** adds McNemar tests on per-scenario correctness and a paired bootstrap CI on FRR to `papertables.py`.
   *Done when:* the tables say which differences survive.
