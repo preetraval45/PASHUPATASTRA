@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-19T13:21:22+00:00",
+  "as_of": "2026-10-20T11:41:23+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
@@ -208,12 +208,8 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-15",
-        "value": 13
-      },
-      {
         "label": "2026-10-16",
-        "value": 35
+        "value": 22
       },
       {
         "label": "2026-10-17",
@@ -221,28 +217,28 @@
       },
       {
         "label": "2026-10-18",
-        "value": 24
+        "value": 23
       },
       {
         "label": "2026-10-19",
-        "value": 8
+        "value": 29
+      },
+      {
+        "label": "2026-10-20",
+        "value": 6
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 37
+        "value": 40
       },
       {
         "label": "qilin",
-        "value": 13
+        "value": 15
       },
       {
         "label": "Helix",
-        "value": 7
-      },
-      {
-        "label": "THE SEVEN DEADLY SINS",
         "value": 7
       },
       {
@@ -258,33 +254,41 @@
         "value": 4
       },
       {
-        "label": "incransom",
-        "value": 4
+        "label": "Redact",
+        "value": 3
       },
       {
         "label": "Storm",
         "value": 3
       },
       {
-        "label": "aurora",
+        "label": "payload",
+        "value": 2
+      },
+      {
+        "label": "Global Secret Group",
         "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 52
-      },
-      {
-        "label": "KR",
-        "value": 3
+        "value": 48
       },
       {
         "label": "DE",
-        "value": 3
+        "value": 4
       },
       {
-        "label": "EG",
+        "label": "CH",
+        "value": 2
+      },
+      {
+        "label": "BR",
+        "value": 2
+      },
+      {
+        "label": "KR",
         "value": 2
       },
       {
@@ -302,52 +306,48 @@
       {
         "label": "TH",
         "value": 2
-      },
-      {
-        "label": "BR",
-        "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 32
+        "value": 31
       },
       {
         "label": "Manufacturing",
-        "value": 15
+        "value": 16
       },
       {
         "label": "Technology",
-        "value": 12
+        "value": 9
+      },
+      {
+        "label": "Professional Services",
+        "value": 7
       },
       {
         "label": "Transportation",
         "value": 7
       },
       {
-        "label": "Financial Services",
-        "value": 7
-      },
-      {
         "label": "Healthcare",
-        "value": 7
+        "value": 6
       },
       {
         "label": "Education",
         "value": 5
       },
       {
-        "label": "Professional Services",
+        "label": "Financial Services",
         "value": 5
       },
       {
-        "label": "Energy & Utilities",
+        "label": "Retail & E-Commerce",
         "value": 4
       },
       {
         "label": "Other",
-        "value": 3
+        "value": 4
       }
     ]
   },
@@ -384,12 +384,12 @@
   "breaches": {
     "ok": true,
     "source": "https://haveibeenpwned.com/api/v3/breaches",
-    "breaches": 1046,
-    "accounts": 17846480593,
+    "breaches": 1047,
+    "accounts": 17846550965,
     "top_data_classes": [
       {
         "label": "Email addresses",
-        "value": 1039
+        "value": 1040
       },
       {
         "label": "Passwords",
@@ -397,7 +397,7 @@
       },
       {
         "label": "Names",
-        "value": 565
+        "value": 566
       },
       {
         "label": "Usernames",
@@ -409,15 +409,15 @@
       },
       {
         "label": "Phone numbers",
-        "value": 382
+        "value": 383
       },
       {
         "label": "Physical addresses",
-        "value": 308
+        "value": 309
       },
       {
         "label": "Dates of birth",
-        "value": 287
+        "value": 288
       },
       {
         "label": "Genders",
@@ -429,6 +429,14 @@
       }
     ],
     "latest": [
+      {
+        "title": "Assurance Retraite",
+        "domain": "lassuranceretraite.fr",
+        "breach_date": "2024-09-01",
+        "added": "2026-10-20",
+        "accounts": 70372,
+        "verified": true
+      },
       {
         "title": "Gîtes de France",
         "domain": "gites-de-france.com",
@@ -499,14 +507,6 @@
         "breach_date": "2019-08-01",
         "added": "2026-09-22",
         "accounts": 17838396,
-        "verified": true
-      },
-      {
-        "title": "Burger King Russia",
-        "domain": "burgerkingrus.ru",
-        "breach_date": "2024-08-25",
-        "added": "2026-09-21",
-        "accounts": 3155792,
         "verified": true
       }
     ]
