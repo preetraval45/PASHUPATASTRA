@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-20T11:41:23+00:00",
+  "as_of": "2026-10-21T11:52:47+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.10.16",
-    "total": 1748,
-    "added_last_30_days": 32,
+    "catalog_version": "2026.10.20",
+    "total": 1754,
+    "added_last_30_days": 38,
     "known_ransomware_use": 361,
     "by_month": [
       {
         "label": "2025-10",
-        "value": 12
+        "value": 7
       },
       {
         "label": "2025-11",
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-10",
-        "value": 18
+        "value": 24
       }
     ],
     "top_vendors": [
@@ -104,6 +104,54 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-106931",
+        "vendor": "EG Secure Solutions",
+        "product": "SiteGuard Server Edition",
+        "name": "EG Secure Solutions SiteGuard Server Edition OS Command Injection Vulnerability",
+        "added": "2026-10-20",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-96656",
+        "vendor": "Plex",
+        "product": "Media Server",
+        "name": "Plex Media Server External Control of File Name or Path Vulnerability",
+        "added": "2026-10-20",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-96655",
+        "vendor": "Plex",
+        "product": "Media Server",
+        "name": "Plex Media Server Server-Side Request Forgery (SSRF) Vulnerability",
+        "added": "2026-10-20",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-96654",
+        "vendor": "Plex",
+        "product": "Media Server",
+        "name": "Plex Media Server Improper Neutralization of Encoded URI Schemes in a Web Page Vulnerability",
+        "added": "2026-10-20",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-96652",
+        "vendor": "Plex",
+        "product": "Media Server",
+        "name": "Plex Media Server Server-Side Request Forgery (SSRF) Vulnerability",
+        "added": "2026-10-20",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-110936",
+        "vendor": "Siemens",
+        "product": "Software Center",
+        "name": "Siemens Software Center Uncontrolled Search Path Element Vulnerability",
+        "added": "2026-10-20",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-102764",
         "vendor": "BeyondTrust",
@@ -151,54 +199,6 @@
         "name": "Ahsay AhsayCBS Improper Authentication Vulnerability",
         "added": "2026-10-14",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-0322",
-        "vendor": "Palo Alto Networks",
-        "product": "PAN-OS",
-        "name": "Palo Alto Networks PAN-OS Code Injection Vulnerability",
-        "added": "2026-10-14",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-104935",
-        "vendor": "Ivanti",
-        "product": "Connect Secure",
-        "name": "Ivanti Connect Secure Authentication Bypass by Spoofing Vulnerability",
-        "added": "2026-10-13",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-96951",
-        "vendor": "Microsoft",
-        "product": "Windows",
-        "name": "Microsoft Windows Command Injection Vulnerability",
-        "added": "2026-10-13",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2015-5477",
-        "vendor": "ISC",
-        "product": "BIND",
-        "name": " ISC BIND Data Processing Errors Vulnerability",
-        "added": "2026-10-08",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2016-3081",
-        "vendor": "Apache",
-        "product": "Struts",
-        "name": "Apache Struts Command Injection Vulnerability",
-        "added": "2026-10-08",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2023-22894",
-        "vendor": "Strapi",
-        "product": "Strapi",
-        "name": "Strapi Cleartext Storage of Sensitive Information Vulnerability",
-        "added": "2026-10-08",
-        "ransomware": false
       }
     ]
   },
@@ -209,11 +209,11 @@
     "by_day": [
       {
         "label": "2026-10-16",
-        "value": 22
+        "value": 5
       },
       {
         "label": "2026-10-17",
-        "value": 20
+        "value": 14
       },
       {
         "label": "2026-10-18",
@@ -225,13 +225,17 @@
       },
       {
         "label": "2026-10-20",
-        "value": 6
+        "value": 24
+      },
+      {
+        "label": "2026-10-21",
+        "value": 5
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 40
+        "value": 30
       },
       {
         "label": "qilin",
@@ -242,6 +246,14 @@
         "value": 7
       },
       {
+        "label": "Booba Project",
+        "value": 6
+      },
+      {
+        "label": "SilentRansomGroup",
+        "value": 4
+      },
+      {
         "label": "everest",
         "value": 4
       },
@@ -250,34 +262,34 @@
         "value": 4
       },
       {
-        "label": "thegentlemen",
-        "value": 4
+        "label": "emperador",
+        "value": 3
       },
       {
-        "label": "Redact",
+        "label": "Global Secret Group",
         "value": 3
       },
       {
         "label": "Storm",
         "value": 3
-      },
-      {
-        "label": "payload",
-        "value": 2
-      },
-      {
-        "label": "Global Secret Group",
-        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 48
+        "value": 53
       },
       {
         "label": "DE",
         "value": 4
+      },
+      {
+        "label": "MY",
+        "value": 2
+      },
+      {
+        "label": "GB",
+        "value": 2
       },
       {
         "label": "CH",
@@ -292,37 +304,33 @@
         "value": 2
       },
       {
-        "label": "MY",
-        "value": 2
-      },
-      {
         "label": "NL",
         "value": 2
       },
       {
-        "label": "IT",
-        "value": 2
-      },
-      {
-        "label": "TH",
-        "value": 2
+        "label": "CA",
+        "value": 1
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 31
+        "value": 26
       },
       {
         "label": "Manufacturing",
-        "value": 16
+        "value": 15
       },
       {
         "label": "Technology",
-        "value": 9
+        "value": 10
       },
       {
         "label": "Professional Services",
+        "value": 8
+      },
+      {
+        "label": "Healthcare",
         "value": 7
       },
       {
@@ -330,23 +338,19 @@
         "value": 7
       },
       {
-        "label": "Healthcare",
+        "label": "Other",
         "value": 6
-      },
-      {
-        "label": "Education",
-        "value": 5
       },
       {
         "label": "Financial Services",
         "value": 5
       },
       {
-        "label": "Retail & E-Commerce",
+        "label": "Education",
         "value": 4
       },
       {
-        "label": "Other",
+        "label": "Retail & E-Commerce",
         "value": 4
       }
     ]
