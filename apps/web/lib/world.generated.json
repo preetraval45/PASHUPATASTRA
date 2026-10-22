@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-10-21T11:52:47+00:00",
+  "as_of": "2026-10-22T11:56:32+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.10.20",
+    "catalog_version": "2026.10.21",
     "total": 1754,
-    "added_last_30_days": 38,
+    "added_last_30_days": 37,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -208,20 +208,12 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-16",
-        "value": 5
-      },
-      {
-        "label": "2026-10-17",
-        "value": 14
-      },
-      {
-        "label": "2026-10-18",
-        "value": 23
+        "label": "2026-10-13",
+        "value": 1
       },
       {
         "label": "2026-10-19",
-        "value": 29
+        "value": 25
       },
       {
         "label": "2026-10-20",
@@ -229,129 +221,133 @@
       },
       {
         "label": "2026-10-21",
-        "value": 5
+        "value": 37
+      },
+      {
+        "label": "2026-10-22",
+        "value": 13
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 30
+        "value": 26
+      },
+      {
+        "label": "BrainCipher",
+        "value": 8
       },
       {
         "label": "qilin",
-        "value": 15
+        "value": 8
       },
       {
-        "label": "Helix",
+        "label": "SilentRansomGroup",
         "value": 7
+      },
+      {
+        "label": "lamashtu",
+        "value": 6
       },
       {
         "label": "Booba Project",
         "value": 6
       },
       {
-        "label": "SilentRansomGroup",
-        "value": 4
-      },
-      {
         "label": "everest",
         "value": 4
       },
       {
-        "label": "play",
-        "value": 4
+        "label": "incransom",
+        "value": 3
       },
       {
-        "label": "emperador",
+        "label": "Helix",
         "value": 3
       },
       {
         "label": "Global Secret Group",
-        "value": 3
-      },
-      {
-        "label": "Storm",
         "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 53
+        "value": 45
       },
       {
         "label": "DE",
-        "value": 4
-      },
-      {
-        "label": "MY",
-        "value": 2
+        "value": 8
       },
       {
         "label": "GB",
-        "value": 2
-      },
-      {
-        "label": "CH",
-        "value": 2
-      },
-      {
-        "label": "BR",
-        "value": 2
-      },
-      {
-        "label": "KR",
-        "value": 2
-      },
-      {
-        "label": "NL",
-        "value": 2
+        "value": 4
       },
       {
         "label": "CA",
+        "value": 2
+      },
+      {
+        "label": "AR",
+        "value": 2
+      },
+      {
+        "label": "MX",
+        "value": 2
+      },
+      {
+        "label": "BG",
+        "value": 1
+      },
+      {
+        "label": "FR",
+        "value": 1
+      },
+      {
+        "label": "IE",
         "value": 1
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 26
-      },
-      {
-        "label": "Manufacturing",
-        "value": 15
-      },
-      {
-        "label": "Technology",
-        "value": 10
+        "value": 29
       },
       {
         "label": "Professional Services",
-        "value": 8
+        "value": 12
+      },
+      {
+        "label": "Manufacturing",
+        "value": 12
       },
       {
         "label": "Healthcare",
-        "value": 7
-      },
-      {
-        "label": "Transportation",
-        "value": 7
+        "value": 10
       },
       {
         "label": "Other",
+        "value": 7
+      },
+      {
+        "label": "Technology",
         "value": 6
       },
       {
-        "label": "Financial Services",
-        "value": 5
+        "label": "Retail & E-Commerce",
+        "value": 6
       },
       {
         "label": "Education",
         "value": 4
       },
       {
-        "label": "Retail & E-Commerce",
+        "label": "Transportation",
         "value": 4
+      },
+      {
+        "label": "Agriculture and Food Production",
+        "value": 2
       }
     ]
   },
