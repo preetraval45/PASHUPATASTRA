@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-22T11:56:32+00:00",
+  "as_of": "2026-10-23T11:42:26+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.10.21",
     "total": 1754,
-    "added_last_30_days": 37,
+    "added_last_30_days": 33,
     "known_ransomware_use": 361,
     "by_month": [
       {
         "label": "2025-10",
-        "value": 7
+        "value": 6
       },
       {
         "label": "2025-11",
@@ -213,7 +213,7 @@
       },
       {
         "label": "2026-10-19",
-        "value": 25
+        "value": 7
       },
       {
         "label": "2026-10-20",
@@ -225,25 +225,29 @@
       },
       {
         "label": "2026-10-22",
-        "value": 13
+        "value": 30
+      },
+      {
+        "label": "2026-10-23",
+        "value": 1
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 26
+        "value": 23
       },
       {
-        "label": "BrainCipher",
-        "value": 8
+        "label": "SilentRansomGroup",
+        "value": 9
       },
       {
         "label": "qilin",
         "value": 8
       },
       {
-        "label": "SilentRansomGroup",
-        "value": 7
+        "label": "BrainCipher",
+        "value": 8
       },
       {
         "label": "lamashtu",
@@ -255,14 +259,14 @@
       },
       {
         "label": "everest",
-        "value": 4
+        "value": 5
       },
       {
-        "label": "incransom",
-        "value": 3
+        "label": "akira",
+        "value": 5
       },
       {
-        "label": "Helix",
+        "label": "bravox",
         "value": 3
       },
       {
@@ -273,77 +277,77 @@
     "by_country": [
       {
         "label": "US",
-        "value": 45
+        "value": 39
       },
       {
         "label": "DE",
-        "value": 8
+        "value": 9
       },
       {
         "label": "GB",
         "value": 4
       },
       {
-        "label": "CA",
-        "value": 2
-      },
-      {
-        "label": "AR",
-        "value": 2
-      },
-      {
         "label": "MX",
         "value": 2
       },
       {
-        "label": "BG",
-        "value": 1
-      },
-      {
         "label": "FR",
+        "value": 2
+      },
+      {
+        "label": "AU",
+        "value": 2
+      },
+      {
+        "label": "CA",
+        "value": 2
+      },
+      {
+        "label": "IT",
         "value": 1
       },
       {
-        "label": "IE",
+        "label": "TR",
         "value": 1
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 29
+        "value": 32
       },
       {
         "label": "Professional Services",
-        "value": 12
+        "value": 13
       },
       {
         "label": "Manufacturing",
         "value": 12
       },
       {
-        "label": "Healthcare",
+        "label": "Retail & E-Commerce",
         "value": 10
       },
       {
+        "label": "Healthcare",
+        "value": 8
+      },
+      {
         "label": "Other",
-        "value": 7
+        "value": 6
       },
       {
         "label": "Technology",
-        "value": 6
-      },
-      {
-        "label": "Retail & E-Commerce",
-        "value": 6
+        "value": 5
       },
       {
         "label": "Education",
         "value": 4
       },
       {
-        "label": "Transportation",
-        "value": 4
+        "label": "Hospitality",
+        "value": 2
       },
       {
         "label": "Agriculture and Food Production",
