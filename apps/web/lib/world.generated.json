@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-10-23T11:42:26+00:00",
+  "as_of": "2026-10-24T11:04:56+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.10.21",
-    "total": 1754,
-    "added_last_30_days": 33,
+    "catalog_version": "2026.10.23",
+    "total": 1756,
+    "added_last_30_days": 35,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-10",
-        "value": 24
+        "value": 26
       }
     ],
     "top_vendors": [
@@ -104,6 +104,22 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-114625",
+        "vendor": "Arista",
+        "product": "VeloCloud Orchestrator",
+        "name": "Arista VeloCloud Orchestrator SQL Injection Vulnerability",
+        "added": "2026-10-23",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-110447",
+        "vendor": "Collabora",
+        "product": "Collabora Online – Built-in CODE Server",
+        "name": "Collabora Online – Built-in CODE Server OS Command Injection Vulnerability",
+        "added": "2026-10-23",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-106931",
         "vendor": "EG Secure Solutions",
@@ -183,22 +199,6 @@
         "name": "Ahsay AhsayCBS Command Injection Vulnerability",
         "added": "2026-10-14",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-76519",
-        "vendor": "Cisco",
-        "product": "Secure Email Gateway",
-        "name": "Cisco Secure Email Gateway Relative Path Traversal Vulnerability",
-        "added": "2026-10-14",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-105133",
-        "vendor": "Ahsay",
-        "product": "AhsayCBS",
-        "name": "Ahsay AhsayCBS Improper Authentication Vulnerability",
-        "added": "2026-10-14",
-        "ransomware": false
       }
     ]
   },
@@ -208,57 +208,45 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-13",
-        "value": 1
-      },
-      {
-        "label": "2026-10-19",
-        "value": 7
-      },
-      {
-        "label": "2026-10-20",
-        "value": 24
-      },
-      {
         "label": "2026-10-21",
-        "value": 37
+        "value": 29
       },
       {
         "label": "2026-10-22",
-        "value": 30
+        "value": 29
       },
       {
         "label": "2026-10-23",
-        "value": 1
+        "value": 39
+      },
+      {
+        "label": "2026-10-24",
+        "value": 3
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 23
-      },
-      {
-        "label": "SilentRansomGroup",
-        "value": 9
+        "value": 20
       },
       {
         "label": "qilin",
-        "value": 8
+        "value": 16
       },
       {
         "label": "BrainCipher",
         "value": 8
       },
       {
+        "label": "SilentRansomGroup",
+        "value": 6
+      },
+      {
         "label": "lamashtu",
         "value": 6
       },
       {
-        "label": "Booba Project",
-        "value": 6
-      },
-      {
-        "label": "everest",
+        "label": "lockbit5",
         "value": 5
       },
       {
@@ -266,88 +254,92 @@
         "value": 5
       },
       {
-        "label": "bravox",
+        "label": "rhysida",
         "value": 3
       },
       {
-        "label": "Global Secret Group",
+        "label": "Whitearmor",
         "value": 3
+      },
+      {
+        "label": "Deadlock",
+        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 39
+        "value": 28
       },
       {
         "label": "DE",
-        "value": 9
+        "value": 10
       },
       {
-        "label": "GB",
+        "label": "ES",
         "value": 4
+      },
+      {
+        "label": "AR",
+        "value": 3
+      },
+      {
+        "label": "AU",
+        "value": 3
+      },
+      {
+        "label": "TR",
+        "value": 2
       },
       {
         "label": "MX",
         "value": 2
       },
       {
-        "label": "FR",
-        "value": 2
-      },
-      {
-        "label": "AU",
-        "value": 2
-      },
-      {
-        "label": "CA",
-        "value": 2
-      },
-      {
         "label": "IT",
-        "value": 1
+        "value": 2
       },
       {
-        "label": "TR",
-        "value": 1
+        "label": "CH",
+        "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 32
+        "value": 27
       },
       {
         "label": "Professional Services",
-        "value": 13
+        "value": 17
       },
       {
         "label": "Manufacturing",
-        "value": 12
-      },
-      {
-        "label": "Retail & E-Commerce",
-        "value": 10
-      },
-      {
-        "label": "Healthcare",
-        "value": 8
+        "value": 13
       },
       {
         "label": "Other",
-        "value": 6
+        "value": 9
+      },
+      {
+        "label": "Healthcare",
+        "value": 7
       },
       {
         "label": "Technology",
-        "value": 5
+        "value": 7
+      },
+      {
+        "label": "Retail & E-Commerce",
+        "value": 6
+      },
+      {
+        "label": "Financial Services",
+        "value": 3
       },
       {
         "label": "Education",
-        "value": 4
-      },
-      {
-        "label": "Hospitality",
-        "value": 2
+        "value": 3
       },
       {
         "label": "Agriculture and Food Production",
