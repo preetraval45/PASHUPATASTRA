@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-24T11:04:56+00:00",
+  "as_of": "2026-10-25T11:34:37+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.10.23",
     "total": 1756,
-    "added_last_30_days": 35,
+    "added_last_30_days": 33,
     "known_ransomware_use": 361,
     "by_month": [
       {
         "label": "2025-10",
-        "value": 6
+        "value": 4
       },
       {
         "label": "2025-11",
@@ -209,41 +209,45 @@
     "by_day": [
       {
         "label": "2026-10-21",
-        "value": 29
+        "value": 2
       },
       {
         "label": "2026-10-22",
-        "value": 29
+        "value": 28
       },
       {
         "label": "2026-10-23",
-        "value": 39
+        "value": 38
       },
       {
         "label": "2026-10-24",
-        "value": 3
+        "value": 22
+      },
+      {
+        "label": "2026-10-25",
+        "value": 10
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 20
+        "value": 23
       },
       {
         "label": "qilin",
-        "value": 16
+        "value": 19
       },
       {
-        "label": "BrainCipher",
-        "value": 8
-      },
-      {
-        "label": "SilentRansomGroup",
+        "label": "krybit",
         "value": 6
+      },
+      {
+        "label": "emperador",
+        "value": 5
       },
       {
         "label": "lamashtu",
-        "value": 6
+        "value": 5
       },
       {
         "label": "lockbit5",
@@ -254,30 +258,34 @@
         "value": 5
       },
       {
-        "label": "rhysida",
-        "value": 3
+        "label": "SilentRansomGroup",
+        "value": 4
       },
       {
         "label": "Whitearmor",
         "value": 3
       },
       {
-        "label": "Deadlock",
-        "value": 2
+        "label": "rhysida",
+        "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 28
+        "value": 24
       },
       {
         "label": "DE",
-        "value": 10
+        "value": 12
       },
       {
         "label": "ES",
         "value": 4
+      },
+      {
+        "label": "MX",
+        "value": 3
       },
       {
         "label": "AR",
@@ -288,62 +296,58 @@
         "value": 3
       },
       {
-        "label": "TR",
+        "label": "BG",
         "value": 2
       },
       {
-        "label": "MX",
+        "label": "GB",
         "value": 2
       },
       {
-        "label": "IT",
-        "value": 2
-      },
-      {
-        "label": "CH",
+        "label": "FR",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 27
-      },
-      {
-        "label": "Professional Services",
-        "value": 17
+        "value": 20
       },
       {
         "label": "Manufacturing",
-        "value": 13
+        "value": 16
+      },
+      {
+        "label": "Professional Services",
+        "value": 14
+      },
+      {
+        "label": "Technology",
+        "value": 12
       },
       {
         "label": "Other",
-        "value": 9
+        "value": 8
       },
       {
         "label": "Healthcare",
         "value": 7
       },
       {
-        "label": "Technology",
+        "label": "Retail & E-Commerce",
         "value": 7
       },
       {
-        "label": "Retail & E-Commerce",
-        "value": 6
-      },
-      {
-        "label": "Financial Services",
-        "value": 3
-      },
-      {
-        "label": "Education",
-        "value": 3
+        "label": "Energy & Utilities",
+        "value": 4
       },
       {
         "label": "Agriculture and Food Production",
-        "value": 2
+        "value": 3
+      },
+      {
+        "label": "Hospitality",
+        "value": 3
       }
     ]
   },
