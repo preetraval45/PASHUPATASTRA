@@ -6,9 +6,9 @@
 
 | Retriever | Recall@1 | Recall@5 | Recall@10 | MRR |
 |---|---:|---:|---:|---:|
-| **Brahmacharini v0** | 0.609 | 0.790 | 0.845 | 0.691 |
-| bm25 | 0.270 | 0.481 | 0.577 | 0.373 |
-| hashing-embedder (Smriti today) | 0.112 | 0.212 | 0.269 | 0.168 |
+| **Brahmacharini v0** | 0.614 | 0.802 | 0.854 | 0.699 |
+| bm25 | 0.268 | 0.478 | 0.580 | 0.372 |
+| hashing-embedder (Smriti today) | 0.120 | 0.226 | 0.283 | 0.177 |
 
 Epochs chosen on validation sources: 10.
 

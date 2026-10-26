@@ -13,24 +13,24 @@
   "task": "rank all techniques for an observed behaviour",
   "test": {
     "brahmacharini-v0": {
-      "recall@1": 0.6086,
-      "recall@5": 0.7904,
-      "recall@10": 0.8448,
-      "mrr": 0.6905,
+      "recall@1": 0.6144,
+      "recall@5": 0.802,
+      "recall@10": 0.8535,
+      "mrr": 0.6988,
       "n": 1727
     },
     "bm25": {
-      "recall@1": 0.2698,
-      "recall@5": 0.4812,
-      "recall@10": 0.5773,
-      "mrr": 0.373,
+      "recall@1": 0.2681,
+      "recall@5": 0.4783,
+      "recall@10": 0.5802,
+      "mrr": 0.3716,
       "n": 1727
     },
     "hashing-embedder (Smriti today)": {
-      "recall@1": 0.1123,
-      "recall@5": 0.2125,
-      "recall@10": 0.2687,
-      "mrr": 0.1676,
+      "recall@1": 0.1199,
+      "recall@5": 0.2264,
+      "recall@10": 0.2826,
+      "mrr": 0.1771,
       "n": 1727
     }
   },
@@ -38,64 +38,64 @@
   "curve": [
     {
       "epoch": 1,
-      "loss": 1.0326,
-      "val_mrr": 0.5892
+      "loss": 1.0324,
+      "val_mrr": 0.5916
     },
     {
       "epoch": 2,
-      "loss": 0.1968,
-      "val_mrr": 0.6514
+      "loss": 0.2029,
+      "val_mrr": 0.6551
     },
     {
       "epoch": 3,
-      "loss": 0.3055,
-      "val_mrr": 0.6857
+      "loss": 0.2745,
+      "val_mrr": 0.6911
     },
     {
       "epoch": 4,
-      "loss": 0.0462,
-      "val_mrr": 0.6806
+      "loss": 0.0509,
+      "val_mrr": 0.6869
     },
     {
       "epoch": 5,
-      "loss": 0.0151,
-      "val_mrr": 0.6874
+      "loss": 0.0181,
+      "val_mrr": 0.6941
     },
     {
       "epoch": 6,
-      "loss": 0.0302,
-      "val_mrr": 0.694
+      "loss": 0.0169,
+      "val_mrr": 0.7013
     },
     {
       "epoch": 7,
-      "loss": 0.0059,
-      "val_mrr": 0.6958
+      "loss": 0.006,
+      "val_mrr": 0.7011
     },
     {
       "epoch": 8,
-      "loss": 0.0395,
-      "val_mrr": 0.7029
+      "loss": 0.0327,
+      "val_mrr": 0.7053
     },
     {
       "epoch": 9,
-      "loss": 0.0739,
-      "val_mrr": 0.7004
+      "loss": 0.0349,
+      "val_mrr": 0.7062
     },
     {
       "epoch": 10,
-      "loss": 0.004,
-      "val_mrr": 0.7056
+      "loss": 0.0031,
+      "val_mrr": 0.7099
     },
     {
       "epoch": 11,
-      "loss": 0.0025,
-      "val_mrr": 0.7033
+      "loss": 0.0032,
+      "val_mrr": 0.7067
     },
     {
       "epoch": 12,
-      "loss": 0.005,
-      "val_mrr": 0.7
+      "loss": 0.0065,
+      "val_mrr": 0.6958
     }
   ],
-  "seconds": 413.6
+  "seconds": 223.9
 }
