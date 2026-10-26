@@ -147,9 +147,82 @@ teaching that they are not.
 
 See [tables.md](tables.md), generated from the run records.
 
-Read with §9. In particular the arms table has two empty rows, and the 31
-executable scenarios are 20 negatives, 6 escalations and 5 remediations — a
-subset that under-tests remediation and therefore flatters restraint.
+Read with §9. The 31 executable scenarios are 20 negatives, 6 escalations and 5
+remediations — a subset that under-tests remediation and therefore flatters
+restraint.
+
+### 7.1 Baselines
+
+> *Draft written by Claude for RP-11, for the author to revise. Every number
+> below is in [tables.md](tables.md) (Tables 1 and 5, records of 19 October
+> 2026); none is computed here.*
+
+**Arms.** Four arms faced the same 31 scenarios, each run three times (n = 93
+per row):
+
+- **runbook:** threshold-triggered automation. It acts when a number crosses
+  a line, with no policy, no verification and no way to hand off.
+- **pashupatastra:** the architecture, given the same proposal as the
+  runbook. It adds the three things the architecture contributes: declining
+  to act when nothing is wrong, a policy verdict on every action, and checking
+  the result.
+- **naive-llm:** a language model choosing the action directly.
+- **pashupatastra-llm:** the same model as the proposer inside the
+  architecture, so policy and verification are the only difference from
+  naive-llm.
+
+The models are llama3, mistral and qwen2.5:7b, served by Ollama on CPU.
+Metrics are defined in [METRICS.md](METRICS.md): FRR is the share of executed
+actions that were wrong, HIR the share of incidents handed to a human, and ARR
+the share resolved with no human.
+
+**The architecture beats the runbook, and the gap survives chance.** Both
+resolve 0.6452 of incidents without a human (ARR). But the runbook's FRR is
+0.5455: more than half its executed actions are wrong. The architecture's is
+0.0000, at the price of escalating 0.3548 of incidents (HIR). Overall it is
+correct on 0.8387 of runs against 0.6452. On paired runs it was right where
+the runbook was wrong 18 times, and never the reverse. McNemar's exact test
+puts that beyond chance (Table 5).
+
+**Small local models do not make useful proposers here, and the reasons
+differ.**
+
+- **llama3**'s rows are identical in both arms: FRR 0.0000, HIR 0.0000,
+  correct 0.6452. That is exactly the share of runs whose right answer is to
+  do nothing. On this corpus its behaviour is indistinguishable from never
+  acting.
+- **mistral** proposed an action outside the allowed list in 93 of 93 naive
+  runs and 92 of 93 inside the architecture, so every incident escalated (HIR
+  1.0000, correct 0.1935).
+- **qwen2.5:7b** returned 53 (naive) and 56 (architecture) provider or schema
+  errors, and was correct on 0.0538 and 0.0323 of runs.
+
+The LLM-failure table in [tables.md](tables.md) counts these failures apart
+from wrong answers. The qwen rows measure CPU inference on the runner as much
+as the model.
+
+**Policy and verification change no LLM's correctness significantly.** For
+each model, pashupatastra-llm against naive-llm has no difference that
+survives chance: 0 / 0 discordant runs for llama3 and mistral, 3 / 5 for
+qwen2.5:7b (Table 5). Read this with the previous paragraph: the layer has
+nothing to stop when the proposer never acts, or proposes nothing it is
+allowed to do. These runs neither confirm nor refute the safety claim. They
+show it untested by these models. The claim's test is a proposer that
+confidently proposes wrong allowed actions, and none of the three did.
+
+**Every LLM arm is worse than the deterministic proposer.** Against
+pashupatastra, each pashupatastra-llm arm was right less often: 0 / 18, 0 / 60
+and 0 / 75 discordant runs for llama3, mistral and qwen2.5:7b. All three
+survive chance (Table 5).
+
+**What this subsection does not show.**
+
+- Diagnosis quality: no arm here is asked for a root cause. That is RP-15, on
+  20 labelled incidents.
+- Larger or hosted models.
+- Any scenario outside the 31 the reference stack can inject.
+
+§9 discusses each.
 
 ## 8. Failure analysis
 
@@ -226,11 +299,11 @@ the results rather than derived from them.)*
 | Item | Blocked on |
 |---|---|
 | §2 Background and related work | A literature review; nothing else blocks it |
-| §7 Evaluation prose | The corrected corpus re-run at N≥3 |
+| §7 Evaluation prose | §7.1 baselines drafted 26 Oct (RP-11), for the author's revision; the rest of §7 waits on diagnosis results (RP-15) |
 | §8 Failure analysis | The same runs |
 | §10 Conclusion | §8 |
 | Human arm | Recruiting operators |
-| Naive LLM arm | A configured model — and a fourth arm, Pashupatastra with the same LLM proposer, so the comparison changes one variable at a time |
+| Naive LLM arm | Done 19 Oct: three local models in both LLM arms, N = 3 (Table 1). Larger or hosted models are not yet run |
 | Diagnosis quality (RCA@k) | 20 labelled incidents and a real model |
 | External validation | A benchmark this repository did not author |
 | Sati models vs general LLMs | The Kaal generator, Sati-RCA trained on it, and the head-to-head — the contribution this paper is moving toward |

@@ -82,3 +82,4 @@ Protocol: before every push, write a topic-named file from
 - [CIFixes1026](CIFixes1026.md) — hermetic feed tests, ThreatFox withdrawn, next 15.5.28, pushresults.sh
 - [MahagauriSkandamata](MahagauriSkandamata.md) — models 8 and 5 on SMD and ATT&CK; premature all-clear is Mahagauri's headline
 - [Notebooks0610](Notebooks0610.md) — notebooks for Chandraghanta, SMD, BGL, Mahagauri, Skandamata
+- [RP10RP11](RP10RP11.md) — Holm-adjusted Table 5; §7.1 baselines draft for owner revision

@@ -47,3 +47,20 @@ def test_a_consistent_gap_excludes_zero():
 
 def test_scenarios_only_one_arm_ran_are_ignored():
     assert bootstrap_difference({"x": [1]}, {"y": [0]}, mean) is None
+
+
+def test_holm_matches_a_worked_example():
+    # Sorted 0.01, 0.03, 0.04: 0.01 x3 = 0.03; 0.03 x2 = 0.06; 0.04 x1 = 0.04,
+    # raised to 0.06 because adjusted values never fall as p rises.
+    from pashupatastra.significance import holm
+
+    assert holm([0.01, 0.04, 0.03]) == pytest.approx([0.03, 0.06, 0.06])
+
+
+def test_holm_never_lowers_a_p_value_and_caps_at_one():
+    from pashupatastra.significance import holm
+
+    raw = [0.2, 0.9, 0.001, 0.5]
+    adjusted = holm(raw)
+    assert all(a >= r for a, r in zip(adjusted, raw, strict=True))
+    assert max(adjusted) <= 1.0

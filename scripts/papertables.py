@@ -25,7 +25,7 @@ from pashupatastra.metrics import (  # noqa: E402
     load_records,
     per_scenario,
 )
-from pashupatastra.significance import bootstrap_difference, mcnemar  # noqa: E402
+from pashupatastra.significance import bootstrap_difference, holm, mcnemar  # noqa: E402
 
 RESULTS = Path("benchmark/results")
 
@@ -76,7 +76,7 @@ def by_scenario(records: list) -> dict[str, list]:
     return grouped
 
 
-def compare(name_a: str, a: list, name_b: str, b: list) -> str:
+def compare(name_a: str, a: list, name_b: str, b: list) -> dict:
     keyed_b = {(r.scenario_id, r.run_index): r for r in b}
     pairs = [
         (ra.verdict == "correct", keyed_b[(ra.scenario_id, ra.run_index)].verdict == "correct")
@@ -86,15 +86,31 @@ def compare(name_a: str, a: list, name_b: str, b: list) -> str:
         and keyed_b[(ra.scenario_id, ra.run_index)].verdict != "harness_error"
     ]
     if not pairs:
-        return f"| {name_a} vs {name_b} | — | — | — | no paired runs |"
+        return {"name": f"{name_a} vs {name_b}", "p": None}
     test = mcnemar(pairs)
     ci = bootstrap_difference(by_scenario(a), by_scenario(b), frr)
-    ci_text = f"[{ci[0]:+.3f}, {ci[1]:+.3f}]" if ci else "undefined (no actions)"
-    verdict = "survives" if test.p_value < 0.05 else "within chance"
-    return (
-        f"| {name_a} vs {name_b} | {test.only_a} / {test.only_b} | {test.p_value:.4f} | "
-        f"{ci_text} | {verdict} |"
-    )
+    return {
+        "name": f"{name_a} vs {name_b}",
+        "counts": f"{test.only_a} / {test.only_b}",
+        "p": test.p_value,
+        "ci": f"[{ci[0]:+.3f}, {ci[1]:+.3f}]" if ci else "undefined (no actions)",
+    }
+
+
+def table5_rows(comparisons: list[dict]) -> list[str]:
+    """Holm-adjusted across every comparison in the table (RP-10): a row
+    survives only if it survives the whole family of tests."""
+    tested = [c for c in comparisons if c["p"] is not None]
+    for c, adjusted in zip(tested, holm([c["p"] for c in tested]), strict=True):
+        c["adjusted"] = adjusted
+    rows = []
+    for c in comparisons:
+        if c["p"] is None:
+            rows.append(f"| {c['name']} | — | — | — | — | no paired runs |")
+            continue
+        verdict = "survives" if c["adjusted"] < 0.05 else "within chance"
+        rows.append(f"| {c['name']} | {c['counts']} | {c['p']:.4f} | {c['adjusted']:.4f} | {c['ci']} | {verdict} |")
+    return rows
 
 
 def main() -> int:
@@ -191,23 +207,27 @@ def main() -> int:
     print("Paired by scenario and run. McNemar's exact test on correctness counts only")
     print("the runs where the two arms disagreed; the interval is a paired bootstrap on")
     print("the difference in false-remediation rate, resampling scenarios rather than")
-    print("runs (Dror et al., ACL 2018). Rows read A vs B.\n")
-    print("| Comparison | A right only / B right only | McNemar p | FRR(A) − FRR(B), 95% CI | Verdict |")
-    print("|---|---:|---:|---|---|")
+    print("runs (Dror et al., ACL 2018). Rows read A vs B. The verdict uses the Holm-adjusted")
+    print("p, which accounts for every test in this table at once (Holm 1979).\n")
+    print("| Comparison | A right only / B right only | McNemar p | Holm-adjusted p | FRR(A) − FRR(B), 95% CI | Verdict |")
+    print("|---|---:|---:|---:|---|---|")
     deterministic = records_for("pashupatastra")
     runbook = records_for("runbook")
+    comparisons: list[dict] = []
     if deterministic and runbook:
-        print(compare("pashupatastra", deterministic, "runbook", runbook))
+        comparisons.append(compare("pashupatastra", deterministic, "runbook", runbook))
     for model in sorted({model for _, model in llm}):
         naive, full = llm.get(("naive-llm", model)), llm.get(("pashupatastra-llm", model))
         if full and naive:
-            print(compare(f"pashupatastra-llm · {model}", full, f"naive-llm · {model}", naive))
+            comparisons.append(compare(f"pashupatastra-llm · {model}", full, f"naive-llm · {model}", naive))
         if naive and runbook:
-            print(compare(f"naive-llm · {model}", naive, "runbook", runbook))
+            comparisons.append(compare(f"naive-llm · {model}", naive, "runbook", runbook))
         if full and deterministic:
-            print(compare(f"pashupatastra-llm · {model}", full, "pashupatastra", deterministic))
-    if not (deterministic and runbook) and not llm:
-        print("| — | — | — | — | no paired arms recorded yet |")
+            comparisons.append(compare(f"pashupatastra-llm · {model}", full, "pashupatastra", deterministic))
+    for row in table5_rows(comparisons):
+        print(row)
+    if not comparisons:
+        print("| — | — | — | — | — | no paired arms recorded yet |")
 
     print("\n## Table 4 — Metrics not computed\n")
     print("Defined in METRICS.md and absent from the tables above. Listed so a")

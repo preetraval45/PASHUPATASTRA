@@ -79,3 +79,23 @@ def bootstrap_difference(
     lo = diffs[int((1 - level) / 2 * len(diffs))]
     hi = diffs[min(len(diffs) - 1, int((1 + level) / 2 * len(diffs)))]
     return (round(lo, 4), round(hi, 4))
+
+
+def holm(p_values: Sequence[float]) -> list[float]:
+    """Holm–Bonferroni adjusted p-values, in the input order.
+
+    Table 5 runs one test per comparison, about ten of them. Without a
+    correction, one "survives" in twenty is expected by chance at 0.05. Holm's
+    step-down method controls the family-wise error rate, like Bonferroni,
+    while rejecting at least as much (Holm, Scand. J. Statist. 1979). An
+    adjusted p below 0.05 means the difference survives chance across the
+    whole table, not just on its own row.
+    """
+    m = len(p_values)
+    order = sorted(range(m), key=lambda i: p_values[i])
+    adjusted = [0.0] * m
+    running = 0.0
+    for rank, i in enumerate(order):
+        running = max(running, min(1.0, (m - rank) * p_values[i]))
+        adjusted[i] = running
+    return adjusted

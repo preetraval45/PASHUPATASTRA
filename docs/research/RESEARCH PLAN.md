@@ -243,12 +243,12 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   The Oracle box is CPU-only, so expect this to take days. Record the hardware in the run records.
   *Done when:* Table 1 shows all four arms with n.
 
-- [~] **RP-10 · Significance between arms** — *Claude's part done 18 Oct: `pashupatastra.significance` (exact McNemar; paired bootstrap resampling scenarios), 7 tests, Table 5 in papertables. Table 5 filled 19 Oct from RP-09's records: pashupatastra beats runbook (18 / 0 disagreements, McNemar p < 0.0001); for each model, the LLM arm with Dharma vs without shows no correctness difference that survives chance; each pashupatastra-llm arm is significantly less often correct than deterministic pashupatastra (0 / 18, 0 / 60, 0 / 75; p < 0.0001). Remains: the owner reads Dror et al. 2018.*
+- [~] **RP-10 · Significance between arms** — *Claude's part done 18 Oct: `pashupatastra.significance` (exact McNemar; paired bootstrap resampling scenarios), 7 tests, Table 5 in papertables. Table 5 filled 19 Oct from RP-09's records: pashupatastra beats runbook (18 / 0 disagreements, McNemar p < 0.0001); for each model, the LLM arm with Dharma vs without shows no correctness difference that survives chance; each pashupatastra-llm arm is significantly less often correct than deterministic pashupatastra (0 / 18, 0 / 60, 0 / 75; p < 0.0001). 26 Oct: a Holm–Bonferroni correction across all of Table 5's tests (`significance.holm`; 2 tests, plus 2 for the table logic). Table 5 now prints the raw and adjusted p, and the verdict uses the adjusted one. On the 19 Oct records, every verdict is unchanged: the six that survive have raw p < 0.0001. Remains: the owner reads Dror et al. 2018.*
   **Both** · You 3 h; Claude 1 session · Depends: RP-09
   *Steps:* **You** read Dror et al. ACL 2018, *The Hitchhiker's Guide to Testing Statistical Significance in NLP*. **Claude** adds McNemar tests on per-scenario correctness and a paired bootstrap CI on FRR to `papertables.py`.
   *Done when:* the tables say which differences survive.
 
-- [ ] **RP-11 · §7 draft — baselines**
+- [~] **RP-11 · §7 draft — baselines** — *Drafted by Claude on 26 Oct: [PAPER.md §7.1](PAPER.md). Every number is taken from tables.md (Tables 1 and 5); it states what the LLM rows do and do not show. Remains: the owner's 3-hour revision in their own voice, and confirming every number against tables.md after the next benchmark run.*
   **Both** · Claude draft; You 3 h · Depends: RP-10
   *Done when:* §7 has a baselines subsection, and every number in it is in [tables.md](tables.md).
 
