@@ -21,51 +21,51 @@
       "held_out": "machine-1",
       "machines": 8,
       "weights": {
-        "shailaputri": 2.1719,
-        "max robust z": 0.3529,
-        "pca": 0.2842,
-        "bias": -4.7596
+        "shailaputri": 2.219,
+        "max robust z": 0.3268,
+        "pca": 0.2831,
+        "bias": -4.7516
       },
       "thresholds": {
-        "siddhidatri-v0": 0.3,
-        "shailaputri": 0.3,
-        "max robust z": 0.3,
-        "pca": 0.3
+        "siddhidatri-v0": 0.129451,
+        "shailaputri": 0.110733,
+        "max robust z": 0.059157,
+        "pca": 0.034662
       },
       "detectors": {
         "siddhidatri-v0": {
-          "precision": 0.698,
-          "recall": 0.212,
-          "f1": 0.281,
-          "false_alarms_per_1000": 52.388,
-          "mean_lead": 79.65,
+          "precision": 0.625,
+          "recall": 0.651,
+          "f1": 0.518,
+          "false_alarms_per_1000": 3.871,
+          "mean_lead": 98.537,
           "ece": 0.0257,
           "brier": 0.055
         },
         "shailaputri": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "false_alarms_per_1000": 0.0,
-          "mean_lead": 0.0,
-          "ece": 0.0225,
+          "precision": 0.584,
+          "recall": 0.715,
+          "f1": 0.565,
+          "false_alarms_per_1000": 8.181,
+          "mean_lead": 120.55,
+          "ece": 0.0224,
           "brier": 0.0564
         },
         "max robust z": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "false_alarms_per_1000": 0.0,
-          "mean_lead": 0.0,
+          "precision": 0.238,
+          "recall": 0.847,
+          "f1": 0.351,
+          "false_alarms_per_1000": 34.29,
+          "mean_lead": 111.3,
           "ece": 0.0253,
           "brier": 0.0572
         },
         "pca": {
-          "precision": 0.375,
-          "recall": 0.036,
-          "f1": 0.066,
-          "false_alarms_per_1000": 0.0,
-          "mean_lead": 19.25,
+          "precision": 0.344,
+          "recall": 0.599,
+          "f1": 0.366,
+          "false_alarms_per_1000": 66.468,
+          "mean_lead": 102.537,
           "ece": 0.0292,
           "brier": 0.0564
         }
@@ -75,51 +75,51 @@
       "held_out": "machine-2",
       "machines": 9,
       "weights": {
-        "shailaputri": 1.9396,
-        "max robust z": 0.3459,
-        "pca": 0.3116,
-        "bias": -4.5276
+        "shailaputri": 1.933,
+        "max robust z": 0.344,
+        "pca": 0.3119,
+        "bias": -4.5233
       },
       "thresholds": {
-        "siddhidatri-v0": 0.3,
-        "shailaputri": 0.3,
-        "max robust z": 0.3,
-        "pca": 0.3
+        "siddhidatri-v0": 0.121121,
+        "shailaputri": 0.105206,
+        "max robust z": 0.083114,
+        "pca": 0.04094
       },
       "detectors": {
         "siddhidatri-v0": {
-          "precision": 0.696,
-          "recall": 0.334,
-          "f1": 0.409,
-          "false_alarms_per_1000": 82.343,
-          "mean_lead": 101.067,
+          "precision": 0.719,
+          "recall": 0.793,
+          "f1": 0.707,
+          "false_alarms_per_1000": 2.086,
+          "mean_lead": 105.4,
           "ece": 0.0081,
           "brier": 0.0394
         },
         "shailaputri": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "false_alarms_per_1000": 0.0,
-          "mean_lead": 0.0,
+          "precision": 0.61,
+          "recall": 0.574,
+          "f1": 0.556,
+          "false_alarms_per_1000": 2.024,
+          "mean_lead": 90.689,
           "ece": 0.0026,
           "brier": 0.0409
         },
         "max robust z": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "false_alarms_per_1000": 0.0,
-          "mean_lead": 0.0,
+          "precision": 0.14,
+          "recall": 0.657,
+          "f1": 0.218,
+          "false_alarms_per_1000": 4.339,
+          "mean_lead": 80.933,
           "ece": 0.0044,
           "brier": 0.0414
         },
         "pca": {
-          "precision": 0.551,
-          "recall": 0.227,
-          "f1": 0.284,
-          "false_alarms_per_1000": 4.831,
-          "mean_lead": 42.356,
+          "precision": 0.549,
+          "recall": 0.878,
+          "f1": 0.572,
+          "false_alarms_per_1000": 38.154,
+          "mean_lead": 94.0,
           "ece": 0.0081,
           "brier": 0.0405
         }
@@ -129,51 +129,51 @@
       "held_out": "machine-3",
       "machines": 11,
       "weights": {
-        "shailaputri": 1.3757,
-        "max robust z": 0.4768,
-        "pca": 1.139,
-        "bias": -4.3746
+        "shailaputri": 1.384,
+        "max robust z": 0.4744,
+        "pca": 1.1398,
+        "bias": -4.3763
       },
       "thresholds": {
-        "siddhidatri-v0": 0.3,
-        "shailaputri": 0.3,
-        "max robust z": 0.3,
-        "pca": 0.3
+        "siddhidatri-v0": 0.123625,
+        "shailaputri": 0.133383,
+        "max robust z": 0.098569,
+        "pca": 0.079107
       },
       "detectors": {
         "siddhidatri-v0": {
-          "precision": 0.615,
-          "recall": 0.605,
-          "f1": 0.376,
-          "false_alarms_per_1000": 384.913,
-          "mean_lead": 76.155,
-          "ece": 0.0919,
+          "precision": 0.33,
+          "recall": 0.877,
+          "f1": 0.386,
+          "false_alarms_per_1000": 137.54,
+          "mean_lead": 91.382,
+          "ece": 0.092,
           "brier": 0.0768
         },
         "shailaputri": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "false_alarms_per_1000": 0.0,
-          "mean_lead": 0.0,
+          "precision": 0.731,
+          "recall": 0.502,
+          "f1": 0.497,
+          "false_alarms_per_1000": 1.27,
+          "mean_lead": 153.309,
           "ece": 0.0297,
           "brier": 0.0272
         },
         "max robust z": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "false_alarms_per_1000": 0.0,
-          "mean_lead": 0.0,
+          "precision": 0.127,
+          "recall": 0.829,
+          "f1": 0.19,
+          "false_alarms_per_1000": 22.49,
+          "mean_lead": 100.645,
           "ece": 0.0253,
           "brier": 0.0275
         },
         "pca": {
-          "precision": 0.481,
-          "recall": 0.513,
-          "f1": 0.328,
-          "false_alarms_per_1000": 336.953,
-          "mean_lead": 62.045,
+          "precision": 0.451,
+          "recall": 0.694,
+          "f1": 0.311,
+          "false_alarms_per_1000": 148.868,
+          "mean_lead": 99.755,
           "ece": 0.0892,
           "brier": 0.0777
         }
@@ -182,41 +182,41 @@
   ],
   "mean_across_groups": {
     "siddhidatri-v0": {
-      "precision": 0.6697,
-      "recall": 0.3837,
-      "f1": 0.3553,
-      "false_alarms_per_1000": 173.2147,
-      "mean_lead": 85.624,
+      "precision": 0.558,
+      "recall": 0.7737,
+      "f1": 0.537,
+      "false_alarms_per_1000": 47.8323,
+      "mean_lead": 98.4397,
       "ece": 0.0419,
       "brier": 0.0571
     },
     "shailaputri": {
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": 0.0,
-      "false_alarms_per_1000": 0.0,
-      "mean_lead": 0.0,
-      "ece": 0.0183,
+      "precision": 0.6417,
+      "recall": 0.597,
+      "f1": 0.5393,
+      "false_alarms_per_1000": 3.825,
+      "mean_lead": 121.516,
+      "ece": 0.0182,
       "brier": 0.0415
     },
     "max robust z": {
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": 0.0,
-      "false_alarms_per_1000": 0.0,
-      "mean_lead": 0.0,
+      "precision": 0.1683,
+      "recall": 0.7777,
+      "f1": 0.253,
+      "false_alarms_per_1000": 20.373,
+      "mean_lead": 97.626,
       "ece": 0.0183,
       "brier": 0.042
     },
     "pca": {
-      "precision": 0.469,
-      "recall": 0.2587,
-      "f1": 0.226,
-      "false_alarms_per_1000": 113.928,
-      "mean_lead": 41.217,
+      "precision": 0.448,
+      "recall": 0.7237,
+      "f1": 0.4163,
+      "false_alarms_per_1000": 84.4967,
+      "mean_lead": 98.764,
       "ece": 0.0422,
       "brier": 0.0582
     }
   },
-  "seconds": 669.5
+  "seconds": 1399.9
 }
