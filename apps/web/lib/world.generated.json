@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-26T13:07:38+00:00",
+  "as_of": "2026-10-26T15:14:17+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
@@ -209,7 +209,7 @@
     "by_day": [
       {
         "label": "2026-10-22",
-        "value": 11
+        "value": 9
       },
       {
         "label": "2026-10-23",
@@ -225,13 +225,13 @@
       },
       {
         "label": "2026-10-26",
-        "value": 8
+        "value": 10
       }
     ],
     "by_group": [
       {
         "label": "qilin",
-        "value": 23
+        "value": 21
       },
       {
         "label": "N0n",
@@ -239,7 +239,7 @@
       },
       {
         "label": "emperador",
-        "value": 7
+        "value": 8
       },
       {
         "label": "Whitearmor",
@@ -280,6 +280,10 @@
         "value": 11
       },
       {
+        "label": "MX",
+        "value": 4
+      },
+      {
         "label": "AR",
         "value": 4
       },
@@ -300,12 +304,8 @@
         "value": 3
       },
       {
-        "label": "MX",
-        "value": 3
-      },
-      {
-        "label": "AU",
-        "value": 3
+        "label": "TR",
+        "value": 2
       }
     ],
     "by_sector": [
@@ -319,7 +319,7 @@
       },
       {
         "label": "Technology",
-        "value": 14
+        "value": 15
       },
       {
         "label": "Not Found",
@@ -335,7 +335,11 @@
       },
       {
         "label": "Other",
-        "value": 7
+        "value": 6
+      },
+      {
+        "label": "Transportation",
+        "value": 4
       },
       {
         "label": "Energy & Utilities",
@@ -343,10 +347,6 @@
       },
       {
         "label": "Hospitality",
-        "value": 4
-      },
-      {
-        "label": "Transportation",
         "value": 3
       }
     ]
