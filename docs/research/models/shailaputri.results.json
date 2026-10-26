@@ -1,5 +1,72 @@
 {
   "model": "sati-shailaputri-v0",
+  "seeds": {
+    "values": {
+      "7": {
+        "precision": 0.307,
+        "recall": 0.711,
+        "f1": 0.382,
+        "false_alarms_per_1000": 26.582,
+        "mean_lead": 180.225
+      },
+      "11": {
+        "precision": 0.393,
+        "recall": 0.796,
+        "f1": 0.475,
+        "false_alarms_per_1000": 23.324,
+        "mean_lead": 170.404
+      },
+      "13": {
+        "precision": 0.321,
+        "recall": 0.713,
+        "f1": 0.399,
+        "false_alarms_per_1000": 24.133,
+        "mean_lead": 175.777
+      },
+      "17": {
+        "precision": 0.392,
+        "recall": 0.786,
+        "f1": 0.467,
+        "false_alarms_per_1000": 23.72,
+        "mean_lead": 190.212
+      },
+      "19": {
+        "precision": 0.371,
+        "recall": 0.805,
+        "f1": 0.454,
+        "false_alarms_per_1000": 30.27,
+        "mean_lead": 185.487
+      }
+    },
+    "spread": {
+      "precision": {
+        "mean": 0.357,
+        "min": 0.307,
+        "max": 0.393
+      },
+      "recall": {
+        "mean": 0.762,
+        "min": 0.711,
+        "max": 0.805
+      },
+      "f1": {
+        "mean": 0.435,
+        "min": 0.382,
+        "max": 0.475
+      },
+      "false_alarms_per_1000": {
+        "mean": 25.606,
+        "min": 23.324,
+        "max": 30.27
+      },
+      "mean_lead": {
+        "mean": 180.421,
+        "min": 170.404,
+        "max": 190.212
+      }
+    },
+    "cpu": "AMD EPYC 9V74 80-Core Processor"
+  },
   "dataset": {
     "name": "NAB (real series only)",
     "repo": "numenta/NAB",
@@ -56,11 +123,11 @@
       "threshold": 0.75,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.337,
+          "precision": 0.339,
           "recall": 0.726,
           "f1": 0.404,
-          "false_alarms_per_1000": 52.264,
-          "mean_lead": 143.371
+          "false_alarms_per_1000": 52.215,
+          "mean_lead": 144.871
         },
         "robust-z": {
           "precision": 0.218,
@@ -99,11 +166,11 @@
       "threshold": 0.75,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.306,
+          "precision": 0.317,
           "recall": 0.514,
-          "f1": 0.356,
-          "false_alarms_per_1000": 15.58,
-          "mean_lead": 24.367
+          "f1": 0.359,
+          "false_alarms_per_1000": 15.673,
+          "mean_lead": 22.583
         },
         "robust-z": {
           "precision": 0.201,
@@ -142,11 +209,11 @@
       "threshold": 0.75,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.369,
+          "precision": 0.345,
           "recall": 0.814,
-          "f1": 0.44,
-          "false_alarms_per_1000": 29.509,
-          "mean_lead": 287.143
+          "f1": 0.426,
+          "false_alarms_per_1000": 30.43,
+          "mean_lead": 287.729
         },
         "robust-z": {
           "precision": 0.14,
@@ -185,11 +252,11 @@
       "threshold": 0.8,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.444,
-          "recall": 0.667,
-          "f1": 0.496,
-          "false_alarms_per_1000": 5.463,
-          "mean_lead": 64.9
+          "precision": 0.288,
+          "recall": 0.524,
+          "f1": 0.336,
+          "false_alarms_per_1000": 5.439,
+          "mean_lead": 49.143
         },
         "robust-z": {
           "precision": 0.352,
@@ -225,14 +292,14 @@
       "held_out": "realTweets",
       "series": 10,
       "train_series": 37,
-      "threshold": 0.8,
+      "threshold": 0.75,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.284,
+          "precision": 0.246,
           "recall": 0.975,
-          "f1": 0.425,
-          "false_alarms_per_1000": 17.84,
-          "mean_lead": 376.94
+          "f1": 0.385,
+          "false_alarms_per_1000": 29.155,
+          "mean_lead": 396.8
         },
         "robust-z": {
           "precision": 0.15,
@@ -267,11 +334,11 @@
   ],
   "mean_across_families": {
     "shailaputri-v0": {
-      "precision": 0.348,
-      "recall": 0.739,
-      "f1": 0.424,
-      "false_alarms_per_1000": 24.131,
-      "mean_lead": 179.344
+      "precision": 0.307,
+      "recall": 0.711,
+      "f1": 0.382,
+      "false_alarms_per_1000": 26.582,
+      "mean_lead": 180.225
     },
     "robust-z": {
       "precision": 0.212,
@@ -302,6 +369,6 @@
       "mean_lead": 241.285
     }
   },
-  "model_sha256": "4d5b78b4c5ad0ace3e67286efcff2c2fb2ecf40d44dcae61ae7dd097aa3d187a",
-  "seconds": 153.4
+  "model_sha256": "062909b779c911d0ea6b59b2ac71295ca5a41ecef6edf3ac94a521a9aa1b7c8f",
+  "seconds": 585.1
 }

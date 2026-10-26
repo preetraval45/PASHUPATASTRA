@@ -1,7 +1,7 @@
 {
   "model": "sati-shailaputri-v0",
-  "sha256": "4d5b78b4c5ad0ace3e67286efcff2c2fb2ecf40d44dcae61ae7dd097aa3d187a",
-  "threshold": 0.8,
+  "sha256": "062909b779c911d0ea6b59b2ac71295ca5a41ecef6edf3ac94a521a9aa1b7c8f",
+  "threshold": 0.75,
   "features": [
     "z_12",
     "z_72",
@@ -17,5 +17,6 @@
     "series": 47
   },
   "lightgbm": "4.7.0",
-  "python": "3.12.15"
+  "python": "3.12.15",
+  "cpu": "AMD EPYC 9V74 80-Core Processor"
 }
