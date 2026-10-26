@@ -1,0 +1,82 @@
+name: RCAEval diagnosis — Sati vs LLMs
+
+# RP-33: every diagnoser on the declared RCAEval sample (benchmark/external/
+# rcaeval/subset.json, llm_sample), scored by the RP-14 harness on identical
+# evidence. LLMs run on CPU through Ollama on the runner, as in benchmark.yml.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/rcaeval-diagnosis.yml
+      - scripts/benchrcaeval.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rcaeval-diagnosis
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: ${{ matrix.diagnoser }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        diagnoser: ["loudest", "sati-kaal", "llm:llama3", "llm:qwen2.5:7b"]
+    env:
+      PASHU_BASELINE_BASE_URL: http://localhost:11434/v1
+      PASHU_BASELINE_TEMPERATURE: "0.2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/rcaeval
+          key: rcaeval-v1
+      - name: Ollama, serving one model on CPU
+        if: startsWith(matrix.diagnoser, 'llm:')
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          (ollama serve > /tmp/ollama.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 2; done
+          ollama pull "${MODEL#llm:}"
+        env:
+          MODEL: ${{ matrix.diagnoser }}
+      - run: python scripts/benchrcaeval.py --diagnoser "${{ matrix.diagnoser }}" --cache .cache/rcaeval
+      - name: name the artifact
+        id: slug
+        run: echo "slug=$(echo '${{ matrix.diagnoser }}' | tr -c 'a-zA-Z0-9' '_')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rcaeval-${{ steps.slug.outputs.slug }}
+          path: benchmark/results/rcaeval/
+          if-no-files-found: error
+
+  table:
+    needs: diagnose
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: rcaeval-*
+          path: benchmark/results/rcaeval
+          merge-multiple: true
+      - run: python scripts/rcaevaltable.py > docs/research/models/rcaeval-diagnosis.md
+      - name: commit the records and the table
+        run: |
+          bash scripts/pushresults.sh "docs(research): RCAEval diagnosis, Sati vs LLMs, from run ${{ github.run_id }}" docs/research/models/rcaeval-diagnosis.md benchmark/results/rcaeval

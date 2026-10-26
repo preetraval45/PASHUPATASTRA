@@ -88,3 +88,4 @@ Protocol: before every push, write a topic-named file from
 - [ResultsRound1026](ResultsRound1026.md) — sim-to-real fails; SatiDetect re-decided; Kushmanda v2; RP-39/60/73/74 ticked
 - [CIDeployLive](CIDeployLive.md) — AWS secrets added; deploy job pins provider=sati
 - [FindingsPage](FindingsPage.md) — /findings: six headline results read from results JSON
+- [RCAEvalLLM](RCAEvalLLM.md) — RP-33 LLM vs Sati on declared RCAEval sample; workflow rcaeval-diagnosis
