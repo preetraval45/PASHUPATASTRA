@@ -86,3 +86,4 @@ Protocol: before every push, write a topic-named file from
 - [BlockBKaal](BlockBKaal.md) — Kaal generator (ADR proposed), dataset v1 manifest + guard in CI
 - [FalseAlarmFix](FalseAlarmFix.md) — FA/1000 denominator bug fixed; SatiDetect decision to re-check after rerun
 - [ResultsRound1026](ResultsRound1026.md) — sim-to-real fails; SatiDetect re-decided; Kushmanda v2; RP-39/60/73/74 ticked
+- [CIDeployLive](CIDeployLive.md) — AWS secrets added; deploy job pins provider=sati

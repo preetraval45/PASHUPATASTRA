@@ -302,6 +302,10 @@ jobs:
       AWS_REGION: us-east-1
       AWS_DEFAULT_REGION: us-east-1
       API: https://265d0hsmwa.execute-api.us-east-1.amazonaws.com/api/v1
+      # The owner's decision (18 Oct 2026): answers come from Sati's own models.
+      # Without this, deploylambda.py finds no third-party key and ships the echo
+      # stub, which would silently replace the live provider on the first CI deploy.
+      PASHU_MODEL_PROVIDER: sati
     steps:
       - name: secrets present?
         id: gate
