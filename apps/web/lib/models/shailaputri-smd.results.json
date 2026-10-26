@@ -28,7 +28,8 @@
       "verbosity": -1,
       "seed": 7,
       "deterministic": true,
-      "force_row_wise": true
+      "force_row_wise": true,
+      "num_threads": 2
     },
     "rounds": 300,
     "onset": {
@@ -189,5 +190,5 @@
       "mean_lead": 101.097
     }
   },
-  "seconds": 474.7
+  "seconds": 410.4
 }
