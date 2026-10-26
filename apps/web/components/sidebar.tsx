@@ -77,6 +77,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     title: "Learn",
     items: [
       { href: "/training", label: "Training", icon: "cap", hint: "cyber defence practice" },
+      { href: "/findings", label: "Findings", icon: "news", hint: "what the measurements showed" },
       { href: "/evaluation", label: "Evaluation", icon: "check" },
     ],
   },
