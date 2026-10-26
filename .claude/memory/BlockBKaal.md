@@ -63,3 +63,10 @@ keys (the 20 incidents) are the owner's and are not touched.
   `katyayani-simtoreal` CI job.
 - **Next:** verify the authored graphs from RCAEval traces (`has_traces`),
   and use them in the RP-18 guard.
+
+## RP-27 (same day)
+
+`sati.rca.cite.SatiRCAProvider` puts the ranker behind the Gateway. Its
+citations are event ids, and the Reasoner's fabricated-citation check applies
+to it unchanged; 3 tests cover this. The done-when waits on the 20 labelled
+incidents (RP-13).

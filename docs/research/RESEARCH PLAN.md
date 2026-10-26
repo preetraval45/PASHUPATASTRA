@@ -371,7 +371,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   4. Evaluate on all splits; the held-out-topology split is the one that matters.
   *Done when:* a generated table compares v0 and v1 on every split. **Checkpoint Sun 21 Feb:** if v1 does not beat v0 on held-out topologies, the paper ships v0 and the GNN becomes future work.
 
-- [ ] **RP-27 · Citations from Sati-RCA**
+- [~] **RP-27 · Citations from Sati-RCA** — *Built 26 Oct: `sati.rca.cite.SatiRCAProvider` serves Katyayani's ranker as a Gateway provider (rule 5). Its hypotheses cite the event ids behind the top-ranked services' features, and only ids it was shown. 3 tests drive real Kaal incidents through the real Reasoner and Gateway: every hypothesis survives citation verification, the top one names the true root in over 80%, and a tampered provider citing an unshown ref has its hypothesis suppressed (FABRICATED_CITATION). Remains: the done-when on the 20 labelled incidents (RP-13), and SHAP-ranked citations (today it cites every event behind the service, capped at 6).*
   **Both** · You design; Claude implements and tests · Depends: RP-24 (and RP-26 if v1 ships)
   *Why:* rule 1. Sati's answer must cite the events behind it, and those citations must be verified, exactly like an LLM hypothesis.
   *Steps:* for the top-ranked service, take the features that contributed most (SHAP values for v0; gradient or attention attribution for v1) and map them back to their event IDs. Emit `evidence_refs` that pass the existing citation verification in [reasoning.py](../../packages/core/pashupatastra/reasoning.py).
