@@ -40,3 +40,13 @@ Brahmacharini's source split for Skandamata.
 - **Gitleaks false positive.** It flagged a cache `key:` value in
   train-sati.yml (generic-api-key). The cache keys are renamed to plain
   words; keep hex and versioned slugs out of `key:` lines.
+
+## Results (26 Oct, run 40360156287)
+
+- **Skandamata:** hit@1 0.775 against BM25 two-hop 0.541. Strong. RP-72
+  is ticked; it has a card and a Models page section.
+- **Mahagauri:** a negative result. 0.199 premature all-clears on held-out
+  groups, against a 5% budget on training. RP-71 is ticked with that stated;
+  the card says do not trust it to declare recovery. The v1 idea: a
+  threshold set on an upper confidence bound, or agreement with the 3σ
+  check.

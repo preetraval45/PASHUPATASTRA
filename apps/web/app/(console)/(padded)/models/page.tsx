@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
-import { BRAHMACHARINI, CHANDRAGHANTA, KALARATRI, KALARATRI_BGL, KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
+import { BRAHMACHARINI, CHANDRAGHANTA, KALARATRI, KALARATRI_BGL, KATYAYANI, MAHAGAURI, SKANDAMATA, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
 export const metadata: Metadata = {
   title: "Sati models",
@@ -324,6 +324,91 @@ export default function ModelsPage() {
               </Panel>
             );
           })}
+        </section>
+      )}
+
+      {!SKANDAMATA.pending && (
+        <section id="skandamata-results" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Skandamata — the defences for what was seen</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              Given a behaviour, rank ATT&amp;CK&apos;s {SKANDAMATA.dataset.mitigations} mitigations. Tested on{" "}
+              {SKANDAMATA.dataset.behaviours.test.toLocaleString()} behaviours written about{" "}
+              {SKANDAMATA.dataset.test_sources_unseen} attackers never seen in training; the right answers are the ones
+              ATT&amp;CK itself links. It recommends — Dharma decides.
+            </p>
+          </div>
+          <Panel title="Held-out behaviours" aside="higher is better">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                    <th className="py-2 pr-3 font-normal">Recommender</th>
+                    {["Hit@1", "Recall@5", "Precision@5", "MRR", "nDCG@10"].map((h) => (
+                      <th key={h} className="py-2 pr-3 text-right font-normal">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[rgb(var(--edge))]">
+                  {Object.entries(SKANDAMATA.test).map(([name, m]) => (
+                    <tr key={name}>
+                      <td className="py-2 pr-3">{name.startsWith("skandamata") ? <strong>Skandamata</strong> : name}</td>
+                      {[m["hit@1"], m["recall@5"], m["precision@5"], m.mrr, m["ndcg@10"]].map((v, i) => (
+                        <td key={i} className="tnum py-2 pr-3 text-right">{v.toFixed(3)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <ul className="mt-4 space-y-3 text-sm">
+              {SKANDAMATA.examples.slice(0, 3).map((e) => (
+                <li key={e.behaviour}>
+                  <p className="text-[rgb(var(--muted))]">{e.behaviour}</p>
+                  <p className="mt-1 text-xs"><span className="text-[rgb(var(--faint))]">ATT&amp;CK says:</span> {e.expected.join(", ")}</p>
+                  <p className="text-xs"><span className="text-[rgb(var(--faint))]">Skandamata:</span> {e.recommended.join(", ")}</p>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </section>
+      )}
+
+      {!MAHAGAURI.pending && (
+        <section id="mahagauri-results" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Mahagauri — is it really over?</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              {MAHAGAURI.dataset.incidents} real server incidents. Once a minute, from onset until{" "}
+              {MAHAGAURI.protocol.horizon_minutes} minutes after the end, the verifier says whether the server has
+              recovered; all clear after {MAHAGAURI.protocol.consecutive} yeses in a row. The error that matters is a
+              premature all-clear. This version is not yet safe: read the first column.
+            </p>
+          </div>
+          <Panel title="Held-out machine groups" aside="premature all-clear: lower is safer">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                    <th className="py-2 pr-3 font-normal">Verifier</th>
+                    <th className="py-2 pr-3 text-right font-normal">Premature all-clear</th>
+                    <th className="py-2 pr-3 text-right font-normal">Confirmed</th>
+                    <th className="py-2 text-right font-normal">Left to a human</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[rgb(var(--edge))]">
+                  {Object.entries(MAHAGAURI.pooled).map(([name, v]) => (
+                    <tr key={name}>
+                      <td className="py-2 pr-3">{name.startsWith("mahagauri") ? <strong>Mahagauri</strong> : name}</td>
+                      <td className="tnum py-2 pr-3 text-right">{v.premature_rate.toFixed(3)}</td>
+                      <td className="tnum py-2 pr-3 text-right">{v.confirmed_rate.toFixed(3)}</td>
+                      <td className="tnum py-2 text-right">{v.unconfirmed_rate.toFixed(3)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
         </section>
       )}
 

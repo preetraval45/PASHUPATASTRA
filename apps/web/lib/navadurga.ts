@@ -11,6 +11,8 @@ import brahmacharini from "./models/brahmacharini.results.json";
 import kalaratri from "./models/kalaratri.results.json";
 import kalaratriBgl from "./models/kalaratri-bgl.results.json";
 import chandraghanta from "./models/chandraghanta.results.json";
+import mahagauri from "./models/mahagauri.results.json";
+import skandamata from "./models/skandamata.results.json";
 import shailaputri from "./models/shailaputri.results.json";
 
 export type ModelStatus = "trained" | "training" | "planned";
@@ -108,6 +110,28 @@ export interface NetResults {
 
 export const CHANDRAGHANTA = chandraghanta as unknown as NetResults;
 
+type Ranked = { "hit@1": number; "recall@5": number; "precision@5": number; mrr: number; "ndcg@10": number; n: number };
+
+export interface RespondResults {
+  pending?: string;
+  dataset: { mitigations: number; behaviours: { train: number; validation: number; test: number }; test_sources_unseen: number; right_mitigations_per_behaviour: number };
+  test: Record<string, Ranked>;
+  examples: { behaviour: string; expected: string[]; recommended: string[] }[];
+}
+
+export const SKANDAMATA = skandamata as unknown as RespondResults;
+
+type Verdicts = { premature_rate: number; confirmed_rate: number; unconfirmed_rate: number };
+
+export interface VerifyResults {
+  pending?: string;
+  dataset: { incidents: number; groups: string[] };
+  protocol: { horizon_minutes: number; consecutive: number; premature_budget: number };
+  pooled: Record<string, Verdicts>;
+}
+
+export const MAHAGAURI = mahagauri as unknown as VerifyResults;
+
 type Retrieval = { "recall@1": number; "recall@5": number; "recall@10": number; mrr: number; n: number };
 
 export interface EmbedResults {
@@ -124,5 +148,7 @@ export function statusOf(model: SatiModel): ModelStatus {
   if (model.id === "sati-kalaratri") return KALARATRI.pending ? "training" : "trained";
   if (model.id === "sati-brahmacharini") return BRAHMACHARINI.pending ? "training" : "trained";
   if (model.id === "sati-chandraghanta") return CHANDRAGHANTA.pending ? "training" : "trained";
+  if (model.id === "sati-skandamata") return SKANDAMATA.pending ? "training" : "trained";
+  if (model.id === "sati-mahagauri") return MAHAGAURI.pending ? "training" : "trained";
   return model.status;
 }
