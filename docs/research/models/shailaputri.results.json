@@ -58,35 +58,35 @@
           "precision": 0.339,
           "recall": 0.726,
           "f1": 0.404,
-          "false_alarms_per_1000": 264.503,
+          "false_alarms_per_1000": 52.215,
           "mean_lead": 144.871
         },
         "robust-z": {
           "precision": 0.218,
           "recall": 0.892,
           "f1": 0.325,
-          "false_alarms_per_1000": 736.374,
+          "false_alarms_per_1000": 132.591,
           "mean_lead": 199.176
         },
         "ewma": {
           "precision": 0.146,
           "recall": 0.892,
           "f1": 0.244,
-          "false_alarms_per_1000": 607.957,
+          "false_alarms_per_1000": 14.105,
           "mean_lead": 172.971
         },
         "seasonal-naive": {
           "precision": 0.232,
           "recall": 0.853,
           "f1": 0.334,
-          "false_alarms_per_1000": 444.217,
+          "false_alarms_per_1000": 135.676,
           "mean_lead": 194.0
         },
         "seasonal-robust-z": {
           "precision": 0.251,
           "recall": 0.804,
           "f1": 0.361,
-          "false_alarms_per_1000": 238.567,
+          "false_alarms_per_1000": 118.244,
           "mean_lead": 198.682
         }
       }
@@ -101,35 +101,35 @@
           "precision": 0.317,
           "recall": 0.514,
           "f1": 0.359,
-          "false_alarms_per_1000": 58.627,
+          "false_alarms_per_1000": 15.673,
           "mean_lead": 22.583
         },
         "robust-z": {
           "precision": 0.201,
           "recall": 0.875,
           "f1": 0.313,
-          "false_alarms_per_1000": 517.027,
+          "false_alarms_per_1000": 36.555,
           "mean_lead": 66.217
         },
         "ewma": {
           "precision": 0.198,
           "recall": 0.875,
           "f1": 0.293,
-          "false_alarms_per_1000": 400.085,
+          "false_alarms_per_1000": 11.513,
           "mean_lead": 60.0
         },
         "seasonal-naive": {
           "precision": 0.188,
           "recall": 0.833,
           "f1": 0.295,
-          "false_alarms_per_1000": 117.938,
+          "false_alarms_per_1000": 33.677,
           "mean_lead": 38.683
         },
         "seasonal-robust-z": {
           "precision": 0.131,
           "recall": 0.444,
           "f1": 0.188,
-          "false_alarms_per_1000": 33.437,
+          "false_alarms_per_1000": 43.362,
           "mean_lead": 41.5
         }
       }
@@ -144,35 +144,35 @@
           "precision": 0.345,
           "recall": 0.814,
           "f1": 0.426,
-          "false_alarms_per_1000": 235.486,
+          "false_alarms_per_1000": 30.43,
           "mean_lead": 287.729
         },
         "robust-z": {
           "precision": 0.14,
           "recall": 0.786,
           "f1": 0.219,
-          "false_alarms_per_1000": 692.716,
+          "false_alarms_per_1000": 93.103,
           "mean_lead": 339.543
         },
         "ewma": {
           "precision": 0.273,
           "recall": 0.814,
           "f1": 0.262,
-          "false_alarms_per_1000": 514.12,
+          "false_alarms_per_1000": 13.607,
           "mean_lead": 349.143
         },
         "seasonal-naive": {
           "precision": 0.191,
           "recall": 0.964,
           "f1": 0.303,
-          "false_alarms_per_1000": 505.181,
+          "false_alarms_per_1000": 85.196,
           "mean_lead": 380.614
         },
         "seasonal-robust-z": {
           "precision": 0.157,
           "recall": 0.821,
           "f1": 0.249,
-          "false_alarms_per_1000": 348.881,
+          "false_alarms_per_1000": 99.103,
           "mean_lead": 409.229
         }
       }
@@ -187,35 +187,35 @@
           "precision": 0.288,
           "recall": 0.524,
           "f1": 0.336,
-          "false_alarms_per_1000": 30.624,
+          "false_alarms_per_1000": 5.439,
           "mean_lead": 49.143
         },
         "robust-z": {
           "precision": 0.352,
           "recall": 1.0,
           "f1": 0.508,
-          "false_alarms_per_1000": 501.091,
+          "false_alarms_per_1000": 38.054,
           "mean_lead": 95.543
         },
         "ewma": {
           "precision": 0.195,
           "recall": 0.917,
           "f1": 0.305,
-          "false_alarms_per_1000": 480.824,
+          "false_alarms_per_1000": 12.274,
           "mean_lead": 94.886
         },
         "seasonal-naive": {
           "precision": 0.431,
           "recall": 1.0,
           "f1": 0.541,
-          "false_alarms_per_1000": 123.386,
+          "false_alarms_per_1000": 31.004,
           "mean_lead": 114.943
         },
         "seasonal-robust-z": {
           "precision": 0.413,
           "recall": 0.738,
           "f1": 0.503,
-          "false_alarms_per_1000": 35.62,
+          "false_alarms_per_1000": 27.939,
           "mean_lead": 88.214
         }
       }
@@ -230,35 +230,35 @@
           "precision": 0.246,
           "recall": 0.975,
           "f1": 0.385,
-          "false_alarms_per_1000": 475.246,
+          "false_alarms_per_1000": 29.155,
           "mean_lead": 396.8
         },
         "robust-z": {
           "precision": 0.15,
           "recall": 1.0,
           "f1": 0.259,
-          "false_alarms_per_1000": 835.38,
+          "false_alarms_per_1000": 93.42,
           "mean_lead": 470.23
         },
         "ewma": {
           "precision": 0.111,
           "recall": 1.0,
           "f1": 0.199,
-          "false_alarms_per_1000": 838.382,
+          "false_alarms_per_1000": 19.288,
           "mean_lead": 468.18
         },
         "seasonal-naive": {
           "precision": 0.15,
           "recall": 1.0,
           "f1": 0.259,
-          "false_alarms_per_1000": 670.302,
+          "false_alarms_per_1000": 87.818,
           "mean_lead": 471.98
         },
         "seasonal-robust-z": {
           "precision": 0.149,
           "recall": 1.0,
           "f1": 0.258,
-          "false_alarms_per_1000": 486.966,
+          "false_alarms_per_1000": 84.928,
           "mean_lead": 468.8
         }
       }
@@ -269,38 +269,38 @@
       "precision": 0.307,
       "recall": 0.711,
       "f1": 0.382,
-      "false_alarms_per_1000": 212.897,
+      "false_alarms_per_1000": 26.582,
       "mean_lead": 180.225
     },
     "robust-z": {
       "precision": 0.212,
       "recall": 0.911,
       "f1": 0.325,
-      "false_alarms_per_1000": 656.518,
+      "false_alarms_per_1000": 78.745,
       "mean_lead": 234.142
     },
     "ewma": {
       "precision": 0.185,
       "recall": 0.9,
       "f1": 0.261,
-      "false_alarms_per_1000": 568.274,
+      "false_alarms_per_1000": 14.157,
       "mean_lead": 229.036
     },
     "seasonal-naive": {
       "precision": 0.238,
       "recall": 0.93,
       "f1": 0.346,
-      "false_alarms_per_1000": 372.205,
+      "false_alarms_per_1000": 74.674,
       "mean_lead": 240.044
     },
     "seasonal-robust-z": {
       "precision": 0.22,
       "recall": 0.761,
       "f1": 0.312,
-      "false_alarms_per_1000": 228.694,
+      "false_alarms_per_1000": 74.715,
       "mean_lead": 241.285
     }
   },
   "model_sha256": "ef954a89099499cfcd81bffa6412a849e1a72e42f1c2d32898dccdc3414272f7",
-  "seconds": 191.7
+  "seconds": 193.0
 }
