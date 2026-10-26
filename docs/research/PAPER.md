@@ -154,8 +154,11 @@ restraint.
 ### 7.1 Baselines
 
 > *Draft written by Claude for RP-11, for the author to revise. Every number
-> below is in [tables.md](tables.md) (Tables 1 and 5, records of 19 October
-> 2026); none is computed here.*
+> below is in [tables.md](tables.md) (Tables 1 and 5, benchmark run
+> 40347301415 of 26 October 2026, records committed under `benchmark/results/`);
+> none is computed here. Checked against the regenerated tables on 26 October.
+> The 19 October run differed only in the qwen2.5:7b rows; the conclusions are
+> unchanged.*
 
 **Arms.** Four arms faced the same 31 scenarios, each run three times (n = 93
 per row):
@@ -194,8 +197,11 @@ differ.**
 - **mistral** proposed an action outside the allowed list in 93 of 93 naive
   runs and 92 of 93 inside the architecture, so every incident escalated (HIR
   1.0000, correct 0.1935).
-- **qwen2.5:7b** returned 53 (naive) and 56 (architecture) provider or schema
-  errors, and was correct on 0.0538 and 0.0323 of runs.
+- **qwen2.5:7b** returned 55 provider or schema errors as naive-llm. Inside
+  the architecture it returned 48, plus 13 off-list proposals. It was correct
+  on 0.0538 and 0.0108 of runs respectively. Its rows also moved between the
+  19 and 26 October benchmark runs, which is what a proposer timing out on
+  CPU looks like.
 
 The LLM-failure table in [tables.md](tables.md) counts these failures apart
 from wrong answers. The qwen rows measure CPU inference on the runner as much
@@ -203,8 +209,8 @@ as the model.
 
 **Policy and verification change no LLM's correctness significantly.** For
 each model, pashupatastra-llm against naive-llm has no difference that
-survives chance: 0 / 0 discordant runs for llama3 and mistral, 3 / 5 for
-qwen2.5:7b (Table 5). Read this with the previous paragraph: the layer has
+survives chance: 0 / 0 discordant runs for llama3 and mistral, and 1 / 5 for
+qwen2.5:7b (Holm-adjusted p = 0.8750, Table 5). Read this with the previous paragraph: the layer has
 nothing to stop when the proposer never acts, or proposes nothing it is
 allowed to do. These runs neither confirm nor refute the safety claim. They
 show it untested by these models. The claim's test is a proposer that
@@ -212,8 +218,8 @@ confidently proposes wrong allowed actions, and none of the three did.
 
 **Every LLM arm is worse than the deterministic proposer.** Against
 pashupatastra, each pashupatastra-llm arm was right less often: 0 / 18, 0 / 60
-and 0 / 75 discordant runs for llama3, mistral and qwen2.5:7b. All three
-survive chance (Table 5).
+and 0 / 77 discordant runs for llama3, mistral and qwen2.5:7b. All three
+survive chance after the Holm correction across the whole table (Table 5).
 
 **What this subsection does not show.**
 
