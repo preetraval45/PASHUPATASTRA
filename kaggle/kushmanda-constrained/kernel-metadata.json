@@ -1,0 +1,14 @@
+{
+  "id": "preetraval4518071604/sati-kushmanda-constrained",
+  "title": "sati-kushmanda-constrained",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": ["preetraval4518071604/sati-kushmanda/pyTorch/v2/1"]
+}

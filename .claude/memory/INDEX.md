@@ -89,3 +89,4 @@ Protocol: before every push, write a topic-named file from
 - [CIDeployLive](CIDeployLive.md) — AWS secrets added; deploy job pins provider=sati
 - [FindingsPage](FindingsPage.md) — /findings: six headline results read from results JSON
 - [RCAEvalLLM](RCAEvalLLM.md) — RP-33 LLM vs Sati on declared RCAEval sample; workflow rcaeval-diagnosis
+- [BlockF](BlockF.md) — RP-41 ticked; RP-44 constrained ID decoding, measured on Kaggle
