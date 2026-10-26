@@ -41,6 +41,7 @@ TABLES = [
             ("chandraghanta", "sati.netdetect.report"),
             ("mahagauri", "sati.verify.report"),
             ("skandamata", "sati.respond.report"),
+            ("siddhidatri", "sati.fuse.report"),
             ("kushmanda", "sati.lm.report"),
         )
     ],

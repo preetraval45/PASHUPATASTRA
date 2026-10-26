@@ -32,3 +32,11 @@ Brahmacharini's source split for Skandamata.
 - Read both first runs, then write the cards and Models page sections.
 - Build Siddhidatri (fusion and calibration).
 - Write notebooks 06 onward.
+
+## Follow-up
+
+- **Siddhidatri (RP-73)** is built: out-of-fold stacked logistic fusion on
+  SMD, measured by ECE and Brier.
+- **Gitleaks false positive.** It flagged a cache `key:` value in
+  train-sati.yml (generic-api-key). The cache keys are renamed to plain
+  words; keep hex and versioned slugs out of `key:` lines.
