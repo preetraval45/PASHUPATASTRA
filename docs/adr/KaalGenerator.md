@@ -79,6 +79,27 @@ directly or through others:
 - **Determinism.** A seed and an index fully determine an incident, using
   `random.Random(f"{seed}:{i}")`.
 
+### v1 realism (added 26 October 2026, also proposed)
+
+Under v0, Katyayani's ranker reached RCA@1 = 1.000 on every split, held-out
+faults included. Only the root showed its own resource metrics, it never had
+an anomalous callee, and it was almost always first. v1 adds:
+
+| Knob | Share | What it breaks |
+|---|---:|---|
+| Missing telemetry | 0.30 | the origin's own resource metric is not collected |
+| Retry amplification | 0.30 | a caller's CPU rises, so a resource metric no longer means "root" |
+| Backpressure | 0.25 | a service the root calls looks slow, so the root can have an anomalous callee |
+| Onset skew | ±120 s | "first anomalous" is no longer always the root |
+| Coincident anomaly | 0.15 | an unrelated latency blip near the onset |
+
+The ranker stays at about 0.998 (`models/katyayani-kaal.md`); the
+no-learning baselines fall to 0.46–0.75. With propagation along the call
+graph, the root is the anomalous service every other anomalous service sits
+above, and a topology-aware ranker finds it. This generator measures whether
+a model can use topology. It does not measure real-world RCA; the
+simulation-to-real gap does (RP-19, RCAEval).
+
 ## Consequences
 
 - **Pure Python in `packages/core`** (`pashupatastra.kaal`). There is no
@@ -98,3 +119,6 @@ directly or through others:
 3. Should decoys be 40% and negatives 20%?
 4. Should propagation be upward only, or should some faults (a saturated
    queue blocking producers) also flow down?
+5. Should v2 add genuinely ambiguous incidents: two concurrent faults,
+   partial propagation (only some callers affected), or shared dependencies?
+   Without them, synthetic RCA stays near-trivial for a graph-aware model.

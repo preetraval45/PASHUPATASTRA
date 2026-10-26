@@ -16,6 +16,8 @@ on:
       - packages/sati/**
       # The detectors are scored by the core harness, so a scoring change must re-run them.
       - packages/core/pashupatastra/evaluation.py
+      - packages/core/pashupatastra/kaal/**
+      - docs/research/datasets/**
       - .github/workflows/train-sati.yml
 
 permissions:
@@ -255,6 +257,30 @@ jobs:
           cp results/siddhidatri/results.json apps/web/lib/models/siddhidatri.results.json
           (cd packages/sati && python -m sati.fuse.report ../../results/siddhidatri/results.json) > docs/research/models/siddhidatri.md
           bash scripts/pushresults.sh "docs(models): Siddhidatri v0 results from run ${{ github.run_id }}" docs/research/models/siddhidatri.results.json docs/research/models/siddhidatri.md apps/web/lib/models/siddhidatri.results.json
+
+  katyayani-kaal:
+    # RP-24: Katyayani's ranker on Kaal dataset v1 (synthetic), on the committed
+    # manifest's splits; about a minute on CPU.
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - name: train and evaluate on Kaal v1
+        working-directory: packages/sati
+        run: python -m sati.rca.kaal --n 50000 --seed 1 --manifest ../../docs/research/datasets/kaal-v1.json --out ../../results/katyayani-kaal
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models
+          cp results/katyayani-kaal/results.json docs/research/models/katyayani-kaal.results.json
+          (cd packages/sati && python -m sati.rca.kaalreport ../../results/katyayani-kaal/results.json) > docs/research/models/katyayani-kaal.md
+          bash scripts/pushresults.sh "docs(models): Katyayani on Kaal results from run ${{ github.run_id }}" docs/research/models/katyayani-kaal.results.json docs/research/models/katyayani-kaal.md
 
   kalaratri:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,

@@ -89,6 +89,15 @@ def depth(inc: Incident) -> int:
     return max((hops.get(s, 0) for s in inc.label["affected"]), default=0)  # type: ignore[union-attr]
 
 
+def assign(n: int, seed: int) -> dict[str, str | None]:
+    """Incident id → its split, or None when the guard removed it from a test
+    split as a repeat of training. The one place the split is decided: the
+    manifest and every training run call this, so they cannot disagree."""
+    rows = [(split_of(inc), inc.id, signature(inc)) for inc in (incident(seed, i) for i in range(n))]
+    train_sigs = {sig for s, _, sig in rows if s == "train"}
+    return {inc_id: (None if s.startswith("test") and sig in train_sigs else s) for s, inc_id, sig in rows}
+
+
 def build(n: int, seed: int) -> dict:
     """Assign every incident, then drop from each test split any incident whose
     signature also occurs in training: an exact structural repeat measures

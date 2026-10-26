@@ -40,3 +40,16 @@ keys (the 20 incidents) are the owner's and are not touched.
   manifest in a deliberate commit.
 - **RP-24:** a Sati-RCA ranker trained on Kaal train, evaluated on test-id,
   test-ood-topology and test-ood-fault, and on RCAEval as sim-to-real.
+
+## RP-24 and generator v1 (same day)
+
+- **Katyayani on Kaal** (`sati.rca.kaal`): RCA@1 was 1.000 on v0 on every
+  split, and the simulator was the reason. v1 added five realism knobs
+  (ADR §v1). The ranker stays at about 0.998 while the baselines drop to
+  0.46–0.75.
+- **I stopped tuning the simulator to taste on purpose.** A synthetic score
+  isn't the claim; sim-to-real on RCAEval is.
+- **The manifest was regenerated deliberately for v1.** Counts are
+  unchanged.
+- **Next:** convert RCAEval cases into Kaal-style events, then run the
+  Kaal-trained ranker on them zero-shot.

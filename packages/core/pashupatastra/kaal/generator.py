@@ -35,10 +35,19 @@ from pashupatastra.events import (
     Severity,
 )
 
-VERSION = "kaal-generator-v0"
+VERSION = "kaal-generator-v1"
 DECOY_SHARE = 0.4
 NEGATIVE_SHARE = 0.2
 FADE_SIGMA = 1.5
+# v1 realism (26 Oct 2026). Under v0, Sati-RCA reached RCA@1 = 1.000 on every split,
+# held-out faults included: only the root showed its own resource metrics, it never
+# had an anomalous callee, and it was almost always first. Real incidents are not
+# that tidy, and a model that learns those rules has learned the simulator.
+MISSING_TELEMETRY = 0.3  # the origin's own resource metric is not collected
+RETRY_AMPLIFICATION = 0.3  # a caller's CPU rises from retries
+BACKPRESSURE = 0.25  # a service the root calls looks slow too
+COINCIDENCE = 0.15  # an unrelated latency anomaly near the onset
+SKEW_SECONDS = 120  # clock and scrape skew on onset times
 EPOCH = datetime(2026, 1, 1, tzinfo=UTC)
 
 LAYERS = (
@@ -185,6 +194,11 @@ def _log(service: Service, message: str, at: datetime) -> Event:
     )
 
 
+def _skew(rng: random.Random) -> timedelta:
+    """Clock and scrape-interval skew: an observed onset can be early or late."""
+    return timedelta(seconds=rng.randint(-SKEW_SECONDS, SKEW_SECONDS))
+
+
 def _shift(name: str, direction: int, sigma: float) -> float:
     base = BASELINES[name]
     spread = max(abs(base) * 0.08, 0.01 if base < 1 else 1.0)
@@ -210,6 +224,7 @@ def incident(seed: int, index: int) -> Incident:
     fault = None if negative else rng.choice([f for f in FAULTS if _eligible(f, services)])
     origin = rng.choice(_eligible(fault, services)) if fault else None
     affected: list[str] = []
+    secondary: list[str] = []
     onset = start + timedelta(minutes=rng.randint(5, 15))
 
     if fault and origin:
@@ -218,17 +233,21 @@ def incident(seed: int, index: int) -> Incident:
         if fault.name == "third_party_outage":
             events.append(_log(origin, "upstream payments-provider returned 503", onset))
         strength = rng.uniform(4.0, 9.0)
+        # v1 realism: the origin's own resource metric is sometimes not collected.
+        hidden = rng.random() < MISSING_TELEMETRY
         for name, direction in fault.metrics:
+            if hidden and name not in ("latency_p99_ms", "error_rate"):
+                name, direction = "latency_p99_ms", 1  # only the symptom every service exports is seen
             sigma = direction * strength * rng.uniform(0.8, 1.1)
             events.append(_metric(origin, name, _shift(name, direction, abs(sigma)), BASELINES[name], sigma,
-                                  onset + timedelta(seconds=rng.randint(0, 50))))
+                                  onset + _skew(rng) + timedelta(seconds=rng.randint(0, 50))))
         affected.append(origin.name)
         # Up the call graph: callers see latency and errors, delayed and attenuated.
         for caller, hops in callers_by_distance(origin.name, calls):
             sigma = strength * (rng.uniform(0.6, 0.9) ** hops) * rng.uniform(0.8, 1.6)
             if sigma < FADE_SIGMA:
                 continue
-            at = onset + timedelta(minutes=sum(rng.randint(1, 3) for _ in range(hops)))
+            at = onset + timedelta(minutes=sum(rng.randint(1, 3) for _ in range(hops))) + _skew(rng)
             svc = by_name[caller]
             events.append(_metric(svc, "latency_p99_ms", _shift("latency_p99_ms", 1, sigma), BASELINES["latency_p99_ms"],
                                   sigma, at))
@@ -236,7 +255,28 @@ def incident(seed: int, index: int) -> Incident:
                 err = sigma * rng.uniform(0.5, 1.0)
                 events.append(_metric(svc, "error_rate", _shift("error_rate", 1, err), BASELINES["error_rate"], err,
                                       at + timedelta(seconds=30)))
+            if rng.random() < RETRY_AMPLIFICATION:
+                # Callers retrying burn CPU: a resource metric that is not the root's.
+                cpu = sigma * rng.uniform(0.5, 1.0)
+                events.append(_metric(svc, "cpu_ratio", _shift("cpu_ratio", 1, cpu), BASELINES["cpu_ratio"], cpu,
+                                      at + timedelta(seconds=45)))
             affected.append(caller)
+        # Backpressure: a struggling service can make the services it calls look slow too.
+        callees = [b for a, b in calls if a == origin.name]
+        if callees and rng.random() < BACKPRESSURE:
+            target = by_name[rng.choice(callees)]
+            sigma = strength * rng.uniform(0.3, 0.6)
+            events.append(_metric(target, "latency_p99_ms", _shift("latency_p99_ms", 1, sigma),
+                                  BASELINES["latency_p99_ms"], sigma, onset + timedelta(minutes=rng.randint(1, 3))))
+            secondary.append(target.name)
+        if rng.random() < COINCIDENCE:
+            bystanders = [s for s in services if s.name not in affected and s.name not in secondary]
+            if bystanders:
+                b = rng.choice(bystanders)
+                sigma = rng.uniform(2.0, 4.0)
+                events.append(_metric(b, "latency_p99_ms", _shift("latency_p99_ms", 1, sigma),
+                                      BASELINES["latency_p99_ms"], sigma, onset + timedelta(minutes=rng.randint(-3, 6))))
+                decoys.append({"service": b.name, "kind": "coincident_anomaly"})
 
     if rng.random() < DECOY_SHARE:
         # Prefer a service the fault did not touch; never the root.
@@ -263,6 +303,7 @@ def incident(seed: int, index: int) -> Incident:
         "action": fault.action if fault else None,
         "outcome": fault.outcome if fault else "nothing",
         "affected": affected,
+        "secondary": secondary,
         "decoys": decoys,
     }
     return Incident(incident_id, VERSION, services, calls, events, label, {"seed": seed, "index": index})

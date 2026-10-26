@@ -52,3 +52,13 @@ def test_signatures_ignore_names_but_not_structure():
     a, b = incident(11, 1), incident(11, 2)
     assert signature(a) == signature(a)
     assert signature(a) != signature(b)
+
+
+def test_assign_agrees_with_the_manifest_counts():
+    from pashupatastra.kaal.dataset import assign
+
+    splits = assign(1500, seed=11)
+    for s in SPLITS:
+        assert sum(1 for v in splits.values() if v == s) == MANIFEST["splits"][s]["incidents"]
+    removed = sum(MANIFEST["guard"]["removed_from_tests_as_repeats_of_training"].values())
+    assert sum(1 for v in splits.values() if v is None) == removed

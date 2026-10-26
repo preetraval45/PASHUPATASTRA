@@ -33,6 +33,7 @@ TABLES = [
         (MODELS / f"{name}.md", [sys.executable, "-m", module, str(MODELS / f"{name}.results.json")], SATI)
         for name, module in (
             ("sati-rca", "sati.rca.report"),
+            ("katyayani-kaal", "sati.rca.kaalreport"),
             ("shailaputri", "sati.detect.report"),
             ("shailaputri-smd", "sati.detect.smdreport"),
             ("kalaratri", "sati.loganomaly.report"),

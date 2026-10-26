@@ -1,6 +1,6 @@
 {
   "dataset": "kaal-v1",
-  "generator": "kaal-generator-v0",
+  "generator": "kaal-generator-v1",
   "seed": 1,
   "n": 50000,
   "rules": {
@@ -78,23 +78,23 @@
     "anomalous_services_per_incident": {
       "0": 9915,
       "1": 8956,
-      "2": 9728,
-      "3": 5956,
-      "4": 3673,
-      "5": 3109,
-      "6": 2020,
-      "7": 1789,
-      "8": 1760,
-      "9": 1563,
-      "10": 973,
-      "11": 455,
-      "12": 103
+      "2": 9731,
+      "3": 5952,
+      "4": 3684,
+      "5": 3088,
+      "6": 2048,
+      "7": 1751,
+      "8": 1775,
+      "9": 1579,
+      "10": 959,
+      "11": 462,
+      "12": 100
     },
     "propagation_depth": {
       "0": 18871,
-      "1": 11954,
-      "2": 11268,
-      "3": 7907
+      "1": 11955,
+      "2": 11280,
+      "3": 7894
     },
     "compared_with_real": "pending RP-19 (fault-injected cluster runs) and an RCAEval comparison"
   }
