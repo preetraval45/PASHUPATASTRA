@@ -1,6 +1,6 @@
 {
   "model": "sati-shailaputri-v0",
-  "sha256": "ef954a89099499cfcd81bffa6412a849e1a72e42f1c2d32898dccdc3414272f7",
+  "sha256": "062909b779c911d0ea6b59b2ac71295ca5a41ecef6edf3ac94a521a9aa1b7c8f",
   "threshold": 0.75,
   "features": [
     "z_12",
