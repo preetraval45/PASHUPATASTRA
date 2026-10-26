@@ -47,7 +47,7 @@
   },
   "thresholds": {
     "kalaratri-v0": 0.9996684324889528,
-    "pca": 0.20397068696625942
+    "pca": 0.2039706869662387
   },
   "top_features": [
     {
@@ -85,5 +85,5 @@
   ],
   "weights_published": false,
   "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",
-  "seconds": 6.0
+  "seconds": 10.1
 }
