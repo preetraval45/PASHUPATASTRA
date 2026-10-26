@@ -38,6 +38,26 @@ time. Onset-weighted training raised F1 on SMD (0.531 → 0.556), but lead did
 not improve there either (110.4 → 108.5), so earlier flags remain the open
 problem.
 
+### Across five training seeds (train-sati run 40391561511)
+
+One run's numbers proved unreproducible across GitHub's runners, so
+Shailaputri is now trained with seeds 7, 11, 13, 17 and 19 (CPU recorded:
+AMD EPYC 7763). Mean [min, max]:
+
+| Shailaputri v0 | Mean | Range | Best statistical detector |
+|---|---:|---|---:|
+| F1 | 0.435 | [0.382, 0.475] | 0.346 (seasonal-naive) |
+| False alarms / 1000 | 25.6 | [23.3, 30.3] | 74.7 (seasonal-robust-z); EWMA 14.2 |
+| Lead | 180.4 | [170.4, 190.2] | 241.3 (seasonal-robust-z) |
+
+**The decision holds across every seed.** Even its worst seed beats every
+statistical detector on F1 (0.382 against 0.346), and its noisiest seed raises
+less than half seasonal-robust-z's false alarms (30.3 against 74.7). But its
+earliest seed still flags later than seasonal-robust-z (190.2 against 241.3).
+It wins on false alarms and loses on lead, so `SeasonalRobustZ` stays the
+default and Shailaputri a second opinion, on evidence that no longer depends
+on which machine ran the job.
+
 *The 18 October measurement follows, kept as recorded and superseded by the
 section above.*
 

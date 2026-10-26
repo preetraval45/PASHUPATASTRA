@@ -58,3 +58,9 @@ section. Fixed Kushmanda's listed data (it said "LogHub corpus", which is
 excluded). `katyayani-simtoreal.results.json` was copied into
 `apps/web/lib/models` by hand; the CI job should copy it too, next time
 `train-sati.yml` is touched.
+
+## Five-seed result
+
+F1 0.435 [0.382, 0.475], false alarms 25.6 [23.3, 30.3], lead 180.4 [170.4,
+190.2], on an AMD EPYC 7763 runner. The SatiDetect decision holds on every
+seed. `/findings` is live, and the API deploys from CI.
