@@ -15,7 +15,8 @@ import sys
 from pathlib import Path
 
 RECORDS = Path(__file__).resolve().parents[1] / "benchmark" / "results" / "rcaeval"
-LABEL = {"sati-kaal": "Sati-RCA (trained on Kaal, zero-shot)", "loudest": "Loudest service (no learning)"}
+LABEL = {"katyayani": "Katyayani (trained on real RCAEval, other systems)",
+         "sati-kaal": "Sati-RCA (trained on Kaal, zero-shot)", "loudest": "Loudest service (no learning)"}
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> str:

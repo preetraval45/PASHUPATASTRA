@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        diagnoser: ["loudest", "sati-kaal", "llm:llama3", "llm:qwen2.5:7b"]
+        diagnoser: ["loudest", "katyayani", "sati-kaal", "llm:llama3", "llm:qwen2.5:7b"]
     env:
       PASHU_BASELINE_BASE_URL: http://localhost:11434/v1
       PASHU_BASELINE_TEMPERATURE: "0.2"

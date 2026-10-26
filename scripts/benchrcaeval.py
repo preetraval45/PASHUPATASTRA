@@ -3,6 +3,7 @@
     python scripts/benchrcaeval.py --diagnoser llm:llama3 --cache .cache/rcaeval
     python scripts/benchrcaeval.py --diagnoser sati-kaal --cache .cache/rcaeval
     python scripts/benchrcaeval.py --diagnoser loudest --cache .cache/rcaeval
+    python scripts/benchrcaeval.py --diagnoser katyayani --cache .cache/rcaeval
 
 Cases are the **pre-declared LLM sample** in `benchmark/external/rcaeval/subset.json`
 (`llm_sample`: 50 Online Boutique and 50 Sock Shop cases, chosen by hash before
@@ -86,7 +87,43 @@ class Ranked:
         return Diagnosis(ranked=ranked, evidence_refs=refs)
 
 
-def build(spec: str, tables: dict):
+class Katyayani:
+    """Katyayani trained on real RCAEval incidents from the *other* systems
+    (RE1 and RE2, Train Ticket included), leave one system out, on its own
+    features (`sati.rca.features`). The like-for-like row: same cases, same
+    harness, trained on real data instead of Kaal."""
+
+    name = "katyayani"
+
+    def __init__(self, cache: Path) -> None:
+        from sati.rca import features as rfeat
+        from sati.rca import model as rmodel
+        from sati.rca.run import TRAIN_SUITES, build as build_table
+        from sati.sources import rcaeval
+
+        rev, names = sample()
+        index = rcaeval.cases(cache, rev)
+        pool = index[index["suite"].isin(TRAIN_SUITES) & ~index["case"].isin(set(names))]
+        test = index[index["case"].isin(set(names))]
+        rcaeval.prefetch(list(pool["case"]) + list(test["case"]), cache, rev)
+        train_table, _ = build_table(pool, cache, rev)
+        test_table, _ = build_table(test, cache, rev)
+        features = rfeat.feature_columns(train_table.drop(columns=["suite"]))
+        self.rankings: dict[str, list[str]] = {}
+        for system in sorted(test_table["system"].unique()):
+            ranker = rmodel.train_ranker(train_table[train_table["system"] != system], features)
+            part = test_table[test_table["system"] == system]
+            self.rankings.update(rmodel.predict(ranker, part, features))
+
+    def diagnose(self, case: Case) -> Diagnosis:
+        ranked = tuple(self.rankings.get(case.id, []))[:3]
+        if not ranked:
+            return Diagnosis(error="no features for this case")
+        refs = tuple(ref for ref, text in case.evidence if text.startswith(f"service={ranked[0]};"))
+        return Diagnosis(ranked=ranked, evidence_refs=refs)
+
+
+def build(spec: str, tables: dict, cache: Path):
     kind, _, rest = spec.partition(":")
     if kind == "llm" and rest:
         from benchdiagnosis import LLMDiagnoser
@@ -94,13 +131,15 @@ def build(spec: str, tables: dict):
         return LLMDiagnoser(rest)
     if kind == "loudest":
         return Ranked("loudest", tables, lambda t: t["peak"].to_numpy())
+    if kind == "katyayani":
+        return Katyayani(cache)
     if kind == "sati-kaal":
         from sati.rca import kaal
         from sati.rca.simtoreal import train_kaal_ranker
 
         ranker = train_kaal_ranker(50_000, 1)
         return Ranked("sati-kaal", tables, lambda t: ranker.predict(t[kaal.FEATURES]))
-    raise SystemExit(f"unknown diagnoser {spec!r}; use llm:<model>, sati-kaal or loudest")
+    raise SystemExit(f"unknown diagnoser {spec!r}; use llm:<model>, katyayani, sati-kaal or loudest")
 
 
 def main() -> int:
@@ -112,7 +151,7 @@ def main() -> int:
 
     cases, tables = build_cases(args.cache)
     print(f"{len(cases)} RCAEval cases from the declared LLM sample")
-    diagnoser = build(args.diagnoser, tables)
+    diagnoser = build(args.diagnoser, tables, args.cache)
     report = score(diagnoser, cases)
     write_jsonl(report, args.out / f"{diagnoser.name.replace(':', '_')}.jsonl")
     print(f"{diagnoser.name}: RCA@1 {report.rca1:.3f} {report.rca1_ci}  RCA@3 {report.rca3:.3f}  "

@@ -23,3 +23,9 @@ diagnoser sees identical evidence and is graded by the same harness.
 - Read `docs/research/models/rcaeval-diagnosis.md` when the run finishes.
 - Consider adding Katyayani trained on RCAEval (leave one system out) as a
   diagnoser in the same harness, for a like-for-like comparison.
+
+## Katyayani row (same day)
+
+The `katyayani` diagnoser trains on real RCAEval RE1/RE2 cases from the other
+systems, leave one system out, using Katyayani's own features. It is the
+like-for-like real-data row beside the LLMs and the Kaal model.
