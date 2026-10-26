@@ -287,7 +287,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   3. Watch the first two lectures of Stanford CS224W (*Machine Learning with Graphs*).
   *Done when:* you can describe how a fault in a database shows up in its callers' latency and errors, and why the loudest service is often not the cause.
 
-- [ ] **RP-17 · Kaal incident generator**
+- [~] **RP-17 · Kaal incident generator** — *Started 26 Oct at the owner's request to begin Block B. The fault model is **proposed, not decided**: [adr/KaalGenerator](../adr/KaalGenerator.md) (Claude's draft, awaiting the owner's decision). It has nine faults across PIB's eight categories with registered actions, upward propagation (delay per hop, attenuation, fade below 1.5σ), decoys in about 40% of incidents (an unrelated deploy or a noisy neighbour), and negatives in about 20%. Built: `pashupatastra.kaal.generator` (pure Python, deterministic by seed, emits Drishti `Event`s plus a label) and `python -m pashupatastra.kaal.generate --n 1000 --seed 1`. 9 tests cover determinism, label consistency, negatives without a fault signature, propagation only to callers, decoys never the root, acyclic topology, and the catalogue covering all eight categories. Remains: the owner's decision on the ADR. If it changes the model, the generator follows and the RP-18 manifest is regenerated.*
   **Both** · You 4 h fault-model design; Claude 2–3 sessions build · Depends: RP-16, RP-04
   *Why:* a model needs thousands of labelled incidents, and you have 20 (which are test-only). Kaal's job — simulation — is exactly this.
   *Steps:*
@@ -300,7 +300,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   2. **Claude** implements `packages/core/pashupatastra/kaal/generator.py` (pure Python, deterministic by seed, no torch). It samples a topology (services and dependencies), injects a fault, and emits Drishti `Event`s plus a label (root service, fault type, the correct action). Tests cover determinism, label consistency, and that negatives carry no fault.
   *Done when:* `python -m pashupatastra.kaal.generate --n 1000 --seed 1` writes a dataset, and the tests pass.
 
-- [ ] **RP-18 · Dataset v1: splits and contamination guard**
+- [~] **RP-18 · Dataset v1: splits and contamination guard** — *Built 26 Oct: `pashupatastra.kaal.dataset`. 50,000 incidents (seed 1) split by fixed rules: test-OOD-fault (`cpu_saturation`, an unseen fault in a seen category, and `consumer_lag`, an unseen category); test-OOD-topology (one shape hash in ten); then train / validation / test-ID 80/10/10. [Manifest](datasets/kaal-v1.json) committed before any training: 30,161 / 3,830 / 3,715 / 4,341 / 7,939, with each split's id-list SHA-256. The guard passes: no PIB reference-topology match, no training signature in any test split, and 14 test-ID repeats of training removed and counted. CI regenerates the manifest and fails on any difference. A first realism summary (anomalous services per incident, propagation depth) is in the manifest. 6 tests. Remains: guarding against the 20 labelled incidents (RP-13) and RCAEval's topologies once they exist as graphs, and the realism comparison against real runs (RP-19).*
   **Claude** · 1–2 sessions · review 1 h · Depends: RP-17
   *Steps:*
   1. Generate about 50k incidents. Split them into train / validation / test-ID / **test-OOD (held-out topologies)** / **test-OOD (held-out fault types)**. Commit the split manifest before any training.

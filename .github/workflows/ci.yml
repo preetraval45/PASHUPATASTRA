@@ -35,6 +35,12 @@ jobs:
       - name: benchmark harness tests
         run: PYTHONPATH=packages/core:. pytest benchmark/harness -q -o python_files="test*.py"
       - run: ruff check packages/core
+      - name: Kaal dataset v1 matches its committed manifest, and the guard passes
+        # RP-18: the split manifest was committed before any training. If the
+        # generator changes, every split moves; this makes that a deliberate
+        # regeneration rather than a silent one. About ten seconds.
+        working-directory: packages/core
+        run: python -m pashupatastra.kaal.dataset --n 50000 --seed 1 --manifest ../../docs/research/datasets/kaal-v1.json --check
       - name: detection benchmark holds its recorded result
         # The seasonality decision (ADR Seasonality) rests on measured numbers,
         # so the measurement runs here rather than living in a commit message.

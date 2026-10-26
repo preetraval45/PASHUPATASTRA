@@ -21,6 +21,7 @@ in the filename.
 | [LLMBaselines](LLMBaselines.md) — 2 × 2: {deterministic, LLM} proposer × {no policy, Dharma + verification}; LLMs are baselines only | 2026-10-18 | Accepted |
 | [SatiDetect](SatiDetect.md) — Shailaputri v0 beats every statistical detector on F1 but not on lead time; statistical default stays, model is a second opinion | 2026-10-18 | Accepted |
 | [SatiEmbed](SatiEmbed.md) — Brahmacharini adopted for behaviour→technique recall (R@1 0.609 vs BM25 0.270); incident recall waits for a measurement | 2026-10-18 | Accepted |
+| [KaalGenerator](KaalGenerator.md) — the fault model for Kaal's synthetic incidents: nine faults over PIB's eight categories, upward propagation, decoys and negatives | 2026-10-26 | Proposed (owner to decide) |
 
 ## Planned
 
