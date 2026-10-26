@@ -1,0 +1,222 @@
+{
+  "model": "sati-siddhidatri-v0",
+  "dataset": {
+    "name": "SMD (Server Machine Dataset)",
+    "repo": "NetManAIOps/OmniAnomaly",
+    "revision": "7fb0e0acf89ea49908896bcc9f9e80fcfff6baf4",
+    "machines": 28,
+    "groups": [
+      "machine-1",
+      "machine-2",
+      "machine-3"
+    ]
+  },
+  "fused": [
+    "shailaputri",
+    "max robust z",
+    "pca"
+  ],
+  "folds": [
+    {
+      "held_out": "machine-1",
+      "machines": 8,
+      "weights": {
+        "shailaputri": 2.1719,
+        "max robust z": 0.3529,
+        "pca": 0.2842,
+        "bias": -4.7596
+      },
+      "thresholds": {
+        "siddhidatri-v0": 0.3,
+        "shailaputri": 0.3,
+        "max robust z": 0.3,
+        "pca": 0.3
+      },
+      "detectors": {
+        "siddhidatri-v0": {
+          "precision": 0.698,
+          "recall": 0.212,
+          "f1": 0.281,
+          "false_alarms_per_1000": 52.388,
+          "mean_lead": 79.65,
+          "ece": 0.0257,
+          "brier": 0.055
+        },
+        "shailaputri": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 0.0,
+          "mean_lead": 0.0,
+          "ece": 0.0225,
+          "brier": 0.0564
+        },
+        "max robust z": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 0.0,
+          "mean_lead": 0.0,
+          "ece": 0.0253,
+          "brier": 0.0572
+        },
+        "pca": {
+          "precision": 0.375,
+          "recall": 0.036,
+          "f1": 0.066,
+          "false_alarms_per_1000": 0.0,
+          "mean_lead": 19.25,
+          "ece": 0.0292,
+          "brier": 0.0564
+        }
+      }
+    },
+    {
+      "held_out": "machine-2",
+      "machines": 9,
+      "weights": {
+        "shailaputri": 1.9396,
+        "max robust z": 0.3459,
+        "pca": 0.3116,
+        "bias": -4.5276
+      },
+      "thresholds": {
+        "siddhidatri-v0": 0.3,
+        "shailaputri": 0.3,
+        "max robust z": 0.3,
+        "pca": 0.3
+      },
+      "detectors": {
+        "siddhidatri-v0": {
+          "precision": 0.696,
+          "recall": 0.334,
+          "f1": 0.409,
+          "false_alarms_per_1000": 82.343,
+          "mean_lead": 101.067,
+          "ece": 0.0081,
+          "brier": 0.0394
+        },
+        "shailaputri": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 0.0,
+          "mean_lead": 0.0,
+          "ece": 0.0026,
+          "brier": 0.0409
+        },
+        "max robust z": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 0.0,
+          "mean_lead": 0.0,
+          "ece": 0.0044,
+          "brier": 0.0414
+        },
+        "pca": {
+          "precision": 0.551,
+          "recall": 0.227,
+          "f1": 0.284,
+          "false_alarms_per_1000": 4.831,
+          "mean_lead": 42.356,
+          "ece": 0.0081,
+          "brier": 0.0405
+        }
+      }
+    },
+    {
+      "held_out": "machine-3",
+      "machines": 11,
+      "weights": {
+        "shailaputri": 1.3757,
+        "max robust z": 0.4768,
+        "pca": 1.139,
+        "bias": -4.3746
+      },
+      "thresholds": {
+        "siddhidatri-v0": 0.3,
+        "shailaputri": 0.3,
+        "max robust z": 0.3,
+        "pca": 0.3
+      },
+      "detectors": {
+        "siddhidatri-v0": {
+          "precision": 0.615,
+          "recall": 0.605,
+          "f1": 0.376,
+          "false_alarms_per_1000": 384.913,
+          "mean_lead": 76.155,
+          "ece": 0.0919,
+          "brier": 0.0768
+        },
+        "shailaputri": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 0.0,
+          "mean_lead": 0.0,
+          "ece": 0.0297,
+          "brier": 0.0272
+        },
+        "max robust z": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 0.0,
+          "mean_lead": 0.0,
+          "ece": 0.0253,
+          "brier": 0.0275
+        },
+        "pca": {
+          "precision": 0.481,
+          "recall": 0.513,
+          "f1": 0.328,
+          "false_alarms_per_1000": 336.953,
+          "mean_lead": 62.045,
+          "ece": 0.0892,
+          "brier": 0.0777
+        }
+      }
+    }
+  ],
+  "mean_across_groups": {
+    "siddhidatri-v0": {
+      "precision": 0.6697,
+      "recall": 0.3837,
+      "f1": 0.3553,
+      "false_alarms_per_1000": 173.2147,
+      "mean_lead": 85.624,
+      "ece": 0.0419,
+      "brier": 0.0571
+    },
+    "shailaputri": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "false_alarms_per_1000": 0.0,
+      "mean_lead": 0.0,
+      "ece": 0.0183,
+      "brier": 0.0415
+    },
+    "max robust z": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "false_alarms_per_1000": 0.0,
+      "mean_lead": 0.0,
+      "ece": 0.0183,
+      "brier": 0.042
+    },
+    "pca": {
+      "precision": 0.469,
+      "recall": 0.2587,
+      "f1": 0.226,
+      "false_alarms_per_1000": 113.928,
+      "mean_lead": 41.217,
+      "ece": 0.0422,
+      "brier": 0.0582
+    }
+  },
+  "seconds": 669.5
+}
