@@ -14,11 +14,11 @@
   "task": "rank every ATT&CK mitigation for an observed behaviour",
   "test": {
     "skandamata-v0": {
-      "hit@1": 0.7746,
-      "recall@5": 0.8284,
-      "precision@5": 0.4372,
-      "mrr": 0.8417,
-      "ndcg@10": 0.8357,
+      "hit@1": 0.7896,
+      "recall@5": 0.8256,
+      "precision@5": 0.437,
+      "mrr": 0.851,
+      "ndcg@10": 0.8397,
       "n": 1269
     },
     "popularity": {
@@ -31,122 +31,122 @@
     },
     "bm25 direct": {
       "hit@1": 0.1946,
-      "recall@5": 0.2601,
-      "precision@5": 0.1286,
-      "mrr": 0.345,
-      "ndcg@10": 0.2764,
+      "recall@5": 0.2591,
+      "precision@5": 0.1278,
+      "mrr": 0.3442,
+      "ndcg@10": 0.2755,
       "n": 1269
     },
     "bm25 two-hop": {
-      "hit@1": 0.5414,
-      "recall@5": 0.6452,
-      "precision@5": 0.3357,
-      "mrr": 0.6604,
-      "ndcg@10": 0.6516,
+      "hit@1": 0.5374,
+      "recall@5": 0.6463,
+      "precision@5": 0.3352,
+      "mrr": 0.6595,
+      "ndcg@10": 0.6517,
       "n": 1269
     }
   },
-  "best_epoch_by_validation": 20,
+  "best_epoch_by_validation": 17,
   "curve": [
     {
       "epoch": 1,
-      "loss": 0.1977,
-      "val_ndcg@10": 0.4175
+      "loss": 0.1984,
+      "val_ndcg@10": 0.4162
     },
     {
       "epoch": 2,
-      "loss": 0.1692,
-      "val_ndcg@10": 0.5499
+      "loss": 0.1655,
+      "val_ndcg@10": 0.5748
     },
     {
       "epoch": 3,
-      "loss": 0.1294,
-      "val_ndcg@10": 0.701
+      "loss": 0.1253,
+      "val_ndcg@10": 0.7184
     },
     {
       "epoch": 4,
-      "loss": 0.086,
-      "val_ndcg@10": 0.7775
+      "loss": 0.0823,
+      "val_ndcg@10": 0.7878
     },
     {
       "epoch": 5,
-      "loss": 0.0677,
-      "val_ndcg@10": 0.8201
+      "loss": 0.0549,
+      "val_ndcg@10": 0.8206
     },
     {
       "epoch": 6,
-      "loss": 0.063,
-      "val_ndcg@10": 0.8328
+      "loss": 0.056,
+      "val_ndcg@10": 0.8394
     },
     {
       "epoch": 7,
-      "loss": 0.0314,
-      "val_ndcg@10": 0.8402
+      "loss": 0.0235,
+      "val_ndcg@10": 0.8437
     },
     {
       "epoch": 8,
-      "loss": 0.0184,
-      "val_ndcg@10": 0.845
+      "loss": 0.0165,
+      "val_ndcg@10": 0.8449
     },
     {
       "epoch": 9,
-      "loss": 0.0281,
-      "val_ndcg@10": 0.8435
+      "loss": 0.0184,
+      "val_ndcg@10": 0.8437
     },
     {
       "epoch": 10,
-      "loss": 0.0144,
-      "val_ndcg@10": 0.8471
+      "loss": 0.0186,
+      "val_ndcg@10": 0.8465
     },
     {
       "epoch": 11,
-      "loss": 0.0053,
-      "val_ndcg@10": 0.8486
-    },
-    {
-      "epoch": 12,
-      "loss": 0.0116,
+      "loss": 0.0054,
       "val_ndcg@10": 0.8474
     },
     {
+      "epoch": 12,
+      "loss": 0.0107,
+      "val_ndcg@10": 0.8467
+    },
+    {
       "epoch": 13,
-      "loss": 0.0032,
-      "val_ndcg@10": 0.8491
+      "loss": 0.0046,
+      "val_ndcg@10": 0.8484
     },
     {
       "epoch": 14,
-      "loss": 0.0035,
-      "val_ndcg@10": 0.8489
+      "loss": 0.0018,
+      "val_ndcg@10": 0.8492
     },
     {
       "epoch": 15,
-      "loss": 0.0067,
-      "val_ndcg@10": 0.8481
+      "loss": 0.005,
+      "val_ndcg@10": 0.8485
     },
     {
       "epoch": 16,
-      "loss": 0.0014,
-      "val_ndcg@10": 0.8518
-    },
-    {
-      "epoch": 17,
-      "loss": 0.0089,
+      "loss": 0.0039,
       "val_ndcg@10": 0.8499
     },
     {
+      "epoch": 17,
+      "loss": 0.0096,
+      "val_ndcg@10": 0.8524
+    },
+    {
       "epoch": 18,
-      "loss": 0.0297,
-      "val_ndcg@10": 0.8505
+      "loss": 0.0181,
+      "val_ndcg@10": 0.852
     },
     {
       "epoch": 19,
-      "loss": 0.0076,
+      "loss": 0.0036,
       "val_ndcg@10": 0.8493
     },
     {
       "epoch": 20,
-      "loss": 0.0032,
-      "val_ndcg@10": 0.8527
+      "loss": 0.0011,
+      "val_ndcg@10": 0.8488
     }
   ],
   "examples": [
@@ -160,7 +160,7 @@
         "Network Intrusion Prevention",
         "Filter Network Traffic",
         "Network Segmentation",
-        "Pre-compromise",
+        "Data Loss Prevention",
         "Disable or Remove Feature or Program"
       ]
     },
@@ -175,7 +175,7 @@
         "Antivirus/Antimalware",
         "User Training",
         "Audit",
-        "Code Signing"
+        "Execution Prevention"
       ]
     },
     {
@@ -191,7 +191,7 @@
         "User Account Management",
         "Audit",
         "Privileged Account Management",
-        "Multi-factor Authentication"
+        "Password Policies"
       ]
     },
     {
@@ -204,8 +204,8 @@
         "Multi-factor Authentication",
         "Password Policies",
         "Account Use Policies",
-        "User Account Management",
-        "Restrict Web-Based Content"
+        "Restrict Web-Based Content",
+        "Pre-compromise"
       ]
     },
     {
@@ -216,12 +216,12 @@
       ],
       "recommended": [
         "Pre-compromise",
+        "Data Backup",
         "Behavior Prevention on Endpoint",
-        "Privileged Account Management",
-        "User Training",
-        "User Account Management"
+        "User Account Management",
+        "User Training"
       ]
     }
   ],
-  "seconds": 755.2
+  "seconds": 622.6
 }
