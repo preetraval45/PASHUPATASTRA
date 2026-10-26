@@ -1,0 +1,227 @@
+{
+  "model": "sati-skandamata-v0",
+  "dataset": {
+    "name": "MITRE ATT&CK enterprise: procedure examples and mitigates relationships",
+    "mitigations": 44,
+    "behaviours": {
+      "train": 10535,
+      "validation": 1270,
+      "test": 1269
+    },
+    "test_sources_unseen": 115,
+    "right_mitigations_per_behaviour": 2.8
+  },
+  "task": "rank every ATT&CK mitigation for an observed behaviour",
+  "test": {
+    "skandamata-v0": {
+      "hit@1": 0.7746,
+      "recall@5": 0.8284,
+      "precision@5": 0.4372,
+      "mrr": 0.8417,
+      "ndcg@10": 0.8357,
+      "n": 1269
+    },
+    "popularity": {
+      "hit@1": 0.2317,
+      "recall@5": 0.3978,
+      "precision@5": 0.2065,
+      "mrr": 0.4429,
+      "ndcg@10": 0.4326,
+      "n": 1269
+    },
+    "bm25 direct": {
+      "hit@1": 0.1946,
+      "recall@5": 0.2601,
+      "precision@5": 0.1286,
+      "mrr": 0.345,
+      "ndcg@10": 0.2764,
+      "n": 1269
+    },
+    "bm25 two-hop": {
+      "hit@1": 0.5414,
+      "recall@5": 0.6452,
+      "precision@5": 0.3357,
+      "mrr": 0.6604,
+      "ndcg@10": 0.6516,
+      "n": 1269
+    }
+  },
+  "best_epoch_by_validation": 20,
+  "curve": [
+    {
+      "epoch": 1,
+      "loss": 0.1977,
+      "val_ndcg@10": 0.4175
+    },
+    {
+      "epoch": 2,
+      "loss": 0.1692,
+      "val_ndcg@10": 0.5499
+    },
+    {
+      "epoch": 3,
+      "loss": 0.1294,
+      "val_ndcg@10": 0.701
+    },
+    {
+      "epoch": 4,
+      "loss": 0.086,
+      "val_ndcg@10": 0.7775
+    },
+    {
+      "epoch": 5,
+      "loss": 0.0677,
+      "val_ndcg@10": 0.8201
+    },
+    {
+      "epoch": 6,
+      "loss": 0.063,
+      "val_ndcg@10": 0.8328
+    },
+    {
+      "epoch": 7,
+      "loss": 0.0314,
+      "val_ndcg@10": 0.8402
+    },
+    {
+      "epoch": 8,
+      "loss": 0.0184,
+      "val_ndcg@10": 0.845
+    },
+    {
+      "epoch": 9,
+      "loss": 0.0281,
+      "val_ndcg@10": 0.8435
+    },
+    {
+      "epoch": 10,
+      "loss": 0.0144,
+      "val_ndcg@10": 0.8471
+    },
+    {
+      "epoch": 11,
+      "loss": 0.0053,
+      "val_ndcg@10": 0.8486
+    },
+    {
+      "epoch": 12,
+      "loss": 0.0116,
+      "val_ndcg@10": 0.8474
+    },
+    {
+      "epoch": 13,
+      "loss": 0.0032,
+      "val_ndcg@10": 0.8491
+    },
+    {
+      "epoch": 14,
+      "loss": 0.0035,
+      "val_ndcg@10": 0.8489
+    },
+    {
+      "epoch": 15,
+      "loss": 0.0067,
+      "val_ndcg@10": 0.8481
+    },
+    {
+      "epoch": 16,
+      "loss": 0.0014,
+      "val_ndcg@10": 0.8518
+    },
+    {
+      "epoch": 17,
+      "loss": 0.0089,
+      "val_ndcg@10": 0.8499
+    },
+    {
+      "epoch": 18,
+      "loss": 0.0297,
+      "val_ndcg@10": 0.8505
+    },
+    {
+      "epoch": 19,
+      "loss": 0.0076,
+      "val_ndcg@10": 0.8493
+    },
+    {
+      "epoch": 20,
+      "loss": 0.0032,
+      "val_ndcg@10": 0.8527
+    }
+  ],
+  "examples": [
+    {
+      "behaviour": "Mori can communicate using HTTP over IPv4 or IPv6 depending on a flag set.",
+      "expected": [
+        "Filter Network Traffic",
+        "Network Intrusion Prevention"
+      ],
+      "recommended": [
+        "Network Intrusion Prevention",
+        "Filter Network Traffic",
+        "Network Segmentation",
+        "Pre-compromise",
+        "Disable or Remove Feature or Program"
+      ]
+    },
+    {
+      "behaviour": "Qilin can employ several code obfuscation methods, including renaming functions, altering control flows, and encrypting strings.",
+      "expected": [
+        "Antivirus/Antimalware",
+        "Behavior Prevention on Endpoint"
+      ],
+      "recommended": [
+        "Behavior Prevention on Endpoint",
+        "Antivirus/Antimalware",
+        "User Training",
+        "Audit",
+        "Code Signing"
+      ]
+    },
+    {
+      "behaviour": "GoldMax has used scheduled tasks to maintain persistence.",
+      "expected": [
+        "Audit",
+        "Operating System Configuration",
+        "Privileged Account Management",
+        "User Account Management"
+      ],
+      "recommended": [
+        "Operating System Configuration",
+        "User Account Management",
+        "Audit",
+        "Privileged Account Management",
+        "Multi-factor Authentication"
+      ]
+    },
+    {
+      "behaviour": "APT41 DUST used compromised Google Workspace accounts for command and control.",
+      "expected": [
+        "Network Intrusion Prevention",
+        "Restrict Web-Based Content"
+      ],
+      "recommended": [
+        "Multi-factor Authentication",
+        "Password Policies",
+        "Account Use Policies",
+        "User Account Management",
+        "Restrict Web-Based Content"
+      ]
+    },
+    {
+      "behaviour": "Star Blizzard has registered impersonation email accounts to spoof experts in a particular field or individuals and organizations affiliated with the intended target.",
+      "expected": [
+        "Threat Intelligence Program",
+        "User Training"
+      ],
+      "recommended": [
+        "Pre-compromise",
+        "Behavior Prevention on Endpoint",
+        "Privileged Account Management",
+        "User Training",
+        "User Account Management"
+      ]
+    }
+  ],
+  "seconds": 761.3
+}
