@@ -154,8 +154,11 @@ def runs_on_disk() -> dict[str, dict[str, object]]:
             if not isinstance(arm, str):
                 continue
             entry = found.setdefault(
-                arm, {"records": 0, "scenarios": set(), "repeats": 0, "ablations": set()}
+                arm,
+                {"records": 0, "scenarios": set(), "repeats": 0, "ablations": set(), "models": set()},
             )
+            if isinstance(model := record.get("model"), str) and model:
+                entry["models"].add(model)  # type: ignore[union-attr]
             entry["records"] = int(entry["records"]) + 1  # type: ignore[call-overload]
             if isinstance(scenario := record.get("scenario_id"), str):
                 entry["scenarios"].add(scenario)  # type: ignore[union-attr]
@@ -169,9 +172,60 @@ def runs_on_disk() -> dict[str, dict[str, object]]:
             "scenarios": len(entry["scenarios"]),  # type: ignore[arg-type]
             "repeats": entry["repeats"],
             "ablations": sorted(entry["ablations"]),  # type: ignore[call-overload]
+            "models": sorted(entry["models"]),  # type: ignore[call-overload]
         }
         for arm, entry in found.items()
     }
+
+
+LLM_ARMS = ("naive-llm", "pashupatastra-llm")
+
+
+def review(recorded: dict[str, dict[str, object]]) -> list[dict[str, str]]:
+    """The review's findings, with a status the records can answer.
+
+    A status says "answered" only when the run records on disk show it, and it
+    names what remains. Otherwise it keeps the status written on the review's
+    date. A criticism answered later is visibly answered later; it is never
+    quietly edited away.
+    """
+    out = []
+    with_data = {arm: e for arm, e in recorded.items() if e["records"]}
+    llm = {arm: e for arm, e in with_data.items() if arm in LLM_ARMS}
+    for finding in REVIEW:
+        status = finding["status"]
+        if finding["key"] == "thin" and len(with_data) >= 2:
+            fewest = min(int(e["repeats"]) for e in with_data.values())
+            total = sum(int(e["records"]) for e in with_data.values())
+            if fewest >= 3:
+                status = (
+                    f"answered by the records: {len(with_data)} arms with data, every scenario run "
+                    f"at least {fewest} times ({total:,} runs), compared by McNemar's exact test "
+                    "(Table 5). Still open: the corpus is 31 scenarios, written by one person"
+                )
+        if finding["key"] == "model" and llm:
+            models = sorted({m for e in llm.values() for m in e["models"]})  # type: ignore[union-attr]
+            runs = sum(int(e["records"]) for e in llm.values())
+            status = (
+                f"measured for actions: {len(models)} local models ({', '.join(models)}) in both LLM arms, "
+                f"{runs:,} runs (Table 1). Diagnosis accuracy is still unmeasured: RP-15 needs the 20 "
+                "labelled incidents"
+            )
+        out.append({**finding, "status": status})
+    return out
+
+
+def records_committed() -> int:
+    """How many benchmark record files git tracks. Since 18 Oct the benchmark
+    workflow commits them, so a reader can recompute the arm tables."""
+    try:
+        done = subprocess.run(
+            ["git", "ls-files", "benchmark/results/"],
+            cwd=ROOT, capture_output=True, text=True, check=True,
+        )
+    except (subprocess.CalledProcessError, OSError):
+        return 0
+    return sum(1 for line in done.stdout.splitlines() if line.endswith(".jsonl"))
 
 
 def tracked_records() -> list[dict[str, object]]:
@@ -214,8 +268,15 @@ def tracked_records() -> list[dict[str, object]]:
     return found
 
 
-def records_note(tracked: list[dict[str, object]]) -> str:
+def records_note(tracked: list[dict[str, object]], committed: int = 0) -> str:
     """What a reader can and cannot recompute from this repository."""
+    if committed:
+        return (
+            f"{committed} benchmark record file(s) are committed under benchmark/results/ by the "
+            "benchmark workflow, so every arm number can be recomputed from this repository with "
+            "`python scripts/reproduce.py --check`. The experiments under docs/research/experiments/ "
+            f"add {len(tracked)} more record file(s)."
+        )
     unchanged = (
         "benchmark/results/ is gitignored, so the records behind any arm run "
         "live on the machine that produced them and not in this repository. A "
@@ -366,13 +427,14 @@ def main() -> int:
                 "records": entry["records"] if entry else 0,
                 "scenarios": entry["scenarios"] if entry else 0,
                 "repeats": entry["repeats"] if entry else 0,
+                "models": entry["models"] if entry else [],
                 "ablations": entry["ablations"] if entry else [],
                 "absent": None
                 if entry
                 else (
-                    "no run recorded here. The harness injects faults into a live "
-                    "five-service Kubernetes stack, and no cluster has been stood "
-                    "up for a scored run on this checkout"
+                    "no run recorded here. Each arm runs in benchmark.yml on GitHub's "
+                    "runners, with its own kind cluster for the five-service stack, "
+                    "and that workflow commits the records"
                 ),
             }
         )
@@ -445,9 +507,9 @@ def main() -> int:
         "arms_with_data": sum(1 for arm in arms if arm["records"]),
         # Said out loud, because it is the reproducibility question a reviewer
         # asks first and the repository's own .gitignore is the answer.
-        "records_are_tracked": bool(tracked_experiments),
+        "records_are_tracked": bool(tracked_experiments) or records_committed() > 0,
         "tracked_experiments": tracked_experiments,
-        "records_note": records_note(tracked_experiments),
+        "records_note": records_note(tracked_experiments, records_committed()),
         "ablations": [a.value for a in Ablation],
         "injection": {
             "injectable": injectable,
@@ -455,7 +517,7 @@ def main() -> int:
             "blocked_scenarios": sum(entry["scenarios"] for entry in blocked),
         },
         "attacks": attacks,
-        "review": {"date": REVIEW_DATE, "findings": REVIEW},
+        "review": {"date": REVIEW_DATE, "findings": review(recorded)},
     }
 
     OUT.write_text(

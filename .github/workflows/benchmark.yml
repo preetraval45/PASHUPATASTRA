@@ -4,8 +4,10 @@ name: Benchmark
 # kind cluster on an identical ubuntu-latest machine, so the rows of a table
 # come from the same setup. RESEARCH PLAN.md RP-01.
 #
-# Run records stay gitignored (benchmark/results/) and are kept as the
-# `pib-records` artifact; only the generated tables are committed.
+# The tables job commits the run records (benchmark/results/, force-added
+# past .gitignore), the generated tables and the /evaluation page's data, so
+# every published arm number can be rebuilt from the repository
+# (scripts/reproduce.py --check) and the page cannot lag the records.
 
 on:
   workflow_dispatch:
@@ -120,11 +122,12 @@ jobs:
           name: pib-records
           path: benchmark/results/
       - run: python scripts/papertables.py > docs/research/tables.md
+      - run: python scripts/buildevaluation.py
       - name: Commit regenerated tables
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/research/tables.md
+          git add docs/research/tables.md apps/web/lib/evaluation.generated.json
           # The records the tables came from are committed too. Artifacts expire
           # after 90 days, and a table nobody can regenerate is not reproducible
           # (scripts/reproduce.py --check).

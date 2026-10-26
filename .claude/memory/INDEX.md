@@ -78,3 +78,4 @@ Protocol: before every push, write a topic-named file from
 - [Chandraghanta](Chandraghanta.md) — network IDS on UNSW/CIC via Kaggle mirrors; TTL leak and random split measured
 - [ShailaputriSMD](ShailaputriSMD.md) — SMD loader/model/job; leave-one-group-out; onset-weighted variant
 - [ChandraghantaResults](ChandraghantaResults.md) — CIC 0.997 random vs 0.453 by day; RP-61 ticked; Kaggle mount path
+- [EvaluationRefresh](EvaluationRefresh.md) — /evaluation statuses computed from records; benchmark job regenerates it
