@@ -1,0 +1,118 @@
+{
+  "model": "sati-kushmanda-v2",
+  "questions": 737,
+  "kinds": [
+    "lookup",
+    "classify"
+  ],
+  "free": {
+    "classify": {
+      "cited_right_passage": 0.4366,
+      "false_abstention": 0.1269,
+      "exact_match": 0.4234,
+      "n": 607
+    },
+    "lookup": {
+      "cited_right_passage": 0.7358,
+      "false_abstention": 0.0377,
+      "exact_match": 0.5283,
+      "n": 53
+    },
+    "unanswerable": {
+      "abstained": 0.4026,
+      "n": 77
+    }
+  },
+  "constrained": {
+    "classify": {
+      "cited_right_passage": 0.4366,
+      "false_abstention": 0.1269,
+      "exact_match": 0.4316,
+      "n": 607
+    },
+    "lookup": {
+      "cited_right_passage": 0.6038,
+      "false_abstention": 0.0377,
+      "exact_match": 0.6038,
+      "n": 53
+    },
+    "unanswerable": {
+      "abstained": 0.4026,
+      "n": 77
+    }
+  },
+  "lexical baseline": {
+    "classify": {
+      "cited_right_passage": 0.6903,
+      "false_abstention": 0.0,
+      "exact_match": 0.6903,
+      "n": 607
+    },
+    "lookup": {
+      "cited_right_passage": 0.9623,
+      "false_abstention": 0.0,
+      "exact_match": 0.9623,
+      "n": 53
+    },
+    "unanswerable": {
+      "abstained": 0.0,
+      "n": 77
+    }
+  },
+  "valid_outputs": {
+    "free": 0.9932,
+    "constrained": 1.0
+  },
+  "examples": [
+    {
+      "question": "Which ATT&CK technique does this behaviour describe? [SUGARDUMP](https://attack.mitre.org/software/S1042) has collected browser bookmark and history information",
+      "expected": "T1217 — Browser Information Discovery [1]",
+      "free": "T1619 — Cloud Storage Object Discovery [2]",
+      "constrained": "T1619 [2]"
+    },
+    {
+      "question": "Which ATT&CK technique does this behaviour describe? During [Operation Wocao](https://attack.mitre.org/campaigns/C0014), threat actors used PowerShell to add an",
+      "expected": "T1686.003 — Windows Host Firewall [1]",
+      "free": "T1219 — Remote Access Tools [3]",
+      "constrained": "T1219 [3]"
+    },
+    {
+      "question": "Which ATT&CK technique does this behaviour describe? A [QuasarRAT](https://attack.mitre.org/software/S0262) .dll file is digitally signed by a certificate from ",
+      "expected": "T1553.002 — Code Signing [3]",
+      "free": "T1074.002 — Remote Data Staging [1]",
+      "constrained": "T1074.002 [1]"
+    },
+    {
+      "question": "Which ATT&CK technique does this behaviour describe? [Empire](https://attack.mitre.org/software/S0363) can utilize Invoke-DCOM to leverage remote COM execution ",
+      "expected": "The context does not answer this.",
+      "free": "The context does not answer this.",
+      "constrained": "The context does not answer this."
+    },
+    {
+      "question": "Which ATT&CK technique does this behaviour describe? [Shamoon](https://attack.mitre.org/software/S0140) has been seen overwriting features of disk structure suc",
+      "expected": "The context does not answer this.",
+      "free": "The context does not answer this.",
+      "constrained": "The context does not answer this."
+    },
+    {
+      "question": "Which ATT&CK technique does this behaviour describe? [APT28](https://attack.mitre.org/groups/G0007) has staged archives of collected data on a target's Outlook ",
+      "expected": "T1074.002 — Remote Data Staging [1]",
+      "free": "T1074.002 — Remote Data Staging [1]",
+      "constrained": "T1074.002 [1]"
+    },
+    {
+      "question": "Which ATT&CK technique does this behaviour describe? [Sea Turtle](https://attack.mitre.org/groups/G1041) executed [SnappyTCP](https://attack.mitre.org/software/",
+      "expected": "T1564.011 — Ignore Process Interrupts [3]",
+      "free": "T1020.001 — Traffic Duplication [1]",
+      "constrained": "T1020.001 [1]"
+    },
+    {
+      "question": "Which ATT&CK technique does this behaviour describe? [Comnie](https://attack.mitre.org/software/S0244) runs the command: net start >> %TEMP%\\info.dat on a victi",
+      "expected": "T1007 — System Service Discovery [1]",
+      "free": "T1619 — Cloud Storage Object Discovery [2]",
+      "constrained": "T1619 [2]"
+    }
+  ],
+  "device": "cuda",
+  "seconds": 83.9
+}

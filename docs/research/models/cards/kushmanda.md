@@ -94,6 +94,12 @@ comparable.
   unanswerable questions and wrongly declines on 0–13% of answerable ones,
   depending on question type. The remaining 46% are fabricated answers, and
   citation checking must catch them.
+- **Constraining fixes the form, not the choice** ([kushmanda-constrained.md](../kushmanda-constrained.md)).
+  When decoding may only write an identifier from the passages, every output
+  is valid (1.000, against 0.993 free). Lookup exact match rises from 0.528 to
+  0.604, still far below word overlap's 0.962. Behaviour → technique barely
+  moves (0.423 to 0.432). The model's remaining errors are in choosing which
+  identifier, so in serving the identifier comes from retrieval.
 
 ## Known limitations
 

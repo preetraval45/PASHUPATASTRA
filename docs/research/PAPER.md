@@ -282,8 +282,12 @@ from given passages:
 - It returns a technique identifier exactly on only 0.528 of lookups, against
   0.962 for word overlap ([kushmanda.md](models/kushmanda.md)).
 
-This motivates constrained decoding (RP-44): an identifier must be one present
-in the evidence.
+Constrained decoding (RP-44) allows only identifiers present in the evidence.
+It makes every output valid (1.000, against 0.993 free) and raises lookup exact
+match to 0.604, still below word overlap. On behaviour → technique it moves
+0.423 to 0.432 ([kushmanda-constrained.md](models/kushmanda-constrained.md)).
+It fixes the form of the answer, not the choice, so in serving the identifier
+comes from retrieval and the model writes around it.
 
 **Two models did not earn their place, and the architecture reflects it.**
 
