@@ -56,11 +56,11 @@
       "threshold": 0.75,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.339,
+          "precision": 0.337,
           "recall": 0.726,
           "f1": 0.404,
-          "false_alarms_per_1000": 52.215,
-          "mean_lead": 144.871
+          "false_alarms_per_1000": 52.264,
+          "mean_lead": 143.371
         },
         "robust-z": {
           "precision": 0.218,
@@ -99,11 +99,11 @@
       "threshold": 0.75,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.317,
+          "precision": 0.306,
           "recall": 0.514,
-          "f1": 0.359,
-          "false_alarms_per_1000": 15.673,
-          "mean_lead": 22.583
+          "f1": 0.356,
+          "false_alarms_per_1000": 15.58,
+          "mean_lead": 24.367
         },
         "robust-z": {
           "precision": 0.201,
@@ -142,11 +142,11 @@
       "threshold": 0.75,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.345,
+          "precision": 0.369,
           "recall": 0.814,
-          "f1": 0.426,
-          "false_alarms_per_1000": 30.43,
-          "mean_lead": 287.729
+          "f1": 0.44,
+          "false_alarms_per_1000": 29.509,
+          "mean_lead": 287.143
         },
         "robust-z": {
           "precision": 0.14,
@@ -185,11 +185,11 @@
       "threshold": 0.8,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.288,
-          "recall": 0.524,
-          "f1": 0.336,
-          "false_alarms_per_1000": 5.439,
-          "mean_lead": 49.143
+          "precision": 0.444,
+          "recall": 0.667,
+          "f1": 0.496,
+          "false_alarms_per_1000": 5.463,
+          "mean_lead": 64.9
         },
         "robust-z": {
           "precision": 0.352,
@@ -225,14 +225,14 @@
       "held_out": "realTweets",
       "series": 10,
       "train_series": 37,
-      "threshold": 0.75,
+      "threshold": 0.8,
       "detectors": {
         "shailaputri-v0": {
-          "precision": 0.246,
+          "precision": 0.284,
           "recall": 0.975,
-          "f1": 0.385,
-          "false_alarms_per_1000": 29.155,
-          "mean_lead": 396.8
+          "f1": 0.425,
+          "false_alarms_per_1000": 17.84,
+          "mean_lead": 376.94
         },
         "robust-z": {
           "precision": 0.15,
@@ -267,11 +267,11 @@
   ],
   "mean_across_families": {
     "shailaputri-v0": {
-      "precision": 0.307,
-      "recall": 0.711,
-      "f1": 0.382,
-      "false_alarms_per_1000": 26.582,
-      "mean_lead": 180.225
+      "precision": 0.348,
+      "recall": 0.739,
+      "f1": 0.424,
+      "false_alarms_per_1000": 24.131,
+      "mean_lead": 179.344
     },
     "robust-z": {
       "precision": 0.212,
@@ -302,6 +302,6 @@
       "mean_lead": 241.285
     }
   },
-  "model_sha256": "062909b779c911d0ea6b59b2ac71295ca5a41ecef6edf3ac94a521a9aa1b7c8f",
-  "seconds": 194.8
+  "model_sha256": "4d5b78b4c5ad0ace3e67286efcff2c2fb2ecf40d44dcae61ae7dd097aa3d187a",
+  "seconds": 153.4
 }
