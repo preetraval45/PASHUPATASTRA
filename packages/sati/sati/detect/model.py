@@ -40,10 +40,10 @@ ROUNDS = 300
 THRESHOLDS = tuple(round(t, 2) for t in np.arange(0.3, 0.96, 0.05))
 
 
-def train(frames: list[pd.DataFrame], labels: list[np.ndarray]) -> lgb.Booster:
+def train(frames: list[pd.DataFrame], labels: list[np.ndarray], seed: int = 7) -> lgb.Booster:
     X = pd.concat([f.iloc[WARMUP:] for f in frames], ignore_index=True)
     y = np.concatenate([lab[WARMUP:] for lab in labels])
-    return lgb.train(PARAMS, lgb.Dataset(X, label=y), num_boost_round=ROUNDS)
+    return lgb.train({**PARAMS, "seed": seed}, lgb.Dataset(X, label=y), num_boost_round=ROUNDS)
 
 
 def probabilities(booster: lgb.Booster, frame: pd.DataFrame) -> np.ndarray:

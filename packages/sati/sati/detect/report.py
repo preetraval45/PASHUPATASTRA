@@ -36,6 +36,14 @@ def main(path: str) -> int:
         w(f"| {LABEL.get(name, name)} | {m['f1']:.3f} | {m['precision']:.3f} | {m['recall']:.3f} | "
           f"{m['false_alarms_per_1000']:.1f} | {m['mean_lead']:.1f} |")
     w("")
+    if "seeds" in r:
+        sp = r["seeds"]["spread"]
+        w(f"**Across {len(r['seeds']['values'])} training seeds** (CPU: {r['seeds']['cpu']}), Shailaputri v0's "
+          f"F1 is {sp['f1']['mean']:.3f} [{sp['f1']['min']:.3f}, {sp['f1']['max']:.3f}], false alarms per 1000 "
+          f"{sp['false_alarms_per_1000']['mean']:.1f} [{sp['false_alarms_per_1000']['min']:.1f}, "
+          f"{sp['false_alarms_per_1000']['max']:.1f}], and lead {sp['mean_lead']['mean']:.1f} "
+          f"[{sp['mean_lead']['min']:.1f}, {sp['mean_lead']['max']:.1f}] (mean [min, max]). The table above is seed "
+          f"{next(iter(r['seeds']['values']))}. Read the spread, not one run.\n")
 
     w("## Per held-out family\n")
     w("| Held out | Series | Threshold | Detector | F1 | Recall | FA / 1000 |")

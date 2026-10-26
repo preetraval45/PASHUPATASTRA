@@ -37,3 +37,16 @@
 17 MB). Parity tests against PyTorch run in CI only, because torch is not
 installed locally. It is meant for Lambda serving (RP-44/45); deploying it
 needs AWS credentials.
+
+## Thread pin was not enough (same day)
+
+A second pinned run gave Shailaputri hash `4d5b78b4` and F1 0.424, against
+`062909b7` and 0.382. The cause is cross-runner CPU differences tipping a
+coarse threshold grid. The fix is a five-seed spread (`SEEDS` in
+`detect/run.py`), with mean [min, max] in the report and the CPU recorded.
+Restate adr/SatiDetect on the spread.
+
+The owner made the `Claude` IAM user for me; their own account is separate.
+It still needs an access key, added as GitHub secrets, before CI can deploy.
+Never use the console password; the owner was told to change it and enable
+MFA.

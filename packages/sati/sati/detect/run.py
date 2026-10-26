@@ -24,6 +24,7 @@ import time
 from pathlib import Path
 
 import lightgbm as lgb
+import numpy as np
 from pashupatastra.evaluation import Series, evaluate
 from pashupatastra.strategies import Ewma, RobustZScore, SeasonalNaive, SeasonalRobustZ
 
@@ -50,6 +51,38 @@ def load(cache: Path, rev: str) -> list[dict]:
             "labels": feats.labels(len(values), ranges),
         })
     return rows
+
+
+SEEDS = (7, 11, 13, 17, 19)
+"""Training seeds. On 26 Oct, the same code, data and thread count gave F1 0.382
+in one run and 0.424 in the next: runners differ in CPU, LightGBM's floating
+point differs with them, and a coarse threshold grid turns a tiny score shift
+into a different threshold. One run's number is therefore not the result; the
+spread across seeds is."""
+
+
+def cpu_model() -> str:
+    try:
+        for line in Path("/proc/cpuinfo").read_text().splitlines():
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return platform.processor() or platform.machine()
+
+
+def seed_run(data: list[dict], families: list[str], seed: int) -> dict[str, float]:
+    """Shailaputri's mean-across-families metrics when trained with one seed."""
+    per_family = []
+    for held in families:
+        train = [s for s in data if s["family"] != held]
+        test = [s for s in data if s["family"] == held]
+        booster = model.train([s["features"] for s in train], [s["labels"] for s in train], seed=seed)
+        threshold = choose_threshold(booster, train)
+        rows = [evaluate(model.Replay(model.probabilities(booster, s["features"]), threshold),
+                         Series(s["name"], list(s["values"]), s["ranges"])).row() for s in test]
+        per_family.append({m: mean(rows, m) for m in METRICS})
+    return {m: round(sum(f[m] for f in per_family) / len(per_family), 3) for m in METRICS}
 
 
 def mean(rows: list[dict], key: str) -> float:
@@ -126,11 +159,20 @@ def main() -> int:
     (args.out / "shailaputri-v0.meta.json").write_text(json.dumps({
         "model": "sati-shailaputri-v0", "sha256": digest, "threshold": final_threshold,
         "features": list(data[0]["features"].columns), "trained_on": {"dataset": "NAB", "revision": rev, "series": len(data)},
-        "lightgbm": lgb.__version__, "python": platform.python_version(),
+        "lightgbm": lgb.__version__, "python": platform.python_version(), "cpu": cpu_model(),
     }, indent=2) + "\n", encoding="utf-8")
+
+    by_seed = {str(SEEDS[0]): overall["shailaputri-v0"]}
+    for seed in SEEDS[1:]:
+        by_seed[str(seed)] = seed_run(data, families, seed)
+        print(f"  seed {seed}: F1 {by_seed[str(seed)]['f1']:.3f}")
+    spread = {m: {"mean": round(float(np.mean([v[m] for v in by_seed.values()])), 3),
+                  "min": min(v[m] for v in by_seed.values()), "max": max(v[m] for v in by_seed.values())}
+              for m in METRICS}
 
     results = {
         "model": "sati-shailaputri-v0",
+        "seeds": {"values": by_seed, "spread": spread, "cpu": cpu_model()},
         "dataset": {"name": "NAB (real series only)", "repo": nab.REPO, "revision": rev,
                     "series": len(data), "families": families},
         "params": {"model": model.PARAMS, "rounds": model.ROUNDS, "thresholds": list(model.THRESHOLDS)},
