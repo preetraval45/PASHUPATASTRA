@@ -37,6 +37,7 @@ TABLES = [
             ("kalaratri", "loganomaly"),
             ("kalaratri-bgl", "loganomaly"),
             ("brahmacharini", "embed"),
+            ("chandraghanta", "netdetect"),
             ("kushmanda", "lm"),
         )
     ],
