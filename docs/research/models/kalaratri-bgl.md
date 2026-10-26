@@ -14,14 +14,14 @@
 
 | Feature | Gain |
 |---|---:|
-| `T2` | 228632.9 |
-| `T18` | 98441.2 |
-| `T147` | 97798.1 |
+| `T2` generating <*> | 228632.9 |
+| `T18` data TLB error interrupt | 98441.2 |
+| `T147` data storage interrupt | 97798.1 |
 | `distinct_share` | 28611.6 |
-| `T54` | 28574.4 |
-| `T10` | 27233.4 |
-| `T217` | 26309.2 |
-| `T16` | 17675.6 |
+| `T54` rts panic! - stopping execution | 28574.4 |
+| `T10` <*> double-hummer alignment exceptions | 27233.4 |
+| `T217` <*> floating point alignment exceptions | 26309.2 |
+| `T16` ciod: failed to read message prefix on control stream (CioStream socket to <*> | 17675.6 |
 
 ## How to read this
 

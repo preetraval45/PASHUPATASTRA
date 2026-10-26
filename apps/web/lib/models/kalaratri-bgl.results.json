@@ -53,15 +53,18 @@
   "top_features": [
     {
       "feature": "T2",
-      "gain": 228632.9
+      "gain": 228632.9,
+      "template": "generating <*>"
     },
     {
       "feature": "T18",
-      "gain": 98441.2
+      "gain": 98441.2,
+      "template": "data TLB error interrupt"
     },
     {
       "feature": "T147",
-      "gain": 97798.1
+      "gain": 97798.1,
+      "template": "data storage interrupt"
     },
     {
       "feature": "distinct_share",
@@ -69,22 +72,26 @@
     },
     {
       "feature": "T54",
-      "gain": 28574.4
+      "gain": 28574.4,
+      "template": "rts panic! - stopping execution"
     },
     {
       "feature": "T10",
-      "gain": 27233.4
+      "gain": 27233.4,
+      "template": "<*> double-hummer alignment exceptions"
     },
     {
       "feature": "T217",
-      "gain": 26309.2
+      "gain": 26309.2,
+      "template": "<*> floating point alignment exceptions"
     },
     {
       "feature": "T16",
-      "gain": 17675.6
+      "gain": 17675.6,
+      "template": "ciod: failed to read message prefix on control stream (CioStream socket to <*>"
     }
   ],
   "weights_published": false,
   "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",
-  "seconds": 73.0
+  "seconds": 14.3
 }
