@@ -12,6 +12,12 @@ The roadmap recorded a blocking gap:
 > series; EWMA scores 43. A detector that cries wolf every morning is one
 > operators learn to ignore.
 
+*Note added 26 October 2026: those figures used the harness's old false-alarm
+formula, whose denominator left out the normal points a strategy did not flag.
+Counting every judged point, robust-z scores 397.8 per 1000 on the square-wave
+workload in `scripts/benchdetect.py`, still a flood. The decision below is
+unchanged: seasonal-robust-z's worst case is 0.0 under either formula.*
+
 It marked this a hard gate on Phase 9 security detection, and correctly so —
 human activity is the most seasonal signal there is, so a security detector
 inheriting a seasonality bug inherits it on every metric that matters.

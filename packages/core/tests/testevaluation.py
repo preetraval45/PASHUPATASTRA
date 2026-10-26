@@ -107,9 +107,31 @@ def test_f1_is_zero_when_either_half_is() -> None:
 def test_false_alarm_rate_is_reported_per_thousand() -> None:
     """The number an operator actually feels."""
     score = Score(
-        strategy="s", series="x", true_positives=5, false_positives=5, warmup_samples=990
+        strategy="s", series="x", true_positives=5, false_positives=5, warmup_samples=10,
+        judged_samples=1000,
     )
     assert score.false_alarms_per_1000 == 5.0
+
+
+def test_false_alarms_count_the_normal_points_left_alone() -> None:
+    """The denominator is every judged point, not only the flagged ones. When it
+    was only the flagged ones, this rate was 1000 x (1 - precision)."""
+    from pashupatastra.baselines import Band, Reading
+
+    class FlagsEveryTenth:
+        name = "every-tenth"
+
+        def __init__(self) -> None:
+            self.i = 0
+
+        def evaluate_and_observe(self, value: float) -> Reading:
+            self.i += 1
+            band = Band.HIGH if self.i % 10 == 0 else Band.NORMAL
+            return Reading(band=band, value=value, median=None, deviation=0.0, samples=self.i)
+
+    score = evaluate(FlagsEveryTenth(), Series("flat", [0.0] * 1000))
+    assert score.judged_samples == 1000
+    assert score.false_alarms_per_1000 == 100.0
 
 
 # --- the strategies ----------------------------------------------------------
@@ -187,7 +209,9 @@ def test_robust_z_false_alarms_are_a_square_wave_artifact() -> None:
     """
     square = evaluate(RobustZScore(), seasonal(cycles=8, period=60))
     smooth = evaluate(RobustZScore(), Series("sine", sine()))
-    assert square.false_alarms_per_1000 > 500
+    # About 40% of judged points flagged (398 per 1000 since the denominator fix of
+    # 26 Oct 2026; under the old formula, which ignored unflagged points, it read 901).
+    assert square.false_alarms_per_1000 > 300
     assert smooth.false_alarms_per_1000 == 0.0
 
 

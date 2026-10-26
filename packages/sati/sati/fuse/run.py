@@ -42,7 +42,6 @@ from pathlib import Path
 import lightgbm as lgb
 import numpy as np
 
-from sati.detect import model as detect_model
 from sati.detect import smd as smd_run
 from sati.sources import smd
 
@@ -92,6 +91,18 @@ def scores(m: dict, booster: lgb.Booster, pca_q: float) -> np.ndarray:
     ])
 
 
+def candidates(probs: list[np.ndarray]) -> list[float]:
+    """Thresholds spread over the probabilities actually produced.
+
+    A calibrated probability for a rare event seldom reaches the 0.3 to 0.95
+    grid an uncalibrated classifier uses. On that grid, two single detectors
+    in v0's first run never flagged anything (F1 0.000). Quantiles of the
+    training groups' own out-of-fold probabilities cover the range that
+    matters."""
+    pooled = np.concatenate(probs)
+    return sorted({round(float(q), 6) for q in np.quantile(pooled, np.linspace(0.80, 0.999, 40))})
+
+
 def fit(machines: list[dict]) -> lgb.Booster:
     return smd_run.fit([m["features"] for m in machines], [m["labels"] for m in machines], onset=False)
 
@@ -137,9 +148,11 @@ def main() -> int:
 
         # Thresholds on the training groups' out-of-fold probabilities.
         fused_train = [predict(fused_w, s) for s in oof_scores]
-        t_fused = smd_run.best(oof_machines, fused_train, detect_model.THRESHOLDS)
-        t_single = {name: smd_run.best(oof_machines, [predict(single_w[name], s[:, [k]]) for s in oof_scores],
-                                       detect_model.THRESHOLDS) for k, name in enumerate(FEATURES)}
+        t_fused = smd_run.best(oof_machines, fused_train, candidates(fused_train))
+        t_single = {}
+        for k, name in enumerate(FEATURES):
+            probs = [predict(single_w[name], s[:, [k]]) for s in oof_scores]
+            t_single[name] = smd_run.best(oof_machines, probs, candidates(probs))
 
         booster = fit(train)
         test_scores = [scores(m, booster, pca_q) for m in test]

@@ -4,6 +4,8 @@
 - **Date:** 2026-10-18
 - **Evidence:** [models/shailaputri.md](../research/models/shailaputri.md), train-sati run 39169841856
 
+> **26 October 2026: re-measurement pending.** The false-alarm figures below were computed with the harness's old formula, which left the normal points a detector did not flag out of the denominator. That made "false alarms per 1000" equal to 1000 × (1 − precision). The formula is fixed in `pashupatastra.evaluation`, the training workflow re-runs Shailaputri, and this decision is re-checked against the corrected numbers.
+
 ## Context
 
 Backlog item 2.1 said ML detection ships "only if it beats the best statistical

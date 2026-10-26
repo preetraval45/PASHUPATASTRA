@@ -84,3 +84,4 @@ Protocol: before every push, write a topic-named file from
 - [Notebooks0610](Notebooks0610.md) — notebooks for Chandraghanta, SMD, BGL, Mahagauri, Skandamata
 - [RP10RP11](RP10RP11.md) — Holm-adjusted Table 5; §7.1 baselines draft for owner revision
 - [BlockBKaal](BlockBKaal.md) — Kaal generator (ADR proposed), dataset v1 manifest + guard in CI
+- [FalseAlarmFix](FalseAlarmFix.md) — FA/1000 denominator bug fixed; SatiDetect decision to re-check after rerun

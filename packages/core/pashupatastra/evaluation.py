@@ -64,6 +64,9 @@ class Score:
     total_episodes: int = 0
     lead_samples: list[int] = field(default_factory=list)
     warmup_samples: int = 0
+    judged_samples: int = 0
+    """Every reading the strategy made a claim about: flagged or not, inside an
+    episode or not. Warm-up readings are not judged."""
 
     @property
     def precision(self) -> float:
@@ -96,9 +99,15 @@ class Score:
 
     @property
     def false_alarms_per_1000(self) -> float:
-        """The number an operator actually feels."""
-        total = self.true_positives + self.false_positives + self.warmup_samples
-        return round(1000 * self.false_positives / total, 2) if total else 0.0
+        """The number an operator actually feels: false flags per 1000 judged points.
+
+        Until 26 October 2026 the denominator was flagged points plus warm-up,
+        because `evaluate` never counted the normal readings a strategy left
+        alone. On a real series that made this 1000 × (1 − precision) rather
+        than a rate per point judged, and it overstated false alarms on every
+        long series (Shailaputri on SMD showed 383 when anomalies are about 4%
+        of minutes)."""
+        return round(1000 * self.false_positives / self.judged_samples, 2) if self.judged_samples else 0.0
 
     def row(self) -> dict[str, object]:
         return {
@@ -136,6 +145,8 @@ def evaluate(strategy, series: Series) -> Score:
             # miss would reward strategies that guess early.
             score.warmup_samples += 1
             continue
+
+        score.judged_samples += 1
 
         episode = series.episode(index)
         if reading.is_anomalous:
