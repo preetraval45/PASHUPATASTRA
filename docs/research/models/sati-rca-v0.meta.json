@@ -1,6 +1,6 @@
 {
   "model": "sati-rca-v0",
-  "sha256": "f0e8103c20ac04d38061b4aaea2bada4b98cdc7741567bdf067ad588751c964f",
+  "sha256": "5cff5f7588cbf46f29fba219e7f0f3bacab0c7ac5e7be7e93d17f4ded2046dff",
   "features": [
     "n_series",
     "shift_cpu",
