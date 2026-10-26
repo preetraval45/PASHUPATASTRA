@@ -34,6 +34,7 @@ TABLES = [
         for name, module in (
             ("sati-rca", "sati.rca.report"),
             ("katyayani-kaal", "sati.rca.kaalreport"),
+            ("katyayani-simtoreal", "sati.rca.simtoreport"),
             ("shailaputri", "sati.detect.report"),
             ("shailaputri-smd", "sati.detect.smdreport"),
             ("kalaratri", "sati.loganomaly.report"),

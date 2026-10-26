@@ -282,6 +282,34 @@ jobs:
           (cd packages/sati && python -m sati.rca.kaalreport ../../results/katyayani-kaal/results.json) > docs/research/models/katyayani-kaal.md
           bash scripts/pushresults.sh "docs(models): Katyayani on Kaal results from run ${{ github.run_id }}" docs/research/models/katyayani-kaal.results.json docs/research/models/katyayani-kaal.md
 
+  katyayani-simtoreal:
+    # RP-24 sim-to-real: the Kaal-trained ranker, zero-shot on RCAEval's
+    # Online Boutique and Sock Shop cases with authored call graphs.
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/rcaeval
+          key: rcaeval-v1
+      - name: train on Kaal, test zero-shot on RCAEval
+        working-directory: packages/sati
+        run: python -m sati.rca.simtoreal --cache ../../.cache/rcaeval --out ../../results/katyayani-simtoreal
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models
+          cp results/katyayani-simtoreal/results.json docs/research/models/katyayani-simtoreal.results.json
+          (cd packages/sati && python -m sati.rca.simtoreport ../../results/katyayani-simtoreal/results.json) > docs/research/models/katyayani-simtoreal.md
+          bash scripts/pushresults.sh "docs(models): Katyayani sim-to-real results from run ${{ github.run_id }}" docs/research/models/katyayani-simtoreal.results.json docs/research/models/katyayani-simtoreal.md
+
   kalaratri:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
     # split by time. LogHub is research-use only, so this job publishes metrics

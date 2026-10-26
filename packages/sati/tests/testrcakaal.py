@@ -49,3 +49,24 @@ def test_the_root_usually_has_anomalous_callers_rather_than_callees():
 def test_wilson_interval_brackets_the_rate():
     lo, hi = wilson(90, 100)
     assert lo < 0.9 < hi and 0 <= lo and hi <= 1
+
+
+def test_rcaeval_features_map_onto_the_kaal_columns_with_the_authored_graph():
+    import numpy as np
+    import pandas as pd
+
+    from sati.rca.simtoreal import GRAPHS, kaal_features
+
+    services = ["frontend", "checkoutservice", "paymentservice", "redis"]
+    table = pd.DataFrame({
+        "case": "c1", "service": services, "label": [0, 0, 1, 0],
+        "peak_any": np.log1p([5.0, 4.0, 9.0, 0.5]), "onset_any": [120.0, 60.0, 30.0, np.nan],
+        "families_moved": [1, 1, 2, 0],
+        **{f"shift_{f}": [0.0, 0.0, 2.0 if f == "cpu" else 0.0, 0.0] for f in ("cpu", "mem", "other")},
+    })
+    out = kaal_features(table, "ob")
+    assert set(FEATURES) <= set(out.columns)
+    pay = out[out["service"] == "paymentservice"].iloc[0]
+    assert pay["onset_rank"] == 1 and pay["own_metric"] == 1
+    assert pay["anomalous_callers"] == 1 and pay["anomalous_callees"] == 0  # checkout calls payment
+    assert ("checkoutservice", "paymentservice") in GRAPHS["ob"]["calls"]

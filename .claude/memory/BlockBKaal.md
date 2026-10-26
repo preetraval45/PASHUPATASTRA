@@ -53,3 +53,13 @@ keys (the 20 incidents) are the owner's and are not touched.
   unchanged.
 - **Next:** convert RCAEval cases into Kaal-style events, then run the
   Kaal-trained ranker on them zero-shot.
+
+## Sim-to-real (same day)
+
+- `sati.rca.simtoreal` runs the Kaal-trained ranker zero-shot on RCAEval
+  Online Boutique and Sock Shop. Call graphs are authored in `GRAPHS`, and
+  Train Ticket is excluded.
+- A 12-case smoke run showed a large gap. The full numbers come from the
+  `katyayani-simtoreal` CI job.
+- **Next:** verify the authored graphs from RCAEval traces (`has_traces`),
+  and use them in the RP-18 guard.
