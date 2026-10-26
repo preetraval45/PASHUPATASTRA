@@ -216,7 +216,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* **Claude** drafts `docs/adr/LLMBaselines.md`, covering: the identical `Brief` and prompt for both LLM arms; the call goes through the Gateway to the Oracle Ollama endpoint, with the token from env, never the repo; temperature and seed recorded per run; LLM errors graded separately from wrong answers. **You** choose the models (default `qwen2.5:7b`, `mistral` 7B, `llama3` 8B) and the temperature (default 0.2).
   *Done when:* the ADR is committed with your decisions in it.
 
-- [~] **RP-07 · Build the LLM baseline arms** — *Built 18 Oct (LLMProposer, naive-llm, pashupatastra-llm, refusals, 7 tests). The clean-records step now runs inside RP-09's benchmark jobs, against Ollama on GitHub's runners instead of the Oracle box (no secrets needed). Remains: those records.*
+- [x] **RP-07 · Build the LLM baseline arms** — *Built 18 Oct (LLMProposer, naive-llm, pashupatastra-llm, refusals, 7 tests). The clean-records step ran inside RP-09's benchmark jobs, against Ollama on GitHub's runners instead of the Oracle box. Done 19 Oct: run 39179521734 recorded 93 runs for every (arm, model) pair ([tables.md](tables.md)).*
   **Claude** · 1–2 sessions · review 1 h · Depends: RP-06
   *Steps:*
   1. Build a proposer behind the Gateway that takes a `Brief` and returns a validated proposal, restricted to `allowed_actions`, do-nothing or escalate.
@@ -234,7 +234,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* the PyTorch "Learn the Basics" tutorial end to end; 3Blue1Brown's *Neural Networks* backpropagation episodes; Karpathy's "micrograd" video, coding along.
   *Done when:* you write a full training loop from memory (Dataset, DataLoader, model, loss, optimizer, train and validation, checkpoint) and train it on any small public dataset.
 
-- [~] **RP-09 · Full baseline run** — *Running from 18 Oct: matrix pre-declared in [experiments/llm-baselines-matrix.md](experiments/llm-baselines-matrix.md) before any result (558 runs, 31 × 2 arms × 3 models × N = 3); six `llm` jobs in benchmark.yml, each Ollama on CPU plus its own kind cluster; records carry model, temperature and hardware; papertables gains one row per (arm, model) and LLM-error counts. Deviation stated: Ollama on GitHub's runners, not the Oracle box. Remains: the jobs finishing and Table 1 showing all four arms.*
+- [x] **RP-09 · Full baseline run** — *Running from 18 Oct: matrix pre-declared in [experiments/llm-baselines-matrix.md](experiments/llm-baselines-matrix.md) before any result (558 runs, 31 × 2 arms × 3 models × N = 3); six `llm` jobs in benchmark.yml, each Ollama on CPU plus its own kind cluster; records carry model, temperature and hardware; papertables gains one row per (arm, model) and LLM-error counts. Deviation stated: Ollama on GitHub's runners, not the Oracle box. Done 19 Oct (run 39179521734): all 558 runs recorded, and Table 1 shows every arm with n = 93. `human` is listed with the reason it has no data. What the rows say, before anyone reads more into them: llama3's correct rate (0.645) is exactly the do-nothing rate (60 of 93) with HIR 0. Mistral proposed off-list actions in 92–93 of 93 runs. Qwen 2.5 7B had 53–56 provider or schema errors (CPU inference on the runner), so its rows measure the harness's hardware as much as the model. Both are counted apart from wrong answers.*
   **Claude** · 1 session + overnights · review 1 h · Depends: RP-07
   *Steps:*
   1. Commit the run matrix *before* running: 31 scenarios × 2 LLM arms × 3 models × N = 3.
@@ -243,7 +243,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   The Oracle box is CPU-only, so expect this to take days. Record the hardware in the run records.
   *Done when:* Table 1 shows all four arms with n.
 
-- [~] **RP-10 · Significance between arms** — *Claude's part done 18 Oct: `pashupatastra.significance` (exact McNemar; paired bootstrap resampling scenarios), 7 tests, Table 5 in papertables. Remains: the owner reads Dror et al. 2018, and RP-09's records fill the table.*
+- [~] **RP-10 · Significance between arms** — *Claude's part done 18 Oct: `pashupatastra.significance` (exact McNemar; paired bootstrap resampling scenarios), 7 tests, Table 5 in papertables. Table 5 filled 19 Oct from RP-09's records: pashupatastra beats runbook (18 / 0 disagreements, McNemar p < 0.0001); for each model, the LLM arm with Dharma vs without shows no correctness difference that survives chance; each pashupatastra-llm arm is significantly less often correct than deterministic pashupatastra (0 / 18, 0 / 60, 0 / 75; p < 0.0001). Remains: the owner reads Dror et al. 2018.*
   **Both** · You 3 h; Claude 1 session · Depends: RP-09
   *Steps:* **You** read Dror et al. ACL 2018, *The Hitchhiker's Guide to Testing Statistical Significance in NLP*. **Claude** adds McNemar tests on per-scenario correctness and a paired bootstrap CI on FRR to `papertables.py`.
   *Done when:* the tables say which differences survive.

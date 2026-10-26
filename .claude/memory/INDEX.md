@@ -72,3 +72,4 @@ Protocol: before every push, write a topic-named file from
 - [KalaratriBGL](KalaratriBGL.md) — BGL loader/windows; lint notebooks with CI's ruff<0.13
 - [DeployOnResults](DeployOnResults.md) — CI runs on workflow_run so bot result commits deploy
 - [KushmandaV2](KushmandaV2.md) — v1 overfit/0% → v2 grounded tuning, NVD, smaller model; push loops fail loudly
+- [LLMBaselineResults](LLMBaselineResults.md) — RP-07/09 ticked; LLM rows weak, caveats in plan
