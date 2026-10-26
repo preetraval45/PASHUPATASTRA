@@ -30,3 +30,10 @@
 - On the next train-sati run, confirm Shailaputri's model hash equals
   `062909b7`, proving the thread pin works.
 - RP-44: serve Kushmanda behind the sati provider with ID verification.
+
+## Kushmanda numpy engine (same day)
+
+`sati.lm.infer`: a numpy forward pass with a KV cache, and int8 export (about
+17 MB). Parity tests against PyTorch run in CI only, because torch is not
+installed locally. It is meant for Lambda serving (RP-44/45); deploying it
+needs AWS credentials.
