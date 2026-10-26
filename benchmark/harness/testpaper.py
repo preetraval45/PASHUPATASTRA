@@ -18,7 +18,8 @@ NUMBER = re.compile(r"\b\d+\.\d{3,4}\b|\b\d+ / \d+\b|\b\d+ of 93\b")
 def _section() -> str:
     paper = (ROOT / "docs" / "research" / "PAPER.md").read_text(encoding="utf-8")
     start = paper.index("### 7.1 Baselines")
-    body = paper[start : paper.index("\n## ", start)]
+    end = min(i for i in (paper.find("\n## ", start), paper.find("\n### ", start + 1)) if i != -1)
+    body = paper[start:end]
     return body[body.index("**Arms.**") :]  # after the editorial note, which names run ids and dates
 
 
@@ -36,3 +37,19 @@ def test_every_number_in_section_7_1_is_in_the_generated_tables():
         elif n not in tables:
             missing.append(n)
     assert not missing, f"§7.1 cites numbers that tables.md does not contain: {missing}"
+
+
+def test_every_number_in_section_7_2_is_in_a_generated_model_table():
+    paper = (ROOT / "docs" / "research" / "PAPER.md").read_text(encoding="utf-8")
+    start = paper.index("### 7.2 ")
+    body = paper[start : paper.index("\n## ", start)]
+    body = body[body.index("Nine models") :]  # after the editorial note
+    tables = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "docs" / "research" / "models").glob("*.md"))
+    cited = set(re.findall(r"\b\d+\.\d{1,4}\b", body))
+    missing = []
+    for n in sorted(cited):
+        # A percentage in prose may appear as a share in a table (88.4% ↔ 88.4 or 0.884).
+        variants = {n, f"{float(n) / 100:.3f}"} if float(n) > 1 else {n}
+        if not any(v in tables for v in variants):
+            missing.append(n)
+    assert not missing, f"§7.2 cites numbers no model table contains: {missing}"

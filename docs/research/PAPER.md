@@ -230,6 +230,72 @@ survive chance after the Holm correction across the whole table (Table 5).
 
 §9 discusses each.
 
+### 7.2 Sati's own models on real data
+
+> *Draft written by Claude for the author to revise. Every number below is in a
+> generated table under [models/](models/), rebuilt by
+> `scripts/reproduce.py --check`. A CI test fails if this subsection cites a
+> number those tables do not contain.*
+
+Nine models were trained from scratch on public data, each with a split chosen
+so that the test measures something the model has not seen. Five results bear
+on the paper's claims.
+
+**Root cause from real incidents transfers across systems; root cause from a
+simulator does not.**
+
+- Katyayani, trained on RCAEval fault injections and tested on a microservice
+  system absent from training, ranks the root-cause service first in 88.4% of
+  645 cases, against 57.0% for a no-learning baseline
+  ([sati-rca.md](models/sati-rca.md)).
+- The same design trained only on 50,000 synthetic Kaal incidents reaches
+  about 0.998 on synthetic tests ([katyayani-kaal.md](models/katyayani-kaal.md)),
+  but zero-shot on real cases it scores 0.490 on Online Boutique and 0.265 on
+  Sock Shop. Ranking by the loudest service alone scores 0.608 and 0.747
+  ([katyayani-simtoreal.md](models/katyayani-simtoreal.md)).
+
+The simulator taught topology-first reasoning, and in real faults the culprit
+is the loudest service. Synthetic data is at most an augmentation here, not a
+substitute.
+
+**How a model is tested decides its headline.** On CIC-IDS2017, Chandraghanta
+scores F1 0.997 when flows are split at random, the usual protocol, and 0.453
+when the test days hold only attack families it never saw
+([chandraghanta.md](models/chandraghanta.md)).
+
+**A learned detector can be both more accurate and quieter.** On 28 real
+servers from a held-out machine group, Shailaputri scores F1 0.556 with 4.6
+false alarms per 1000 minutes, against 0.419 and 86.6 for per-machine PCA
+([shailaputri-smd.md](models/shailaputri-smd.md)). On NAB, the five-seed
+spread is F1 0.435 [0.382, 0.475] with 25.6 false alarms per 1000 against 74.7
+for `SeasonalRobustZ`. It still flags later (lead 180.4 against 241.3), so the
+architecture keeps the statistical detector as default
+([shailaputri.md](models/shailaputri.md); adr/SatiDetect).
+
+**A small language model can answer from evidence, but not copy identifiers.**
+Kushmanda (16.9M parameters, trained from scratch) answers held-out questions
+from given passages:
+
+- ROUGE-L 0.785 on definitions, 0.938 on required actions and 0.998 on
+  mitigations. A word-overlap baseline scores 0.683, 0.361 and 0.613.
+- It declines on 0.543 of questions no passage answers.
+- It returns a technique identifier exactly on only 0.528 of lookups, against
+  0.962 for word overlap ([kushmanda.md](models/kushmanda.md)).
+
+This motivates constrained decoding (RP-44): an identifier must be one present
+in the evidence.
+
+**Two models did not earn their place, and the architecture reflects it.**
+
+- Mahagauri, the recovery verifier, declared 0.199 of incidents over while
+  still anomalous. Requiring agreement with a 3σ check lowers that to 0.061,
+  but confirms only 0.211 of recoveries ([mahagauri.md](models/mahagauri.md)).
+- Siddhidatri's fusion matched Shailaputri alone on F1 (0.534 against 0.530)
+  while raising false alarms from 4.0 to 47.9
+  ([siddhidatri.md](models/siddhidatri.md)).
+
+Neither verdict closes an incident without a human.
+
 ## 8. Failure analysis
 
 *(To write once the corrected corpus has been run at N≥3. The question the
@@ -305,14 +371,14 @@ the results rather than derived from them.)*
 | Item | Blocked on |
 |---|---|
 | §2 Background and related work | A literature review; nothing else blocks it |
-| §7 Evaluation prose | §7.1 baselines drafted 26 Oct (RP-11), for the author's revision; the rest of §7 waits on diagnosis results (RP-15) |
+| §7 Evaluation prose | §7.1 baselines and §7.2 Sati's own models drafted 26 Oct for the author's revision, each guarded by a CI test against the generated tables; diagnosis on the 20 labelled incidents waits on RP-13 and RP-15 |
 | §8 Failure analysis | The same runs |
 | §10 Conclusion | §8 |
 | Human arm | Recruiting operators |
 | Naive LLM arm | Done 19 Oct: three local models in both LLM arms, N = 3 (Table 1). Larger or hosted models are not yet run |
 | Diagnosis quality (RCA@k) | 20 labelled incidents and a real model |
 | External validation | A benchmark this repository did not author |
-| Sati models vs general LLMs | The Kaal generator, Sati-RCA trained on it, and the head-to-head — the contribution this paper is moving toward |
+| Sati models vs general LLMs | Running: RCAEval diagnosis with Katyayani, Sati (Kaal), llama3 and qwen2.5:7b on a pre-declared sample (RP-33). Kaal-trained Sati-RCA does not transfer to real incidents (§7.2) |
 | Submission or preprint | Everything above; and it is the author's call, not a task to be completed on their behalf |
 
 The order of work, with owners and dates, is [RESEARCH PLAN.md](RESEARCH%20PLAN.md).
