@@ -22,16 +22,16 @@
       "held_out": "machine-1",
       "incidents": 112,
       "train_incidents": 215,
-      "threshold": 0.82,
+      "threshold": 0.84,
       "timer_minutes": 11,
       "verifiers": {
         "mahagauri-v0": {
           "incidents": 112,
-          "premature_rate": 0.2232,
-          "confirmed_rate": 0.6339,
-          "unconfirmed_rate": 0.1429,
-          "median_delay": 20.0,
-          "mean_delay": 22.2
+          "premature_rate": 0.2054,
+          "confirmed_rate": 0.5893,
+          "unconfirmed_rate": 0.2054,
+          "median_delay": 19.5,
+          "mean_delay": 22.8
         },
         "back within 3σ": {
           "incidents": 112,
@@ -60,11 +60,11 @@
       "verifiers": {
         "mahagauri-v0": {
           "incidents": 114,
-          "premature_rate": 0.1667,
-          "confirmed_rate": 0.5526,
-          "unconfirmed_rate": 0.2807,
+          "premature_rate": 0.1579,
+          "confirmed_rate": 0.5351,
+          "unconfirmed_rate": 0.307,
           "median_delay": 17.0,
-          "mean_delay": 19.5
+          "mean_delay": 18.8
         },
         "back within 3σ": {
           "incidents": 114,
@@ -88,16 +88,16 @@
       "held_out": "machine-3",
       "incidents": 101,
       "train_incidents": 226,
-      "threshold": 0.86,
+      "threshold": 0.88,
       "timer_minutes": 11,
       "verifiers": {
         "mahagauri-v0": {
           "incidents": 101,
-          "premature_rate": 0.2772,
-          "confirmed_rate": 0.5842,
-          "unconfirmed_rate": 0.1386,
-          "median_delay": 13.0,
-          "mean_delay": 15.9
+          "premature_rate": 0.2376,
+          "confirmed_rate": 0.5545,
+          "unconfirmed_rate": 0.2079,
+          "median_delay": 15.5,
+          "mean_delay": 17.5
         },
         "back within 3σ": {
           "incidents": 101,
@@ -120,9 +120,9 @@
   ],
   "pooled": {
     "mahagauri-v0": {
-      "premature_rate": 0.2202,
-      "confirmed_rate": 0.5902,
-      "unconfirmed_rate": 0.1896
+      "premature_rate": 0.1988,
+      "confirmed_rate": 0.5597,
+      "unconfirmed_rate": 0.2416
     },
     "back within 3σ": {
       "premature_rate": 0.1651,
@@ -135,5 +135,5 @@
       "unconfirmed_rate": 0.0
     }
   },
-  "seconds": 278.1
+  "seconds": 198.5
 }
