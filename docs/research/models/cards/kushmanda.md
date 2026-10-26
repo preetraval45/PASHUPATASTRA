@@ -24,9 +24,15 @@ a snapshot of the Kaggle GPU run of 26 October 2026, at commit `74cc4ee`.
 
   The best checkpoint is chosen on held-out loss.
 - **Built by:** an AI assistant (Claude), under the owner's direction.
-- **Weights:** 68 MB, kept as Kaggle run output and not in git. Every source
-  permits release ([datasheets.md](../../datasheets.md)), so they are
-  Apache-2.0 eligible. Release is the owner's decision.
+- **Weights:** 68 MB, stored as a **private** Kaggle Model
+  (`preetraval4518071604/sati-kushmanda`, PyTorch instance `v2`: weights,
+  tokenizer and results), not in git. Every source permits release
+  ([datasheets.md](../../datasheets.md)), so they are Apache-2.0 eligible.
+  Making them public is the owner's decision.
+- **Serving without PyTorch:** `sati.lm.infer` runs the same forward pass in
+  numpy with a key/value cache, from int8 weights (about 17 MB). CI checks it
+  against PyTorch: logits and greedy output are identical unquantised, and
+  quantised logits correlate above 0.99.
 
 ## Intended use
 
