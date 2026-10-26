@@ -10,7 +10,7 @@ Recall is per anomaly *episode*; false alarms are per 1000 judged points; lead i
 
 | Detector | F1 | Precision | Episode recall | False alarms / 1000 | Lead |
 |---|---:|---:|---:|---:|---:|
-| **Shailaputri v0** | 0.382 | 0.307 | 0.711 | 212.9 | 180.2 |
+| **Shailaputri v0** | 0.424 | 0.348 | 0.739 | 191.4 | 179.3 |
 | robust-z | 0.325 | 0.212 | 0.911 | 656.5 | 234.1 |
 | EWMA | 0.261 | 0.185 | 0.900 | 568.3 | 229.0 |
 | seasonal-naive | 0.346 | 0.238 | 0.930 | 372.2 | 240.0 |
@@ -20,31 +20,31 @@ Recall is per anomaly *episode*; false alarms are per 1000 judged points; lead i
 
 | Held out | Series | Threshold | Detector | F1 | Recall | FA / 1000 |
 |---|---:|---:|---|---:|---:|---:|
-| `realAWSCloudwatch` | 17 | 0.75 | **Shailaputri v0** | 0.404 | 0.726 | 264.5 |
+| `realAWSCloudwatch` | 17 | 0.75 | **Shailaputri v0** | 0.404 | 0.726 | 267.9 |
 | `realAWSCloudwatch` | 17 | 0.75 | robust-z | 0.325 | 0.892 | 736.4 |
 | `realAWSCloudwatch` | 17 | 0.75 | EWMA | 0.244 | 0.892 | 608.0 |
 | `realAWSCloudwatch` | 17 | 0.75 | seasonal-naive | 0.334 | 0.853 | 444.2 |
 | `realAWSCloudwatch` | 17 | 0.75 | seasonal-robust-z | 0.361 | 0.804 | 238.6 |
-| `realAdExchange` | 6 | 0.75 | **Shailaputri v0** | 0.359 | 0.514 | 58.6 |
+| `realAdExchange` | 6 | 0.75 | **Shailaputri v0** | 0.356 | 0.514 | 58.6 |
 | `realAdExchange` | 6 | 0.75 | robust-z | 0.313 | 0.875 | 517.0 |
 | `realAdExchange` | 6 | 0.75 | EWMA | 0.293 | 0.875 | 400.1 |
 | `realAdExchange` | 6 | 0.75 | seasonal-naive | 0.295 | 0.833 | 117.9 |
 | `realAdExchange` | 6 | 0.75 | seasonal-robust-z | 0.188 | 0.444 | 33.4 |
-| `realKnownCause` | 7 | 0.75 | **Shailaputri v0** | 0.426 | 0.814 | 235.5 |
+| `realKnownCause` | 7 | 0.75 | **Shailaputri v0** | 0.440 | 0.814 | 230.1 |
 | `realKnownCause` | 7 | 0.75 | robust-z | 0.219 | 0.786 | 692.7 |
 | `realKnownCause` | 7 | 0.75 | EWMA | 0.262 | 0.814 | 514.1 |
 | `realKnownCause` | 7 | 0.75 | seasonal-naive | 0.303 | 0.964 | 505.2 |
 | `realKnownCause` | 7 | 0.75 | seasonal-robust-z | 0.249 | 0.821 | 348.9 |
-| `realTraffic` | 7 | 0.8 | **Shailaputri v0** | 0.336 | 0.524 | 30.6 |
+| `realTraffic` | 7 | 0.8 | **Shailaputri v0** | 0.496 | 0.667 | 30.9 |
 | `realTraffic` | 7 | 0.8 | robust-z | 0.508 | 1.000 | 501.1 |
 | `realTraffic` | 7 | 0.8 | EWMA | 0.305 | 0.917 | 480.8 |
 | `realTraffic` | 7 | 0.8 | seasonal-naive | 0.541 | 1.000 | 123.4 |
 | `realTraffic` | 7 | 0.8 | seasonal-robust-z | 0.503 | 0.738 | 35.6 |
-| `realTweets` | 10 | 0.75 | **Shailaputri v0** | 0.385 | 0.975 | 475.2 |
-| `realTweets` | 10 | 0.75 | robust-z | 0.259 | 1.000 | 835.4 |
-| `realTweets` | 10 | 0.75 | EWMA | 0.199 | 1.000 | 838.4 |
-| `realTweets` | 10 | 0.75 | seasonal-naive | 0.259 | 1.000 | 670.3 |
-| `realTweets` | 10 | 0.75 | seasonal-robust-z | 0.258 | 1.000 | 487.0 |
+| `realTweets` | 10 | 0.8 | **Shailaputri v0** | 0.425 | 0.975 | 369.4 |
+| `realTweets` | 10 | 0.8 | robust-z | 0.259 | 1.000 | 835.4 |
+| `realTweets` | 10 | 0.8 | EWMA | 0.199 | 1.000 | 838.4 |
+| `realTweets` | 10 | 0.8 | seasonal-naive | 0.259 | 1.000 | 670.3 |
+| `realTweets` | 10 | 0.8 | seasonal-robust-z | 0.258 | 1.000 | 487.0 |
 
 ## How to read this
 
