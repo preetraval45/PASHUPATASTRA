@@ -8,7 +8,9 @@
 
 | Verifier | Premature all-clear ↓ | Confirmed | Unconfirmed in the hour |
 |---|---:|---:|---:|
-| **mahagauri-v0** | 0.220 | 0.590 | 0.190 |
+| **mahagauri-v0** | 0.199 | 0.560 | 0.242 |
+| **mahagauri-v1 (upper-bound threshold)** | 0.132 | 0.486 | 0.382 |
+| **mahagauri-v1 + 3σ agreement** | 0.061 | 0.211 | 0.728 |
 | back within 3σ | 0.165 | 0.248 | 0.587 |
 | fixed timer | 0.480 | 0.520 | 0.000 |
 
@@ -16,13 +18,19 @@
 
 | Held out | Incidents | Verifier | Premature | Confirmed | Unconfirmed | Median delay (min) |
 |---|---:|---|---:|---:|---:|---:|
-| `machine-1` | 112 | mahagauri-v0 | 0.223 | 0.634 | 0.143 | 20 |
+| `machine-1` | 112 | mahagauri-v0 | 0.205 | 0.589 | 0.205 | 19.5 |
+| `machine-1` | 112 | mahagauri-v1 (upper-bound threshold) | 0.161 | 0.536 | 0.304 | 23.5 |
+| `machine-1` | 112 | mahagauri-v1 + 3σ agreement | 0.054 | 0.170 | 0.777 | 16 |
 | `machine-1` | 112 | back within 3σ | 0.152 | 0.205 | 0.643 | 16 |
 | `machine-1` | 112 | fixed timer | 0.482 | 0.518 | 0.000 | 9 |
-| `machine-2` | 114 | mahagauri-v0 | 0.167 | 0.553 | 0.281 | 17 |
+| `machine-2` | 114 | mahagauri-v0 | 0.158 | 0.535 | 0.307 | 17 |
+| `machine-2` | 114 | mahagauri-v1 (upper-bound threshold) | 0.079 | 0.447 | 0.474 | 27 |
+| `machine-2` | 114 | mahagauri-v1 + 3σ agreement | 0.061 | 0.193 | 0.746 | 11.5 |
 | `machine-2` | 114 | back within 3σ | 0.175 | 0.254 | 0.570 | 6 |
 | `machine-2` | 114 | fixed timer | 0.465 | 0.535 | 0.000 | 11 |
-| `machine-3` | 101 | mahagauri-v0 | 0.277 | 0.584 | 0.139 | 13 |
+| `machine-3` | 101 | mahagauri-v0 | 0.238 | 0.554 | 0.208 | 15.5 |
+| `machine-3` | 101 | mahagauri-v1 (upper-bound threshold) | 0.158 | 0.475 | 0.366 | 19.5 |
+| `machine-3` | 101 | mahagauri-v1 + 3σ agreement | 0.069 | 0.277 | 0.653 | 13.5 |
 | `machine-3` | 101 | back within 3σ | 0.168 | 0.287 | 0.545 | 4 |
 | `machine-3` | 101 | fixed timer | 0.495 | 0.505 | 0.000 | 10 |
 
