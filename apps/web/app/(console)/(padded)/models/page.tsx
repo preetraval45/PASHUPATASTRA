@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
-import { BRAHMACHARINI, CHANDRAGHANTA, KALARATRI, KALARATRI_BGL, KATYAYANI, MAHAGAURI, SKANDAMATA, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
+import { BRAHMACHARINI, CHANDRAGHANTA, KALARATRI, KALARATRI_BGL, KATYAYANI, KUSHMANDA, MAHAGAURI, SIM_TO_REAL, SKANDAMATA, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
 export const metadata: Metadata = {
   title: "Sati models",
@@ -324,6 +324,99 @@ export default function ModelsPage() {
               </Panel>
             );
           })}
+        </section>
+      )}
+
+      {KUSHMANDA.sft?.grounded && (
+        <section id="kushmanda-results" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Kushmanda — Sati&apos;s own language model</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              {(KUSHMANDA.parameters / 1e6).toFixed(1)}M parameters, trained from scratch on{" "}
+              {(KUSHMANDA.corpus.train_tokens / 1e6).toFixed(1)}M tokens of security text. It answers from the passages
+              it is given, cites one, and says so when none holds the answer — tested on{" "}
+              {KUSHMANDA.sft.evaluated_questions.toLocaleString()} questions about techniques, CVEs and weaknesses it never
+              saw in tuning. It writes answers well and copies exact IDs badly, so IDs are checked against the citation.
+            </p>
+          </div>
+          <Panel title="Held-out questions" aside="higher is better">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                    <th className="py-2 pr-3 font-normal">Question</th>
+                    <th className="py-2 pr-3 font-normal">Measure</th>
+                    <th className="py-2 pr-3 text-right font-normal">Kushmanda</th>
+                    <th className="py-2 pr-3 text-right font-normal">Word overlap</th>
+                    <th className="py-2 text-right font-normal">Chance</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[rgb(var(--edge))]">
+                  {([
+                    ["define", "rouge_l", "Define a technique, CWE or CVE"],
+                    ["remediate", "rouge_l", "What to do about a CVE"],
+                    ["mitigate", "rouge_l", "Mitigations for a technique"],
+                    ["unanswerable", "abstained", "No passage holds the answer"],
+                    ["lookup", "exact_match", "Technique ID by name"],
+                    ["classify", "exact_match", "Behaviour → technique"],
+                  ] as const).map(([kind, metric, label]) => {
+                    const g = KUSHMANDA.sft!.grounded!;
+                    const cell = (who: string) => g[who]?.[kind]?.[metric];
+                    return (
+                      <tr key={kind}>
+                        <td className="py-2 pr-3">{label}</td>
+                        <td className="py-2 pr-3 text-xs text-[rgb(var(--faint))]">{metric.replace("_", " ")}</td>
+                        {["kushmanda", "lexical baseline", "chance"].map((who) => (
+                          <td key={who} className={`tnum py-2 pr-3 text-right ${who === "kushmanda" ? "font-semibold" : ""}`}>
+                            {cell(who)?.toFixed(3) ?? "—"}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        </section>
+      )}
+
+      {!SIM_TO_REAL.pending && (
+        <section id="sim-to-real" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Can a simulator teach root cause? Not yet.</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              The same ranker, trained only on 50,000 synthetic incidents, scores about 0.998 on synthetic tests — and below
+              a no-learning baseline on real fault-injection cases. Katyayani, trained on real data, reaches 88% on a
+              system it never saw. This is why Sati&apos;s root-cause model learns from real incidents.
+            </p>
+          </div>
+          <Panel title="Zero-shot on real RCAEval cases" aside="RCA@1 — the right service ranked first">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                    <th className="py-2 pr-3 font-normal">System</th>
+                    <th className="py-2 pr-3 font-normal">Ranker</th>
+                    <th className="py-2 pr-3 text-right font-normal">RCA@1</th>
+                    <th className="py-2 text-right font-normal">RCA@3</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[rgb(var(--edge))]">
+                  {Object.entries(SIM_TO_REAL.test).flatMap(([system, rankers]) =>
+                    Object.entries(rankers).map(([name, m]) => (
+                      <tr key={`${system}-${name}`}>
+                        <td className="py-2 pr-3">{system === "ob" ? "Online Boutique" : system === "ss" ? "Sock Shop" : system}</td>
+                        <td className="py-2 pr-3">{name.startsWith("katyayani") ? <strong>Trained on simulator</strong> : name}</td>
+                        <td className="tnum py-2 pr-3 text-right">{m["rca@1"].value.toFixed(3)}</td>
+                        <td className="tnum py-2 text-right">{m["rca@3"].value.toFixed(3)}</td>
+                      </tr>
+                    )),
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
         </section>
       )}
 

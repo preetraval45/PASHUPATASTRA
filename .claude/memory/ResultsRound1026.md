@@ -50,3 +50,11 @@ The owner made the `Claude` IAM user for me; their own account is separate.
 It still needs an access key, added as GitHub secrets, before CI can deploy.
 Never use the console password; the owner was told to change it and enable
 MFA.
+
+## Models page (same day)
+
+Added Kushmanda v2's grounded-answer table and the sim-to-real result
+section. Fixed Kushmanda's listed data (it said "LogHub corpus", which is
+excluded). `katyayani-simtoreal.results.json` was copied into
+`apps/web/lib/models` by hand; the CI job should copy it too, next time
+`train-sati.yml` is touched.

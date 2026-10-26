@@ -13,6 +13,8 @@ import kalaratriBgl from "./models/kalaratri-bgl.results.json";
 import chandraghanta from "./models/chandraghanta.results.json";
 import mahagauri from "./models/mahagauri.results.json";
 import skandamata from "./models/skandamata.results.json";
+import kushmanda from "./models/kushmanda.results.json";
+import simtoreal from "./models/katyayani-simtoreal.results.json";
 import shailaputri from "./models/shailaputri.results.json";
 
 export type ModelStatus = "trained" | "training" | "planned";
@@ -35,7 +37,7 @@ export const MODELS: SatiModel[] = [
   { n: 1, id: "sati-shailaputri", name: "Shailaputri", nature: "the steady foundation", job: "Metric anomaly detection — learns what normal looks like for every series", stage: "Observe", data: ["NAB", "SMD"], status: "training", task: "RP-60" },
   { n: 2, id: "sati-brahmacharini", name: "Brahmacharini", nature: "discipline and study", job: "Embeddings for memory — maps observed behaviour to the known technique it resembles", stage: "Remember", data: ["MITRE ATT&CK procedures"], status: "training", task: "RP-64" },
   { n: 3, id: "sati-chandraghanta", name: "Chandraghanta", nature: "the bell that warns", job: "Network intrusion alerting — flags attack traffic by family", stage: "Observe", data: ["UNSW-NB15", "CIC-IDS2017"], status: "planned", task: "RP-61" },
-  { n: 4, id: "sati-kushmanda", name: "Kushmanda", nature: "the creator", job: "Writes the structured hypothesis and explanation — Sati's own language model", stage: "Explain", data: ["LogHub corpus", "incident text"], status: "planned", task: "RP-65" },
+  { n: 4, id: "sati-kushmanda", name: "Kushmanda", nature: "the creator", job: "Writes the structured hypothesis and explanation — Sati's own language model", stage: "Explain", data: ["MITRE ATT&CK, CAPEC, CWE", "CISA KEV", "NVD CVE descriptions"], status: "training", task: "RP-65" },
   { n: 5, id: "sati-skandamata", name: "Skandamata", nature: "the protecting mother", job: "Proposes the protective response — Dharma still authorises it", stage: "Act", data: ["MITRE ATT&CK mitigations"], status: "training", task: "RP-72" },
   { n: 6, id: "sati-katyayani", name: "Katyayani", nature: "the warrior who finds the adversary", job: "Root-cause ranking — names the service at fault and the fault type, citing the metric series", stage: "Understand", data: ["RCAEval"], status: "trained", task: "RP-58" },
   { n: 7, id: "sati-kalaratri", name: "Kalaratri", nature: "the night that dispels darkness", job: "Log anomaly detection — what hides in the noise", stage: "Observe", data: ["LogHub HDFS", "LogHub BGL"], status: "training", task: "RP-62" },
@@ -132,6 +134,33 @@ export interface VerifyResults {
 
 export const MAHAGAURI = mahagauri as unknown as VerifyResults;
 
+type Grounded = Record<string, number>;
+
+export interface LMResults {
+  pending?: string;
+  model: string;
+  parameters: number;
+  device: string;
+  corpus: { documents: number; train_tokens: number };
+  held_out: { perplexity: number; bits_per_byte: number };
+  sft?: {
+    evaluated_questions: number;
+    grounded?: Record<string, Record<string, Grounded>>;
+  };
+}
+
+export const KUSHMANDA = kushmanda as unknown as LMResults;
+
+type AtK = { value: number; ci95: [number, number]; n: number };
+
+export interface SimToRealResults {
+  pending?: string;
+  tested_on: { cases: Record<string, number> };
+  test: Record<string, Record<string, { "rca@1": AtK; "rca@3": AtK }>>;
+}
+
+export const SIM_TO_REAL = simtoreal as unknown as SimToRealResults;
+
 type Retrieval = { "recall@1": number; "recall@5": number; "recall@10": number; mrr: number; n: number };
 
 export interface EmbedResults {
@@ -150,5 +179,6 @@ export function statusOf(model: SatiModel): ModelStatus {
   if (model.id === "sati-chandraghanta") return CHANDRAGHANTA.pending ? "training" : "trained";
   if (model.id === "sati-skandamata") return SKANDAMATA.pending ? "training" : "trained";
   if (model.id === "sati-mahagauri") return MAHAGAURI.pending ? "training" : "trained";
+  if (model.id === "sati-kushmanda") return KUSHMANDA.sft?.grounded ? "trained" : "training";
   return model.status;
 }

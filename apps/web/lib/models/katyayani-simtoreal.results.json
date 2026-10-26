@@ -1,0 +1,324 @@
+{
+  "model": "sati-katyayani-kaal-v0",
+  "trained_on": {
+    "dataset": "Kaal v1",
+    "n": 50000,
+    "seed": 1
+  },
+  "tested_on": {
+    "dataset": "RCAEval",
+    "revision": "afeacb11bcc94dadfd1c8f483ee4377b2b8b614e",
+    "subset_sha256": "55db1d911e1fb564a5741a96b756928610e8b001b1d819fb356f8111a6e80c0a",
+    "systems": [
+      "ob",
+      "ss"
+    ],
+    "cases": {
+      "ob": 245,
+      "ss": 245
+    },
+    "excluded": {
+      "tt": "Train Ticket: no call graph authored (64 components)"
+    }
+  },
+  "graphs": {
+    "ob": {
+      "calls": [
+        [
+          "frontend-external",
+          "frontend"
+        ],
+        [
+          "frontend",
+          "adservice"
+        ],
+        [
+          "frontend",
+          "cartservice"
+        ],
+        [
+          "frontend",
+          "checkoutservice"
+        ],
+        [
+          "frontend",
+          "currencyservice"
+        ],
+        [
+          "frontend",
+          "productcatalogservice"
+        ],
+        [
+          "frontend",
+          "recommendationservice"
+        ],
+        [
+          "frontend",
+          "shippingservice"
+        ],
+        [
+          "checkoutservice",
+          "cartservice"
+        ],
+        [
+          "checkoutservice",
+          "currencyservice"
+        ],
+        [
+          "checkoutservice",
+          "emailservice"
+        ],
+        [
+          "checkoutservice",
+          "paymentservice"
+        ],
+        [
+          "checkoutservice",
+          "productcatalogservice"
+        ],
+        [
+          "checkoutservice",
+          "shippingservice"
+        ],
+        [
+          "recommendationservice",
+          "productcatalogservice"
+        ],
+        [
+          "cartservice",
+          "redis"
+        ]
+      ],
+      "source": "authored from the project's published architecture",
+      "trace_check": {
+        "checked": true,
+        "case": "re2ob_checkoutservice_cpu_1",
+        "observed_edges": 9,
+        "observed_and_authored": 9,
+        "observed_not_authored": [],
+        "authored_not_observed": [
+          [
+            "cartservice",
+            "redis"
+          ],
+          [
+            "checkoutservice",
+            "cartservice"
+          ],
+          [
+            "checkoutservice",
+            "shippingservice"
+          ],
+          [
+            "frontend",
+            "adservice"
+          ],
+          [
+            "frontend",
+            "cartservice"
+          ],
+          [
+            "frontend",
+            "shippingservice"
+          ],
+          [
+            "frontend-external",
+            "frontend"
+          ]
+        ]
+      }
+    },
+    "ss": {
+      "calls": [
+        [
+          "front-end",
+          "catalogue"
+        ],
+        [
+          "front-end",
+          "carts"
+        ],
+        [
+          "front-end",
+          "orders"
+        ],
+        [
+          "front-end",
+          "user"
+        ],
+        [
+          "front-end",
+          "session-db"
+        ],
+        [
+          "orders",
+          "carts"
+        ],
+        [
+          "orders",
+          "user"
+        ],
+        [
+          "orders",
+          "payment"
+        ],
+        [
+          "orders",
+          "shipping"
+        ],
+        [
+          "orders",
+          "orders-db"
+        ],
+        [
+          "shipping",
+          "rabbitmq"
+        ],
+        [
+          "queue-master",
+          "rabbitmq"
+        ],
+        [
+          "rabbitmq-exporter",
+          "rabbitmq"
+        ],
+        [
+          "catalogue",
+          "catalogue-db"
+        ],
+        [
+          "carts",
+          "carts-db"
+        ],
+        [
+          "user",
+          "user-db"
+        ]
+      ],
+      "source": "authored from the project's published architecture",
+      "trace_check": {
+        "checked": false,
+        "why": "RCAEval has no traces for this system"
+      }
+    }
+  },
+  "test": {
+    "ob": {
+      "katyayani-kaal-v0 (zero-shot)": {
+        "rca@1": {
+          "value": 0.4898,
+          "ci95": [
+            0.4278,
+            0.5521
+          ],
+          "n": 245
+        },
+        "rca@3": {
+          "value": 0.6571,
+          "ci95": [
+            0.5957,
+            0.7137
+          ],
+          "n": 245
+        }
+      },
+      "loudest service": {
+        "rca@1": {
+          "value": 0.6082,
+          "ci95": [
+            0.5458,
+            0.6672
+          ],
+          "n": 245
+        },
+        "rca@3": {
+          "value": 0.9143,
+          "ci95": [
+            0.8725,
+            0.9433
+          ],
+          "n": 245
+        }
+      },
+      "earliest anomaly": {
+        "rca@1": {
+          "value": 0.098,
+          "ci95": [
+            0.0667,
+            0.1416
+          ],
+          "n": 245
+        },
+        "rca@3": {
+          "value": 0.3796,
+          "ci95": [
+            0.3211,
+            0.4418
+          ],
+          "n": 245
+        }
+      }
+    },
+    "ss": {
+      "katyayani-kaal-v0 (zero-shot)": {
+        "rca@1": {
+          "value": 0.2653,
+          "ci95": [
+            0.214,
+            0.3239
+          ],
+          "n": 245
+        },
+        "rca@3": {
+          "value": 0.5755,
+          "ci95": [
+            0.5129,
+            0.6358
+          ],
+          "n": 245
+        }
+      },
+      "loudest service": {
+        "rca@1": {
+          "value": 0.7469,
+          "ci95": [
+            0.689,
+            0.7973
+          ],
+          "n": 245
+        },
+        "rca@3": {
+          "value": 0.9673,
+          "ci95": [
+            0.9369,
+            0.9834
+          ],
+          "n": 245
+        }
+      },
+      "earliest anomaly": {
+        "rca@1": {
+          "value": 0.1388,
+          "ci95": [
+            0.101,
+            0.1877
+          ],
+          "n": 245
+        },
+        "rca@3": {
+          "value": 0.3347,
+          "ci95": [
+            0.2786,
+            0.3959
+          ],
+          "n": 245
+        }
+      }
+    }
+  },
+  "reference": {
+    "source": "sati-rca.results.json",
+    "note": "Katyayani trained on RCAEval (leave-one-system-out); see sati-rca.md for its per-system rows"
+  },
+  "seconds": 74.3
+}
