@@ -65,7 +65,7 @@
         "max": 190.212
       }
     },
-    "cpu": "AMD EPYC 9V74 80-Core Processor"
+    "cpu": "AMD EPYC 7763 64-Core Processor"
   },
   "dataset": {
     "name": "NAB (real series only)",
@@ -370,5 +370,5 @@
     }
   },
   "model_sha256": "062909b779c911d0ea6b59b2ac71295ca5a41ecef6edf3ac94a521a9aa1b7c8f",
-  "seconds": 585.1
+  "seconds": 596.4
 }

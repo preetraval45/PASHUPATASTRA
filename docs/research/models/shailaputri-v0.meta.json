@@ -18,5 +18,5 @@
   },
   "lightgbm": "4.7.0",
   "python": "3.12.15",
-  "cpu": "AMD EPYC 9V74 80-Core Processor"
+  "cpu": "AMD EPYC 7763 64-Core Processor"
 }

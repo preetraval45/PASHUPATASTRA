@@ -16,7 +16,7 @@ Recall is per anomaly *episode*; false alarms are per 1000 judged points; lead i
 | seasonal-naive | 0.346 | 0.238 | 0.930 | 74.7 | 240.0 |
 | seasonal-robust-z | 0.312 | 0.220 | 0.761 | 74.7 | 241.3 |
 
-**Across 5 training seeds** (CPU: AMD EPYC 9V74 80-Core Processor), Shailaputri v0's F1 is 0.435 [0.382, 0.475], false alarms per 1000 25.6 [23.3, 30.3], and lead 180.4 [170.4, 190.2] (mean [min, max]). The table above is seed 7. Read the spread, not one run.
+**Across 5 training seeds** (CPU: AMD EPYC 7763 64-Core Processor), Shailaputri v0's F1 is 0.435 [0.382, 0.475], false alarms per 1000 25.6 [23.3, 30.3], and lead 180.4 [170.4, 190.2] (mean [min, max]). The table above is seed 7. Read the spread, not one run.
 
 ## Per held-out family
 
