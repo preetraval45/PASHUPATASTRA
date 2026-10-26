@@ -138,11 +138,33 @@ def summary(outcomes: list[dict]) -> dict:
     }
 
 
-def choose(train: list[dict], probs: list[np.ndarray]) -> float:
+def wilson_upper(k: int, n: int, z: float = 1.645) -> float:
+    """One-sided 95% upper bound on a rate from k events in n trials."""
+    if n == 0:
+        return 1.0
+    p = k / n
+    centre = p + z * z / (2 * n)
+    half = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return float((centre + half) / (1 + z * z / n))
+
+
+def choose(train: list[dict], probs: list[np.ndarray], upper: bool = False,
+           agree: list[np.ndarray] | None = None) -> float:
     """The lowest threshold that keeps premature all-clears within budget on
-    the training groups; the strictest one if none does."""
+    the training groups; the strictest one if none does.
+
+    v0 holds the *point estimate* within budget. On held-out groups that gave
+    0.199, because a threshold chosen to sit exactly at 5% on one sample
+    drifts above it on the next. `upper=True` holds the one-sided 95% upper
+    bound within budget instead. `agree` adds a second condition that must
+    also say "recovered" (the 3σ check)."""
     for t in THRESHOLDS:
-        if summary([outcome(ep, p >= t) for ep, p in zip(train, probs, strict=True)])["premature_rate"] <= PREMATURE_BUDGET:
+        votes = [p >= t if agree is None else (p >= t) & a
+                 for p, a in zip(probs, agree or [None] * len(probs), strict=True)]
+        results = [outcome(ep, v) for ep, v in zip(train, votes, strict=True)]
+        premature = sum(r["result"] == "premature" for r in results)
+        rate = wilson_upper(premature, len(results)) if upper else premature / max(1, len(results))
+        if rate <= PREMATURE_BUDGET:
             return t
     return THRESHOLDS[-1]
 
@@ -175,13 +197,22 @@ def main() -> int:
         booster = lgb.train(detect_model.PARAMS, lgb.Dataset(pd.concat([ep["frame"] for ep in train], ignore_index=True),
                                                               label=np.concatenate([ep["y"] for ep in train])),
                             num_boost_round=detect_model.ROUNDS)
-        t = choose(train, [booster.predict(ep["frame"]) for ep in train])
+        train_probs = [booster.predict(ep["frame"]) for ep in train]
+        t = choose(train, train_probs)
+        t_upper = choose(train, train_probs, upper=True)
+        within = [ep["frame"]["pre_beyond_3"].to_numpy() == 0 for ep in train]
+        t_agree = choose(train, train_probs, upper=True, agree=within)
         timer = int(np.median([ep["end"] - ep["start"] for ep in train]))
         fold = {
             "held_out": held, "incidents": len(test), "train_incidents": len(train),
-            "threshold": t, "timer_minutes": timer,
+            "threshold": t, "threshold_upper": t_upper, "threshold_agree": t_agree, "timer_minutes": timer,
             "verifiers": {
                 "mahagauri-v0": summary([outcome(ep, booster.predict(ep["frame"]) >= t) for ep in test]),
+                "mahagauri-v1 (upper-bound threshold)": summary(
+                    [outcome(ep, booster.predict(ep["frame"]) >= t_upper) for ep in test]),
+                "mahagauri-v1 + 3σ agreement": summary(
+                    [outcome(ep, (booster.predict(ep["frame"]) >= t_agree) & (ep["frame"]["pre_beyond_3"].to_numpy() == 0))
+                     for ep in test]),
                 "back within 3σ": summary([outcome(ep, ep["frame"]["pre_beyond_3"].to_numpy() == 0) for ep in test]),
                 "fixed timer": summary([outcome(ep, np.arange(len(ep["y"])) >= timer) for ep in test]),
             },

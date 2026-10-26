@@ -50,3 +50,10 @@ Brahmacharini's source split for Skandamata.
   the card says do not trust it to declare recovery. The v1 idea: a
   threshold set on an upper confidence bound, or agreement with the 3σ
   check.
+
+## Mahagauri v1 (26 Oct)
+
+Two rows were added beside v0: an upper-bound threshold (one-sided Wilson 95%
+bound within 5%), and the same plus 3σ agreement. Judge them on the premature
+rate first, then on the confirmed rate. Account security is done by the
+owner: the old key was deactivated, the password changed and MFA enabled.

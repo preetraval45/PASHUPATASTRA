@@ -58,8 +58,14 @@ def test_the_whole_run_and_report(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["verify", "--out", str(tmp_path), "--cache", str(tmp_path)])
     assert verify.main() == 0
     results = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
-    assert set(results["pooled"]) == {"mahagauri-v0", "back within 3σ", "fixed timer"}
+    assert set(results["pooled"]) == {"mahagauri-v0", "mahagauri-v1 (upper-bound threshold)",
+                                      "mahagauri-v1 + 3σ agreement", "back within 3σ", "fixed timer"}
     assert results["dataset"]["incidents"] == 12
     assert results["pooled"]["mahagauri-v0"]["confirmed_rate"] > 0.5  # clean recoveries are confirmable
     assert report.main(str(tmp_path / "results.json")) == 0
     assert "Premature all-clear" in capsys.readouterr().out
+
+
+def test_the_upper_bound_is_stricter_than_the_point_estimate():
+    assert verify.wilson_upper(5, 100) > 0.05
+    assert verify.wilson_upper(0, 200) < 0.02
