@@ -30,15 +30,16 @@ SATI = ROOT / "packages" / "sati"
 TABLES = [
     (ROOT / "docs/research/tables.md", [sys.executable, "scripts/papertables.py"], ROOT),
     *[
-        (MODELS / f"{name}.md", [sys.executable, "-m", f"sati.{module}.report", str(MODELS / f"{name}.results.json")], SATI)
+        (MODELS / f"{name}.md", [sys.executable, "-m", module, str(MODELS / f"{name}.results.json")], SATI)
         for name, module in (
-            ("sati-rca", "rca"),
-            ("shailaputri", "detect"),
-            ("kalaratri", "loganomaly"),
-            ("kalaratri-bgl", "loganomaly"),
-            ("brahmacharini", "embed"),
-            ("chandraghanta", "netdetect"),
-            ("kushmanda", "lm"),
+            ("sati-rca", "sati.rca.report"),
+            ("shailaputri", "sati.detect.report"),
+            ("shailaputri-smd", "sati.detect.smdreport"),
+            ("kalaratri", "sati.loganomaly.report"),
+            ("kalaratri-bgl", "sati.loganomaly.report"),
+            ("brahmacharini", "sati.embed.report"),
+            ("chandraghanta", "sati.netdetect.report"),
+            ("kushmanda", "sati.lm.report"),
         )
     ],
 ]

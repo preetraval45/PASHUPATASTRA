@@ -63,6 +63,7 @@ it is recorded below.
 - **Source:** Su et al., *OmniAnomaly* (KDD 2019),
   github.com/NetManAIOps/OmniAnomaly.
 - **Terms:** MIT.
+- **Fetched:** from the repository at commit `7fb0e0a`, pinned in `sati.detect.smd`.
 - **Contents:** 28 machines × 38 metrics, five weeks, with the authors' own
   train/test split and labelled test anomalies.
 - **Known limits:** labels cover anomalies the operators recognised.

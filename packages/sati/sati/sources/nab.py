@@ -30,23 +30,23 @@ REPO = "numenta/NAB"
 REAL_FAMILIES = ("realAWSCloudwatch", "realAdExchange", "realKnownCause", "realTraffic", "realTweets")
 
 
-def revision() -> str:
+def revision(repo: str = REPO) -> str:
     """NAB's current commit. Authenticated when a token is present: anonymous
     calls share one rate limit across every job on a CI runner's address, and
     the training run failed on it once."""
-    request = urllib.request.Request(f"https://api.github.com/repos/{REPO}/commits/master")
+    request = urllib.request.Request(f"https://api.github.com/repos/{repo}/commits/master")
     if token := os.environ.get("GITHUB_TOKEN"):
         request.add_header("Authorization", f"Bearer {token}")
     with urllib.request.urlopen(request, timeout=60) as r:
         return json.load(r)["sha"]
 
 
-def _fetch(path: str, cache: Path, rev: str) -> bytes:
+def _fetch(path: str, cache: Path, rev: str, repo: str = REPO) -> bytes:
     target = cache / rev / path
     if target.exists() and target.stat().st_size > 0:
         return target.read_bytes()
     target.parent.mkdir(parents=True, exist_ok=True)
-    url = f"https://raw.githubusercontent.com/{REPO}/{rev}/{path}"
+    url = f"https://raw.githubusercontent.com/{repo}/{rev}/{path}"
     for attempt in range(4):
         try:
             with urllib.request.urlopen(url, timeout=120) as r:

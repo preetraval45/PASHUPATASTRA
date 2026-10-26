@@ -76,3 +76,4 @@ Protocol: before every push, write a topic-named file from
 - [KalaratriBGLResults](KalaratriBGLResults.md) — BGL F1 0.355 on time split; RP-62 ticked; Models page shows both
 - [LiveVerification](LiveVerification.md) — 8 product tasks ticked on live evidence; /api/world 404 is expected
 - [Chandraghanta](Chandraghanta.md) — network IDS on UNSW/CIC via Kaggle mirrors; TTL leak and random split measured
+- [ShailaputriSMD](ShailaputriSMD.md) — SMD loader/model/job; leave-one-group-out; onset-weighted variant
