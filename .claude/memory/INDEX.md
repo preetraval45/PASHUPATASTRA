@@ -74,3 +74,4 @@ Protocol: before every push, write a topic-named file from
 - [KushmandaV2](KushmandaV2.md) — v1 overfit/0% → v2 grounded tuning, NVD, smaller model; push loops fail loudly
 - [LLMBaselineResults](LLMBaselineResults.md) — RP-07/09 ticked; LLM rows weak, caveats in plan
 - [KalaratriBGLResults](KalaratriBGLResults.md) — BGL F1 0.355 on time split; RP-62 ticked; Models page shows both
+- [LiveVerification](LiveVerification.md) — 8 product tasks ticked on live evidence; /api/world 404 is expected
