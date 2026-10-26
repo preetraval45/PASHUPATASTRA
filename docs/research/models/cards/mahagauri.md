@@ -25,8 +25,8 @@ are a snapshot of training run 40360156287 (26 October 2026).
 
 - **For:** research. In particular, it measures how hard "is it really over?"
   is on real servers.
-- **Out of scope:** closing incidents on its own. **This version must not be
-  trusted to declare recovery** (see the metrics).
+- **Out of scope:** closing incidents on its own. **No version yet may declare
+  recovery unattended**; v1 + 3σ agreement comes closest (see v1 below).
 
 ## Data and split
 
@@ -54,16 +54,32 @@ onset to 60 minutes after it ends. Leave one machine group out.
 - **A fixed timer is the worst on safety (0.480).** Incidents vary too much
   in length for any single wait to work.
 
+## v1 (26 October 2026, run 40403217142)
+
+Two variants were measured beside v0, pooled over held-out groups:
+
+| Verifier | Premature all-clear ↓ | Confirmed | Unconfirmed |
+|---|---:|---:|---:|
+| v0, point-estimate threshold | 0.199 | 0.560 | 0.242 |
+| v1, upper-bound threshold | 0.132 | 0.486 | 0.382 |
+| v1 + 3σ agreement | 0.061 | 0.211 | 0.728 |
+
+- **Holding the upper bound helps but is not enough:** 0.132, still well above
+  5%.
+- **Requiring agreement with the 3σ check gets close to the budget (0.061),**
+  at a price. It confirms only 0.211 of recoveries and leaves 0.728 to a
+  human.
+- **The trade-off is now explicit:** every step toward safety hands more
+  incidents back to people. For a verifier that is the right direction to
+  err, so **v1 + 3σ agreement is the variant to serve**. Even so, it is not
+  yet within budget, and it must not close incidents unattended.
+
 ## Known limitations and what would fix them
 
 - **Labels are the operators' judgement.** SMD marks when operators
   considered each anomaly over, and some "premature" calls may be right
   early.
-- **The budget is a point estimate.** A threshold chosen to sit exactly at
-  5% on training data will drift above it on new machines. v1 should set
-  the threshold for an upper confidence bound on the premature rate, not its
-  point estimate, or require agreement with the 3σ check before declaring
-  recovery.
+- **The budget is a point estimate.** A threshold that sits exactly at 5% on training data drifts above it on new machines. v1 tried both remedies, an upper-bound threshold and 3σ agreement (above). Agreement comes closest; a calibrated recovery probability would be the next step.
 
 ## Ethical considerations
 

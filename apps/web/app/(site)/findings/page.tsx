@@ -124,12 +124,16 @@ function findings(): Finding[] {
       title: "Two models that did not earn their place",
       headline: pct(mahagauri.pooled["mahagauri-v0"].premature_rate),
       versus: [
-        { label: "Mahagauri — incidents declared over too early", value: pct(mahagauri.pooled["mahagauri-v0"].premature_rate) },
+        { label: "Mahagauri v0 — incidents declared over too early", value: pct(mahagauri.pooled["mahagauri-v0"].premature_rate) },
+        {
+          label: "v1 with a second check — early, and still confirmed",
+          value: `${pct((mahagauri.pooled as Record<string, { premature_rate: number; confirmed_rate: number }>)["mahagauri-v1 + 3σ agreement"]?.premature_rate ?? 0)} · ${pct((mahagauri.pooled as Record<string, { premature_rate: number; confirmed_rate: number }>)["mahagauri-v1 + 3σ agreement"]?.confirmed_rate ?? 0)}`,
+        },
         { label: "Siddhidatri fusion F1 vs Shailaputri alone", value: `${f3(fused.f1)} vs ${f3(alone.f1)}` },
         { label: "fusion's false alarms vs Shailaputri alone", value: `${fused.false_alarms_per_1000.toFixed(1)} vs ${alone.false_alarms_per_1000.toFixed(1)}` },
       ],
       body:
-        "The recovery verifier calls one incident in five over too early on unseen servers, so it must not be trusted to close incidents. Fusing three detectors bought recall with twelve times the false alarms. Both stay published, with what would fix them.",
+        "The recovery verifier called one incident in five over too early on unseen servers. Requiring a second check brings that near the 5% budget, but then most incidents go back to a human — safety bought with usefulness, so it still may not close incidents alone. Fusing three detectors bought recall with twelve times the false alarms. Both stay published, with what would fix them.",
       href: "/models#mahagauri-results",
       tone: "negative",
     },
