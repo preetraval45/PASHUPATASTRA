@@ -45,8 +45,7 @@ from pashupatastra.kaal.dataset import assign
 from pashupatastra.kaal.generator import incident
 from pashupatastra.kaal.references import REFERENCES
 
-from sati.rca import features as rfeat
-from sati.rca import kaal, model
+from sati.rca import external, kaal, model
 from sati.sources import rcaeval
 
 # One copy of the authored graphs, shared with the RP-18 contamination guard.
@@ -69,7 +68,7 @@ def kaal_features(table: pd.DataFrame, system: str) -> pd.DataFrame:
     onset = table["onset_any"].where(anomalous_mask)
     first = onset.min()
     out = pd.DataFrame({
-        "case": table["case"], "service": table["service"], "label": table["label"],
+        "case": table["case"], "service": table["service"],
         "onset_min": (onset - first) / 60.0,
         "onset_rank": onset.rank(method="first"),
         "peak": peak,
@@ -86,6 +85,8 @@ def kaal_features(table: pd.DataFrame, system: str) -> pd.DataFrame:
     layer = graph["layer"]
     for x in kaal.LAYERS:
         out[f"layer_{x}"] = [int(layer.get(s, "backend") == x) for s in table["service"]]  # type: ignore[union-attr]
+    if "label" in table:  # only when the caller has joined the answer on, never from the adapter
+        out.insert(2, "label", table["label"].to_numpy())
     return out
 
 
@@ -129,15 +130,17 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=Path("results/katyayani-simtoreal"))
     parser.add_argument("--n", type=int, default=50_000)
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--subset", type=Path, default=Path("../../benchmark/external/rcaeval/subset.json"))
     parser.add_argument("--limit", type=int, default=0, help="cases per system, for a smoke run; 0 means all")
     parser.add_argument("--katyayani", type=Path, default=Path("../../docs/research/models/sati-rca.results.json"))
     args = parser.parse_args()
 
     started = time.time()
     ranker = train_kaal_ranker(args.n, args.seed)
-    rev = rcaeval.revision()
+    subset = external.load_subset(args.subset)
+    rev = subset["revision"]
     index = rcaeval.cases(args.cache, rev)
-    index = index[index["system"].isin(GRAPHS)]
+    index = index[index["case"].isin(set(subset["cases"]))]
     checks = {s: graph_check(s, index, args.cache, rev) for s in GRAPHS}  # on every case, before any --limit
     if args.limit:
         index = index.groupby("system", group_keys=False).head(args.limit)
@@ -145,13 +148,12 @@ def main() -> int:
 
     tables = {s: [] for s in GRAPHS}
     for _, case in index.iterrows():
-        frame = rcaeval.metrics(case["case"], args.cache, rev)
-        table, _ = rfeat.incident_features(frame, int(case["inject_time"]))
-        if case["root_cause_service"] not in set(table["service"]):
+        inputs = external.inputs(case, args.cache, rev)
+        answer = external.answer(case)
+        if answer not in set(inputs["service"]):
             continue
-        table["case"] = case["case"]
-        table["label"] = (table["service"] == case["root_cause_service"]).astype(int)
-        tables[case["system"]].append(kaal_features(table, case["system"]))
+        # The answer is joined on here, after the adapter, for scoring only.
+        tables[case["system"]].append(inputs.assign(label=(inputs["service"] == answer).astype(int)))
 
     results = {}
     for system, parts in tables.items():
@@ -173,7 +175,7 @@ def main() -> int:
     out = {
         "model": "sati-katyayani-kaal-v0",
         "trained_on": {"dataset": "Kaal v1", "n": args.n, "seed": args.seed},
-        "tested_on": {"dataset": "RCAEval", "revision": rev, "systems": list(GRAPHS),
+        "tested_on": {"dataset": "RCAEval", "revision": rev, "subset_sha256": subset["cases_sha256"], "systems": list(GRAPHS),
                       "cases": {s: int(pd.concat(p)["case"].nunique()) for s, p in tables.items() if p},
                       "excluded": {"tt": "Train Ticket: no call graph authored (64 components)"}},
         "graphs": {s: {"calls": [list(c) for c in g["calls"]],

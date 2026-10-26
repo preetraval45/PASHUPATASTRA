@@ -412,12 +412,12 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* **You** read OpenRCA (Xu et al., ICLR 2025), RCAEval (Pham et al., 2025), AIOpsLab (Chen et al., 2025) and ITBench (IBM, 2025). **Claude** writes a feasibility note: licence, size, whether it runs on one machine, and how its data maps to Sati-RCA's inputs. **You** decide. RCAEval is likely the best fit, because its metrics-and-topology data matches Sati-RCA's inputs.
   *Done when:* `docs/adr/ExternalBenchmark.md` is committed. The chosen benchmark joins the contamination guard.
 
-- [ ] **RP-32 · Adapter and pre-declared subset**
+- [x] **RP-32 · Adapter and pre-declared subset** — *Done 26 Oct: `benchmark/external/rcaeval/subset.json` declares the subset before any full result: all 490 Online Boutique and Sock Shop cases at RCAEval revision `afeacb1`, with a SHA-256 over the case list. Train Ticket is excluded (no authored graph). `sati.rca.external`: `inputs()` builds per-service features from metrics and the graph only, and `answer()` (scorer only) returns the root. `load_subset` refuses an edited list. 3 tests: the subset matches its hash and rule, an edited subset is refused, and the inputs carry no label or answer field. Sim-to-real (`sati.rca.simtoreal`) now reads the pinned subset and records its hash.*
   **Claude** · 1–2 sessions · Depends: RP-31
   *Steps:* write `benchmark/external/<name>/` with an adapter whose output never contains the label (a test enforces this). Commit the subset before any run.
   *Done when:* the tests pass, and the subset's commit predates any result.
 
-- [ ] **RP-33 · External run**
+- [~] **RP-33 · External run** — *Started 26 Oct: Sati-RCA zero-shot on the RP-32 subset runs in the `katyayani-simtoreal` job. Remains: its numbers, the best LLM baseline on the same cases, RCAEval's published baselines where comparable, and the owner's §7 subsection.*
   **Both** · Claude 1 session + overnight; You 3 h · Depends: RP-32, RP-29
   *Steps:* run Sati-RCA zero-shot (no training on this benchmark), the best LLM baseline, and the benchmark's own published baselines where they are comparable. **You** write the §7 subsection and update §9's first threat.
   *Done when:* there is a generated table from data this repository did not author.

@@ -81,3 +81,10 @@ incidents (RP-13).
   stack-level numbers, so there is nothing for RCA to rank. Extending
   `observe()` changes the benchmark contract and requires re-running every
   arm, which is the owner's decision. The plan records the proposal.
+
+## RP-32 (same day)
+
+The RCAEval subset was declared and committed before any full result: 490 OB
+and SS cases at revision `afeacb1`, hash `55db1d9`. The adapter
+(`sati.rca.external`) keeps the answer out of the inputs, and tests enforce
+it. Sim-to-real now uses the pinned subset, and RP-33 is started.
