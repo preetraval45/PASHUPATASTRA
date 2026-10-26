@@ -1,1 +1,377 @@
-{ "pending": "Kushmanda has not been trained yet — it needs the Kaggle secrets" }
+{
+  "model": "sati-kushmanda-v1",
+  "architecture": "decoder-only transformer: RMSNorm, RoPE, SwiGLU, fused causal attention, tied embeddings",
+  "parameters": 34087424,
+  "config": {
+    "vocab_size": 16384,
+    "context": 512,
+    "layers": 8,
+    "heads": 8,
+    "width": 512,
+    "dropout": 0.0,
+    "rope_base": 10000.0
+  },
+  "device": "cuda",
+  "corpus": {
+    "documents": 22153,
+    "by_source": {
+      "mitre-attack": 3652,
+      "mitre-attack-procedure": 14431,
+      "mitre-capec": 1207,
+      "mitre-cwe": 917,
+      "cisa-kev": 1678,
+      "repository": 268
+    },
+    "held_out_documents": 1090,
+    "train_tokens": 1088711,
+    "held_out_tokens": 53839
+  },
+  "tokenizer": {
+    "vocab": 16384,
+    "tokens_per_line_held_out": 32.44,
+    "gpt2_tokens_per_line_held_out": 35.2
+  },
+  "held_out": {
+    "loss": 3.6133,
+    "perplexity": 37.09,
+    "bits_per_byte": 1.0334
+  },
+  "sft": {
+    "train_pairs": 22596,
+    "held_out_pairs": 1458,
+    "held_out_answer_loss": 2.8487,
+    "exact_match": {
+      "lookup": {
+        "accuracy": 0.0,
+        "n": 69
+      },
+      "classify": {
+        "accuracy": 0.0,
+        "n": 531
+      }
+    },
+    "examples": [
+      {
+        "question": "Which ATT&CK technique ID is 'Extra Window Memory Injection'?",
+        "expected": "T1055.011",
+        "answer": "T1027.003"
+      },
+      {
+        "question": "Which ATT&CK technique ID is 'Pluggable Authentication Modules'?",
+        "expected": "T1556.003",
+        "answer": "T1027.003"
+      },
+      {
+        "question": "Which ATT&CK technique ID is 'Disk Structure Wipe'?",
+        "expected": "T1561.002",
+        "answer": "T1059.003"
+      },
+      {
+        "question": "Which ATT&CK technique ID is 'Direct Network Flood'?",
+        "expected": "T1498.001",
+        "answer": "T1059.003"
+      },
+      {
+        "question": "Which ATT&CK technique ID is 'Domain Generation Algorithms'?",
+        "expected": "T1568.002",
+        "answer": "T1059.003"
+      },
+      {
+        "question": "Which ATT&CK technique ID is 'Search Victim-Owned Websites'?",
+        "expected": "T1594",
+        "answer": "T1027.003"
+      },
+      {
+        "question": "What is MITRE ATT&CK technique T1055.011?",
+        "expected": "T1055.011 is Extra Window Memory Injection. Adversaries may inject malicious code into process via Extra Window Memory (EWM) in order to evade process-based defenses as well as possibly elevate privil",
+        "answer": "T1027.005 is Cloud Accounts. Adversaries may attempt to get credentials from cloud storage services. Adversaries may use compromised cloud accounts that can be used during targeting. Adversaries may use compromised cloud accounts to gain access to cloud storage services."
+      },
+      {
+        "question": "What is MITRE ATT&CK technique T1556.003?",
+        "expected": "T1556.003 is Pluggable Authentication Modules. Adversaries may modify pluggable authentication modules (PAM) to access user credentials or enable otherwise unwarranted access to accounts. PAM is a mod",
+        "answer": "T1027.005 is Cloud Accounts. Adversaries may attempt to get credentials from cloud storage services. Adversaries may use compromised cloud accounts that can be used during targeting. Adversaries may use compromised cloud accounts to gain access to cloud storage services."
+      },
+      {
+        "question": "What is MITRE ATT&CK technique T1561.002?",
+        "expected": "T1561.002 is Disk Structure Wipe. Adversaries may corrupt or wipe the disk data structures on a hard drive necessary to boot a system; targeting specific critical systems or in large numbers in a netw",
+        "answer": "T1027.005 is Cloud Accounts. Adversaries may attempt to get credentials from cloud storage services. Adversaries may use compromised cloud accounts that can be used during targeting. Adversaries may use compromised cloud accounts to gain access to cloud storage services."
+      },
+      {
+        "question": "What is MITRE ATT&CK technique T1498.001?",
+        "expected": "T1498.001 is Direct Network Flood. Adversaries may attempt to cause a denial of service (DoS) by directly sending a high-volume of network traffic to a target. This DoS attack may also reduce the avai",
+        "answer": "T1027.005 is Cloud Accounts. Adversaries may use compromised cloud accounts that can be used during targeting. Adversaries may use compromised cloud accounts to gain access to cloud accounts. Adversaries may use compromised cloud accounts that can be used during targeting."
+      },
+      {
+        "question": "What is MITRE ATT&CK technique T1568.002?",
+        "expected": "T1568.002 is Domain Generation Algorithms. Adversaries may make use of Domain Generation Algorithms (DGAs) to dynamically identify a destination domain for command and control traffic rather than rely",
+        "answer": "T1027.005 is Cloud Accounts. Adversaries may attempt to get credentials from cloud storage services. Adversaries may use compromised cloud accounts that can be used during targeting. Adversaries may use compromised cloud accounts that can be used during targeting."
+      },
+      {
+        "question": "What is MITRE ATT&CK technique T1594?",
+        "expected": "T1594 is Search Victim-Owned Websites. Adversaries may search websites owned by the victim for information that can be used during targeting. Victim-owned websites may contain a variety of details, in",
+        "answer": "T1027 is Ingress Tool Transfer. Adversaries may attempt to get a listing of software, software, or software, to a system or network. Adversaries may use the information from different systems to determine which users can be used to gain access to resources."
+      }
+    ]
+  },
+  "curve": [
+    {
+      "phase": "pretrain",
+      "step": 400,
+      "train_loss": 2.7613,
+      "val_loss": 3.6133
+    },
+    {
+      "phase": "pretrain",
+      "step": 800,
+      "train_loss": 0.8289,
+      "val_loss": 4.0369
+    },
+    {
+      "phase": "pretrain",
+      "step": 1200,
+      "train_loss": 0.2634,
+      "val_loss": 4.6366
+    },
+    {
+      "phase": "pretrain",
+      "step": 1600,
+      "train_loss": 0.1728,
+      "val_loss": 5.0443
+    },
+    {
+      "phase": "pretrain",
+      "step": 2000,
+      "train_loss": 0.1257,
+      "val_loss": 5.371
+    },
+    {
+      "phase": "pretrain",
+      "step": 2400,
+      "train_loss": 0.109,
+      "val_loss": 5.6121
+    },
+    {
+      "phase": "pretrain",
+      "step": 2800,
+      "train_loss": 0.1001,
+      "val_loss": 5.789
+    },
+    {
+      "phase": "pretrain",
+      "step": 3200,
+      "train_loss": 0.1036,
+      "val_loss": 5.9457
+    },
+    {
+      "phase": "pretrain",
+      "step": 3600,
+      "train_loss": 0.065,
+      "val_loss": 6.0553
+    },
+    {
+      "phase": "pretrain",
+      "step": 4000,
+      "train_loss": 0.069,
+      "val_loss": 6.0957
+    },
+    {
+      "phase": "pretrain",
+      "step": 4400,
+      "train_loss": 0.0567,
+      "val_loss": 6.1312
+    },
+    {
+      "phase": "pretrain",
+      "step": 4800,
+      "train_loss": 0.0579,
+      "val_loss": 6.1397
+    },
+    {
+      "phase": "pretrain",
+      "step": 5200,
+      "train_loss": 0.0413,
+      "val_loss": 6.1857
+    },
+    {
+      "phase": "pretrain",
+      "step": 5600,
+      "train_loss": 0.042,
+      "val_loss": 6.1414
+    },
+    {
+      "phase": "pretrain",
+      "step": 6000,
+      "train_loss": 0.0382,
+      "val_loss": 6.1087
+    },
+    {
+      "phase": "pretrain",
+      "step": 6400,
+      "train_loss": 0.0409,
+      "val_loss": 6.1134
+    },
+    {
+      "phase": "pretrain",
+      "step": 6800,
+      "train_loss": 0.0368,
+      "val_loss": 6.0654
+    },
+    {
+      "phase": "pretrain",
+      "step": 7200,
+      "train_loss": 0.0331,
+      "val_loss": 6.0488
+    },
+    {
+      "phase": "pretrain",
+      "step": 7600,
+      "train_loss": 0.029,
+      "val_loss": 6.0167
+    },
+    {
+      "phase": "pretrain",
+      "step": 8000,
+      "train_loss": 0.0359,
+      "val_loss": 5.9768
+    },
+    {
+      "phase": "sft",
+      "step": 100,
+      "train_loss": 1.4848,
+      "val_loss": 2.8487
+    },
+    {
+      "phase": "sft",
+      "step": 200,
+      "train_loss": 2.0686,
+      "val_loss": 3.0433
+    },
+    {
+      "phase": "sft",
+      "step": 300,
+      "train_loss": 2.0658,
+      "val_loss": 3.0666
+    },
+    {
+      "phase": "sft",
+      "step": 400,
+      "train_loss": 1.5853,
+      "val_loss": 3.126
+    },
+    {
+      "phase": "sft",
+      "step": 500,
+      "train_loss": 1.4194,
+      "val_loss": 3.1807
+    },
+    {
+      "phase": "sft",
+      "step": 600,
+      "train_loss": 1.2422,
+      "val_loss": 3.2544
+    },
+    {
+      "phase": "sft",
+      "step": 700,
+      "train_loss": 1.3004,
+      "val_loss": 3.188
+    },
+    {
+      "phase": "sft",
+      "step": 800,
+      "train_loss": 1.6115,
+      "val_loss": 3.2934
+    },
+    {
+      "phase": "sft",
+      "step": 900,
+      "train_loss": 1.3302,
+      "val_loss": 3.2498
+    },
+    {
+      "phase": "sft",
+      "step": 1000,
+      "train_loss": 0.7756,
+      "val_loss": 3.2978
+    },
+    {
+      "phase": "sft",
+      "step": 1100,
+      "train_loss": 0.5925,
+      "val_loss": 3.1808
+    },
+    {
+      "phase": "sft",
+      "step": 1200,
+      "train_loss": 1.1288,
+      "val_loss": 3.202
+    },
+    {
+      "phase": "sft",
+      "step": 1300,
+      "train_loss": 1.1485,
+      "val_loss": 3.2359
+    },
+    {
+      "phase": "sft",
+      "step": 1400,
+      "train_loss": 1.126,
+      "val_loss": 3.2384
+    },
+    {
+      "phase": "sft",
+      "step": 1500,
+      "train_loss": 0.708,
+      "val_loss": 3.2377
+    },
+    {
+      "phase": "sft",
+      "step": 1600,
+      "train_loss": 1.1331,
+      "val_loss": 3.2379
+    },
+    {
+      "phase": "sft",
+      "step": 1700,
+      "train_loss": 0.6907,
+      "val_loss": 3.2709
+    },
+    {
+      "phase": "sft",
+      "step": 1800,
+      "train_loss": 1.0787,
+      "val_loss": 3.2743
+    },
+    {
+      "phase": "sft",
+      "step": 1900,
+      "train_loss": 0.1731,
+      "val_loss": 3.2966
+    },
+    {
+      "phase": "sft",
+      "step": 2000,
+      "train_loss": 0.397,
+      "val_loss": 3.2902
+    }
+  ],
+  "samples": [
+    {
+      "prompt": "Credential stuffing is",
+      "completion": " not to perform the access control. A remote access control can have a set of access to the system from a system to a system, including from the system and the system. https://attack. https://attack.org/techniques/T1070.006) and can be used to obtain credentials of the user\u2019s domain name. https://attack.mitre.org"
+    },
+    {
+      "prompt": "To contain a host that is beaconing to a command-and-control server,",
+      "completion": " or may be intended to be used by changing functionality based on the operating name. https://attack.org/techniques/T1036/005), adversaries may abuse the Windows command shell for persistence or command line to gather information. https://attack.mitre.org/techniques/T1090/004) or use, or to upload and download files, or execute malicious payloads via the"
+    },
+    {
+      "prompt": "T1566 Phishing",
+      "completion": " Multiple Multiple Multiple products are used in various ways to evade defenses. https://attack.mitre. .001 \u2014 code in the Startup . https://attack. x.org.001 \u2014 C:\\Windows\\ is a command shell. https. .exe \u2014 Windows Command Shell https://attack. .org/techniques"
+    }
+  ],
+  "steps": {
+    "pretrain": 8000,
+    "sft": 2000
+  },
+  "seconds": 30781.1
+}

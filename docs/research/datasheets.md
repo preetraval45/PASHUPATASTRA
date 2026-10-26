@@ -112,3 +112,24 @@ it is recorded below.
   - BGL: 4.7M lines over 214.7 days, labelled alerts.
 - **Known limits:** many published HDFS results split sessions at random, which
   leaks future log templates into training. Splits here are by time.
+
+## Kushmanda's text corpus
+
+The language model learns only from text whose terms allow its weights to ship
+under Apache-2.0. The sources are listed in `packages/sati/sati/lm/corpus.py`.
+
+| Source | Terms | Use |
+|---|---|---|
+| MITRE ATT&CK (enterprise), CAPEC | MITRE's royalty-free licence to use and prepare derivative works; attribution required | Pretraining, grounded tuning, Brahmacharini |
+| MITRE CWE | Free for research, development and commercial use, with MITRE's copyright notice | Pretraining, grounded tuning |
+| CISA KEV | U.S. government work | Pretraining, grounded tuning, Brahmacharini |
+| NVD CVE descriptions (from v2) | Descriptions under the CVE Program's terms of use: a perpetual, royalty-free licence to reproduce and prepare derivative works. NVD's own data is a U.S. government work. | Pretraining only |
+| This repository's docs and course | The owner's | Pretraining |
+
+- **NVD:** the yearly JSON 2.0 feeds from 2002 onward. Rejected CVEs and
+  descriptions under 60 characters are skipped. A CVE's CWE weaknesses are
+  appended to its text.
+- **Known limits:** NVD descriptions are templated ("Cross-site scripting in X
+  allows remote attackers to…"). MinHash near-duplicate removal collapses the
+  most repetitive ones, and the cleaning statistics are printed with each run.
+- **Excluded:** LogHub, which is research-use only.

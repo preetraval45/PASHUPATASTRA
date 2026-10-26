@@ -35,8 +35,51 @@ def main(path: str) -> int:
         f"| GPT-2 (generic) | 50,257 | {gpt2 if gpt2 is not None else '—'} |",
         "",
     ]
+    pre = [c for c in r.get("curve", []) if c["phase"] == "pretrain"]
+    if pre:
+        best = min(pre, key=lambda c: c["val_loss"])
+        last = pre[-1]
+        out += ["## What the training curve shows\n"]
+        if best["step"] < last["step"]:
+            out.append(
+                f"Held-out loss was lowest at step {best['step']:,} ({best['val_loss']}) and ended at "
+                f"{last['val_loss']} by step {last['step']:,}, while training loss fell to {last['train_loss']}. "
+                f"After step {best['step']:,} the model was memorising its training text rather than learning the "
+                f"language: **overfitting**. The step-{best['step']:,} checkpoint is the one kept and evaluated.\n")
+        else:
+            out.append(f"Held-out loss was still falling at the last step ({last['val_loss']}); more steps may help.\n")
+        if "epochs" in r:
+            out.append(f"Pretraining read the corpus about {r['epochs']} times.\n")
     s = r.get("sft")
-    if s:
+    if s and "grounded" in s:
+        g = s["grounded"]
+        out += [
+            "## Answering from given passages — held out by entity\n",
+            f"{s['train_pairs']:,} training pairs. {s['evaluated_questions']:,} of {s['held_out_pairs']:,} held-out "
+            f"questions are scored here, all about techniques, CVEs and CWEs never seen in tuning. Each question "
+            f"comes with {s['passages']} passages; in about {s['unanswerable_share']:.0%} of them none holds the "
+            f"answer, and the right reply is to say so. Held-out answer loss: {s['held_out_answer_loss']}.\n",
+            "| Question type | Measure | **Kushmanda** | Lexical baseline | Chance | n |",
+            "|---|---|---:|---:|---:|---:|",
+        ]
+        for kind, row in g["kushmanda"].items():
+            for metric, value in row.items():
+                if metric == "n":
+                    continue
+                others = [g[name].get(kind, {}).get(metric) for name in ("lexical baseline", "chance")]
+                cells = " | ".join("—" if v is None else f"{v:.3f}" for v in others)
+                out.append(f"| {kind} | {metric.replace('_', ' ')} | **{value:.3f}** | {cells} | {row['n']} |")
+        out += [
+            "",
+            "*Copy precision* is the share of the answer's word 4-grams found in its passages. A grounded answer "
+            "scores high; one written from memory scores low. The lexical baseline answers with a whole passage, "
+            "so its copy precision is 1 by construction.\n",
+            "### Examples (greedy, unedited)\n",
+            *[f"- **{e['kind']}** — **Q:** {e['question']}\n  **Expected:** {e['expected']}\n  **Kushmanda:** {e['answer']}"
+              for e in s["examples"]],
+            "",
+        ]
+    elif s:
         out += [
             "## Instruction tuning — held out by entity\n",
             f"{s['train_pairs']:,} training pairs, {s['held_out_pairs']:,} held-out pairs about techniques, CVEs and "

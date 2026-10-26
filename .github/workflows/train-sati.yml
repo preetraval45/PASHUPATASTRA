@@ -39,6 +39,27 @@ jobs:
       - run: ruff check packages/sati
       - run: pytest packages/sati -q
 
+  kushmanda-smoke:
+    # Kushmanda trains for hours on Kaggle. This runs the whole pipeline on
+    # the real sources at toy size on CPU: corpus, tokenizer, pretraining,
+    # grounded tuning, evaluation and report. A mistake then costs minutes
+    # here, not a Kaggle session. NVD is left out (--tiny) to keep it short.
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati tokenizers
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: tiny end-to-end run
+        working-directory: packages/sati
+        run: |
+          python -m sati.lm.train --tiny --out ../../results/kushmanda-smoke --cache ../../.cache/corpus
+          python -m sati.lm.report ../../results/kushmanda-smoke/results.json
+
   sati-rca:
     needs: test
     runs-on: ubuntu-latest
@@ -78,8 +99,15 @@ jobs:
           git add docs/research/models apps/web/lib/models
           if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
           git commit -m "docs(models): Sati-RCA v0 results from run ${{ github.run_id }}"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          # Parallel jobs push to main at once. Retry with backoff, and fail the step
+          # if the results never land: a loop ending in `sleep` exits 0, which hid a
+          # lost push of the BGL results on 19 Oct.
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 15))
+          done
+          echo "::error::could not push the results after 6 attempts"
+          exit 1
 
   shailaputri:
     # Model 1 of the nine (adr/Navadurga): metric anomaly detection on NAB's
@@ -120,10 +148,15 @@ jobs:
           git add docs/research/models apps/web/lib/models
           if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
           git commit -m "docs(models): Shailaputri v0 results from run ${{ github.run_id }}"
-          for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && break
-            sleep 10
+          # Parallel jobs push to main at once. Retry with backoff, and fail the step
+          # if the results never land: a loop ending in `sleep` exits 0, which hid a
+          # lost push of the BGL results on 19 Oct.
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 15))
           done
+          echo "::error::could not push the results after 6 attempts"
+          exit 1
 
   kalaratri:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
@@ -167,10 +200,15 @@ jobs:
           git add docs/research/models apps/web/lib/models
           if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
           git commit -m "docs(models): Kalaratri v0 results (HDFS, BGL) from run ${{ github.run_id }}"
-          for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && break
-            sleep 10
+          # Parallel jobs push to main at once. Retry with backoff, and fail the step
+          # if the results never land: a loop ending in `sleep` exits 0, which hid a
+          # lost push of the BGL results on 19 Oct.
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 15))
           done
+          echo "::error::could not push the results after 6 attempts"
+          exit 1
 
   brahmacharini:
     # Model 2 of the nine (adr/Navadurga): embeddings for memory and recall,
@@ -213,7 +251,12 @@ jobs:
           git add docs/research/models apps/web/lib/models services/api/app/sati_models
           if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
           git commit -m "docs(models): Brahmacharini v0 results and served model from run ${{ github.run_id }}"
-          for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && break
-            sleep 10
+          # Parallel jobs push to main at once. Retry with backoff, and fail the step
+          # if the results never land: a loop ending in `sleep` exits 0, which hid a
+          # lost push of the BGL results on 19 Oct.
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 15))
           done
+          echo "::error::could not push the results after 6 attempts"
+          exit 1

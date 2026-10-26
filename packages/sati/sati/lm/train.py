@@ -3,6 +3,16 @@
     python -m sati.lm.train --out results/kushmanda             # on a GPU
     python -m sati.lm.train --out /tmp/k --tiny                 # minute-long smoke run, CPU
 
+v2 (26 Oct), after v1 overfitted by step 400 of 8,000 (its 34M parameters
+memorised a 1.1M-token corpus) and scored zero on held-out questions asked
+without context:
+
+* NVD CVE descriptions added, about 20x the corpus.
+* A smaller model (about 17M parameters) with dropout.
+* Instruction tuning is grounded: answer from the passages given, cite one,
+  or abstain (`sft.py`). It is scored against a lexical baseline and chance
+  (`evaluate.py`).
+
 1. **Data.** Build the corpus (`corpus.py`), clean and deduplicate it
    (`clean.py`), split by document — 5% held out.
 2. **Tokenizer.** Byte-level BPE trained on the training documents only, with
@@ -13,9 +23,9 @@
    checked through training and the best checkpoint is kept.
 4. **Instruction tuning (SFT).** Question/answer pairs from the structured
    sources (`sft.py`), loss on the answer only, held out by entity.
-5. **Evaluation.** Held-out bits per byte (comparable across tokenizers); on
-   held-out entities, answer loss and exact-match accuracy for questions with
-   a single right answer (technique ID lookups and behaviour → technique).
+5. **Evaluation.** Held-out bits per byte, which compares across tokenizers.
+   On held-out entities: answer loss, plus `evaluate.score` for the model, the
+   lexical baseline and chance.
 
 Weights are Apache-2.0 eligible: every source allows it (datasheets.md).
 """
@@ -34,7 +44,7 @@ import numpy as np
 import torch
 
 from sati.lm import corpus as corpus_mod
-from sati.lm import sft
+from sati.lm import evaluate, sft
 from sati.lm.model import Config, Kushmanda
 
 SPECIAL = ["<|doc|>", sft.USER, sft.ASSISTANT, sft.END]
@@ -90,10 +100,11 @@ def lm_batch(data: np.ndarray, context: int, size: int, rng: np.random.Generator
 def sft_encode(tok, pairs: list[dict], context: int) -> list[tuple[list[int], list[int]]]:
     out = []
     for p in pairs:
-        prompt, answer = sft.format_pair(p["q"], p["a"])
+        prompt, answer = sft.format_pair(p["q"], p["a"], p.get("context"))
         pi, ai = tok.encode(prompt).ids, tok.encode(answer).ids
-        ids = (pi + ai)[: context + 1]
-        mask = ([0] * len(pi) + [1] * len(ai))[: context + 1]
+        # Too long: drop the start of the prompt, never the answer.
+        ids = (pi + ai)[-(context + 1):]
+        mask = ([0] * len(pi) + [1] * len(ai))[-(context + 1):]
         if sum(mask[1:]) > 0:
             out.append((ids, mask))
     return out
@@ -141,9 +152,9 @@ def held_out_loss(model, data: np.ndarray, context: int, device: str, autocast, 
 
 
 @torch.no_grad()
-def answer(model, tok, question: str, device: str, max_new: int = 48) -> str:
-    prompt, _ = sft.format_pair(question, "")
-    ids = torch.tensor([tok.encode(prompt).ids[-model.cfg.context + max_new:]], device=device)
+def answer(model, tok, question: str, device: str, max_new: int = 48, context: list[str] | None = None) -> str:
+    prompt, _ = sft.format_pair(question, "", context)
+    ids = torch.tensor([tok.encode(prompt).ids[-(model.cfg.context - max_new):]], device=device)
     out = model.generate(ids, max_new, temperature=0, stop=tok.token_to_id(sft.END))
     return tok.decode(out[0, ids.size(1):].tolist()).replace(sft.END, "").strip()
 
@@ -180,10 +191,17 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=Path("results/kushmanda"))
     parser.add_argument("--cache", type=Path, default=Path(".cache/corpus"))
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[4])
-    parser.add_argument("--steps", type=int, default=8000, help="pretraining optimiser steps")
-    parser.add_argument("--sft-steps", type=int, default=2000)
+    parser.add_argument("--steps", type=int, default=4000, help="pretraining optimiser steps")
+    parser.add_argument("--sft-steps", type=int, default=3000)
     parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--accumulate", type=int, default=2)
+    parser.add_argument("--width", type=int, default=384)
+    parser.add_argument("--layers", type=int, default=6)
+    parser.add_argument("--heads", type=int, default=6)
+    parser.add_argument("--context", type=int, default=640)
+    parser.add_argument("--dropout", type=float, default=0.1)
+    parser.add_argument("--no-cve", action="store_true", help="leave the NVD descriptions out (v1's corpus)")
+    parser.add_argument("--eval-questions", type=int, default=1200)
     parser.add_argument("--tiny", action="store_true")
     args = parser.parse_args()
 
@@ -197,7 +215,7 @@ def main() -> int:
         return torch.autocast("cuda", dtype=dtype) if device == "cuda" else nullcontext()
     args.out.mkdir(parents=True, exist_ok=True)
 
-    docs = corpus_mod.build(args.cache, args.root)
+    docs = corpus_mod.build(args.cache, args.root, cve=not (args.no_cve or args.tiny))
     train_docs, test_docs = corpus_mod.split(docs)
     by_source: dict[str, int] = {}
     for d in docs:
@@ -210,8 +228,9 @@ def main() -> int:
     tok.save(str(args.out / "tokenizer.json"))
     held_lines = [line for d in test_docs for line in d["text"].splitlines() if line.strip()]
 
-    cfg = (Config(vocab_size=tok.get_vocab_size(), context=64, layers=2, heads=2, width=64)
-           if args.tiny else Config(vocab_size=tok.get_vocab_size()))
+    cfg = (Config(vocab_size=tok.get_vocab_size(), context=256, layers=2, heads=2, width=64)
+           if args.tiny else Config(vocab_size=tok.get_vocab_size(), context=args.context, layers=args.layers,
+                                    heads=args.heads, width=args.width, dropout=args.dropout))
     model = Kushmanda(cfg).to(device)
     train_ids, test_ids = encode_docs(tok, train_docs), encode_docs(tok, test_docs)
     print(f"model {model.parameters_count() / 1e6:.1f}M parameters; pretraining tokens {len(train_ids):,}")
@@ -244,17 +263,24 @@ def main() -> int:
         return float(np.mean(losses))
     curve += train_loop(model, sft_step, 10 if args.tiny else args.sft_steps, 2e-4, 1, device, sft_val, "sft")
 
-    # Exact-match accuracy where a question has one right answer.
-    exact: dict[str, list[int]] = {}
-    examples = []
-    for p in [q for q in sft_test if q["kind"] in ("lookup", "classify")][: 30 if args.tiny else 600]:
-        got = answer(model, tok, p["q"], device, 12)
-        want = p["a"].split(" — ")[0].strip()
-        exact.setdefault(p["kind"], []).append(int(got.split(" ")[0].strip(" .—") == want))
-        if len(examples) < 6:
-            examples.append({"question": p["q"][:200], "expected": p["a"], "answer": got})
-    for p in [q for q in sft_test if q["kind"] in ("define", "mitigate", "remediate")][:6]:
-        examples.append({"question": p["q"], "expected": p["a"][:200], "answer": answer(model, tok, p["q"], device, 60)})
+    # Grounded answers on held-out entities, scored with the baselines on the same questions.
+    questions = random.Random(7).sample(sft_test, min(len(sft_test), 30 if args.tiny else args.eval_questions))
+    answers = [answer(model, tok, p["q"], device, 24 if p["kind"] in ("lookup", "classify") else 90, p["context"])
+               for p in questions]
+    rng_chance = random.Random(7)
+    grounded = {
+        "kushmanda": evaluate.score(questions, answers),
+        "lexical baseline": evaluate.score(questions, [evaluate.lexical(p) for p in questions]),
+        "chance": evaluate.score(questions, [evaluate.chance(p, rng_chance) for p in questions]),
+    }
+    examples, shown = [], set()
+    for p, got in zip(questions, answers, strict=True):
+        label = p["kind"] if p["answerable"] else "unanswerable"
+        if label in shown:
+            continue
+        shown.add(label)
+        examples.append({"kind": label, "question": p["q"][:200], "context": [c[:160] for c in p["context"]],
+                         "expected": p["a"][:240], "answer": got[:240]})
 
     held_bytes = sum(len(d["text"].encode("utf-8")) + 1 for d in test_docs)
     samples = []
@@ -263,9 +289,10 @@ def main() -> int:
         out = model.generate(ids, 24 if args.tiny else 80, temperature=0.7)
         samples.append({"prompt": prompt, "completion": tok.decode(out[0].tolist()[ids.size(1):])})
 
-    torch.save({"config": cfg.__dict__, "state": model.state_dict()}, args.out / "kushmanda-v1.pt")
+    torch.save({"config": cfg.__dict__, "state": model.state_dict()}, args.out / "kushmanda-v2.pt")
+    best_step = min((c for c in curve if c["phase"] == "pretrain"), key=lambda c: c["val_loss"])["step"]
     results = {
-        "model": "sati-kushmanda-v1",
+        "model": "sati-kushmanda-v2",
         "architecture": "decoder-only transformer: RMSNorm, RoPE, SwiGLU, fused causal attention, tied embeddings",
         "parameters": model.parameters_count(),
         "config": cfg.__dict__,
@@ -278,16 +305,18 @@ def main() -> int:
         "held_out": {"loss": round(pre_loss, 4), "perplexity": round(math.exp(pre_loss), 2),
                      "bits_per_byte": round((pre_loss / math.log(2)) * len(test_ids) / max(1, held_bytes), 4)},
         "sft": {"train_pairs": len(sft_train), "held_out_pairs": len(sft_test),
-                "held_out_answer_loss": round(sft_val(), 4),
-                "exact_match": {k: {"accuracy": round(sum(v) / len(v), 4), "n": len(v)} for k, v in exact.items()},
-                "examples": examples},
+                "held_out_answer_loss": round(sft_val(), 4), "passages": sft.PASSAGES,
+                "unanswerable_share": sft.UNANSWERABLE, "evaluated_questions": len(questions),
+                "grounded": grounded, "examples": examples},
         "curve": curve,
         "samples": samples,
         "steps": {"pretrain": steps, "sft": 10 if args.tiny else args.sft_steps},
+        # How many times pretraining read the corpus, counting to the kept checkpoint.
+        "epochs": round(best_step * args.batch * args.accumulate * cfg.context / max(1, len(train_ids)), 1),
         "seconds": round(time.time() - started, 1),
     }
     (args.out / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"held_out": results["held_out"], "exact_match": results["sft"]["exact_match"]}))
+    print(json.dumps({"held_out": results["held_out"], "grounded": grounded}))
     return 0
 
 

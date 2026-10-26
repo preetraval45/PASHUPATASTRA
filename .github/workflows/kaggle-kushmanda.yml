@@ -110,7 +110,12 @@ jobs:
           git add docs/research/models apps/web/lib/models
           if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
           git commit -m "docs(models): Kushmanda v0 results from Kaggle, run ${{ github.run_id }}"
-          for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && break
-            sleep 10
+          # Parallel jobs push to main at once. Retry with backoff, and fail the step
+          # if the results never land: a loop ending in `sleep` exits 0, which hid a
+          # lost push of the BGL results on 19 Oct.
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 15))
           done
+          echo "::error::could not push the results after 6 attempts"
+          exit 1

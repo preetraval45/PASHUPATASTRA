@@ -39,5 +39,12 @@ jobs:
           git add apps/web/lib/world.generated.json
           if git diff --cached --quiet; then echo "unchanged"; exit 0; fi
           git commit -m "data(world): threat landscape snapshot from run ${{ github.run_id }}"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          # Parallel jobs push to main at once. Retry with backoff, and fail the step
+          # if the results never land: a loop ending in `sleep` exits 0, which hid a
+          # lost push of the BGL results on 19 Oct.
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 15))
+          done
+          echo "::error::could not push the results after 6 attempts"
+          exit 1

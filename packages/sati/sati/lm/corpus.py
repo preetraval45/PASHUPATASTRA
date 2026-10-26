@@ -8,6 +8,12 @@ allow that:
   mitigation and attack-pattern descriptions. MITRE grants a royalty-free
   licence to use and prepare derivative works, with attribution.
 * **CISA KEV** — vulnerability names and required actions; U.S. government work.
+* **NVD CVE descriptions** (from v2, `cve=True`) — every published CVE, from
+  NIST's yearly JSON 2.0 feeds. The descriptions come from the CVE Program,
+  whose terms of use grant a perpetual, royalty-free licence to reproduce and
+  prepare derivative works; NVD's own data is a U.S. government work. About
+  20x the rest of the corpus put together: v1 (1.1M tokens) overfitted after
+  a few hundred steps, because the corpus was too small for the model.
 * **This repository's own writing** — the training course and the docs.
 
 LogHub is deliberately excluded: it is research-use only (datasheets.md).
@@ -28,6 +34,8 @@ ATTACK = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/e
 CAPEC = "https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json"
 KEV = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 CWE = "https://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
+NVD = "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{year}.json.gz"
+NVD_YEARS = range(2002, 2027)
 
 CITATION = re.compile(r"\(Citation: [^)]*\)")
 MARKUP = re.compile(r"<[^>]+>")
@@ -130,6 +138,38 @@ def cwe_documents(cache: Path) -> list[dict]:
     return docs
 
 
+def nvd_record(item: dict) -> dict | None:
+    """One NVD JSON 2.0 vulnerability → a document, or None if rejected or empty."""
+    cve = item.get("cve", {})
+    if cve.get("vulnStatus") == "Rejected":
+        return None
+    description = next((d["value"] for d in cve.get("descriptions", []) if d.get("lang") == "en"), "").strip()
+    if len(description) < 60 or description.startswith("** REJECT"):
+        return None
+    weaknesses = sorted({
+        d["value"] for w in cve.get("weaknesses", []) for d in w.get("description", [])
+        if d.get("value", "").startswith("CWE-")
+    })
+    text = f"{cve['id']}: {description}"
+    if weaknesses:
+        text += f" Weakness: {', '.join(weaknesses)}."
+    return {"source": "nvd-cve", "id": cve["id"], "text": text}
+
+
+def nvd_documents(cache: Path, years: range = NVD_YEARS) -> list[dict]:
+    import gzip
+    import urllib.error
+
+    docs = []
+    for year in years:
+        try:
+            feed = json.loads(gzip.decompress(_get(NVD.format(year=year), cache)))
+        except urllib.error.HTTPError:  # a year not published yet
+            continue
+        docs.extend(d for d in map(nvd_record, feed.get("vulnerabilities", [])) if d)
+    return docs
+
+
 def repo_documents(root: Path) -> list[dict]:
     docs = []
     for path in sorted([*root.glob("docs/**/*.md"), root / "apps" / "web" / "lib" / "training.ts"]):
@@ -143,7 +183,7 @@ def repo_documents(root: Path) -> list[dict]:
     return docs
 
 
-def build(cache: Path, root: Path, clean: bool = True) -> list[dict]:
+def build(cache: Path, root: Path, clean: bool = True, cve: bool = False) -> list[dict]:
     docs = [
         *stix_documents(ATTACK, "mitre-attack", cache),
         *procedure_documents(cache),
@@ -151,6 +191,7 @@ def build(cache: Path, root: Path, clean: bool = True) -> list[dict]:
         *cwe_documents(cache),
         *kev_documents(cache),
         *repo_documents(root),
+        *(nvd_documents(cache) if cve else []),
     ]
     if not clean:
         return docs
