@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-10-25T11:34:37+00:00",
+  "as_of": "2026-10-26T13:07:38+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.10.23",
     "total": 1756,
-    "added_last_30_days": 33,
+    "added_last_30_days": 30,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -208,12 +208,8 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-21",
-        "value": 2
-      },
-      {
         "label": "2026-10-22",
-        "value": 28
+        "value": 11
       },
       {
         "label": "2026-10-23",
@@ -225,116 +221,120 @@
       },
       {
         "label": "2026-10-25",
-        "value": 10
+        "value": 21
+      },
+      {
+        "label": "2026-10-26",
+        "value": 8
       }
     ],
     "by_group": [
       {
-        "label": "N0n",
+        "label": "qilin",
         "value": 23
       },
       {
-        "label": "qilin",
-        "value": 19
+        "label": "N0n",
+        "value": 15
+      },
+      {
+        "label": "emperador",
+        "value": 7
+      },
+      {
+        "label": "Whitearmor",
+        "value": 6
       },
       {
         "label": "krybit",
         "value": 6
       },
       {
-        "label": "emperador",
-        "value": 5
-      },
-      {
-        "label": "lamashtu",
-        "value": 5
-      },
-      {
         "label": "lockbit5",
-        "value": 5
-      },
-      {
-        "label": "akira",
-        "value": 5
-      },
-      {
-        "label": "SilentRansomGroup",
         "value": 4
       },
       {
-        "label": "Whitearmor",
+        "label": "payload",
         "value": 3
       },
       {
         "label": "rhysida",
+        "value": 3
+      },
+      {
+        "label": "thegentlemen",
+        "value": 3
+      },
+      {
+        "label": "akira",
         "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 24
+        "value": 27
       },
       {
         "label": "DE",
-        "value": 12
+        "value": 11
+      },
+      {
+        "label": "AR",
+        "value": 4
       },
       {
         "label": "ES",
         "value": 4
       },
       {
-        "label": "MX",
+        "label": "IT",
         "value": 3
       },
       {
-        "label": "AR",
+        "label": "MY",
+        "value": 3
+      },
+      {
+        "label": "CH",
+        "value": 3
+      },
+      {
+        "label": "MX",
         "value": 3
       },
       {
         "label": "AU",
         "value": 3
-      },
-      {
-        "label": "BG",
-        "value": 2
-      },
-      {
-        "label": "GB",
-        "value": 2
-      },
-      {
-        "label": "FR",
-        "value": 2
       }
     ],
     "by_sector": [
       {
-        "label": "Not Found",
-        "value": 20
-      },
-      {
         "label": "Manufacturing",
-        "value": 16
+        "value": 18
       },
       {
         "label": "Professional Services",
-        "value": 14
+        "value": 15
       },
       {
         "label": "Technology",
-        "value": 12
+        "value": 14
       },
       {
-        "label": "Other",
-        "value": 8
+        "label": "Not Found",
+        "value": 13
       },
       {
         "label": "Healthcare",
-        "value": 7
+        "value": 8
       },
       {
         "label": "Retail & E-Commerce",
+        "value": 7
+      },
+      {
+        "label": "Other",
         "value": 7
       },
       {
@@ -342,11 +342,11 @@
         "value": 4
       },
       {
-        "label": "Agriculture and Food Production",
-        "value": 3
+        "label": "Hospitality",
+        "value": 4
       },
       {
-        "label": "Hospitality",
+        "label": "Transportation",
         "value": 3
       }
     ]
