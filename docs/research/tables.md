@@ -16,7 +16,7 @@ so it is never printed above the rate of acting wrongly.
 | naive-llm · `qwen2.5:7b` | 0.0000 | 0.5914 | 0.0538 | 0.0000 | 0.0538 | 93 |
 | pashupatastra-llm · `llama3` | 0.0000 | 0.0000 | 0.6452 | 0.0000 | 0.6452 | 93 |
 | pashupatastra-llm · `mistral` | 0.0000 | 1.0000 | 0.0000 | 0.0000 | 0.1935 | 93 |
-| pashupatastra-llm · `qwen2.5:7b` | 0.0000 | 0.6129 | 0.0323 | 0.0000 | 0.0323 | 93 |
+| pashupatastra-llm · `qwen2.5:7b` | 0.0000 | 0.6559 | 0.0000 | 0.0000 | 0.0108 | 93 |
 
 **LLM failures, counted apart from wrong answers** (adr/LLMBaselines):
 
@@ -24,10 +24,10 @@ so it is never printed above the rate of acting wrongly.
 |---|---:|---:|---:|
 | naive-llm · `llama3` | 0 | 0 | 0 |
 | naive-llm · `mistral` | 0 | 93 | 0 |
-| naive-llm · `qwen2.5:7b` | 53 | 2 | 0 |
+| naive-llm · `qwen2.5:7b` | 55 | 0 | 0 |
 | pashupatastra-llm · `llama3` | 0 | 0 | 0 |
 | pashupatastra-llm · `mistral` | 1 | 92 | 0 |
-| pashupatastra-llm · `qwen2.5:7b` | 56 | 1 | 0 |
+| pashupatastra-llm · `qwen2.5:7b` | 48 | 13 | 0 |
 
 **Arms with no data, and why:**
 
@@ -100,14 +100,14 @@ runs (Dror et al., ACL 2018). Rows read A vs B.
 |---|---:|---:|---|---|
 | pashupatastra vs runbook | 18 / 0 | 0.0000 | [-0.818, -0.250] | survives |
 | pashupatastra-llm · llama3 vs naive-llm · llama3 | 0 / 0 | 1.0000 | [+0.000, +0.000] | within chance |
-| naive-llm · llama3 vs runbook | 0 / 0 | 1.0000 | [-0.800, -0.222] | within chance |
+| naive-llm · llama3 vs runbook | 0 / 0 | 1.0000 | [-0.800, -0.250] | within chance |
 | pashupatastra-llm · llama3 vs pashupatastra | 0 / 18 | 0.0000 | [+0.000, +0.000] | survives |
 | pashupatastra-llm · mistral vs naive-llm · mistral | 0 / 0 | 1.0000 | undefined (no actions) | within chance |
 | naive-llm · mistral vs runbook | 18 / 60 | 0.0000 | undefined (no actions) | survives |
 | pashupatastra-llm · mistral vs pashupatastra | 0 / 60 | 0.0000 | undefined (no actions) | survives |
-| pashupatastra-llm · qwen2.5:7b vs naive-llm · qwen2.5:7b | 3 / 5 | 0.7266 | [+0.000, +0.000] | within chance |
+| pashupatastra-llm · qwen2.5:7b vs naive-llm · qwen2.5:7b | 1 / 5 | 0.2188 | [+0.000, +0.000] | within chance |
 | naive-llm · qwen2.5:7b vs runbook | 0 / 55 | 0.0000 | [-0.818, -0.250] | survives |
-| pashupatastra-llm · qwen2.5:7b vs pashupatastra | 0 / 75 | 0.0000 | [+0.000, +0.000] | survives |
+| pashupatastra-llm · qwen2.5:7b vs pashupatastra | 0 / 77 | 0.0000 | [+0.000, +0.000] | survives |
 
 ## Table 4 — Metrics not computed
 

@@ -1,0 +1,73 @@
+{"scenario_id": "PIB-0001", "reason": "recovery condition needs ['db_connections', 'error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0002", "reason": "fault type 'migration': requires a database carrying schema state; the reference stack is stateless"}
+{"scenario_id": "PIB-0003", "reason": "fault type 'load': requires a load generator, which is not built yet"}
+{"scenario_id": "PIB-0004", "reason": "fault type 'application': requires instrumented application code; the reference stack reports orchestration state only"}
+{"scenario_id": "PIB-0005", "reason": "recovery condition needs ['db_connections'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0006", "reason": "recovery condition needs ['db_connections'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0007", "reason": "fault type 'migration': requires a database carrying schema state; the reference stack is stateless"}
+{"scenario_id": "PIB-0008", "reason": "fault type 'load': requires a load generator, which is not built yet"}
+{"scenario_id": "PIB-0012", "reason": "fault type 'data': requires corrupting or destroying real data to reproduce, which is not an acceptable thing for a benchmark to do to a stack it does not own"}
+{"scenario_id": "PIB-0014", "reason": "fault type 'application': requires instrumented application code; the reference stack reports orchestration state only"}
+{"scenario_id": "PIB-0015", "reason": "recovery condition needs ['hit_rate', 'origin_qps'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0016", "reason": "fault type 'application': requires instrumented application code; the reference stack reports orchestration state only"}
+{"scenario_id": "PIB-0017", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0018", "reason": "fault type 'load': requires a load generator, which is not built yet"}
+{"scenario_id": "PIB-0019", "reason": "recovery condition needs ['hit_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0020", "reason": "recovery condition needs ['cache_timeouts', 'hit_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0021", "reason": "recovery condition needs ['hit_rate', 'origin_qps'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0025", "reason": "fault type 'data': requires corrupting or destroying real data to reproduce, which is not an acceptable thing for a benchmark to do to a stack it does not own"}
+{"scenario_id": "PIB-0026", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0027", "reason": "recovery condition needs ['cpu_pct', 'latency_p95_ms'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0028", "reason": "fault type 'application': requires instrumented application code; the reference stack reports orchestration state only"}
+{"scenario_id": "PIB-0029", "reason": "recovery condition needs ['disk_pct'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0031", "reason": "fault type 'load': requires a load generator, which is not built yet"}
+{"scenario_id": "PIB-0032", "reason": "recovery condition needs ['available_threads', 'error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0033", "reason": "recovery condition needs ['latency_p95_ms', 'throttle_pct'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0034", "reason": "recovery condition needs ['evictions', 'node_memory_pct'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0038", "reason": "fault type 'data': requires corrupting or destroying real data to reproduce, which is not an acceptable thing for a benchmark to do to a stack it does not own"}
+{"scenario_id": "PIB-0040", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0041", "reason": "recovery condition needs ['auth_failure_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0045", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0047", "reason": "recovery condition needs ['error_rate', 'latency_p95_ms'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0051", "reason": "fault type 'migration': requires a database carrying schema state; the reference stack is stateless"}
+{"scenario_id": "PIB-0052", "reason": "fault type 'migration': requires a database carrying schema state; the reference stack is stateless"}
+{"scenario_id": "PIB-0053", "reason": "recovery condition needs ['error_rate', 'latency_p95_ms'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0054", "reason": "recovery condition needs ['breaker_state', 'error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0055", "reason": "recovery condition needs ['error_rate', 'upstream_qps'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0056", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0057", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0058", "reason": "recovery condition needs ['error_rate', 'rate_limit_hits'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0059", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0060", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0066", "reason": "recovery condition needs ['dns_failure_rate', 'error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0067", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0068", "reason": "fault type 'load': requires a load generator, which is not built yet"}
+{"scenario_id": "PIB-0069", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0070", "reason": "fault type 'load': requires a load generator, which is not built yet"}
+{"scenario_id": "PIB-0071", "reason": "recovery condition needs ['error_rate'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0072", "reason": "recovery condition needs ['packet_loss_pct'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0073", "reason": "recovery condition needs ['connection_rate', 'latency_p95_ms'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0076", "reason": "fault type 'load': requires a load generator, which is not built yet"}
+{"scenario_id": "PIB-0079", "reason": "fault type 'load': requires a load generator, which is not built yet"}
+{"scenario_id": "PIB-0080", "reason": "recovery condition needs ['active_consumers', 'consumer_lag'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0081", "reason": "recovery condition needs ['consumer_lag'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0082", "reason": "recovery condition needs ['consumer_lag'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0083", "reason": "recovery condition needs ['duplicate_rate', 'queue_depth'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0084", "reason": "recovery condition needs ['queue_depth'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0085", "reason": "recovery condition needs ['consumer_lag', 'rebalances_per_hour'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0086", "reason": "recovery condition needs ['dlq_depth'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0090", "reason": "fault type 'data': requires corrupting or destroying real data to reproduce, which is not an acceptable thing for a benchmark to do to a stack it does not own"}
+{"scenario_id": "PIB-0091", "reason": "fault type 'data': requires corrupting or destroying real data to reproduce, which is not an acceptable thing for a benchmark to do to a stack it does not own"}
+{"scenario_id": "PIB-0092", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0093", "reason": "recovery condition needs ['images_with_secrets'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0094", "reason": "recovery condition needs ['cluster_admin_bindings'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0095", "reason": "recovery condition needs ['public_debug_endpoints'], which this stack cannot report; it observes only ['ready_replicas', 'restarts', 'availability']"}
+{"scenario_id": "PIB-0096", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0097", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0098", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0099", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0100", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0101", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0102", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0103", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
+{"scenario_id": "PIB-0104", "reason": "fault type 'security': requires simulating an adversary; an infrastructure fault cannot stand in for an intrusion without deciding the answer in advance"}
