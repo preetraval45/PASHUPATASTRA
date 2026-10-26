@@ -31,3 +31,10 @@ model scores F1 0.997 on a random split and 0.453 on unseen days.
   failure analysis (RP-34/35).
 - Consider a Chandraghanta v1: anomaly scoring combined with the classifier,
   since the two fail on different families.
+
+## v1: either detector (26 Oct)
+
+`chandraghanta-v1 (either)` flags a flow if the classifier or the benign-only
+PCA does; they fail on different families. It runs on Kaggle CPU via
+`kaggle/chandraghanta`. Also added this session: PAPER §7.2, guarded by
+`testpaper.py`.

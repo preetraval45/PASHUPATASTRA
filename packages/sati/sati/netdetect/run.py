@@ -128,6 +128,7 @@ def run_unsw(folder: Path) -> dict:
         "chandraghanta-v0 without TTL": detect(xtr_nt, ytr, xte_nt, "unsw")[0],
         "pca (benign-only)": pca_detect(xtr, ytr, xte, "unsw"),
     }
+    flags["chandraghanta-v1 (either)"] = flags["chandraghanta-v0"] | flags["pca (benign-only)"]
     return {
         "name": "UNSW-NB15",
         "split": "official training and testing files",
@@ -149,6 +150,10 @@ def run_cic(folder: Path) -> dict:
         "chandraghanta-v0": detect(train[features], ytr, test[features], "cic")[0],
         "pca (benign-only)": pca_detect(train[features], ytr, test[features], "cic"),
     }
+    # v1: flag a flow if either detector does. They fail on different families (the
+    # classifier misses infiltration and PCA catches it), so the union is measured,
+    # with its false-positive cost shown beside it.
+    flags["chandraghanta-v1 (either)"] = flags["chandraghanta-v0"] | flags["pca (benign-only)"]
 
     # The setting most published results use: a random split of all days.
     held = validation_mask(len(data), "cic-random")

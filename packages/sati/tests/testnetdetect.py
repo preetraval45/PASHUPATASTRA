@@ -92,6 +92,7 @@ def test_both_pipelines_and_the_report_run_end_to_end(tmp_path, capsys):
                "datasets": {"unsw": run_unsw(unsw_dir), "cic": run_cic(cic_dir)}}
     assert results["datasets"]["unsw"]["detectors"]["chandraghanta-v0"]["f1"] > 0.9  # TTL gives it away
     assert results["datasets"]["cic"]["per_family"]["DDoS"]["seen_in_training"] is False
+    assert "chandraghanta-v1 (either)" in results["datasets"]["cic"]["detectors"]
     path = tmp_path / "results.json"
     path.write_text(json.dumps(results), encoding="utf-8")
     assert report.main(str(path)) == 0
