@@ -35,3 +35,13 @@ contradiction exposed the bug.
 - When the rerun lands, update adr/SatiDetect with the corrected numbers,
   keep or flip its decision, and refresh the Shailaputri and SMD cards and
   §8 material.
+
+## Follow-up (same day)
+
+- **Corrected rates:** Shailaputri 26.6 per 1000 on NAB, against about 75
+  for the statistical detectors (EWMA 14.2); 4.6–6.5 on SMD.
+- **LightGBM non-determinism.** The same code and data gave four different
+  model hashes across runs. Every LightGBM params block now sets
+  `num_threads: 2`, and REPRODUCIBILITY.md says why.
+- RP-74 goes back to `[~]` until adr/SatiDetect is re-decided on the first
+  pinned run.

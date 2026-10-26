@@ -74,8 +74,11 @@ read once, at the end. Kapoor and Narayanan (2023) is the leakage checklist
 these splits were checked against.
 
 **Seeds.** Every training entry point fixes its seeds to 7: Python `random`,
-`torch.manual_seed`, and LightGBM's `seed`. LightGBM runs and the CPU PyTorch
-jobs give the same results on rerun. Kushmanda trains on a GPU, where
+`torch.manual_seed`, and LightGBM's `seed`. LightGBM runs pin `num_threads` to 2: its `deterministic` mode
+is exact only for a fixed thread count, and before this was pinned (26 October
+2026) the same code and data trained four different Shailaputri models across
+five runs, with F1 moving between 0.382 and 0.424. CPU PyTorch jobs give the
+same metrics on rerun. Kushmanda trains on a GPU, where
 non-deterministic kernels mean a rerun matches its metrics within noise, not
 bit for bit.
 

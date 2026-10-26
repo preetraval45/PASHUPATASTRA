@@ -53,6 +53,9 @@ PARAMS: dict[str, object] = {
     "seed": 7,
     "deterministic": True,
     "force_row_wise": True,
+    # `deterministic` holds only for a fixed thread count; runners vary, and on
+    # 26 Oct the same code and data gave four different Shailaputri models.
+    "num_threads": 2,
 }
 ROUNDS = 300
 SPLIT = (0.6, 0.2, 0.2)
