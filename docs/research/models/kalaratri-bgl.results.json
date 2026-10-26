@@ -1,0 +1,90 @@
+{
+  "model": "sati-kalaratri-bgl-v0",
+  "dataset": {
+    "name": "LogHub BGL",
+    "zenodo_record": "8196385",
+    "blocks": 47134,
+    "unit": "windows of 100 lines",
+    "anomaly_share": 0.1023,
+    "split": {
+      "train": 28280,
+      "validation": 9427,
+      "test": 9427,
+      "order": "as logged"
+    }
+  },
+  "vocabulary": 310,
+  "test": {
+    "kalaratri-bgl-v0": {
+      "precision": 0.5128,
+      "recall": 0.2712,
+      "f1": 0.3547,
+      "false_positive_rate": 0.02438,
+      "tp": 221,
+      "fp": 210,
+      "fn": 594,
+      "tn": 8402
+    },
+    "pca (Xu et al. 2009)": {
+      "precision": 0.0923,
+      "recall": 0.8294,
+      "f1": 0.1662,
+      "false_positive_rate": 0.7716,
+      "tp": 676,
+      "fp": 6645,
+      "fn": 139,
+      "tn": 1967
+    },
+    "unseen-template rule": {
+      "precision": 0.0981,
+      "recall": 1.0,
+      "f1": 0.1787,
+      "false_positive_rate": 0.8696,
+      "tp": 815,
+      "fp": 7489,
+      "fn": 0,
+      "tn": 1123
+    }
+  },
+  "thresholds": {
+    "kalaratri-bgl-v0": 0.6127507388944308,
+    "pca": 7586.353679078977
+  },
+  "top_features": [
+    {
+      "feature": "T2",
+      "gain": 228632.9
+    },
+    {
+      "feature": "T18",
+      "gain": 98441.2
+    },
+    {
+      "feature": "T147",
+      "gain": 97798.1
+    },
+    {
+      "feature": "distinct_share",
+      "gain": 28611.6
+    },
+    {
+      "feature": "T54",
+      "gain": 28574.4
+    },
+    {
+      "feature": "T10",
+      "gain": 27233.4
+    },
+    {
+      "feature": "T217",
+      "gain": 26309.2
+    },
+    {
+      "feature": "T16",
+      "gain": 17675.6
+    }
+  ],
+  "weights_published": false,
+  "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",
+  "seconds": 73.0
+}
