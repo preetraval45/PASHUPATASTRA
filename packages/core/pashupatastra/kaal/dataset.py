@@ -17,6 +17,8 @@
 **Contamination guard.** The run fails if:
 
 * any incident's topology matches the PIB reference stack, or
+* any incident's topology shape matches an RCAEval system the models are
+  tested on (Online Boutique, Sock Shop; `kaal.references`), or
 * any training incident's structural signature (topology shape, fault, and
   the ordered sequence of layer, metric, direction and rounded σ) also
   appears in a test split.
@@ -41,6 +43,7 @@ from collections import Counter
 from pathlib import Path
 
 from pashupatastra.kaal.generator import VERSION, Incident, callers_by_distance, incident
+from pashupatastra.kaal.references import REFERENCES, nodes
 
 HELD_OUT_FAULTS = ("cpu_saturation", "consumer_lag")
 OOD_TOPOLOGY_BUCKET = 0  # shape hash mod 10
@@ -52,11 +55,21 @@ def _h(text: str) -> int:
     return int(hashlib.sha256(text.encode()).hexdigest(), 16)
 
 
+def shape_of(nodes: list[tuple[str, str, str]], calls: list[tuple[str, str]]) -> str:
+    """Topology structure without names: each node's layer, kind and call degrees.
+    `nodes` are (name, layer, kind)."""
+    out_deg, in_deg = Counter(a for a, _ in calls), Counter(b for _, b in calls)
+    rows = sorted((layer, kind, out_deg[name], in_deg[name]) for name, layer, kind in nodes)
+    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()[:16]
+
+
 def shape(inc: Incident) -> str:
-    """Topology structure without names: each service's layer, kind and call degrees."""
-    out_deg, in_deg = Counter(a for a, _ in inc.calls), Counter(b for _, b in inc.calls)
-    nodes = sorted((s.layer, s.kind.value, out_deg[s.name], in_deg[s.name]) for s in inc.services)
-    return hashlib.sha256(json.dumps(nodes).encode()).hexdigest()[:16]
+    return shape_of([(s.name, s.layer, s.kind.value) for s in inc.services], inc.calls)
+
+
+#: The shapes of the systems sim-to-real tests on; no generated topology may match one.
+REFERENCE_SHAPES = {system: shape_of(nodes(system), [tuple(c) for c in REFERENCES[system]["calls"]])  # type: ignore[union-attr,misc]
+                    for system in REFERENCES}
 
 
 def signature(inc: Incident) -> str:
@@ -104,9 +117,13 @@ def build(n: int, seed: int) -> dict:
     memory, not generalisation. The count dropped is reported, never hidden."""
     rows = []
     pib_matches, anomalous, depths = 0, Counter(), Counter()
+    reference_matches: Counter[str] = Counter()
+    by_shape = {v: k for k, v in REFERENCE_SHAPES.items()}
     for i in range(n):
         inc = incident(seed, i)
         rows.append((split_of(inc), inc.id, signature(inc), str(inc.label["outcome"])))
+        if (hit := by_shape.get(shape(inc))) is not None:
+            reference_matches[hit] += 1
         if len(inc.services) == PIB_REFERENCE_SERVICES and not inc.calls:
             pib_matches += 1
         anomalous[len(inc.label["affected"])] += 1  # type: ignore[arg-type]
@@ -137,11 +154,12 @@ def build(n: int, seed: int) -> dict:
                    for s in SPLITS},
         "guard": {
             "pib_reference_topology_matches": pib_matches,
+            "rcaeval_topology_matches": {s: reference_matches.get(s, 0) for s in REFERENCES},
             "removed_from_tests_as_repeats_of_training": {t: removed.get(t, 0) for t in SPLITS if t.startswith("test")},
             "train_signatures_also_in": leaks,
-            "passed": pib_matches == 0 and not any(leaks.values()),
+            "passed": pib_matches == 0 and not any(leaks.values()) and not reference_matches,
             "pending": ["the 20 labelled incidents (RP-13): not yet written",
-                        "RCAEval's three topologies: not in this repository as graphs"],
+                        "RCAEval Train Ticket: no graph authored (64 components)"],
         },
         "realism": {
             "anomalous_services_per_incident": {str(k): v for k, v in sorted(anomalous.items())},

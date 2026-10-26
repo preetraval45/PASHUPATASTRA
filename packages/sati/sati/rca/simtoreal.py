@@ -43,36 +43,14 @@ import numpy as np
 import pandas as pd
 from pashupatastra.kaal.dataset import assign
 from pashupatastra.kaal.generator import incident
+from pashupatastra.kaal.references import REFERENCES
 
 from sati.rca import features as rfeat
 from sati.rca import kaal, model
 from sati.sources import rcaeval
 
-GRAPHS: dict[str, dict[str, object]] = {
-    "ob": {
-        "calls": [
-            ("frontend-external", "frontend"),
-            *[("frontend", s) for s in ("adservice", "cartservice", "checkoutservice", "currencyservice",
-                                        "productcatalogservice", "recommendationservice", "shippingservice")],
-            *[("checkoutservice", s) for s in ("cartservice", "currencyservice", "emailservice", "paymentservice",
-                                               "productcatalogservice", "shippingservice")],
-            ("recommendationservice", "productcatalogservice"),
-            ("cartservice", "redis"),
-        ],
-        "layer": {"frontend-external": "edge", "frontend": "edge", "checkoutservice": "api",
-                  "recommendationservice": "api", "redis": "store"},
-    },
-    "ss": {
-        "calls": [
-            *[("front-end", s) for s in ("catalogue", "carts", "orders", "user", "session-db")],
-            *[("orders", s) for s in ("carts", "user", "payment", "shipping", "orders-db")],
-            ("shipping", "rabbitmq"), ("queue-master", "rabbitmq"), ("rabbitmq-exporter", "rabbitmq"),
-            ("catalogue", "catalogue-db"), ("carts", "carts-db"), ("user", "user-db"),
-        ],
-        "layer": {"front-end": "edge", "orders": "api", "carts-db": "store", "catalogue-db": "store",
-                  "orders-db": "store", "user-db": "store", "session-db": "store", "rabbitmq": "store"},
-    },
-}
+# One copy of the authored graphs, shared with the RP-18 contamination guard.
+GRAPHS = REFERENCES
 RESOURCE_FAMILIES = ("cpu", "mem", "other")
 
 

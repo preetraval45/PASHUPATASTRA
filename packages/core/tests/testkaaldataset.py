@@ -62,3 +62,18 @@ def test_assign_agrees_with_the_manifest_counts():
         assert sum(1 for v in splits.values() if v == s) == MANIFEST["splits"][s]["incidents"]
     removed = sum(MANIFEST["guard"]["removed_from_tests_as_repeats_of_training"].values())
     assert sum(1 for v in splits.values() if v is None) == removed
+
+
+def test_no_generated_topology_matches_an_rcaeval_system():
+    from pashupatastra.kaal.dataset import REFERENCE_SHAPES
+
+    assert set(REFERENCE_SHAPES) == {"ob", "ss"}
+    assert all(v == 0 for v in MANIFEST["guard"]["rcaeval_topology_matches"].values())
+
+
+def test_the_reference_shape_check_would_catch_a_copy():
+    from pashupatastra.kaal.dataset import REFERENCE_SHAPES, shape_of
+    from pashupatastra.kaal.references import REFERENCES, nodes
+
+    copy = shape_of(nodes("ob"), [tuple(c) for c in REFERENCES["ob"]["calls"]])
+    assert copy == REFERENCE_SHAPES["ob"]

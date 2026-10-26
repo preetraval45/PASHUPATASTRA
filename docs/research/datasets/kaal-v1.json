@@ -58,6 +58,10 @@
   },
   "guard": {
     "pib_reference_topology_matches": 0,
+    "rcaeval_topology_matches": {
+      "ob": 0,
+      "ss": 0
+    },
     "removed_from_tests_as_repeats_of_training": {
       "test-id": 14,
       "test-ood-topology": 0,
@@ -71,7 +75,7 @@
     "passed": true,
     "pending": [
       "the 20 labelled incidents (RP-13): not yet written",
-      "RCAEval's three topologies: not in this repository as graphs"
+      "RCAEval Train Ticket: no graph authored (64 components)"
     ]
   },
   "realism": {
