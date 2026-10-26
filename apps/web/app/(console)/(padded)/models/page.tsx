@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
-import { BRAHMACHARINI, KALARATRI, KALARATRI_BGL, KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
+import { BRAHMACHARINI, CHANDRAGHANTA, KALARATRI, KALARATRI_BGL, KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
 export const metadata: Metadata = {
   title: "Sati models",
@@ -247,6 +247,83 @@ export default function ModelsPage() {
               </table>
             </div>
           </Panel>
+        </section>
+      )}
+
+      {!CHANDRAGHANTA.pending && (
+        <section id="chandraghanta-results" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Chandraghanta — attack traffic in real labelled flows</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              Two lab datasets of labelled network flows. On CIC-IDS2017 the model trains on Monday to Wednesday and is
+              tested on Thursday and Friday, so every attack family it is tested on is one it has never seen — and the
+              random-split row shows what the usual evaluation would have claimed instead.
+            </p>
+          </div>
+          {(["unsw", "cic"] as const).map((key) => {
+            const d = CHANDRAGHANTA.datasets[key];
+            const ref = d.reference_random_split;
+            const detectors = Object.keys(d.detectors);
+            return (
+              <Panel
+                key={key}
+                title={`${d.name}: ${d.rows.test.toLocaleString()} held-out flows`}
+                aside={`${(d.attack_share_test * 100).toFixed(1)}% attacks · ${d.split}`}
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                        <th className="py-2 pr-3 font-normal">Detector</th>
+                        <th className="py-2 pr-3 text-right font-normal">Precision</th>
+                        <th className="py-2 pr-3 text-right font-normal">Recall</th>
+                        <th className="py-2 pr-3 text-right font-normal">F1</th>
+                        <th className="py-2 text-right font-normal">False-positive rate</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[rgb(var(--edge))]">
+                      {[...Object.entries(d.detectors), ...(ref ? [["random split (reference only)", ref["chandraghanta-v0"]] as const] : [])].map(([name, m]) => (
+                        <tr key={name} className={name.startsWith("random") ? "text-[rgb(var(--faint))]" : undefined}>
+                          <td className="py-2 pr-3">{name.startsWith("chandraghanta") ? <strong>{name.replace("chandraghanta-v0", "Chandraghanta")}</strong> : name}</td>
+                          <td className="tnum py-2 pr-3 text-right">{m.precision.toFixed(3)}</td>
+                          <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
+                          <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>
+                          <td className="tnum py-2 text-right">{m.false_positive_rate.toFixed(4)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                        <th className="py-2 pr-3 font-normal">Attack family</th>
+                        <th className="py-2 pr-3 text-right font-normal">Flows</th>
+                        <th className="py-2 pr-3 font-normal">Seen in training</th>
+                        {detectors.map((n) => (
+                          <th key={n} className="py-2 pr-3 text-right font-normal">{n.replace("chandraghanta-v0", "Chandraghanta")} recall</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[rgb(var(--edge))]">
+                      {Object.entries(d.per_family).filter(([, f]) => f.attack).map(([family, f]) => (
+                        <tr key={family}>
+                          <td className="py-2 pr-3">{family.replace(/ï¿½|�|\u0096|–/g, "-")}</td>
+                          <td className="tnum py-2 pr-3 text-right">{f.n.toLocaleString()}</td>
+                          <td className="py-2 pr-3">{f.seen_in_training ? "yes" : <strong>no</strong>}</td>
+                          {detectors.map((n) => (
+                            <td key={n} className="tnum py-2 pr-3 text-right">{Number(f[n]).toFixed(3)}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-3 text-xs text-[rgb(var(--faint))]">{CHANDRAGHANTA.weights_note}</p>
+              </Panel>
+            );
+          })}
         </section>
       )}
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import sys
 
+from sati.sources.netflow import clean_family
+
 READING = {
     "unsw": "Without the TTL fields, the score shows how much of the detection rests on TTL values that "
             "nearly identify the testbed's attack traffic, which a real network would not provide.",
@@ -27,12 +29,26 @@ def table(d: dict) -> list[str]:
     return rows
 
 
+def finding(key: str, d: dict) -> str:
+    """The measured answer to the question READING poses, computed from the results."""
+    det = d["detectors"]
+    if key == "unsw" and "chandraghanta-v0 without TTL" in det:
+        delta = det["chandraghanta-v0 without TTL"]["f1"] - det["chandraghanta-v0"]["f1"]
+        return f" Measured: removing them changes F1 by {delta:+.3f}."
+    ref = d.get("reference_random_split")
+    if key == "cic" and ref:
+        return (f" Measured: F1 {ref['chandraghanta-v0']['f1']:.3f} on a random split, "
+                f"{det['chandraghanta-v0']['f1']:.3f} on unseen days.")
+    return ""
+
+
 def families(d: dict) -> list[str]:
     names = list(d["detectors"])
     rows = ["| Family | Flows | Seen in training | " + " | ".join(names) + " |",
             "|---|---:|---|" + "---:|" * len(names)]
     for family, f in d["per_family"].items():
-        label = family if f["attack"] else f"{family} *(share wrongly flagged)*"
+        name = clean_family(family)
+        label = name if f["attack"] else f"{name} *(share wrongly flagged)*"
         rows.append(f"| {label} | {f['n']:,} | {'yes' if f['seen_in_training'] else '**no**'} | "
                     + " | ".join(f"{f[n]:.3f}" for n in names) + " |")
     return rows
@@ -55,7 +71,7 @@ def main(path: str) -> int:
             f"{d['attack_share_test']:.1%} of them attacks.\n",
             *table(d),
             "",
-            f"{READING[key]}\n",
+            f"{READING[key]}{finding(key, d)}\n",
             "### Recall by attack family\n",
             *families(d),
             "",

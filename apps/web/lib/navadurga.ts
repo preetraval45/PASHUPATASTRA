@@ -10,6 +10,7 @@ import katyayani from "./models/katyayani.results.json";
 import brahmacharini from "./models/brahmacharini.results.json";
 import kalaratri from "./models/kalaratri.results.json";
 import kalaratriBgl from "./models/kalaratri-bgl.results.json";
+import chandraghanta from "./models/chandraghanta.results.json";
 import shailaputri from "./models/shailaputri.results.json";
 
 export type ModelStatus = "trained" | "training" | "planned";
@@ -89,6 +90,24 @@ export interface LogResults {
 export const KALARATRI = kalaratri as unknown as LogResults;
 export const KALARATRI_BGL = kalaratriBgl as unknown as LogResults;
 
+type FamilyRecall = { n: number; attack: boolean; seen_in_training: boolean } & Record<string, number | boolean>;
+
+export interface NetResults {
+  pending?: string;
+  datasets: Record<"unsw" | "cic", {
+    name: string;
+    split: string;
+    rows: { train: number; test: number };
+    attack_share_test: number;
+    detectors: Record<string, BinaryMetrics>;
+    per_family: Record<string, FamilyRecall>;
+    reference_random_split?: { rows_test: number; "chandraghanta-v0": BinaryMetrics };
+  }>;
+  weights_note: string;
+}
+
+export const CHANDRAGHANTA = chandraghanta as unknown as NetResults;
+
 type Retrieval = { "recall@1": number; "recall@5": number; "recall@10": number; mrr: number; n: number };
 
 export interface EmbedResults {
@@ -104,5 +123,6 @@ export function statusOf(model: SatiModel): ModelStatus {
   if (model.id === "sati-shailaputri") return SHAILAPUTRI.pending ? "training" : "trained";
   if (model.id === "sati-kalaratri") return KALARATRI.pending ? "training" : "trained";
   if (model.id === "sati-brahmacharini") return BRAHMACHARINI.pending ? "training" : "trained";
+  if (model.id === "sati-chandraghanta") return CHANDRAGHANTA.pending ? "training" : "trained";
   return model.status;
 }

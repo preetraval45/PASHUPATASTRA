@@ -72,6 +72,18 @@ def unsw_features(train: pd.DataFrame, test: pd.DataFrame, drop_ttl: bool = Fals
     return a.astype(float), b.astype(float)
 
 
+GARBLED_DASH = ("ï¿½", "�", "\x96", "–")
+"""CIC's web-attack labels carry an en dash that arrives garbled, depending on
+how the CSV was decoded: as U+FFFD, as its UTF-8 bytes read as Latin-1, or as
+the Windows-1252 byte."""
+
+
+def clean_family(label: str) -> str:
+    for broken in GARBLED_DASH:
+        label = label.replace(broken, "-")
+    return " ".join(label.split())
+
+
 def _day(path: Path) -> str:
     return next((d for d in DAYS if path.name.lower().startswith(d.lower())), "")
 
@@ -89,7 +101,7 @@ def cic(folder: Path) -> pd.DataFrame:
         frame["day"] = _day(path)
         parts.append(frame)
     data = pd.concat(parts, ignore_index=True)
-    data["family"] = data.pop("Label").astype(str).str.strip().str.replace("�", "-").str.replace("\x96", "-")
+    data["family"] = data.pop("Label").astype(str).map(clean_family)
     data["label"] = (data["family"] != "BENIGN").astype(int)
     features = [c for c in data.columns if c not in ("day", "family", "label")]
     data[features] = data[features].apply(pd.to_numeric, errors="coerce").replace([np.inf, -np.inf], np.nan)
