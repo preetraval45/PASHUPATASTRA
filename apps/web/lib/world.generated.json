@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-26T15:14:17+00:00",
+  "as_of": "2026-10-26T16:18:10+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
@@ -208,12 +208,8 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-22",
-        "value": 9
-      },
-      {
         "label": "2026-10-23",
-        "value": 38
+        "value": 33
       },
       {
         "label": "2026-10-24",
@@ -225,13 +221,13 @@
       },
       {
         "label": "2026-10-26",
-        "value": 10
+        "value": 24
       }
     ],
     "by_group": [
       {
         "label": "qilin",
-        "value": 21
+        "value": 32
       },
       {
         "label": "N0n",
@@ -258,29 +254,29 @@
         "value": 3
       },
       {
-        "label": "rhysida",
-        "value": 3
-      },
-      {
         "label": "thegentlemen",
         "value": 3
       },
       {
-        "label": "akira",
-        "value": 3
+        "label": "Doommageddon",
+        "value": 2
+      },
+      {
+        "label": "aurora",
+        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 27
+        "value": 33
       },
       {
         "label": "DE",
         "value": 11
       },
       {
-        "label": "MX",
+        "label": "ES",
         "value": 4
       },
       {
@@ -288,15 +284,15 @@
         "value": 4
       },
       {
-        "label": "ES",
-        "value": 4
-      },
-      {
-        "label": "IT",
+        "label": "GB",
         "value": 3
       },
       {
-        "label": "MY",
+        "label": "MX",
+        "value": 3
+      },
+      {
+        "label": "IT",
         "value": 3
       },
       {
@@ -311,7 +307,7 @@
     "by_sector": [
       {
         "label": "Manufacturing",
-        "value": 18
+        "value": 19
       },
       {
         "label": "Professional Services",
@@ -319,19 +315,23 @@
       },
       {
         "label": "Technology",
-        "value": 15
-      },
-      {
-        "label": "Not Found",
-        "value": 13
+        "value": 14
       },
       {
         "label": "Healthcare",
-        "value": 8
+        "value": 10
       },
       {
         "label": "Retail & E-Commerce",
-        "value": 7
+        "value": 9
+      },
+      {
+        "label": "Not Found",
+        "value": 8
+      },
+      {
+        "label": "Energy & Utilities",
+        "value": 6
       },
       {
         "label": "Other",
@@ -342,12 +342,8 @@
         "value": 4
       },
       {
-        "label": "Energy & Utilities",
-        "value": 4
-      },
-      {
-        "label": "Hospitality",
-        "value": 3
+        "label": "Financial Services",
+        "value": 2
       }
     ]
   },
