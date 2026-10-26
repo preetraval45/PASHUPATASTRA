@@ -194,6 +194,37 @@ jobs:
           (cd packages/sati && python -m sati.verify.report ../../results/mahagauri/results.json) > docs/research/models/mahagauri.md
           bash scripts/pushresults.sh "docs(models): Mahagauri v0 results from run ${{ github.run_id }}" docs/research/models/mahagauri.results.json docs/research/models/mahagauri.md apps/web/lib/models/mahagauri.results.json
 
+  skandamata:
+    # Model 5 of the nine (adr/Navadurga): observed behaviour -> the ATT&CK
+    # mitigations that defend against it, split by source, against popularity
+    # and BM25 baselines. CPU. It recommends; Dharma authorises (rule 2).
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - uses: actions/cache@v4
+        with:
+          path: .cache/corpus
+          key: corpus-skandamata-v1
+      - name: train and evaluate on ATT&CK
+        working-directory: packages/sati
+        run: python -m sati.respond.run --cache ../../.cache/corpus --out ../../results/skandamata
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models apps/web/lib/models
+          cp results/skandamata/results.json docs/research/models/skandamata.results.json
+          cp results/skandamata/results.json apps/web/lib/models/skandamata.results.json
+          (cd packages/sati && python -m sati.respond.report ../../results/skandamata/results.json) > docs/research/models/skandamata.md
+          bash scripts/pushresults.sh "docs(models): Skandamata v0 results from run ${{ github.run_id }}" docs/research/models/skandamata.results.json docs/research/models/skandamata.md apps/web/lib/models/skandamata.results.json
+
   kalaratri:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
     # split by time. LogHub is research-use only, so this job publishes metrics

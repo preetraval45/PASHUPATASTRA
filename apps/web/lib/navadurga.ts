@@ -34,10 +34,10 @@ export const MODELS: SatiModel[] = [
   { n: 2, id: "sati-brahmacharini", name: "Brahmacharini", nature: "discipline and study", job: "Embeddings for memory — maps observed behaviour to the known technique it resembles", stage: "Remember", data: ["MITRE ATT&CK procedures"], status: "training", task: "RP-64" },
   { n: 3, id: "sati-chandraghanta", name: "Chandraghanta", nature: "the bell that warns", job: "Network intrusion alerting — flags attack traffic by family", stage: "Observe", data: ["UNSW-NB15", "CIC-IDS2017"], status: "planned", task: "RP-61" },
   { n: 4, id: "sati-kushmanda", name: "Kushmanda", nature: "the creator", job: "Writes the structured hypothesis and explanation — Sati's own language model", stage: "Explain", data: ["LogHub corpus", "incident text"], status: "planned", task: "RP-65" },
-  { n: 5, id: "sati-skandamata", name: "Skandamata", nature: "the protecting mother", job: "Proposes the protective response — Dharma still authorises it", stage: "Act", data: ["to be sourced"], status: "planned", task: "—" },
+  { n: 5, id: "sati-skandamata", name: "Skandamata", nature: "the protecting mother", job: "Proposes the protective response — Dharma still authorises it", stage: "Act", data: ["MITRE ATT&CK mitigations"], status: "training", task: "RP-72" },
   { n: 6, id: "sati-katyayani", name: "Katyayani", nature: "the warrior who finds the adversary", job: "Root-cause ranking — names the service at fault and the fault type, citing the metric series", stage: "Understand", data: ["RCAEval"], status: "trained", task: "RP-58" },
   { n: 7, id: "sati-kalaratri", name: "Kalaratri", nature: "the night that dispels darkness", job: "Log anomaly detection — what hides in the noise", stage: "Observe", data: ["LogHub HDFS", "LogHub BGL"], status: "training", task: "RP-62" },
-  { n: 8, id: "sati-mahagauri", name: "Mahagauri", nature: "calm restored", job: "Verification — confirms a system has truly returned to normal after an action", stage: "Verify", data: ["to be sourced"], status: "planned", task: "—" },
+  { n: 8, id: "sati-mahagauri", name: "Mahagauri", nature: "calm restored", job: "Verification — confirms a system has truly returned to normal after an action", stage: "Verify", data: ["SMD incidents"], status: "training", task: "RP-71" },
   { n: 9, id: "sati-siddhidatri", name: "Siddhidatri", nature: "completion", job: "Fusion — combines the other eight into one calibrated verdict", stage: "Decide", data: ["outputs of 1–8"], status: "planned", task: "—" },
 ];
 

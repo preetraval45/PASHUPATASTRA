@@ -39,6 +39,8 @@ TABLES = [
             ("kalaratri-bgl", "sati.loganomaly.report"),
             ("brahmacharini", "sati.embed.report"),
             ("chandraghanta", "sati.netdetect.report"),
+            ("mahagauri", "sati.verify.report"),
+            ("skandamata", "sati.respond.report"),
             ("kushmanda", "sati.lm.report"),
         )
     ],
