@@ -5,9 +5,10 @@ tests Chandraghanta with `sati.netdetect.run`, and leaves `results.json` in
 /kaggle/working/out. Kaggle hosts both datasets; their official downloads sit
 behind a SharePoint folder and a request form that CI cannot reach.
 
-Attached datasets (kernel-metadata.json):
-  mrwellsdavid/unsw-nb15                → /kaggle/input/unsw-nb15
-  chethuhn/network-intrusion-dataset    → /kaggle/input/network-intrusion-dataset
+Attached datasets (kernel-metadata.json): mrwellsdavid/unsw-nb15 and
+chethuhn/network-intrusion-dataset. Both are searched for under /kaggle/input
+by their distinctive file names, because Kaggle's mount layout has changed
+before (the first run looked in /kaggle/input/unsw-nb15 and found nothing).
 """
 
 import shutil
@@ -18,11 +19,12 @@ COMMIT = "__COMMIT__"
 REPO = "https://github.com/preetraval45/PASHUPATASTRA.git"
 WORK = "/kaggle/working"
 
+print(subprocess.run(["find", "/kaggle/input", "-maxdepth", "4"], capture_output=True, text=True).stdout[:4000])
 subprocess.run(["git", "clone", "--quiet", REPO, f"{WORK}/repo"], check=True)
 subprocess.run(["git", "-C", f"{WORK}/repo", "checkout", "--quiet", COMMIT], check=True)
 subprocess.run(
     [sys.executable, "-m", "sati.netdetect.run", "--out", f"{WORK}/out",
-     "--unsw", "/kaggle/input/unsw-nb15", "--cic", "/kaggle/input/network-intrusion-dataset"],
+     "--unsw", "/kaggle/input", "--cic", "/kaggle/input"],
     check=True,
     cwd=f"{WORK}/repo/packages/sati",
 )

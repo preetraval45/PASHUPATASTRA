@@ -31,3 +31,10 @@ form. Kaggle mirrors both and lets a kernel attach them.
 - Push the kernel at a commit that includes this work and collect the results.
 - Generate `docs/research/models/chandraghanta.md` with `sati.netdetect.report`.
 - Write the model card and add the results to the Models page.
+
+## Follow-up
+
+The first Kaggle run failed: no UNSW files were found under
+`/kaggle/input/unsw-nb15`. The kernel now searches all of `/kaggle/input`,
+following symbolic links. It prints the input tree, and duplicate CIC day
+files count once.

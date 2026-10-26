@@ -33,9 +33,16 @@ DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
 
 
 def _find(folder: Path, pattern: str) -> list[Path]:
-    found = sorted(folder.rglob(pattern))
+    """Every file matching `pattern` under `folder`, following symbolic links,
+    which is how Kaggle mounts attached datasets."""
+    import fnmatch
+    import os
+
+    found = sorted(Path(root) / name for root, _, files in os.walk(folder, followlinks=True)
+                   for name in files if fnmatch.fnmatch(name, pattern))
     if not found:
-        raise FileNotFoundError(f"no {pattern} under {folder}")
+        listing = [str(Path(root).relative_to(folder)) for root, _, _ in os.walk(folder, followlinks=True)][:40]
+        raise FileNotFoundError(f"no {pattern} under {folder}; folders: {listing}")
     return found
 
 
@@ -74,7 +81,8 @@ def cic(folder: Path) -> pd.DataFrame:
     Column names are stripped of the source's stray spaces. Infinite values,
     which the CSVs contain, become missing."""
     parts = []
-    paths = sorted(_find(folder, "*.pcap_ISCX.csv"), key=lambda p: (DAYS.index(_day(p)) if _day(p) else 9, p.name))
+    unique = {p.name: p for p in reversed(_find(folder, "*.pcap_ISCX.csv"))}  # a mirror's duplicate copies count once
+    paths = sorted(unique.values(), key=lambda p: (DAYS.index(_day(p)) if _day(p) else 9, p.name))
     for path in paths:
         frame = pd.read_csv(path, encoding="latin-1", low_memory=False)
         frame.columns = [c.strip() for c in frame.columns]
