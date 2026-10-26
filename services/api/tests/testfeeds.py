@@ -89,13 +89,20 @@ URLHAUS_PAYLOAD = {
 
 @pytest.fixture
 def feeds(monkeypatch):
-    """Both sources answering from captured payloads."""
-    from app.feeds import sources
+    """Both indicator sources answering from captured payloads, and the attack
+    feeds (ransomware.live, Feodo, ThreatFox, HIBP) unreachable. They were added
+    after this fixture and went to the live internet, so this suite's result
+    depended on the day: on 26 Oct a new ransomware.live post failed CI."""
+    from app.feeds import attacks, sources
 
     def fake_get(url: str):
         return KEV_PAYLOAD if "cisa.gov" in url else URLHAUS_PAYLOAD
 
+    def offline(url: str):
+        raise attacks.FeedUnavailable(f"offline in tests: {url}")
+
     monkeypatch.setattr(sources, "_get", fake_get)
+    monkeypatch.setattr(attacks, "_get", offline)
 
 
 # --- the verification vocabulary ---------------------------------------------
@@ -632,3 +639,15 @@ def test_nvd_is_polled_beside_the_others_and_its_outage_stops_nothing(monkeypatc
     assert summary["nvd"]["ok"] is False and "down" in summary["nvd"]["error"]
     assert summary["cisa-kev"]["ok"] is True and summary["cisa-kev"]["stored"] > 0
     assert summary["urlhaus"]["ok"] is True and summary["urlhaus"]["stored"] > 0
+
+
+def test_a_withdrawn_threatfox_export_says_why(monkeypatch) -> None:
+    """A 410 from the retired bulk export reads as withdrawn, not as a blip."""
+    from app.feeds import attacks
+
+    def gone(url: str):
+        raise attacks.FeedUnavailable(f"{url}: HTTP Error 410: Gone")
+
+    monkeypatch.setattr(attacks, "_get", gone)
+    with pytest.raises(attacks.FeedUnavailable, match="Auth-Key"):
+        attacks.fetch_threatfox()

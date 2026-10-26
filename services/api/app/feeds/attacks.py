@@ -79,6 +79,14 @@ decision, and the feed says so rather than pretending.
 """
 FEODO_URL = "https://feodotracker.abuse.ch/downloads/ipblocklist.json"
 THREATFOX_URL = "https://threatfox.abuse.ch/export/json/recent/"
+
+THREATFOX_WITHDRAWN = (
+    "ThreatFox's unauthenticated bulk export is gone: /export/json/recent/ answers "
+    "410 Gone (checked 26 October 2026), and abuse.ch now requires a free Auth-Key "
+    "for ThreatFox data. The feed comes back once a key is set and this fetch is "
+    "rewritten against the keyed API."
+)
+"""Why this feed fails, stated so a red feed on the Observatory reads as withdrawn, not as a blip."""
 HIBP_URL = "https://haveibeenpwned.com/api/v3/breaches"
 
 RANSOMWARE_GROUP_PAGE = "https://www.ransomware.live/group/"
@@ -317,7 +325,12 @@ def fetch_threatfox(limit: int = 25, since: str | None = None) -> list[Event]:
     full confidence earns `corroborated` and nothing earns `confirmed` — the
     publisher does not assert these individually.
     """
-    payload = _get(THREATFOX_URL)
+    try:
+        payload = _get(THREATFOX_URL)
+    except FeedUnavailable as error:
+        if "410" in str(error):
+            raise FeedUnavailable(THREATFOX_WITHDRAWN) from error
+        raise
     if not isinstance(payload, dict):
         raise FeedUnavailable(f"{THREATFOX_URL}: expected an object")
 

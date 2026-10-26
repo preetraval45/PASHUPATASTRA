@@ -94,20 +94,7 @@ jobs:
           # push, so the published numbers follow the latest run (adr/Navadurga).
           cp results/sati-rca/results.json apps/web/lib/models/katyayani.results.json
           (cd packages/sati && python -m sati.rca.report ../../results/sati-rca/results.json) > docs/research/models/sati-rca.md
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/research/models apps/web/lib/models
-          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
-          git commit -m "docs(models): Sati-RCA v0 results from run ${{ github.run_id }}"
-          # Parallel jobs push to main at once. Retry with backoff, and fail the step
-          # if the results never land: a loop ending in `sleep` exits 0, which hid a
-          # lost push of the BGL results on 19 Oct.
-          for attempt in 1 2 3 4 5 6; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
-            sleep $((attempt * 15))
-          done
-          echo "::error::could not push the results after 6 attempts"
-          exit 1
+          bash scripts/pushresults.sh "docs(models): Sati-RCA v0 results from run ${{ github.run_id }}" docs/research/models/sati-rca.results.json docs/research/models/sati-rca-v0.meta.json docs/research/models/sati-rca.md apps/web/lib/models/katyayani.results.json
 
   shailaputri:
     # Model 1 of the nine (adr/Navadurga): metric anomaly detection on NAB's
@@ -143,20 +130,7 @@ jobs:
           cp results/shailaputri/shailaputri-v0.meta.json docs/research/models/shailaputri-v0.meta.json
           cp results/shailaputri/results.json apps/web/lib/models/shailaputri.results.json
           (cd packages/sati && python -m sati.detect.report ../../results/shailaputri/results.json) > docs/research/models/shailaputri.md
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/research/models apps/web/lib/models
-          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
-          git commit -m "docs(models): Shailaputri v0 results from run ${{ github.run_id }}"
-          # Parallel jobs push to main at once. Retry with backoff, and fail the step
-          # if the results never land: a loop ending in `sleep` exits 0, which hid a
-          # lost push of the BGL results on 19 Oct.
-          for attempt in 1 2 3 4 5 6; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
-            sleep $((attempt * 15))
-          done
-          echo "::error::could not push the results after 6 attempts"
-          exit 1
+          bash scripts/pushresults.sh "docs(models): Shailaputri v0 results from run ${{ github.run_id }}" docs/research/models/shailaputri.results.json docs/research/models/shailaputri-v0.meta.json docs/research/models/shailaputri.md apps/web/lib/models/shailaputri.results.json
 
   shailaputri-smd:
     # Shailaputri v1 (RP-60): 28 real servers x 38 metrics from SMD (MIT),
@@ -188,17 +162,37 @@ jobs:
           cp results/shailaputri-smd/results.json docs/research/models/shailaputri-smd.results.json
           cp results/shailaputri-smd/results.json apps/web/lib/models/shailaputri-smd.results.json
           (cd packages/sati && python -m sati.detect.smdreport ../../results/shailaputri-smd/results.json) > docs/research/models/shailaputri-smd.md
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/research/models apps/web/lib/models
-          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
-          git commit -m "docs(models): Shailaputri v1 (SMD) results from run ${{ github.run_id }}"
-          for attempt in 1 2 3 4 5 6; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
-            sleep $((attempt * 15))
-          done
-          echo "::error::could not push the results after 6 attempts"
-          exit 1
+          bash scripts/pushresults.sh "docs(models): Shailaputri v1 (SMD) results from run ${{ github.run_id }}" docs/research/models/shailaputri-smd.results.json docs/research/models/shailaputri-smd.md apps/web/lib/models/shailaputri-smd.results.json
+
+  mahagauri:
+    # Model 8 of the nine (adr/Navadurga): verification on SMD's real
+    # incidents: has the server returned to normal? Leave one machine group
+    # out; premature all-clears are the error that matters.
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/smd
+          key: smd-7fb0e0a
+      - name: train and evaluate on SMD incidents
+        working-directory: packages/sati
+        run: python -m sati.verify.run --cache ../../.cache/smd --out ../../results/mahagauri
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models apps/web/lib/models
+          cp results/mahagauri/results.json docs/research/models/mahagauri.results.json
+          cp results/mahagauri/results.json apps/web/lib/models/mahagauri.results.json
+          (cd packages/sati && python -m sati.verify.report ../../results/mahagauri/results.json) > docs/research/models/mahagauri.md
+          bash scripts/pushresults.sh "docs(models): Mahagauri v0 results from run ${{ github.run_id }}" docs/research/models/mahagauri.results.json docs/research/models/mahagauri.md apps/web/lib/models/mahagauri.results.json
 
   kalaratri:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
@@ -237,20 +231,7 @@ jobs:
             cp results/$name/results.json apps/web/lib/models/$name.results.json
             (cd packages/sati && python -m sati.loganomaly.report ../../results/$name/results.json) > docs/research/models/$name.md
           done
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/research/models apps/web/lib/models
-          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
-          git commit -m "docs(models): Kalaratri v0 results (HDFS, BGL) from run ${{ github.run_id }}"
-          # Parallel jobs push to main at once. Retry with backoff, and fail the step
-          # if the results never land: a loop ending in `sleep` exits 0, which hid a
-          # lost push of the BGL results on 19 Oct.
-          for attempt in 1 2 3 4 5 6; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
-            sleep $((attempt * 15))
-          done
-          echo "::error::could not push the results after 6 attempts"
-          exit 1
+          bash scripts/pushresults.sh "docs(models): Kalaratri v0 results (HDFS, BGL) from run ${{ github.run_id }}" docs/research/models/kalaratri.results.json docs/research/models/kalaratri.md apps/web/lib/models/kalaratri.results.json docs/research/models/kalaratri-bgl.results.json docs/research/models/kalaratri-bgl.md apps/web/lib/models/kalaratri-bgl.results.json
 
   brahmacharini:
     # Model 2 of the nine (adr/Navadurga): embeddings for memory and recall,
@@ -288,17 +269,4 @@ jobs:
           cp results/brahmacharini/results.json docs/research/models/brahmacharini.results.json
           cp results/brahmacharini/results.json apps/web/lib/models/brahmacharini.results.json
           (cd packages/sati && python -m sati.embed.report ../../results/brahmacharini/results.json) > docs/research/models/brahmacharini.md
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/research/models apps/web/lib/models services/api/app/sati_models
-          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
-          git commit -m "docs(models): Brahmacharini v0 results and served model from run ${{ github.run_id }}"
-          # Parallel jobs push to main at once. Retry with backoff, and fail the step
-          # if the results never land: a loop ending in `sleep` exits 0, which hid a
-          # lost push of the BGL results on 19 Oct.
-          for attempt in 1 2 3 4 5 6; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
-            sleep $((attempt * 15))
-          done
-          echo "::error::could not push the results after 6 attempts"
-          exit 1
+          bash scripts/pushresults.sh "docs(models): Brahmacharini v0 results and served model from run ${{ github.run_id }}" docs/research/models/brahmacharini.results.json docs/research/models/brahmacharini.md apps/web/lib/models/brahmacharini.results.json services/api/app/sati_models

@@ -79,3 +79,4 @@ Protocol: before every push, write a topic-named file from
 - [ShailaputriSMD](ShailaputriSMD.md) — SMD loader/model/job; leave-one-group-out; onset-weighted variant
 - [ChandraghantaResults](ChandraghantaResults.md) — CIC 0.997 random vs 0.453 by day; RP-61 ticked; Kaggle mount path
 - [EvaluationRefresh](EvaluationRefresh.md) — /evaluation statuses computed from records; benchmark job regenerates it
+- [CIFixes1026](CIFixes1026.md) — hermetic feed tests, ThreatFox withdrawn, next 15.5.28, pushresults.sh

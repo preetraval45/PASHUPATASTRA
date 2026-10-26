@@ -13,7 +13,7 @@
         {
           "name": "Next.js",
           "package": "next",
-          "version": "15.5.25",
+          "version": "15.5.28",
           "manifest": "apps/web/package.json"
         },
         {
@@ -112,5 +112,5 @@
       ]
     }
   ],
-  "generated_at_commit": "9473605"
+  "generated_at_commit": "5745c5b"
 }

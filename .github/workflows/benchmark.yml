@@ -125,21 +125,4 @@ jobs:
       - run: python scripts/buildevaluation.py
       - name: Commit regenerated tables
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/research/tables.md apps/web/lib/evaluation.generated.json
-          # The records the tables came from are committed too. Artifacts expire
-          # after 90 days, and a table nobody can regenerate is not reproducible
-          # (scripts/reproduce.py --check).
-          git add -f benchmark/results/
-          if git diff --cached --quiet; then echo "tables unchanged"; exit 0; fi
-          git commit -m "docs(tables): regenerate from benchmark run ${{ github.run_id }}"
-          # Parallel jobs push to main at once. Retry with backoff, and fail the step
-          # if the results never land: a loop ending in `sleep` exits 0, which hid a
-          # lost push of the BGL results on 19 Oct.
-          for attempt in 1 2 3 4 5 6; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
-            sleep $((attempt * 15))
-          done
-          echo "::error::could not push the results after 6 attempts"
-          exit 1
+          bash scripts/pushresults.sh "docs(tables): regenerate from benchmark run ${{ github.run_id }}" docs/research/tables.md apps/web/lib/evaluation.generated.json benchmark/results
