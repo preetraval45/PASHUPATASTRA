@@ -2,7 +2,7 @@
 
 # Sati-RCA v0 — results on real fault-injection data
 
-Trained and tested on **RCAEval** (phamquiluan/RCAEval @ `afeacb11bcc9`), 735 real fault-injection cases on three microservice systems. Model `sati-rca-v0`, sha256 `81b6e96ea87a4d78…`. Root cause absent from the candidate services in 0 case(s) — counted as misses.
+Trained and tested on **RCAEval** (phamquiluan/RCAEval @ `afeacb11bcc9`), 735 real fault-injection cases on three microservice systems. Model `sati-rca-v0`, sha256 `5cff5f7588cbf46f…`. Root cause absent from the candidate services in 0 case(s) — counted as misses.
 
 AC@k is the share of incidents whose true root-cause service is ranked in the top k; Avg@5 is the mean of AC@1–AC@5 (RCAEval's headline). Brackets are Wilson 95% intervals. **Baseline** ranks services by their largest robust shift, with no learning — the number a model has to beat to be worth being a model.
 

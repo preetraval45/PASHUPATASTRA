@@ -66,7 +66,8 @@
       "verbosity": -1,
       "seed": 7,
       "deterministic": true,
-      "force_row_wise": true
+      "force_row_wise": true,
+      "num_threads": 2
     },
     "rounds": 300
   },
@@ -716,6 +717,6 @@
       }
     ]
   },
-  "model_sha256": "81b6e96ea87a4d784ffb8a6afd0c6b116eb328e282cdf99a94454a71edcb3ef5",
-  "seconds": 29.7
+  "model_sha256": "5cff5f7588cbf46f29fba219e7f0f3bacab0c7ac5e7be7e93d17f4ded2046dff",
+  "seconds": 26.7
 }
