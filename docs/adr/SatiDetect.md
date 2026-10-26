@@ -4,7 +4,42 @@
 - **Date:** 2026-10-18
 - **Evidence:** [models/shailaputri.md](../research/models/shailaputri.md), train-sati run 39169841856
 
-> **26 October 2026: re-measurement pending.** The false-alarm figures below were computed with the harness's old formula, which left the normal points a detector did not flag out of the denominator. That made "false alarms per 1000" equal to 1000 × (1 − precision). The formula is fixed in `pashupatastra.evaluation`, the training workflow re-runs Shailaputri, and this decision is re-checked against the corrected numbers.
+## Re-measured 26 October 2026 — decision unchanged, reasons changed
+
+The 18 October table below used the harness's old false-alarm formula, which
+left the normal points a detector did not flag out of the denominator, so it
+read as 1000 × (1 − precision). The formula is fixed in
+`pashupatastra.evaluation`. LightGBM now pins its thread count, after the same
+code and data gave several different models across runs. Train-sati run
+40366707718, mean across held-out families:
+
+| Detector | F1 | Recall | False alarms / 1000 | Lead |
+|---|---:|---:|---:|---:|
+| **Shailaputri v0** | **0.382** | 0.711 | 26.6 | 180.2 |
+| seasonal-robust-z | 0.312 | 0.761 | 74.7 | 241.3 |
+| seasonal-naive | 0.346 | 0.930 | 74.7 | 240.0 |
+| robust-z | 0.325 | 0.911 | 78.7 | 234.1 |
+| EWMA | 0.261 | 0.900 | 14.2 | 229.0 |
+
+- **False alarms: yes, now clearly.** It raises 26.6 per 1000 judged points
+  against 74.7 for seasonal-robust-z. Only EWMA (14.2) is quieter, and EWMA has
+  the lowest F1.
+- **Lead time: no.** It flags at 180.2 points before an episode ends against
+  241.3: later.
+- **F1: still the best**, at 0.382. Its F1 was reported as 0.457 on
+  18 October, and runs before the pin gave 0.382 or 0.424. That variance is
+  the run-to-run non-determinism the pin removes.
+
+**RP-23 requires both false alarms and lead time.** It now wins one and loses
+the other, so the decision stands: `SeasonalRobustZ` stays the default and
+Shailaputri is a second opinion. The reason is different from 18 October. Then
+it tied on false alarms; now it wins them decisively and loses only on lead
+time. Onset-weighted training raised F1 on SMD (0.531 → 0.556), but lead did
+not improve there either (110.4 → 108.5), so earlier flags remain the open
+problem.
+
+*The 18 October measurement follows, kept as recorded and superseded by the
+section above.*
 
 ## Context
 

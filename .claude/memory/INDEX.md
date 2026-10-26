@@ -85,3 +85,4 @@ Protocol: before every push, write a topic-named file from
 - [RP10RP11](RP10RP11.md) — Holm-adjusted Table 5; §7.1 baselines draft for owner revision
 - [BlockBKaal](BlockBKaal.md) — Kaal generator (ADR proposed), dataset v1 manifest + guard in CI
 - [FalseAlarmFix](FalseAlarmFix.md) — FA/1000 denominator bug fixed; SatiDetect decision to re-check after rerun
+- [ResultsRound1026](ResultsRound1026.md) — sim-to-real fails; SatiDetect re-decided; Kushmanda v2; RP-39/60/73/74 ticked
