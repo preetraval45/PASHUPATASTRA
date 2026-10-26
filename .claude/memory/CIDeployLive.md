@@ -24,3 +24,11 @@ deploys on every push to main.
 - If the deploy job fails on permissions, the IAM user needs: Lambda
   get/update on `pashupatastra-api`, `iam:PassRole` on its role, and
   DynamoDB describe/create on the `pashupatastra` table.
+
+## Result
+
+CI run 40393376125 deployed live: `/health` reports provider `sati` and every
+route returns 200. RP-57 is ticked. The first live answer showed CAPEC
+`<xhtml:p>` markup; `embed/data.clean` and the provider's `first_sentences`
+now strip tags. The knowledge base regenerates clean on the next
+Brahmacharini run.

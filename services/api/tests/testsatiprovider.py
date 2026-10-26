@@ -106,3 +106,11 @@ def test_it_never_proposes_an_action_itself(provider):
         Evidence(ref="E1", source="event", content="phishing link clicked"),
     ])
     assert out["proposed_action_id"] is None
+
+
+def test_markup_in_a_passage_never_reaches_the_answer():
+    from app.engines.providers.sati import first_sentences
+
+    text = "<xhtml:p>An adversary tries known username/password combinations.</xhtml:p> <xhtml:p>More.</xhtml:p>"
+    out = first_sentences(text)
+    assert "<" not in out and out.startswith("An adversary tries")

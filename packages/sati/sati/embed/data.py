@@ -25,9 +25,14 @@ LINK = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 CITATION = re.compile(r"\(Citation: [^)]*\)")
 
 
+MARKUP = re.compile(r"<[^>]+>")
+
+
 def clean(text: str) -> str:
     text = LINK.sub(r"\1", text)
     text = CITATION.sub("", text)
+    # CAPEC descriptions carry XHTML (`<xhtml:p>`); it reached a live answer on 26 Oct.
+    text = MARKUP.sub(" ", text)
     return re.sub(r"\s+", " ", text).strip()
 
 

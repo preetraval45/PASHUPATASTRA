@@ -190,6 +190,8 @@ def cosine(a: list[float], b: list[float]) -> float:
 
 
 def first_sentences(text: str, limit: int = 320) -> str:
+    # Markup must never reach a reader: CAPEC's XHTML did, on 26 Oct 2026.
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", text))
     sentences = re.split(r"(?<=[.!?])\s+", text.strip())
     out = ""
     for s in sentences:
