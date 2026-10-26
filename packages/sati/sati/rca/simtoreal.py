@@ -7,12 +7,14 @@ it ranks the services of real fault-injection cases from RCAEval, with no
 training on them. Its per-service features are rebuilt from each case's
 metrics (`sati.rca.features`) and from the system's call graph.
 
-**Call graphs are authored, not observed.** RCAEval ships metrics, not
+**Call graphs are authored, then checked against traces.** RCAEval ships metrics, not
 topology. The graphs below are written from each project's published
 architecture: Google's microservices-demo README for Online Boutique, and
 Weaveworks' Sock Shop design for Sock Shop. Train Ticket (64 components) is
-**excluded**, because a hand-written graph of it would be a guess. Checking
-these graphs against RCAEval's own traces is the next step.
+**excluded**, because a hand-written graph of it would be a guess. Each run checks
+the authored graph against the edges in one traced case (`graph_check`). Sock
+Shop has no traces in RCAEval, so its graph stays unchecked, and the results
+say so.
 
 **Feature mapping**, Kaal → RCAEval:
 
@@ -109,6 +111,30 @@ def kaal_features(table: pd.DataFrame, system: str) -> pd.DataFrame:
     return out
 
 
+def trace_edges(case: str, cache: Path, rev: str) -> set[tuple[str, str]]:
+    """Caller → callee pairs observed in one case's traces: a span whose parent
+    belongs to a different service. Used to check an authored graph."""
+    t = pd.read_parquet(rcaeval.fetch(f"{case}/traces.parquet", cache, rev), columns=["spanID", "parentSpanID", "serviceName"])
+    service = dict(zip(t["spanID"], t["serviceName"], strict=True))
+    norm = {"frontendservice": "frontend"}
+    return {(norm.get(service[p], service[p]), norm.get(s, s))
+            for p, s in zip(t["parentSpanID"], t["serviceName"], strict=True)
+            if p in service and service[p] != s}
+
+
+def graph_check(system: str, index: pd.DataFrame, cache: Path, rev: str) -> dict:
+    """Authored edges against traced ones, on the first case of the system with traces."""
+    traced = index[(index["system"] == system) & index["has_traces"]]
+    if traced.empty:
+        return {"checked": False, "why": "RCAEval has no traces for this system"}
+    observed = trace_edges(str(traced.iloc[0]["case"]), cache, rev)
+    authored = {tuple(e) for e in GRAPHS[system]["calls"]}  # type: ignore[union-attr]
+    return {"checked": True, "case": str(traced.iloc[0]["case"]),
+            "observed_edges": len(observed), "observed_and_authored": len(observed & authored),
+            "observed_not_authored": sorted(map(list, observed - authored)),
+            "authored_not_observed": sorted(map(list, authored - observed))}
+
+
 def train_kaal_ranker(n: int, seed: int):
     splits = assign(n, seed)
     frames = []
@@ -134,6 +160,7 @@ def main() -> int:
     rev = rcaeval.revision()
     index = rcaeval.cases(args.cache, rev)
     index = index[index["system"].isin(GRAPHS)]
+    checks = {s: graph_check(s, index, args.cache, rev) for s in GRAPHS}  # on every case, before any --limit
     if args.limit:
         index = index.groupby("system", group_keys=False).head(args.limit)
     rcaeval.prefetch(list(index["case"]), args.cache, rev)
@@ -172,7 +199,8 @@ def main() -> int:
                       "cases": {s: int(pd.concat(p)["case"].nunique()) for s, p in tables.items() if p},
                       "excluded": {"tt": "Train Ticket: no call graph authored (64 components)"}},
         "graphs": {s: {"calls": [list(c) for c in g["calls"]],
-                       "source": "authored from the project's published architecture; not yet checked against traces"}
+                       "source": "authored from the project's published architecture",
+                       "trace_check": checks[s]}
                    for s, g in GRAPHS.items()},
         "test": results,
         "reference": reference,

@@ -36,9 +36,13 @@ def main(path: str) -> int:
         "## How to read this\n",
         "- On Kaal's own test splits, the same ranker scores about 0.998 ([katyayani-kaal.md](katyayani-kaal.md)). "
         "The difference between that and this table is the simulation-to-real gap, which is RP-24's real result.",
-        "- The call graphs are authored from each project's published architecture, not observed. Checking them "
-        "against RCAEval's own traces is the next step. A wrong edge here hurts the zero-shot ranker and not the "
-        "baselines.",
+        *[f"- {NAMES.get(s, s)} graph: " + (
+            f"{g['trace_check']['observed_and_authored']} of {g['trace_check']['observed_edges']} traced edges are in "
+            f"the authored graph (case `{g['trace_check']['case']}`); "
+            f"{len(g['trace_check']['authored_not_observed'])} authored edges were not seen in that trace."
+            if g["trace_check"].get("checked") else f"not checked: {g['trace_check']['why']}.")
+          for s, g in r["graphs"].items()],
+        "- A wrong edge hurts the zero-shot ranker and not the baselines.",
         "- Katyayani trained on RCAEval itself is the reference: [sati-rca.md](sati-rca.md), leave one system out.",
     ]
     print("\n".join(out))
