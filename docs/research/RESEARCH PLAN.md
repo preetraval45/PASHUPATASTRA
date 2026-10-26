@@ -328,7 +328,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
 > in [Block H](#block-h--real-data-models-added-18-october-2026); the Kaal-generated tasks above
 > them remain, as augmentation rather than the primary source.
 
-- [ ] **RP-21 · Detection data loaders**
+- [~] **RP-21 · Detection data loaders** — *Recorded 26 Oct; built during Block H. NAB (`sati.sources.nab`, pinned commit, time-ordered) and SMD (`sati.sources.smd`, pinned commit, the authors' time-ordered halves) load into `evaluation.Series`. The four statistical strategies are scored on NAB beside Shailaputri (`sati.detect.run`). On SMD, the multivariate baselines are max robust z and per-machine PCA. Remains: the four univariate strategies on SMD (per metric), and Kaal metric series. Kaal emits events, not series, so it would need a series renderer.*
   **Claude** · 1 session · Depends: RP-20
   *Steps:* loaders for NAB, SMD (Su et al. KDD 2019) and Kaal-generated metric series into `evaluation.py`'s `Series`, under `packages/sati/`. Every split is time-ordered.
   *Done when:* the existing harness scores the 4 statistical strategies on all three sources.
