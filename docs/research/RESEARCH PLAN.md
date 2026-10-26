@@ -377,7 +377,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* for the top-ranked service, take the features that contributed most (SHAP values for v0; gradient or attention attribution for v1) and map them back to their event IDs. Emit `evidence_refs` that pass the existing citation verification in [reasoning.py](../../packages/core/pashupatastra/reasoning.py).
   *Done when:* every Sati-RCA hypothesis on the 20 incidents passes citation verification, and a test fails if any ref is fabricated.
 
-- [ ] **RP-28 · Serve Sati behind the Gateway; add the Sati arm**
+- [ ] **RP-28 · Serve Sati behind the Gateway; add the Sati arm** — *Assessed 26 Oct: the provider half exists (`sati.rca.cite.SatiRCAProvider`, RP-27; the `sati` chat provider, RP-63). The arm is blocked by a benchmark design question that is the owner's. A PIB brief carries three stack-level numbers (`ready_replicas`, `restarts`, `availability`; `benchmark/harness/stack.py`), the same dictionary the grader reads, so a root-cause ranker has no per-service evidence to rank. Proposal: extend `observe()` with per-service readiness and restarts, which the stack can report, for every arm alike. That changes the benchmark contract and requires re-running all arms, so it waits for the owner's decision rather than being made here.*
   **Claude** · 1–2 sessions · review 1 h · Depends: RP-27
   *Steps:*
   1. Add a provider `services/api/app/engines/providers/sati.py` that loads the trained model (a versioned artefact with a hash) and returns the same validated hypothesis schema as the LLM providers. The model is selected by configuration (rule 5).

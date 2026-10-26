@@ -70,3 +70,14 @@ keys (the 20 incidents) are the owner's and are not touched.
 citations are event ids, and the Reasoner's fabricated-citation check applies
 to it unchanged; 3 tests cover this. The done-when waits on the 20 labelled
 incidents (RP-13).
+
+## Guard and RP-28 (same day)
+
+- **Reference topologies moved to core.** The authored RCAEval graphs now
+  live in `pashupatastra.kaal.references`, shared by the RP-18 guard and
+  sim-to-real. 0 of 50k generated topologies match Online Boutique or Sock
+  Shop, and the manifest was regenerated.
+- **RP-28 Sati arm: not built, on purpose.** A PIB brief carries only three
+  stack-level numbers, so there is nothing for RCA to rank. Extending
+  `observe()` changes the benchmark contract and requires re-running every
+  arm, which is the owner's decision. The plan records the proposal.
