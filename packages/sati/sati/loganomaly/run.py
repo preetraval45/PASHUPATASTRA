@@ -161,7 +161,11 @@ def main() -> int:
         "vocabulary": len(vocab),
         "test": {spec["model"].removeprefix("sati-"): kalaratri, "pca (Xu et al. 2009)": pca, "unseen-template rule": unseen},
         "thresholds": {spec["model"].removeprefix("sati-"): t_model, "pca": t_pca},
-        "top_features": [{"feature": f, "gain": round(float(g), 1)} for f, g in importance],
+        "top_features": [
+            {"feature": f, "gain": round(float(g), 1),
+             **({"template": data.attrs["templates"][f]} if f in data.attrs.get("templates", {}) else {})}
+            for f, g in importance
+        ],
         "weights_published": False,
         "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",
         "seconds": round(time.time() - started, 1),

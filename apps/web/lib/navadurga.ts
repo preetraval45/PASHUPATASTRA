@@ -9,6 +9,7 @@
 import katyayani from "./models/katyayani.results.json";
 import brahmacharini from "./models/brahmacharini.results.json";
 import kalaratri from "./models/kalaratri.results.json";
+import kalaratriBgl from "./models/kalaratri-bgl.results.json";
 import shailaputri from "./models/shailaputri.results.json";
 
 export type ModelStatus = "trained" | "training" | "planned";
@@ -80,12 +81,13 @@ type BinaryMetrics = { precision: number; recall: number; f1: number; false_posi
 
 export interface LogResults {
   pending?: string;
-  dataset: { name: string; blocks: number; anomaly_share: number; split: { train: number; validation: number; test: number } };
+  dataset: { name: string; blocks: number; unit?: string; anomaly_share: number; split: { train: number; validation: number; test: number } };
   test: Record<string, BinaryMetrics>;
   weights_note: string;
 }
 
 export const KALARATRI = kalaratri as unknown as LogResults;
+export const KALARATRI_BGL = kalaratriBgl as unknown as LogResults;
 
 type Retrieval = { "recall@1": number; "recall@5": number; "recall@10": number; mrr: number; n: number };
 

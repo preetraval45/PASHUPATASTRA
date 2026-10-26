@@ -5,7 +5,7 @@ Format follows Mitchell et al. (2019). The generated table
 
 ## Model details
 
-- **What it does:** flags anomalous HDFS blocks from the sequence of log
+- **What it does:** flags anomalous HDFS blocks (and BGL windows, below) from the sequence of log
   templates each block produced. Model 7 of the nine Sati models
   ([adr/Navadurga](../../../adr/Navadurga.md)).
 - **Type:** a LightGBM binary classifier. Its inputs are:
@@ -53,6 +53,42 @@ the next 20% set the threshold, and the last 20% test. It is never shuffled.
   shape of the log would be harder.
 - **It misses 6.6% of anomalous blocks**, while PCA misses almost none. Which
   matters more depends on the cost of a missed failure versus a false alarm.
+
+## BGL, the harder test
+
+The generated table [kalaratri-bgl.md](../kalaratri-bgl.md) is the source of
+truth. These are the run 40347301393 figures.
+
+**Data.** LogHub BGL has 4.7M lines from the BlueGene/L supercomputer, each
+labelled by its administrators (Oliner and Stearley, DSN 2007). There are no
+blocks, so the data is cut into 47,134 windows of 100 consecutive lines. A
+window counts as anomalous if any of its lines has a label, which makes 10.2%
+of windows anomalous.
+
+**Templates.** These come from the message text with every token that contains
+a digit masked. The severity level is not used. Training windows contain 310
+distinct templates.
+
+**Split.** The same time split as HDFS, never shuffled. The test set is the
+last 9,427 windows.
+
+| Detector | Precision | Recall | F1 | False-positive rate |
+|---|---:|---:|---:|---:|
+| Kalaratri v0 | 0.513 | 0.271 | 0.355 | 0.024 |
+| PCA (Xu et al. 2009) | 0.092 | 0.829 | 0.166 | 0.772 |
+| Never-seen-template rule | 0.098 | 1.000 | 0.179 | 0.870 |
+
+- **Twice the baselines' F1, but it misses most failures.** It finds 27% of
+  anomalous windows, and about half of what it flags is real. The two
+  baselines reach high recall only by flagging 77–87% of normal windows,
+  which makes them unusable as alerts.
+- **Later months bring new failures.** Under a time split, the alert types in
+  the test period are partly absent from training. That is the case a
+  deployed detector meets, and it is why random-split BGL results are much
+  higher.
+- **Template masking is crude.** Messages that differ only in a word with no
+  digit stay separate templates. A learned parser such as Drain is the
+  obvious next step, and it should be measured before it is assumed better.
 
 ## Ethical considerations
 

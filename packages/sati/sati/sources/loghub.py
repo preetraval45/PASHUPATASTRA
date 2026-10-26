@@ -117,4 +117,7 @@ def bgl_windows(cache: Path, size: int = 100) -> pd.DataFrame:
                 if len(events) == size:
                     rows.append((len(rows), events, anomalous))
                     events, anomalous = [], 0
-    return pd.DataFrame(rows, columns=["block", "events", "anomaly"])
+    frame = pd.DataFrame(rows, columns=["block", "events", "anomaly"])
+    # Template text by id, so a report can say what `T2` is.
+    frame.attrs["templates"] = {tid: template for template, tid in ids.items()}
+    return frame

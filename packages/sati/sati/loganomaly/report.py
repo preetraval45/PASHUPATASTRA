@@ -32,11 +32,15 @@ def main(path: str) -> int:
         "## What it relies on\n",
         "| Feature | Gain |",
         "|---|---:|",
-        *[f"| `{f['feature']}` | {f['gain']} |" for f in r["top_features"]],
+        *[f"| `{f['feature']}`" + (f" {f['template']}" if "template" in f else "") + f" | {f['gain']} |"
+          for f in r["top_features"]],
         "",
         "## How to read this\n",
-        "- Published HDFS results often split blocks at random and report F1 near 0.99; a time split is harder "
-        "and closer to deployment, so lower numbers here are expected, not a regression.",
+        ("- Published BGL results often split windows at random, so the same alert bursts land in training and "
+         "test. A time split asks whether failures in later months can be told from earlier ones, which is far "
+         "harder, and lower numbers here are expected, not a regression." if bgl else
+         "- Published HDFS results often split blocks at random and report F1 near 0.99; a time split is harder "
+         "and closer to deployment, so lower numbers here are expected, not a regression."),
         f"- Weights are not published: {r['weights_note']}",
         "- Designed, written and trained by an AI assistant under the owner's direction "
         "([adr/RealDataModels](../../adr/RealDataModels.md)).",

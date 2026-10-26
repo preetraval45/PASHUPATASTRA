@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
-import { BRAHMACHARINI, KALARATRI, KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
+import { BRAHMACHARINI, KALARATRI, KALARATRI_BGL, KATYAYANI, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
 export const metadata: Metadata = {
   title: "Sati models",
@@ -255,12 +255,17 @@ export default function ModelsPage() {
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Kalaratri — anomalies hidden in real logs</h2>
             <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
-              {KALARATRI.dataset.name}: {KALARATRI.dataset.blocks.toLocaleString()} Hadoop blocks, split by time — trained on
-              the first {KALARATRI.dataset.split.train.toLocaleString()}, tested on the last{" "}
-              {KALARATRI.dataset.split.test.toLocaleString()} — against two classic detectors on the same blocks.
+              Two real logs, each split by time — trained on the earliest part, tested on the latest — against two
+              classic detectors on exactly the same test data. HDFS is the easy benchmark; BGL, a supercomputer&apos;s
+              log over seven months, is the hard one.
             </p>
           </div>
-          <Panel title="Held-out test blocks" aside="later in time than anything trained on">
+          {[KALARATRI, KALARATRI_BGL].filter((run) => !run.pending).map((run) => (
+          <Panel
+            key={run.dataset.name}
+            title={`${run.dataset.name}: ${run.dataset.split.test.toLocaleString()} held-out ${run.dataset.unit ?? "HDFS blocks"}`}
+            aside={`${(run.dataset.anomaly_share * 100).toFixed(1)}% anomalous · later in time than anything trained on`}
+          >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -273,7 +278,7 @@ export default function ModelsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
-                  {Object.entries(KALARATRI.test).map(([name, m]) => (
+                  {Object.entries(run.test).map(([name, m]) => (
                     <tr key={name}>
                       <td className="py-2 pr-3">{name.startsWith("kalaratri") ? <strong>Kalaratri</strong> : name}</td>
                       <td className="tnum py-2 pr-3 text-right">{m.precision.toFixed(3)}</td>
@@ -285,8 +290,9 @@ export default function ModelsPage() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-3 text-xs text-[rgb(var(--faint))]">{KALARATRI.weights_note}</p>
+            <p className="mt-3 text-xs text-[rgb(var(--faint))]">{run.weights_note}</p>
           </Panel>
+          ))}
         </section>
       )}
 

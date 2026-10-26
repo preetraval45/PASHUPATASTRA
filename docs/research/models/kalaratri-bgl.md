@@ -25,6 +25,6 @@
 
 ## How to read this
 
-- Published HDFS results often split blocks at random and report F1 near 0.99; a time split is harder and closer to deployment, so lower numbers here are expected, not a regression.
+- Published BGL results often split windows at random, so the same alert bursts land in training and test. A time split asks whether failures in later months can be told from earlier ones, which is far harder, and lower numbers here are expected, not a regression.
 - Weights are not published: LogHub is research-use only; weights are withheld pending the owner's decision.
 - Designed, written and trained by an AI assistant under the owner's direction ([adr/RealDataModels](../../adr/RealDataModels.md)).
