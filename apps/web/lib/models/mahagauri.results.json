@@ -1,0 +1,139 @@
+{
+  "model": "sati-mahagauri-v0",
+  "dataset": {
+    "name": "SMD (Server Machine Dataset)",
+    "repo": "NetManAIOps/OmniAnomaly",
+    "revision": "7fb0e0acf89ea49908896bcc9f9e80fcfff6baf4",
+    "incidents": 327,
+    "groups": [
+      "machine-1",
+      "machine-2",
+      "machine-3"
+    ]
+  },
+  "protocol": {
+    "horizon_minutes": 60,
+    "baseline_minutes": 60,
+    "consecutive": 3,
+    "premature_budget": 0.05
+  },
+  "folds": [
+    {
+      "held_out": "machine-1",
+      "incidents": 112,
+      "train_incidents": 215,
+      "threshold": 0.84,
+      "timer_minutes": 11,
+      "verifiers": {
+        "mahagauri-v0": {
+          "incidents": 112,
+          "premature_rate": 0.2054,
+          "confirmed_rate": 0.5893,
+          "unconfirmed_rate": 0.2054,
+          "median_delay": 19.5,
+          "mean_delay": 22.8
+        },
+        "back within 3σ": {
+          "incidents": 112,
+          "premature_rate": 0.1518,
+          "confirmed_rate": 0.2054,
+          "unconfirmed_rate": 0.6429,
+          "median_delay": 16.0,
+          "mean_delay": 16.5
+        },
+        "fixed timer": {
+          "incidents": 112,
+          "premature_rate": 0.4821,
+          "confirmed_rate": 0.5179,
+          "unconfirmed_rate": 0.0,
+          "median_delay": 9.0,
+          "mean_delay": 8.0
+        }
+      }
+    },
+    {
+      "held_out": "machine-2",
+      "incidents": 114,
+      "train_incidents": 213,
+      "threshold": 0.88,
+      "timer_minutes": 12,
+      "verifiers": {
+        "mahagauri-v0": {
+          "incidents": 114,
+          "premature_rate": 0.1579,
+          "confirmed_rate": 0.5351,
+          "unconfirmed_rate": 0.307,
+          "median_delay": 17.0,
+          "mean_delay": 18.8
+        },
+        "back within 3σ": {
+          "incidents": 114,
+          "premature_rate": 0.1754,
+          "confirmed_rate": 0.2544,
+          "unconfirmed_rate": 0.5702,
+          "median_delay": 6.0,
+          "mean_delay": 10.3
+        },
+        "fixed timer": {
+          "incidents": 114,
+          "premature_rate": 0.4649,
+          "confirmed_rate": 0.5351,
+          "unconfirmed_rate": 0.0,
+          "median_delay": 11.0,
+          "mean_delay": 9.5
+        }
+      }
+    },
+    {
+      "held_out": "machine-3",
+      "incidents": 101,
+      "train_incidents": 226,
+      "threshold": 0.88,
+      "timer_minutes": 11,
+      "verifiers": {
+        "mahagauri-v0": {
+          "incidents": 101,
+          "premature_rate": 0.2376,
+          "confirmed_rate": 0.5545,
+          "unconfirmed_rate": 0.2079,
+          "median_delay": 15.5,
+          "mean_delay": 17.5
+        },
+        "back within 3σ": {
+          "incidents": 101,
+          "premature_rate": 0.1683,
+          "confirmed_rate": 0.2871,
+          "unconfirmed_rate": 0.5446,
+          "median_delay": 4.0,
+          "mean_delay": 8.7
+        },
+        "fixed timer": {
+          "incidents": 101,
+          "premature_rate": 0.495,
+          "confirmed_rate": 0.505,
+          "unconfirmed_rate": 0.0,
+          "median_delay": 10.0,
+          "mean_delay": 7.9
+        }
+      }
+    }
+  ],
+  "pooled": {
+    "mahagauri-v0": {
+      "premature_rate": 0.1988,
+      "confirmed_rate": 0.5597,
+      "unconfirmed_rate": 0.2416
+    },
+    "back within 3σ": {
+      "premature_rate": 0.1651,
+      "confirmed_rate": 0.2477,
+      "unconfirmed_rate": 0.5872
+    },
+    "fixed timer": {
+      "premature_rate": 0.4801,
+      "confirmed_rate": 0.5199,
+      "unconfirmed_rate": 0.0
+    }
+  },
+  "seconds": 204.5
+}
