@@ -95,6 +95,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=Path("results/brahmacharini"))
     parser.add_argument("--arch", choices=("bag", "transformer"), default="bag")
     parser.add_argument("--epochs", type=int, default=EPOCHS)
+    parser.add_argument("--lr", type=float, default=3e-4, help="v1 only; v0 keeps Adam at 2e-3")
     args = parser.parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -117,7 +118,7 @@ def main() -> int:
         torch.manual_seed(7)
         v1 = TransformerEncoder().to(device)
         print(f"v1: {v1.parameters_count() / 1e6:.1f}M parameters on {device}")
-        v1_curve = fit(v1, torch.optim.AdamW(v1.parameters(), lr=3e-4, weight_decay=0.01), args.epochs, train, val,
+        v1_curve = fit(v1, torch.optim.AdamW(v1.parameters(), lr=args.lr, weight_decay=0.01), args.epochs, train, val,
                        techniques, index, tech_text, "v1")
 
     queries = [p.text for p in test]

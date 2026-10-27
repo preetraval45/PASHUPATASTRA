@@ -5,8 +5,13 @@
 Clones this repository at the commit below and runs `sati.embed.run --arch
 transformer`, which trains v0 (the bag of words) and v1 (about 20M parameters)
 on the same split, then scores both on the same held-out procedures.
+
+Run 1 (30 epochs) stopped while validation MRR was still rising steeply (best
+epoch = last), so it measured an under-trained model. This run allows 200
+epochs; validation still picks the one kept.
 """
 
+import shutil
 import subprocess
 import sys
 
@@ -18,8 +23,10 @@ subprocess.run(["git", "clone", "--quiet", REPO, f"{WORK}/repo"], check=True)
 subprocess.run(["git", "-C", f"{WORK}/repo", "checkout", "--quiet", COMMIT], check=True)
 subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "-e", f"{WORK}/repo/packages/core"], check=True)
 subprocess.run(
-    [sys.executable, "-m", "sati.embed.run", "--arch", "transformer", "--epochs", "30",
+    [sys.executable, "-m", "sati.embed.run", "--arch", "transformer", "--epochs", "200",
      "--cache", f"{WORK}/cache", "--out", f"{WORK}/out"],
     check=True,
     cwd=f"{WORK}/repo/packages/sati",
 )
+shutil.rmtree(f"{WORK}/repo", ignore_errors=True)
+shutil.rmtree(f"{WORK}/cache", ignore_errors=True)
