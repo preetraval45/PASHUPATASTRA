@@ -1,0 +1,143 @@
+{
+  "model": "sati-katyayani-v1",
+  "rcaeval_revision": "afeacb11bcc94dadfd1c8f483ee4377b2b8b614e",
+  "train_suites": [
+    "RE1",
+    "RE2"
+  ],
+  "systems": {
+    "live": {
+      "cases": 200,
+      "v0 (other RCAEval systems)": {
+        "value": 0.895,
+        "ci95": [
+          0.8448,
+          0.9303
+        ],
+        "n": 200
+      },
+      "train_cases": {
+        "v0": 645,
+        "v1": 645
+      },
+      "loudest": {
+        "value": 0.87,
+        "ci95": [
+          0.8163,
+          0.9097
+        ],
+        "n": 200
+      }
+    },
+    "ob": {
+      "cases": 215,
+      "v0 (other RCAEval systems)": {
+        "value": 0.8791,
+        "ci95": [
+          0.8287,
+          0.9161
+        ],
+        "n": 215
+      },
+      "train_cases": {
+        "v0": 430,
+        "v1": 630
+      },
+      "v1 (+ live stack)": {
+        "value": 0.893,
+        "ci95": [
+          0.8446,
+          0.9277
+        ],
+        "n": 215
+      },
+      "paired": {
+        "only_v1": 4,
+        "only_v0": 1,
+        "p": 0.375
+      },
+      "loudest": {
+        "value": 0.5721,
+        "ci95": [
+          0.5053,
+          0.6364
+        ],
+        "n": 215
+      }
+    },
+    "ss": {
+      "cases": 215,
+      "v0 (other RCAEval systems)": {
+        "value": 0.9488,
+        "ci95": [
+          0.9107,
+          0.9712
+        ],
+        "n": 215
+      },
+      "train_cases": {
+        "v0": 430,
+        "v1": 630
+      },
+      "v1 (+ live stack)": {
+        "value": 0.9535,
+        "ci95": [
+          0.9165,
+          0.9745
+        ],
+        "n": 215
+      },
+      "paired": {
+        "only_v1": 2,
+        "only_v0": 1,
+        "p": 1.0
+      },
+      "loudest": {
+        "value": 0.7674,
+        "ci95": [
+          0.7066,
+          0.8189
+        ],
+        "n": 215
+      }
+    },
+    "tt": {
+      "cases": 215,
+      "v0 (other RCAEval systems)": {
+        "value": 0.8233,
+        "ci95": [
+          0.7667,
+          0.8684
+        ],
+        "n": 215
+      },
+      "train_cases": {
+        "v0": 430,
+        "v1": 630
+      },
+      "v1 (+ live stack)": {
+        "value": 0.814,
+        "ci95": [
+          0.7566,
+          0.8603
+        ],
+        "n": 215
+      },
+      "paired": {
+        "only_v1": 2,
+        "only_v0": 4,
+        "p": 0.6875
+      },
+      "loudest": {
+        "value": 0.3721,
+        "ci95": [
+          0.3103,
+          0.4384
+        ],
+        "n": 215
+      }
+    }
+  },
+  "features": 32,
+  "seconds": 32.9
+}
