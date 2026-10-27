@@ -2993,6 +2993,69 @@
         "summary": "Katyayani Rank"
       }
     },
+    "/api/v1/models/servers/incidents": {
+      "get": {
+        "description": "Server incidents from machines Shailaputri, Siddhidatri and Mahagauri never trained on.",
+        "operationId": "smd_incidents_api_v1_models_servers_incidents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Smd Incidents Api V1 Models Servers Incidents Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Smd Incidents"
+      }
+    },
+    "/api/v1/models/servers/incidents/{incident_id}": {
+      "get": {
+        "description": "Run all three on one incident, live, minute by minute, beside the labelled truth.",
+        "operationId": "smd_run_api_v1_models_servers_incidents__incident_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Smd Run Api V1 Models Servers Incidents  Incident Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Smd Run"
+      }
+    },
     "/api/v1/policy/approvals/fatigue": {
       "get": {
         "description": "Whether the approval step is doing anything.\n\nExposed as an endpoint rather than buried in a log because a metric nobody\nlooks at cannot change behaviour \u2014 and this one is meant to be uncomfortable.\n`looks_decorative` requires *both* near-total approval and near-instant\ndecisions; either alone is consistent with a well-calibrated system.",

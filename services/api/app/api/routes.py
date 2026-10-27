@@ -1782,6 +1782,29 @@ def katyayani_cases() -> dict[str, object]:
     return katyayani.summary()
 
 
+@router.get("/models/servers/incidents")
+def smd_incidents() -> dict[str, object]:
+    """Server incidents from machines Shailaputri, Siddhidatri and Mahagauri never trained on."""
+    from ..engines import smdserve
+
+    if not smdserve.available():
+        raise HTTPException(status_code=503, detail="the server models have not been exported yet")
+    return smdserve.summary()
+
+
+@router.get("/models/servers/incidents/{incident_id}")
+def smd_run(incident_id: str) -> dict[str, object]:
+    """Run all three on one incident, live, minute by minute, beside the labelled truth."""
+    from ..engines import smdserve
+
+    if not smdserve.available():
+        raise HTTPException(status_code=503, detail="the server models have not been exported yet")
+    try:
+        return smdserve.run(incident_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"no shipped incident {incident_id!r}") from None
+
+
 @router.get("/models/katyayani/cases/{case_id}")
 def katyayani_rank(case_id: str) -> dict[str, object]:
     """Rank one reserved incident's services, live, with the true root cause beside the ranking."""

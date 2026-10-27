@@ -51,6 +51,7 @@ jobs:
       brahmacharini: ${{ steps.filter.outputs.brahmacharini }}
       katyayani-pooled: ${{ steps.filter.outputs.katyayani-pooled }}
       katyayani-events: ${{ steps.filter.outputs.katyayani-events }}
+      serve-smd: ${{ steps.filter.outputs.serve-smd }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -109,6 +110,10 @@ jobs:
             kalaratri:
               - *shared
               - 'packages/sati/sati/loganomaly/**'
+            serve-smd:
+              - *shared
+              - 'packages/sati/sati/serving/smd.py'
+              - 'packages/core/pashupatastra/trees.py'
             katyayani-events:
               - *shared
               - 'packages/sati/sati/rca/events.py'
@@ -481,6 +486,33 @@ jobs:
           cp results/katyayani-events/results.json docs/research/models/katyayani-events.results.json
           (cd packages/sati && python -m sati.rca.eventsreport ../../results/katyayani-events/results.json) > docs/research/models/katyayani-events.md
           bash scripts/pushresults.sh "docs(models): Katyayani on event features from run ${{ github.run_id }}" docs/research/models/katyayani-events.results.json docs/research/models/katyayani-events.md services/api/app/sati_models/katyayani.json
+
+  serve-smd:
+    # Shailaputri, Siddhidatri and Mahagauri for the API: trained on two SMD
+    # machine groups, shipped with incidents from the third, checked against
+    # LightGBM before they are written. Deployed by the CI workflow_run.
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.serve-smd == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/smd
+          key: smd-omnianomaly-pinned
+      - name: train on two groups and export with the third's incidents
+        working-directory: packages/sati
+        run: python -m sati.serving.smd --cache ../../.cache/smd --out ../../services/api/app/sati_models
+      - name: commit the served models
+        run: |
+          bash scripts/pushresults.sh "feat(models): served Shailaputri, Siddhidatri and Mahagauri from run ${{ github.run_id }}" services/api/app/sati_models/smd.json
 
   kalaratri:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
