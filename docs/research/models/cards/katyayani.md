@@ -71,7 +71,7 @@ at every caller up the chain, not only at itself.
 **Adding the live stack to training (v1) changes nothing measurable**
 ([katyayani-pooled.md](../katyayani-pooled.md)). Each system held out in turn,
 v0 against v1 on the same cases: Online Boutique 0.879 against 0.893 (p 0.38),
-Sock Shop 0.949 against 0.954, Train Ticket 0.823 against 0.814. More data helps
+Sock Shop 0.954 against 0.949, Train Ticket 0.819 against 0.814. More data helps
 only if it is unlike the data already there.
 
 ## Known limitations

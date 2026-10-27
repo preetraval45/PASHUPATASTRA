@@ -270,8 +270,8 @@ simulator does not.**
   ([katyayani-live-signal.md](models/katyayani-live-signal.md)).
 - Adding those 200 live incidents to the training data does not help on the
   other systems. Each system was held out in turn and compared on the same
-  cases: Online Boutique 0.879 against 0.893 (p 0.38), Sock Shop 0.949 against
-  0.954, Train Ticket 0.823 against 0.814
+  cases: Online Boutique 0.879 against 0.893 (p 0.38), Sock Shop 0.954 against
+  0.949, Train Ticket 0.819 against 0.814
   ([katyayani-pooled.md](models/katyayani-pooled.md)).
 - The deployed API does not hold raw metric series, only events (a deviation
   in σ, an onset, a deploy). Trained on real incidents expressed in those event
