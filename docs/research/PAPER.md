@@ -255,10 +255,10 @@ simulator does not.**
   ([katyayani-simtoreal.md](models/katyayani-simtoreal.md)).
 - Against general LLMs on a sample of 100 Online Boutique and Sock Shop cases
   declared before any run, every diagnoser sees the same label-free evidence.
-  Katyayani, trained on the other systems, ranks the root cause first in 0.930
+  Katyayani, trained on the other systems, ranks the root cause first in 0.940
   of cases. llama3 manages 0.550, qwen2.5:7b 0.510, and the loudest service
   0.660. Paired on the same cases, Katyayani is right where llama3 is wrong 41
-  times, and the reverse happens 3 times (Holm-corrected McNemar p 3.2e-09)
+  times, and the reverse happens 2 times (Holm-corrected McNemar p 4.3e-10)
   ([rcaeval-diagnosis.md](models/rcaeval-diagnosis.md)).
 - On a third system, built for this test and run on a real cluster (200
   fault injections declared before any run), the pattern repeats. Trained on
@@ -332,11 +332,11 @@ abstentions and errors apart from wrong answers. The LLMs (llama3 and
 qwen2.5:7b) run through the AI Gateway at temperature 0.2, on CPU.
 
 **Result.** Katyayani, trained on the other RCAEval systems and never on the
-tested one, names the root cause first in 0.930 [0.863, 0.966] of cases.
+tested one, names the root cause first in 0.940 [0.875, 0.972] of cases.
 
 | Diagnoser | RCA@1 | RCA@3 |
 |---|---:|---:|
-| Katyayani (real data, other systems) | 0.930 | 0.970 |
+| Katyayani (real data, other systems) | 0.940 | 0.970 |
 | Loudest service (no learning) | 0.660 | 0.920 |
 | llama3 | 0.550 | 0.790 |
 | qwen2.5:7b | 0.510 | 0.620 |
@@ -344,9 +344,9 @@ tested one, names the root cause first in 0.930 [0.863, 0.966] of cases.
 
 Paired on the same cases, exact McNemar tests on RCA@1 with Holm's correction:
 
-- against llama3, Katyayani alone is right 41 times and llama3 alone 3 times (p 3.2e-09);
-- against qwen2.5:7b, 44 against 2 (p 9.2e-11);
-- against the loudest-service rule, 30 against 3 (p 1.4e-06).
+- against llama3, Katyayani alone is right 41 times and llama3 alone 2 times (p 4.3e-10);
+- against qwen2.5:7b, 44 against 1 (p 7.8e-12);
+- against the loudest-service rule, 30 against 2 (p 2.5e-07).
 
 **What it does and does not show.** It shows that a small ranker trained on real
 incidents beats two general LLMs on the same evidence. It also shows that
