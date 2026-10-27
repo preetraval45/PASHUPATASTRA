@@ -26,5 +26,5 @@
 ## How to read this
 
 - Published HDFS results often split blocks at random and report F1 near 0.99; a time split is harder and closer to deployment, so lower numbers here are expected, not a regression.
-- Weights are not published: LogHub is research-use only; weights are withheld pending the owner's decision.
+- Weights are not published: Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. LogHub is research-use only.
 - Designed, written and trained by an AI assistant under the owner's direction ([adr/RealDataModels](../../adr/RealDataModels.md)).

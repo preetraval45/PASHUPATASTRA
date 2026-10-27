@@ -83,7 +83,7 @@
       "gain": 191618.2
     }
   ],
-  "weights_published": false,
-  "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",
-  "seconds": 10.5
+  "weights_published": true,
+  "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. LogHub is research-use only.",
+  "seconds": 10.8
 }

@@ -91,7 +91,7 @@
       "template": "ciod: failed to read message prefix on control stream (CioStream socket to <*>"
     }
   ],
-  "weights_published": false,
-  "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",
-  "seconds": 19.0
+  "weights_published": true,
+  "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. LogHub is research-use only.",
+  "seconds": 19.1
 }
