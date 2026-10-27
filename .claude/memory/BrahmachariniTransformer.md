@@ -24,3 +24,9 @@ About 14k procedures are too few for a 20M-parameter encoder trained from nothin
 ## Next session should
 
 - When the TF-IDF LR rows land from CI, update the Brahmacharini and Skandamata cards, then run `scripts/ieeeupdate.py`.
+
+## Later the same day
+
+- The TF-IDF LR beat Brahmacharini v0 in CI (0.646 vs 0.614). `embed/run.py` now adds a fused row, with the weight chosen on validation, in commit 87e5026. Waiting on CI.
+- Try panels for Kalaratri and Chandraghanta are in `components/trytree.tsx`. Chandraghanta's export waits on Kaggle kernel v9, which was pushed at af0d95f.
+- IEEE docx regenerated, tracked by "Claude" (RP-78). Rerun `scripts/ieeeupdate.py --out "docs/research/Pashupatastra IEEE Paper.docx"` after each new result. It always builds from bcc5849.

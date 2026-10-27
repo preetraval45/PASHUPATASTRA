@@ -135,6 +135,24 @@ def content() -> dict[str, list[str]]:
            ["Loudest service", f3(d1["loudest"]), str(paired["loudest"]["only_katyayani"]), str(paired["loudest"]["only_other"])]]
     worst_p = max(p["holm_p"] for p in paired.values())
 
+    claims = []
+    if lin_b:
+        claims.append(f"scores R@1 {f3(lin_b)} against Brahmacharini's {f3(brt['brahmacharini-v0']['recall@1'])}")
+    if lin_s:
+        claims.append(f"hit@1 {f3(lin_s)} against Skandamata's {f3(skt['skandamata-v0']['hit@1'])}")
+    linear_claim = " and ".join(claims) or "rivals the retrieval and mitigation models on their own splits"
+    fused = brt.get("brahmacharini-v0 + tf-idf (fused)")
+    if fused:
+        linear_claim += (f"; fusing it with Brahmacharini, with the weight chosen on validation sources, reaches "
+                         f"R@1 {f3(fused['recall@1'])}")
+    tr = MODELS / "brahmacharini-transformer.results.json"
+    bigger = ""
+    if tr.exists():
+        t = json.loads(tr.read_text(encoding="utf-8"))["test"]["brahmacharini-v1 (transformer)"]
+        bigger = (f"Bigger was not better: a 20M-parameter transformer encoder trained from scratch on the same "
+                  f"split reached R@1 {f3(t['recall@1'])}, against {f3(brt['brahmacharini-v0']['recall@1'])} for "
+                  "the bag-of-words encoder that is served. ")
+
     names = {"live": "Live cluster", "ob": "Online Boutique", "ss": "Sock Shop"}
     s2r_rows = [["Held out", "Real-trained", "Simulator-trained", "Loudest"]]
     for key in ("live", "ob", "ss"):
@@ -228,11 +246,9 @@ def content() -> dict[str, list[str]]:
             "earn a decision on their own are reported with the same prominence and remain advisory.")],
         "limitations": [body(
             "The models carry their own threats. A plain TF-IDF and logistic regression baseline, added after the "
-            "public notebooks found it, " + (
-                f"scores {f3(lin_b)} against Brahmacharini's {f3(brt['brahmacharini-v0']['recall@1'])} and {f3(lin_s)} "
-                f"against Skandamata's {f3(skt['skandamata-v0']['hit@1'])}; "
-                if lin_b and lin_s else "beats the retrieval and mitigation models on their own splits; ") +
-            "a neural model is worth serving only where it beats the strongest simple baseline. Gradient-boosted "
+            "public notebooks found it, " + linear_claim +
+            "; a neural model is worth serving only where it beats the strongest simple baseline. " + bigger +
+            "Gradient-boosted "
             "results move by a few hundredths between CI machines, so they are reported with seed spreads where it "
             "matters. The live cluster's steady load leaves near-flat baselines, and its 200 incidents were built "
             "by the same project; RCAEval is the independent check.")],
