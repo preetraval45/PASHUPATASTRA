@@ -1,0 +1,17 @@
+{
+ "id": "preetraval4518071604/chandraghanta-intrusion-detection-on-unseen-days",
+ "title": "Chandraghanta: Intrusion Detection on Unseen Days",
+ "code_file": "notebook.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": false,
+ "enable_gpu": false,
+ "enable_internet": false,
+ "dataset_sources": [
+  "preetraval4518071604/sati-chandraghanta-ids-split-benchmark",
+  "dhoogla/cicids2017"
+ ],
+ "competition_sources": [],
+ "kernel_sources": [],
+ "model_sources": []
+}

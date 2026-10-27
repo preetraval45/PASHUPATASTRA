@@ -1,0 +1,17 @@
+{
+ "id": "preetraval4518071604/kalaratri-log-anomalies-split-by-time",
+ "title": "Kalaratri: Log Anomalies, Split by Time",
+ "code_file": "notebook.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": false,
+ "enable_gpu": false,
+ "enable_internet": false,
+ "dataset_sources": [
+  "preetraval4518071604/sati-kalaratri-log-anomaly-time-split",
+  "tamaniwilliams/hdfs-v1-loghub-dataset-archive"
+ ],
+ "competition_sources": [],
+ "kernel_sources": [],
+ "model_sources": []
+}
