@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-10-26T16:18:10+00:00",
+  "as_of": "2026-10-27T12:16:00+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.10.23",
-    "total": 1756,
-    "added_last_30_days": 30,
+    "catalog_version": "2026.10.26",
+    "total": 1758,
+    "added_last_30_days": 32,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-10",
-        "value": 26
+        "value": 28
       }
     ],
     "top_vendors": [
@@ -104,6 +104,22 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-109618",
+        "vendor": "PHP Group",
+        "product": "PHP",
+        "name": "PHP Memory Corruption Vulnerability",
+        "added": "2026-10-26",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-109619",
+        "vendor": "PHP Group",
+        "product": "PHP",
+        "name": "PHP Stale Internal Request-State Vulnerability",
+        "added": "2026-10-26",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-114625",
         "vendor": "Arista",
@@ -183,22 +199,6 @@
         "name": "Fortinet Multiple Products Path Traversal Vulnerability",
         "added": "2026-10-16",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-21589",
-        "vendor": "Atlassian",
-        "product": "Multiple Products",
-        "name": "Atlassian Multiple Products Files or Directories Accessible to External Parties Vulnerability",
-        "added": "2026-10-15",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-105134",
-        "vendor": "Ahsay",
-        "product": "AhsayCBS",
-        "name": "Ahsay AhsayCBS Command Injection Vulnerability",
-        "added": "2026-10-14",
-        "ransomware": false
       }
     ]
   },
@@ -209,11 +209,11 @@
     "by_day": [
       {
         "label": "2026-10-23",
-        "value": 33
+        "value": 9
       },
       {
         "label": "2026-10-24",
-        "value": 22
+        "value": 21
       },
       {
         "label": "2026-10-25",
@@ -221,83 +221,87 @@
       },
       {
         "label": "2026-10-26",
-        "value": 24
+        "value": 33
+      },
+      {
+        "label": "2026-10-27",
+        "value": 16
       }
     ],
     "by_group": [
       {
         "label": "qilin",
-        "value": 32
+        "value": 27
       },
       {
         "label": "N0n",
-        "value": 15
+        "value": 14
+      },
+      {
+        "label": "everest",
+        "value": 8
+      },
+      {
+        "label": "Whitearmor",
+        "value": 8
       },
       {
         "label": "emperador",
         "value": 8
       },
       {
-        "label": "Whitearmor",
-        "value": 6
-      },
-      {
         "label": "krybit",
         "value": 6
       },
       {
-        "label": "lockbit5",
-        "value": 4
+        "label": "Falcon",
+        "value": 3
       },
       {
         "label": "payload",
         "value": 3
       },
       {
-        "label": "thegentlemen",
-        "value": 3
-      },
-      {
-        "label": "Doommageddon",
+        "label": "crypto24",
         "value": 2
       },
       {
-        "label": "aurora",
+        "label": "ULose",
         "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 33
+        "value": 32
       },
       {
         "label": "DE",
         "value": 11
       },
       {
-        "label": "ES",
+        "label": "MY",
         "value": 4
-      },
-      {
-        "label": "AR",
-        "value": 4
-      },
-      {
-        "label": "GB",
-        "value": 3
-      },
-      {
-        "label": "MX",
-        "value": 3
       },
       {
         "label": "IT",
         "value": 3
       },
       {
-        "label": "CH",
+        "label": "ES",
         "value": 3
+      },
+      {
+        "label": "GB",
+        "value": 3
+      },
+      {
+        "label": "FR",
+        "value": 2
+      },
+      {
+        "label": "MX",
+        "value": 2
       },
       {
         "label": "TR",
@@ -310,20 +314,20 @@
         "value": 19
       },
       {
-        "label": "Professional Services",
+        "label": "Technology",
         "value": 15
       },
       {
-        "label": "Technology",
-        "value": 14
+        "label": "Professional Services",
+        "value": 13
       },
       {
         "label": "Healthcare",
-        "value": 10
+        "value": 12
       },
       {
         "label": "Retail & E-Commerce",
-        "value": 9
+        "value": 11
       },
       {
         "label": "Not Found",
@@ -331,18 +335,18 @@
       },
       {
         "label": "Energy & Utilities",
-        "value": 6
+        "value": 8
       },
       {
         "label": "Other",
-        "value": 6
-      },
-      {
-        "label": "Transportation",
-        "value": 4
+        "value": 3
       },
       {
         "label": "Financial Services",
+        "value": 2
+      },
+      {
+        "label": "Transportation",
         "value": 2
       }
     ]
@@ -380,12 +384,12 @@
   "breaches": {
     "ok": true,
     "source": "https://haveibeenpwned.com/api/v3/breaches",
-    "breaches": 1047,
-    "accounts": 17846550965,
+    "breaches": 1048,
+    "accounts": 17846896404,
     "top_data_classes": [
       {
         "label": "Email addresses",
-        "value": 1040
+        "value": 1041
       },
       {
         "label": "Passwords",
@@ -425,6 +429,14 @@
       }
     ],
     "latest": [
+      {
+        "title": "AfD",
+        "domain": "afd.de",
+        "breach_date": "2026-09-09",
+        "added": "2026-10-27",
+        "accounts": 345439,
+        "verified": true
+      },
       {
         "title": "Assurance Retraite",
         "domain": "lassuranceretraite.fr",
@@ -495,14 +507,6 @@
         "breach_date": "2026-09-07",
         "added": "2026-09-30",
         "accounts": 423947,
-        "verified": true
-      },
-      {
-        "title": "LimeLeads",
-        "domain": "limeleads.com",
-        "breach_date": "2019-08-01",
-        "added": "2026-09-22",
-        "accounts": 17838396,
         "verified": true
       }
     ]
