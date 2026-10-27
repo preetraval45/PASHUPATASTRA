@@ -45,6 +45,9 @@ def field(name: str, description: str, kind: str = "string") -> dict:
 
 def write(folder: Path, slug: str, title: str, subtitle: str, description: str, licence: str,
           keywords: list[str], resources: list[dict]) -> None:
+    # Kaggle's limits; checked here so a bad one fails the build, not the upload.
+    assert 6 <= len(title) <= 50, f"{slug}: title is {len(title)} characters (6–50)"
+    assert 20 <= len(subtitle) <= 80, f"{slug}: subtitle is {len(subtitle)} characters (20–80)"
     folder.mkdir(parents=True, exist_ok=True)
     meta = {"title": title, "subtitle": subtitle, "id": f"{OWNER}/{slug}", "licenses": [{"name": licence}],
             "keywords": keywords, "description": description + FOOT, "resources": resources}
@@ -134,7 +137,7 @@ def brahmacharini(out: Path, cache: Path) -> None:
         folder / "techniques.csv", index=False)
     write(folder, "sati-brahmacharini-attack-behaviour-to-technique",
           "ATT&CK Behaviour → Technique (split by source)",
-          "17,000+ real attacker behaviours labelled with their ATT&CK technique, held out by group",
+          "17,000+ attacker behaviours labelled with ATT&CK techniques, split by group",
           "Every MITRE ATT&CK enterprise procedure example (how a named group, malware family, tool or campaign used a "
           "technique, written by analysts from public reporting), labelled with its technique. The split is **by "
           "source**: every procedure about one group, malware or tool lands on one side, so the test set describes "
@@ -165,7 +168,7 @@ def skandamata(out: Path, cache: Path) -> None:
         folder / "mitigations.csv", index=False)
     write(folder, "sati-skandamata-attack-behaviour-to-mitigations",
           "ATT&CK Behaviour → Mitigations (multi-label)",
-          "Which defences stop what an attacker did: 13,000 behaviours, 44 mitigations, split by source",
+          "13,000 attacker behaviours and the ATT&CK mitigations that stop them",
           "Each ATT&CK procedure example paired with every mitigation ATT&CK links to its technique (sub-techniques "
           "inherit their parent's). Split by source, so test behaviours describe attackers never seen in training.\n\n"
           "**Task:** rank the 44 mitigations for a behaviour. Skandamata (Sati's defence recommender) gets the first "
@@ -195,7 +198,7 @@ def kushmanda(out: Path, cache: Path) -> None:
                 f.write(json.dumps({"question": p["q"], "passages": p.get("context", []), "answer": p["a"],
                                     "kind": p.get("kind"), "entity": p.get("entity")}, ensure_ascii=False) + "\n")
     write(folder, "sati-kushmanda-data",
-          "Grounded Security QA: answer from passages, cite, or decline",
+          "Grounded Security QA: Cite or Decline",
           "Questions with 3 passages each; answers cite one, and some must be declined",
           "Question–answer pairs built from MITRE ATT&CK, CAPEC, CWE and CISA KEV. Each question comes with three "
           "passages; the answer is written from one of them and ends with its citation, e.g. `[2]`. About one "
@@ -248,8 +251,8 @@ def smd_sets(out: Path, cache: Path) -> None:
     table.to_parquet(shail / "minutes.parquet", index=False)
     cols = [c for c in table.columns if c not in ("machine", "group", "minute", "anomaly")]
     write(shail, "sati-shailaputri-smd-server-anomalies",
-          "Server Anomalies: Per-Minute Features for 28 Real Servers",
-          "SMD's labelled test halves as causal per-minute features, with machine groups for honest splits",
+          "Server Anomalies: 28 Real Servers, Per Minute",
+          "SMD test halves as causal per-minute features, with groups for honest splits",
           "The labelled halves of all 28 servers of the Server Machine Dataset, turned into per-minute features that "
           "use only the past (each metric's robust deviation over several windows, aggregated across the server's 38 "
           "metrics), with the anomaly label. Hold out a machine **group** to test on servers never seen.\n\n**Task:** "
@@ -276,7 +279,7 @@ def smd_sets(out: Path, cache: Path) -> None:
     episodes = pd.concat(rows, ignore_index=True)
     episodes.to_parquet(maha / "recovery.parquet", index=False)
     write(maha, "sati-mahagauri-server-recovery",
-          "Has the Server Recovered? Minute-by-Minute Incident Recovery",
+          "Has the Server Recovered? Incident Recovery",
           "327 real server incidents, from onset to an hour after: is it over yet?",
           "For every labelled anomaly in SMD with an hour of clean history before it, every minute from onset until "
           "an hour after it ends, with features comparing each metric to that incident's own pre-incident baseline, "
@@ -303,7 +306,7 @@ def smd_sets(out: Path, cache: Path) -> None:
     pd.concat(scored, ignore_index=True).to_parquet(sidd / "detector_scores.parquet", index=False)
     write(sidd, "sati-siddhidatri-detector-scores",
           "Three Anomaly Detectors, Scored on Unseen Servers",
-          "Per-minute scores from a learned and two statistical detectors, for fusion and calibration",
+          "Per-minute scores from three detectors on unseen servers, for fusion",
           "For every SMD server-minute: the score of Shailaputri (a gradient-boosted detector trained only on the "
           "*other* machine groups), of the largest robust z-score, and of per-machine PCA reconstruction error, with "
           "the anomaly label. Built for research on combining detectors and calibrating their probabilities.\n\n"
@@ -326,7 +329,7 @@ def benchmark_only(out: Path) -> None:
     models = ROOT / "docs" / "research" / "models"
     for name, slug, title, subtitle, files, body in (
         ("chandraghanta", "sati-chandraghanta-ids-split-benchmark", "Intrusion Detection: Unseen-Attack Splits",
-         "Day splits for CIC-IDS2017 and the official UNSW-NB15 split, with per-family results",
+         "Day splits for CIC-IDS2017, the UNSW-NB15 split, and per-family results",
          ["chandraghanta.results.json", "chandraghanta.md"],
          "How network intrusion detectors look when tested on attacks they have never seen. For CIC-IDS2017 the "
          "split is by day (train Monday–Wednesday, test Thursday–Friday), so every test attack family is unseen; on "
