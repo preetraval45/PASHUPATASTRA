@@ -1,0 +1,45 @@
+# RP-13 — answer keys for the 12 new test incidents. FOR THE OWNER TO FILL.
+#
+# Why you, not Claude: the same AI built the system, so if it also wrote the
+# answers, the test would grade itself. Your keys, committed before any run, are
+# what make these 20 incidents an independent test (PAPER §9, first threat).
+#
+# How:
+#   1. Fill every TODO below. Plain sentences are fine; keep labels short.
+#   2. Save as `benchmark/answerkeys/rp13.yaml` (drop `.template`).
+#   3. Commit that file ALONE:  git add benchmark/answerkeys/rp13.yaml
+#                              git commit -m "test(rp-13): answer keys, before any run"
+#   4. Tell Claude. Claude then builds SC-0009..SC-0020 from your specs and runs
+#      the loader and benchmark. Nothing is run against them before step 3.
+#
+# Fields:
+#   expectation      incident | nothing (benign look-alike) | escalate (a human must decide)
+#   cause            what really happened, one sentence (empty for `nothing`)
+#   root_cause_label the entity at fault, exactly as it will appear as an option, e.g. service:checkout-api
+#   options          4–6 candidate labels the diagnoser chooses from: the answer plus plausible wrong ones
+#   red_herrings     signals that look guilty but are not, and why
+#   correct_action   the action you would approve (e.g. rollback_deployment), or `none` / `escalate`
+#
+# The slots below keep the full 20 at about 25% negative and 15% escalation.
+# Change any slot's expectation if you prefer a different mix; say why in `notes`.
+
+example:  # SC-0001, already in the corpus, to show the shape
+  expectation: incident
+  cause: A bad deploy (v4.21) of checkout-api leaked database connections until the pool saturated.
+  root_cause_label: service:checkout-api
+  options: [service:checkout-api, service:payments, db:orders-primary, service:frontend]
+  red_herrings: db:orders-primary shows high connections, but as the victim, not the cause.
+  correct_action: rollback_deployment
+
+SC-0009: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
+SC-0010: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
+SC-0011: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
+SC-0012: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
+SC-0013: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
+SC-0014: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
+SC-0015: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
+SC-0016: {expectation: nothing, cause: "", root_cause_label: none, options: [TODO], red_herrings: TODO, correct_action: none}
+SC-0017: {expectation: nothing, cause: "", root_cause_label: none, options: [TODO], red_herrings: TODO, correct_action: none}
+SC-0018: {expectation: nothing, cause: "", root_cause_label: none, options: [TODO], red_herrings: TODO, correct_action: none}
+SC-0019: {expectation: escalate, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: escalate}
+SC-0020: {expectation: escalate, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: escalate}

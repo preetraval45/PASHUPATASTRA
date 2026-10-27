@@ -259,7 +259,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* Liang et al. 2022 (*HELM*, the framing); Hamel Husain's posts on evals (error analysis first); Kapoor & Narayanan 2023, *Leakage and the Reproducibility Crisis in ML-based Science* (*Patterns*). The last one is the most important paper in this plan for you. Log all three.
   *Done when:* you can list the leakage types Kapoor & Narayanan describe, and say which ones this project is exposed to.
 
-- [ ] **RP-13 · Grow the labelled test corpus to 20 incidents**
+- [ ] **RP-13 · Grow the labelled test corpus to 20 incidents** — *Template prepared 27 Oct: [benchmark/answerkeys/TEMPLATE.yaml](../../benchmark/answerkeys/TEMPLATE.yaml). It has 12 slots (SC-0009–SC-0020: 7 incidents, 3 negatives, 2 escalations, so the 20 end near 25% negative and 15% escalation), the fields the RP-14 harness needs (`root_cause_label`, `options`), and a worked example from SC-0001. It sits outside `benchmark/incidents/` so the scenario loader never reads it. Remains: the owner fills it and commits it alone; then Claude builds the fixtures and runs them.*
   **Both** · You 6 h; Claude 1–2 sessions · Depends: — · Closes: part of backlog ROADMAP 2.6
   *Steps:*
   1. **You** write the 12 new specs: the cause, the correct action, red herrings, and a negative and escalation share in proportion.
