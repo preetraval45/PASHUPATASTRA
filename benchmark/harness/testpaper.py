@@ -44,12 +44,18 @@ def test_every_number_in_section_7_2_is_in_a_generated_model_table():
     start = paper.index("### 7.2 ")
     body = paper[start : paper.index("\n## ", start)]
     body = body[body.index("Nine models") :]  # after the editorial note
-    tables = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "docs" / "research" / "models").glob("*.md"))
-    cited = set(re.findall(r"\b\d+\.\d{1,4}\b", body))
+    models = ROOT / "docs" / "research" / "models"
+    every = "\n".join(p.read_text(encoding="utf-8") for p in models.glob("*.md"))
     missing = []
-    for n in sorted(cited):
-        # A percentage in prose may appear as a share in a table (88.4% ↔ 88.4 or 0.884).
-        variants = {n, f"{float(n) / 100:.3f}"} if float(n) > 1 else {n}
-        if not any(v in tables for v in variants):
-            missing.append(n)
+    # Checked per paragraph or bullet: one that links a model table must find
+    # its numbers in *that* table. Against all tables at once, a stale number
+    # passed whenever it happened to appear in some other model's table.
+    for block in re.split(r"\n\s*\n|\n(?=- )", body):
+        linked = [models / f for f in re.findall(r"\(models/([\w.-]+\.md)\)", block)]
+        tables = "\n".join(p.read_text(encoding="utf-8") for p in linked if p.exists()) or every
+        for n in sorted(set(re.findall(r"\b\d+\.\d{1,4}\b", block))):
+            # A percentage in prose may appear as a share in a table (88.4% ↔ 88.4 or 0.884).
+            variants = {n, f"{float(n) / 100:.3f}"} if float(n) > 1 else {n}
+            if not any(v in tables for v in variants):
+                missing.append(n)
     assert not missing, f"§7.2 cites numbers no model table contains: {missing}"
