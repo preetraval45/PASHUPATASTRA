@@ -91,3 +91,4 @@ Protocol: before every push, write a topic-named file from
 - [RCAEvalLLM](RCAEvalLLM.md) — RP-33 LLM vs Sati on declared RCAEval sample; workflow rcaeval-diagnosis
 - [BlockF](BlockF.md) — RP-41 ticked; RP-44 constrained ID decoding, measured on Kaggle
 - [KushmandaConstrained](KushmandaConstrained.md) — RP-44 measured: valid 1.000, lookup 0.604 vs lexical 0.962; form not choice
+- [LiveSimToReal](LiveSimToReal.md) — RP-19 live kind stack with real metrics, 200 pre-declared non-PIB faults; run pending

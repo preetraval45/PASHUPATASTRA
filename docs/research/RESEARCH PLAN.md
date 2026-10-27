@@ -308,7 +308,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   3. Add realism checks: the distribution of anomaly counts and propagation depth compared against what the fault-injected cluster runs produce (RP-19).
   *Done when:* the manifest is committed, the guard is in CI, and a realism report is generated.
 
-- [ ] **RP-19 · Sim-to-real set**
+- [~] **RP-19 · Sim-to-real set** — *Built 27 Oct: `benchmark/live`. The PIB stack is pause containers that report replica counts only, and Sati-RCA reads service metrics, so the set runs on a new eight-service stack whose services report request rate, error rate, p90 latency and container CPU and memory (cgroup). The topology is checked to differ from Online Boutique, Sock Shop, PIB and 2,000 Kaal graphs. The plan is committed before any run (`plan.json`, hashed): 200 incidents, 50 each of cpu, mem, delay and release, none of them PIB fault types, with seeded roots. `live-incidents.yml` runs it in 20 kind shards on free runners and commits the dataset. `sati.rca.live` scores Katyayani trained on Kaal and trained on RCAEval (both zero-shot) against the loudest and earliest service, and writes the realism comparison with Kaal. 9 tests. Remains: the run's dataset and table.*
   **Claude** · 1 session + overnights · Depends: RP-17, kind cluster
   *Why:* a model trained only on simulation may learn the simulator. Real fault-injected incidents measure that gap.
   *Steps:* use the PIB harness's fault injection (non-PIB faults only, so they don't overlap the test set) to produce about 200 incidents from the real cluster, labelled by the injected fault. These form a separate test split.

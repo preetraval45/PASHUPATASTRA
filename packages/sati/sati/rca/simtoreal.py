@@ -53,9 +53,10 @@ GRAPHS = REFERENCES
 RESOURCE_FAMILIES = ("cpu", "mem", "other")
 
 
-def kaal_features(table: pd.DataFrame, system: str) -> pd.DataFrame:
-    """RCAEval per-service features → the Kaal ranker's feature columns."""
-    graph = GRAPHS[system]
+def kaal_features(table: pd.DataFrame, system: str, graph: dict | None = None) -> pd.DataFrame:
+    """RCAEval per-service features → the Kaal ranker's feature columns.
+    `graph` overrides the authored graph, for a stack whose graph is known (RP-19)."""
+    graph = graph or GRAPHS[system]
     calls = graph["calls"]
     callees: dict[str, list[str]] = {}
     callers: dict[str, list[str]] = {}

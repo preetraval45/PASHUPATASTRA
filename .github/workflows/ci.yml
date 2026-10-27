@@ -33,7 +33,7 @@ jobs:
       # The benchmark harness's own tests — the arms, the LLM proposer's
       # refusals and rejections (RP-07). No cluster is touched.
       - name: benchmark harness tests
-        run: PYTHONPATH=packages/core:. pytest benchmark/harness -q -o python_files="test*.py"
+        run: PYTHONPATH=packages/core:. pytest benchmark/harness benchmark/live -q -o python_files="test*.py"
       - run: ruff check packages/core
       - name: Kaal dataset v1 matches its committed manifest, and the guard passes
         # RP-18: the split manifest was committed before any training. If the
