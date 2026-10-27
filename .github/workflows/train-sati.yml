@@ -554,7 +554,9 @@ jobs:
             cp results/$name/results.json apps/web/lib/models/$name.results.json
             (cd packages/sati && python -m sati.loganomaly.report ../../results/$name/results.json) > docs/research/models/$name.md
           done
-          bash scripts/pushresults.sh "docs(models): Kalaratri v0 results (HDFS, BGL) from run ${{ github.run_id }}" docs/research/models/kalaratri.results.json docs/research/models/kalaratri.md apps/web/lib/models/kalaratri.results.json docs/research/models/kalaratri-bgl.results.json docs/research/models/kalaratri-bgl.md apps/web/lib/models/kalaratri-bgl.results.json
+          mkdir -p services/api/app/sati_models
+          cp results/kalaratri/model.json services/api/app/sati_models/kalaratri.json
+          bash scripts/pushresults.sh "docs(models): Kalaratri v0 results (HDFS, BGL) from run ${{ github.run_id }}" services/api/app/sati_models/kalaratri.json docs/research/models/kalaratri.results.json docs/research/models/kalaratri.md apps/web/lib/models/kalaratri.results.json docs/research/models/kalaratri-bgl.results.json docs/research/models/kalaratri-bgl.md apps/web/lib/models/kalaratri-bgl.results.json
 
   brahmacharini:
     # Model 2 of the nine (adr/Navadurga): embeddings for memory and recall,
