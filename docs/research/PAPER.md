@@ -384,6 +384,36 @@ not the root. llama3 most often names a service next to the root, with the root
 in its top three. Categories are proposed by rule and await the author's assignment
 (RP-34).
 
+### 7.4 Serving what was evaluated
+
+> *Draft written by Claude for the author to revise.*
+
+A model is only evidence for the system if the deployed model is the evaluated
+one. Five of the nine models are gradient-boosted trees (Katyayani,
+Shailaputri, Kalaratri, Chandraghanta, Mahagauri). They are exported as JSON
+and evaluated in plain Python (`pashupatastra.trees`), so the API on a lean
+Lambda needs no LightGBM. A test checks that its scores equal LightGBM's,
+missing values included, for binary and ranking objectives. Each export is
+also checked against LightGBM on every case it ships. The embedding and
+recommendation models are served from int8 weights in pure Python, and the
+exports check that they rank as PyTorch did.
+
+**Live examples are held out.** Katyayani's served model keeps one incident in
+ten out of its training data, and those are the incidents a visitor can run
+it on. The server-metric models are trained on two machine groups and shipped
+with incidents from the third. Every live answer is shown beside the truth,
+including when it is wrong.
+
+**Chaining fixed a failure that the held-out score did not show.** Skandamata
+was trained on analysts' write-ups of attacker behaviour. Asked live, in a
+user's words, how to defend against "ransomware encrypting our file shares",
+it recommended a single, wrong mitigation, though its held-out score is high.
+Brahmacharini read the same question correctly as Data Encrypted for Impact
+(T1486). In the deployed system, Brahmacharini's technique selects ATT&CK's
+own mitigations and Skandamata orders them, so every recommendation traces to
+a cited technique. A held-out test set drawn from the same kind of text as
+training does not measure performance on a different register of input.
+
 ## 8. Failure analysis
 
 > *Draft written by Claude for the author to revise (RP-35). The categories are
