@@ -11,6 +11,8 @@
 | **mahagauri-v0** | 0.220 | 0.590 | 0.190 |
 | **mahagauri-v1 (upper-bound threshold)** | 0.144 | 0.498 | 0.358 |
 | **mahagauri-v1 + 3σ agreement** | 0.070 | 0.223 | 0.707 |
+| **mahagauri-v2 (out-of-fold, hold chosen)** | 0.015 | 0.006 | 0.979 |
+| **mahagauri-v2 + 3σ agreement** | 0.021 | 0.092 | 0.887 |
 | back within 3σ | 0.165 | 0.248 | 0.587 |
 | fixed timer | 0.480 | 0.520 | 0.000 |
 
@@ -21,16 +23,22 @@
 | `machine-1` | 112 | mahagauri-v0 | 0.223 | 0.634 | 0.143 | 20 |
 | `machine-1` | 112 | mahagauri-v1 (upper-bound threshold) | 0.161 | 0.536 | 0.304 | 24.5 |
 | `machine-1` | 112 | mahagauri-v1 + 3σ agreement | 0.054 | 0.179 | 0.768 | 16.5 |
+| `machine-1` | 112 | mahagauri-v2 (out-of-fold, hold chosen) | 0.036 | 0.018 | 0.946 | 52 |
+| `machine-1` | 112 | mahagauri-v2 + 3σ agreement | 0.009 | 0.071 | 0.920 | 33.5 |
 | `machine-1` | 112 | back within 3σ | 0.152 | 0.205 | 0.643 | 16 |
 | `machine-1` | 112 | fixed timer | 0.482 | 0.518 | 0.000 | 9 |
 | `machine-2` | 114 | mahagauri-v0 | 0.167 | 0.553 | 0.281 | 17 |
 | `machine-2` | 114 | mahagauri-v1 (upper-bound threshold) | 0.079 | 0.439 | 0.482 | 23 |
 | `machine-2` | 114 | mahagauri-v1 + 3σ agreement | 0.079 | 0.219 | 0.702 | 12 |
+| `machine-2` | 114 | mahagauri-v2 (out-of-fold, hold chosen) | 0.000 | 0.000 | 1.000 | — |
+| `machine-2` | 114 | mahagauri-v2 + 3σ agreement | 0.026 | 0.079 | 0.895 | 19 |
 | `machine-2` | 114 | back within 3σ | 0.175 | 0.254 | 0.570 | 6 |
 | `machine-2` | 114 | fixed timer | 0.465 | 0.535 | 0.000 | 11 |
 | `machine-3` | 101 | mahagauri-v0 | 0.277 | 0.584 | 0.139 | 13 |
 | `machine-3` | 101 | mahagauri-v1 (upper-bound threshold) | 0.198 | 0.525 | 0.277 | 18 |
 | `machine-3` | 101 | mahagauri-v1 + 3σ agreement | 0.079 | 0.277 | 0.644 | 13.5 |
+| `machine-3` | 101 | mahagauri-v2 (out-of-fold, hold chosen) | 0.010 | 0.000 | 0.990 | — |
+| `machine-3` | 101 | mahagauri-v2 + 3σ agreement | 0.030 | 0.129 | 0.842 | 26 |
 | `machine-3` | 101 | back within 3σ | 0.168 | 0.287 | 0.545 | 4 |
 | `machine-3` | 101 | fixed timer | 0.495 | 0.505 | 0.000 | 10 |
 
