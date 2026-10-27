@@ -71,6 +71,8 @@ def _numbers_to_decimal(value: Any) -> Any:
 
 
 RECENT_CAP = 300
+#: Pages a filtered audit read may walk before it returns what it has.
+MAX_AUDIT_PAGES = 20
 """Newest events remembered per source. Enough for `/intel` (200) and the
 palette index (80) with room to spare, and small enough that the item stays
 well under DynamoDB's 400 KB — about 25 KB at this cap."""
@@ -181,7 +183,7 @@ class DynamoStore:
         return record
 
     def audit_records(
-        self, incident_ref: str | None = None, limit: int = 100
+        self, incident_ref: str | None = None, limit: int = 100, kind: AuditKind | None = None
     ) -> list[AuditRecord]:
         from boto3.dynamodb.conditions import Attr, Key
 
@@ -190,13 +192,30 @@ class DynamoStore:
             "ScanIndexForward": False,  # newest first
             "Limit": limit,
         }
+        conditions = []
         if incident_ref is not None:
-            query["FilterExpression"] = Attr("incident_ref").eq(incident_ref)
-            # A filter runs after the read, so the page has to be large enough
-            # to still hold `limit` matches once the others are discarded.
+            conditions.append(Attr("incident_ref").eq(incident_ref))
+        if kind is not None:
+            conditions.append(Attr("kind").eq(kind.value))
+        if conditions:
+            expression = conditions[0]
+            for extra in conditions[1:]:
+                expression = expression & extra
+            query["FilterExpression"] = expression
             query["Limit"] = max(limit * 10, 100)
 
-        rows = self.table.query(**query).get("Items", [])[:limit]
+        # A filter runs after each page is read, so one page can hold fewer
+        # than `limit` matches while older ones exist. Page until there are
+        # enough or the partition ends; a single over-sized page silently
+        # missed rare kinds such as approvals.
+        rows: list[dict[str, Any]] = []
+        for _ in range(MAX_AUDIT_PAGES):
+            page = self.table.query(**query)
+            rows.extend(page.get("Items", []))
+            if len(rows) >= limit or "LastEvaluatedKey" not in page:
+                break
+            query["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+        rows = rows[:limit]
         return [
             AuditRecord(
                 at=datetime.fromisoformat(row["at"]),

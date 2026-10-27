@@ -1410,8 +1410,10 @@ def event(event_id: str) -> dict[str, object]:
 
 
 @router.get("/audit", response_model=list[AuditRecord])
-def audit(incident_ref: str | None = None, limit: int = 100) -> list[AuditRecord]:
-    return AUDIT.records(incident_ref=incident_ref, limit=limit)
+def audit(incident_ref: str | None = None, limit: int = 100, kind: AuditKind | None = None) -> list[AuditRecord]:
+    """Newest first. `kind` is validated against the enum, so a mistyped one is
+    a 422 rather than an empty list that reads as "never happened"."""
+    return AUDIT.records(incident_ref=incident_ref, limit=limit, kind=kind)
 
 
 ENRICHER: object | None = None

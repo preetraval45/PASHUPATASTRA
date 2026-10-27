@@ -203,6 +203,19 @@ def test_policy_denials_are_audited() -> None:
     assert any(r["kind"] == "policy_evaluation" for r in records)
 
 
+def test_audit_filters_by_kind_before_the_limit() -> None:
+    """A rare kind behind many common ones is still found: the filter runs
+    before the limit, so "no approvals" cannot mean "none in the newest N"."""
+    ref = "INC-TEST-KIND"
+    evaluate("delete_infrastructure", incident_ref=ref)
+    for _ in range(5):
+        evaluate("restart_service", incident_ref="INC-TEST-KIND-NOISE")
+    only = client.get("/api/v1/audit", params={"kind": "policy_evaluation", "incident_ref": ref, "limit": 1}).json()
+    assert [r["kind"] for r in only] == ["policy_evaluation"] and only[0]["incident_ref"] == ref
+    assert client.get("/api/v1/audit", params={"kind": "approval", "incident_ref": ref}).json() == []
+    assert client.get("/api/v1/audit", params={"kind": "not_a_kind"}).status_code == 422
+
+
 def _ledger(incident_ref: str) -> int:
     return len(client.get("/api/v1/audit", params={"incident_ref": incident_ref}).json())
 

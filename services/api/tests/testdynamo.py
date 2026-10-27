@@ -425,3 +425,19 @@ def test_every_durable_store_can_answer_what_is_recent() -> None:
             "reads it through getattr and would silently show nothing"
         )
         assert callable(getattr(store, "entity_events", None)), store.__name__
+
+
+@needs_table
+def test_audit_kind_filter_finds_a_rare_kind_behind_common_ones(store) -> None:
+    """The filter runs after each page is read; paging must keep going until
+    it has the match, not return an empty first page as "none recorded"."""
+    from app.engines.audit import AuditKind, AuditRecord
+
+    marker = f"kind-{NOW.timestamp()}"
+    store.append_audit(AuditRecord(at=NOW, kind=AuditKind.APPROVAL, actor="human:test",
+                                   incident_ref=marker, summary="the rare one"))
+    for index in range(30):
+        store.append_audit(AuditRecord(at=NOW + timedelta(seconds=index + 1), kind=AuditKind.OBSERVATION,
+                                       actor="test", incident_ref=marker, summary=f"noise {index}"))
+    found = store.audit_records(incident_ref=marker, kind=AuditKind.APPROVAL, limit=1)
+    assert [r.summary for r in found] == ["the rare one"]

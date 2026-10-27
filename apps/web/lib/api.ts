@@ -430,7 +430,10 @@ export const getIncidents = () => get<Incident[]>("/incidents");
 export const getActions = () => get<ActionSpec[]>("/actions");
 export const getTopology = () => get<TopologySnapshot>("/topology/graph");
 export const getTopologyCounts = () => get<{ nodes: number; edges: number }>("/topology");
-export const getAudit = (limit = 50) => get<AuditRecord[]>(`/audit?limit=${limit}`);
+/** `kind` is filtered by the API before the limit, so the newest N of one kind
+ *  are returned, not the matches among the newest N of all. */
+export const getAudit = (limit = 50, kind?: string) =>
+  get<AuditRecord[]>(`/audit?limit=${limit}${kind ? `&kind=${encodeURIComponent(kind)}` : ""}`);
 export const getIncident = (id: string) => get<Incident>(`/incidents/${encodeURIComponent(id)}`);
 export const getIncidentAudit = (id: string) =>
   get<AuditRecord[]>(`/audit?incident_ref=${encodeURIComponent(id)}&limit=100`);

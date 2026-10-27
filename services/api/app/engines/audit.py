@@ -76,13 +76,22 @@ class AuditLog:
             self._records.append(record)
         return record
 
-    def records(self, incident_ref: str | None = None, limit: int = 100) -> list[AuditRecord]:
+    def records(
+        self, incident_ref: str | None = None, limit: int = 100, kind: AuditKind | None = None
+    ) -> list[AuditRecord]:
+        """The newest `limit` records matching the filters, newest first.
+
+        Filtered by the store, before the limit, so "no approvals" means none
+        were recorded, not that none were among the newest hundred lines.
+        """
         store = self._store()
         if store is not None:
-            return store.audit_records(incident_ref=incident_ref, limit=limit)
+            return store.audit_records(incident_ref=incident_ref, limit=limit, kind=kind)
         rows = self._records
         if incident_ref is not None:
             rows = [r for r in rows if r.incident_ref == incident_ref]
+        if kind is not None:
+            rows = [r for r in rows if r.kind == kind]
         return list(reversed(rows[-limit:]))
 
     def since(self, when: datetime, kind: AuditKind | None = None) -> list[AuditRecord]:

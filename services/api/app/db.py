@@ -107,13 +107,19 @@ class PostgresStore:
         return record
 
     def audit_records(
-        self, incident_ref: str | None = None, limit: int = 100
+        self, incident_ref: str | None = None, limit: int = 100, kind: AuditKind | None = None
     ) -> list[AuditRecord]:
         sql = "SELECT at, kind, actor, incident_id, summary, detail FROM audit_record"
+        where: list[str] = []
         params: list[Any] = []
         if incident_ref is not None:
-            sql += " WHERE incident_id = %s"
+            where.append("incident_id = %s")
             params.append(incident_ref)
+        if kind is not None:
+            where.append("kind = %s")
+            params.append(kind.value)
+        if where:
+            sql += " WHERE " + " AND ".join(where)
         sql += " ORDER BY at DESC, id DESC LIMIT %s"
         params.append(limit)
 

@@ -1,4 +1,5 @@
 import { AgentTurn } from "@/components/agentturn";
+import { Filter, FilterRow } from "@/components/filter";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
 import { getAudit, type AuditRecord } from "@/lib/api";
 import { foldAudit } from "@/lib/fold";
@@ -33,11 +34,19 @@ const KIND: Record<string, { label: string; status: Status }> = {
   agent_turn: { label: "answered", status: "neutral" },
 };
 
-export default async function AuditPage() {
+export default async function AuditPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kind?: string | string[] }>;
+}) {
   // Bounded, and the bound is stated rather than silent. An audit view that
   // quietly shows "the last 100" reads as "everything that happened".
   const LIMIT = 100;
-  const records = await getAudit(LIMIT);
+  const raw = (await searchParams).kind;
+  // Only a kind this page knows is sent; anything else shows everything,
+  // rather than an API error or an empty ledger that reads as "never happened".
+  const kind = typeof raw === "string" && raw in KIND ? raw : undefined;
+  const records = await getAudit(LIMIT, kind);
   if (!records) return <Offline />;
 
   return (
@@ -47,9 +56,23 @@ export default async function AuditPage() {
     >
       <Panel
         title="Records"
-        aside={`newest ${records.length}${records.length === LIMIT ? ` of more` : ""}, most recent first`}
+        aside={`newest ${records.length}${records.length === LIMIT ? ` of more` : ""}${
+          kind ? ` ${KIND[kind].label}` : ""
+        }, most recent first`}
       >
-        {records.length === 0 ? (
+        <div className="mb-5">
+          <FilterRow label="Kind">
+            <Filter href="/audit" label="Everything" active={!kind} />
+            {Object.entries(KIND).map(([k, { label }]) => (
+              <Filter key={k} href={`/audit?kind=${k}`} label={label} active={kind === k} />
+            ))}
+          </FilterRow>
+        </div>
+        {records.length === 0 && kind ? (
+          <Empty art="ledger" title={`No ${KIND[kind].label} records.`} action={{ href: "/audit", label: "Show everything →" }}>
+            None of this kind has been recorded. The filter runs over the whole ledger, not only the newest {LIMIT} lines.
+          </Empty>
+        ) : records.length === 0 ? (
           <Empty
           art="ledger"
           title="Nothing recorded yet."
