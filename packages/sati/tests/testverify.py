@@ -59,7 +59,8 @@ def test_the_whole_run_and_report(tmp_path, monkeypatch, capsys):
     assert verify.main() == 0
     results = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
     assert set(results["pooled"]) == {"mahagauri-v0", "mahagauri-v1 (upper-bound threshold)",
-                                      "mahagauri-v1 + 3σ agreement", "back within 3σ", "fixed timer"}
+                                      "mahagauri-v1 + 3σ agreement", "mahagauri-v2 (out-of-fold, hold chosen)",
+                                      "mahagauri-v2 + 3σ agreement", "back within 3σ", "fixed timer"}
     assert results["dataset"]["incidents"] == 12
     assert results["pooled"]["mahagauri-v0"]["confirmed_rate"] > 0.5  # clean recoveries are confirmable
     assert report.main(str(tmp_path / "results.json")) == 0
@@ -69,3 +70,22 @@ def test_the_whole_run_and_report(tmp_path, monkeypatch, capsys):
 def test_the_upper_bound_is_stricter_than_the_point_estimate():
     assert verify.wilson_upper(5, 100) > 0.05
     assert verify.wilson_upper(0, 200) < 0.02
+
+
+def test_a_longer_hold_declares_later_or_never():
+    recovered = np.array([0, 1, 1, 1, 0, 1, 1, 1, 1, 1], dtype=bool)
+    assert verify.all_clear(recovered, 3) == 3
+    assert verify.all_clear(recovered, 5) == 9
+    assert verify.all_clear(recovered, 10) is None
+
+
+def test_v2_picks_the_setting_that_confirms_most_within_budget():
+    # 80 incidents ending at minute 10 (with 40, zero early calls still has a
+    # 95% upper bound above 5%, so nothing would be within budget); the score turns "recovered" at minute 8
+    # (two minutes early) and stays there. A hold of 3 declares at minute 10,
+    # which is on time; nothing here declares early, so the lowest threshold
+    # and shortest hold win, and the choice is deterministic.
+    eps = [{"start": 0, "end": 10, "stop": 30, "group": "g"} for _ in range(80)]
+    probs = [np.r_[np.zeros(8), np.ones(22)] for _ in eps]
+    t, hold = verify.choose_v2(eps, probs)
+    assert hold == 3 and t == verify.THRESHOLDS[0]

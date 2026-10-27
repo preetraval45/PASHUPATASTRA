@@ -30,6 +30,13 @@ trained on both training groups.
 * **Detection:** event-level F1, recall and false alarms per 1000, through
   the same harness as every detector. The threshold is chosen on the training
   groups.
+
+**v1 (27 Oct): fusion at Shailaputri's false-alarm budget.** v0 chose the
+fused threshold for the best F1, and on held-out groups it raised false alarms
+twelve-fold to match Shailaputri's F1. v1 asks the fair question instead. With
+false alarms held at Shailaputri's own rate (measured on the same out-of-fold
+training scores), does fusion catch more? Its threshold is the best-F1 one
+among those within that budget on the training groups.
 """
 
 from __future__ import annotations
@@ -103,6 +110,17 @@ def candidates(probs: list[np.ndarray]) -> list[float]:
     return sorted({round(float(q), 6) for q in np.quantile(pooled, np.linspace(0.80, 0.999, 40))})
 
 
+def within_budget(machines: list[dict], probs: list[np.ndarray], cands: list[float], budget: float) -> float:
+    """The best-F1 threshold whose mean false alarms per 1000 stay within `budget`
+    on these (training) machines; the strictest candidate if none does."""
+    allowed = []
+    for t in cands:
+        m = smd_run.mean(smd_run.score_rows(machines, probs, t, "x"))
+        if m["false_alarms_per_1000"] <= budget:
+            allowed.append((m["f1"], t))
+    return max(allowed)[1] if allowed else max(cands)
+
+
 def fit(machines: list[dict]) -> lgb.Booster:
     return smd_run.fit([m["features"] for m in machines], [m["labels"] for m in machines], onset=False)
 
@@ -154,6 +172,12 @@ def main() -> int:
             probs = [predict(single_w[name], s[:, [k]]) for s in oof_scores]
             t_single[name] = smd_run.best(oof_machines, probs, candidates(probs))
 
+        # v1: Shailaputri alone sets the false-alarm budget, on the same training scores.
+        shail = [predict(single_w["shailaputri"], s[:, [0]]) for s in oof_scores]
+        budget = smd_run.mean(smd_run.score_rows(oof_machines, shail, t_single["shailaputri"], "x"))[
+            "false_alarms_per_1000"]
+        t_fused_v1 = within_budget(oof_machines, fused_train, candidates(fused_train), budget)
+
         booster = fit(train)
         test_scores = [scores(m, booster, pca_q) for m in test]
         y_test = np.concatenate([m["labels"] for m in test])
@@ -162,13 +186,17 @@ def main() -> int:
         detectors["siddhidatri-v0"] = {
             **smd_run.mean(smd_run.score_rows(test, p_fused, t_fused, "siddhidatri-v0")),
             "ece": ece(np.concatenate(p_fused), y_test), "brier": brier(np.concatenate(p_fused), y_test)}
+        detectors["siddhidatri-v1 (at Shailaputri's false-alarm budget)"] = {
+            **smd_run.mean(smd_run.score_rows(test, p_fused, t_fused_v1, "siddhidatri-v1")),
+            "ece": ece(np.concatenate(p_fused), y_test), "brier": brier(np.concatenate(p_fused), y_test)}
         for k, name in enumerate(FEATURES):
             p = [predict(single_w[name], s[:, [k]]) for s in test_scores]
             detectors[name] = {**smd_run.mean(smd_run.score_rows(test, p, t_single[name], name)),
                                "ece": ece(np.concatenate(p), y_test), "brier": brier(np.concatenate(p), y_test)}
         folds.append({"held_out": held, "machines": len(test), "weights": dict(zip([*FEATURES, "bias"],
                                                                                   map(float, np.round(fused_w, 4)), strict=True)),
-                      "thresholds": {"siddhidatri-v0": t_fused, **t_single}, "detectors": detectors})
+                      "thresholds": {"siddhidatri-v0": t_fused, "siddhidatri-v1": t_fused_v1, **t_single},
+                      "fa_budget_v1": budget, "detectors": detectors})
         print(f"  held out {held}: " + "  ".join(f"{k} F1 {v['f1']:.3f} ECE {v['ece']:.3f}" for k, v in detectors.items()))
 
     names = list(folds[0]["detectors"]) if folds else []

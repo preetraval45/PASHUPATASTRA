@@ -33,6 +33,15 @@ knows. Nothing is computed from after t.
 chosen on the training groups. The rule: the lowest threshold whose premature
 rate there stays at or below 5%.
 
+**v2 (27 Oct).** v0 and v1 chose the threshold from the model's predictions
+on its *own training data*, which are over-confident, so the threshold came out
+too lenient and premature all-clears rose on unseen machines. v2 chooses on
+**out-of-fold** predictions inside the training groups (each training group
+predicted by a model fitted without it, as Siddhidatri does). It chooses the
+**hold time** too (3, 5 or 10 consecutive recovered minutes). Among the
+settings whose one-sided 95% upper bound on premature all-clears stays within
+5%, it keeps the one that confirms the most recoveries.
+
 **Baselines,** under the same three-in-a-row rule:
 
 * **Back within 3σ:** all clear once no metric is more than 3 robust standard
@@ -59,6 +68,7 @@ from sati.sources import smd
 HORIZON = 60  # minutes after the true end that a verifier is given to confirm
 BASELINE = 60  # minutes before onset that define "normal" for this incident
 CONSECUTIVE = 3
+HOLDS = (3, 5, 10)
 PREMATURE_BUDGET = 0.05
 THRESHOLDS = tuple(round(t, 2) for t in np.arange(0.3, 0.99, 0.02))
 
@@ -104,18 +114,18 @@ def labels(ep: dict) -> np.ndarray:
     return (np.arange(ep["stop"] - ep["start"]) >= ep["end"] - ep["start"]).astype(int)
 
 
-def all_clear(recovered: np.ndarray) -> int | None:
-    """Index of the first minute ending CONSECUTIVE recovered answers, or None."""
+def all_clear(recovered: np.ndarray, hold: int = CONSECUTIVE) -> int | None:
+    """Index of the first minute ending `hold` consecutive recovered answers, or None."""
     run = 0
     for i, r in enumerate(recovered):
         run = run + 1 if r else 0
-        if run >= CONSECUTIVE:
+        if run >= hold:
             return i
     return None
 
 
-def outcome(ep: dict, recovered: np.ndarray) -> dict:
-    declared = all_clear(recovered)
+def outcome(ep: dict, recovered: np.ndarray, hold: int = CONSECUTIVE) -> dict:
+    declared = all_clear(recovered, hold)
     length = ep["end"] - ep["start"]
     if declared is None:
         return {"result": "unconfirmed"}
@@ -169,6 +179,49 @@ def choose(train: list[dict], probs: list[np.ndarray], upper: bool = False,
     return THRESHOLDS[-1]
 
 
+def fit(eps: list[dict]) -> lgb.Booster:
+    return lgb.train(detect_model.PARAMS, lgb.Dataset(pd.concat([ep["frame"] for ep in eps], ignore_index=True),
+                                                    label=np.concatenate([ep["y"] for ep in eps])),
+                     num_boost_round=detect_model.ROUNDS)
+
+
+def out_of_fold(train: list[dict]) -> list[np.ndarray]:
+    """Each training incident scored by a model fitted without its machine group.
+
+    With a single training group there is nothing to hold out, so the scores are
+    in-sample (v0's behaviour); the full SMD run always has two."""
+    if len({ep["group"] for ep in train}) < 2:
+        model = fit(train)
+        return [model.predict(ep["frame"]) for ep in train]
+    probs: list[np.ndarray | None] = [None] * len(train)
+    for g in sorted({ep["group"] for ep in train}):
+        inner = fit([ep for ep in train if ep["group"] != g])
+        for i, ep in enumerate(train):
+            if ep["group"] == g:
+                probs[i] = inner.predict(ep["frame"])
+    return probs  # type: ignore[return-value]
+
+
+def choose_v2(train: list[dict], probs: list[np.ndarray], agree: list[np.ndarray] | None = None
+              ) -> tuple[float, int]:
+    """(threshold, hold) whose upper-bound premature rate is within budget on
+    out-of-fold scores and which confirms the most recoveries; the strictest
+    setting if none is within budget."""
+    best, best_confirmed = (THRESHOLDS[-1], HOLDS[-1]), -1.0
+    for hold in HOLDS:
+        for t in THRESHOLDS:
+            votes = [p >= t if agree is None else (p >= t) & a
+                     for p, a in zip(probs, agree or [None] * len(probs), strict=True)]
+            results = [outcome(ep, v, hold) for ep, v in zip(train, votes, strict=True)]
+            premature = sum(r["result"] == "premature" for r in results)
+            if wilson_upper(premature, len(results)) > PREMATURE_BUDGET:
+                continue
+            confirmed = sum(r["result"] == "confirmed" for r in results) / len(results)
+            if confirmed > best_confirmed:
+                best, best_confirmed = (t, hold), confirmed
+    return best
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--cache", type=Path, default=Path(".cache/smd"))
@@ -202,10 +255,14 @@ def main() -> int:
         t_upper = choose(train, train_probs, upper=True)
         within = [ep["frame"]["pre_beyond_3"].to_numpy() == 0 for ep in train]
         t_agree = choose(train, train_probs, upper=True, agree=within)
+        oof = out_of_fold(train)
+        t2, hold2 = choose_v2(train, oof)
+        t2a, hold2a = choose_v2(train, oof, agree=within)
         timer = int(np.median([ep["end"] - ep["start"] for ep in train]))
         fold = {
             "held_out": held, "incidents": len(test), "train_incidents": len(train),
             "threshold": t, "threshold_upper": t_upper, "threshold_agree": t_agree, "timer_minutes": timer,
+            "v2": {"threshold": t2, "hold": hold2, "agree_threshold": t2a, "agree_hold": hold2a},
             "verifiers": {
                 "mahagauri-v0": summary([outcome(ep, booster.predict(ep["frame"]) >= t) for ep in test]),
                 "mahagauri-v1 (upper-bound threshold)": summary(
@@ -213,6 +270,11 @@ def main() -> int:
                 "mahagauri-v1 + 3σ agreement": summary(
                     [outcome(ep, (booster.predict(ep["frame"]) >= t_agree) & (ep["frame"]["pre_beyond_3"].to_numpy() == 0))
                      for ep in test]),
+                "mahagauri-v2 (out-of-fold, hold chosen)": summary(
+                    [outcome(ep, booster.predict(ep["frame"]) >= t2, hold2) for ep in test]),
+                "mahagauri-v2 + 3σ agreement": summary(
+                    [outcome(ep, (booster.predict(ep["frame"]) >= t2a) & (ep["frame"]["pre_beyond_3"].to_numpy() == 0),
+                             hold2a) for ep in test]),
                 "back within 3σ": summary([outcome(ep, ep["frame"]["pre_beyond_3"].to_numpy() == 0) for ep in test]),
                 "fixed timer": summary([outcome(ep, np.arange(len(ep["y"])) >= timer) for ep in test]),
             },

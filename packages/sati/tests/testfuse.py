@@ -50,7 +50,7 @@ def test_the_whole_run_fuses_out_of_fold_and_reports(tmp_path, monkeypatch, caps
     assert fuse.main() == 0
     results = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
     assert [f["held_out"] for f in results["folds"]] == ["machine-1", "machine-2", "machine-3"]
-    assert set(results["mean_across_groups"]) == {"siddhidatri-v0", *fuse.FEATURES}
+    assert set(results["mean_across_groups"]) == {"siddhidatri-v0", "siddhidatri-v1 (at Shailaputri's false-alarm budget)", *fuse.FEATURES}
     assert 0 <= results["mean_across_groups"]["siddhidatri-v0"]["ece"] <= 1
     assert report.main(str(tmp_path / "results.json")) == 0
     assert "calibrated verdict" in capsys.readouterr().out
