@@ -47,7 +47,7 @@
   },
   "thresholds": {
     "kalaratri-v0": 0.9996684324889528,
-    "pca": 0.2039706869662387
+    "pca": 0.20397068696625942
   },
   "top_features": [
     {
@@ -85,5 +85,5 @@
   ],
   "weights_published": true,
   "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. LogHub is research-use only.",
-  "seconds": 10.5
+  "seconds": 6.4
 }
