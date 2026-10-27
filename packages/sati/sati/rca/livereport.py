@@ -41,7 +41,9 @@ def main(path: str) -> int:
         "",
         "## Realism: Kaal against the live stack (RP-18)\n",
         "Share of incidents by how many services went anomalous (peak shift ≥ 2σ), and by propagation depth "
-        "(hops from the root to the furthest anomalous caller).\n",
+        "(hops from the root to the furthest anomalous caller). **Read with care:** the live baselines are nearly "
+        "flat, so every live service crosses 2σ in every incident, and the first table is saturated "
+        "([katyayani-live-signal.md](katyayani-live-signal.md)).\n",
     ]
     for key, title in (("anomalous_services_per_incident", "Anomalous services"), ("propagation_depth", "Depth")):
         live, kaal = r["realism"][key]["live"], r["realism"][key]["kaal"]

@@ -94,3 +94,4 @@ Protocol: before every push, write a topic-named file from
 - [LiveSimToReal](LiveSimToReal.md) — RP-19 live kind stack with real metrics, 200 pre-declared non-PIB faults; run pending
 - [RCAEvalVerdict](RCAEvalVerdict.md) — Katyayani 0.930 vs LLMs ~0.53 on RCAEval, Holm p≤1.4e-06; cards refreshed after retrain drift
 - [RetrainChurn](RetrainChurn.md) — per-model path gating so retrains stop drifting published numbers
+- [LiveResults](LiveResults.md) — RP-19 done: live 0.895 RCAEval-trained vs 0.335 Kaal; 2σ realism saturated, measured

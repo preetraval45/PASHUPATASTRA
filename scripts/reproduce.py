@@ -35,6 +35,8 @@ TABLES = [
             ("sati-rca", "sati.rca.report"),
             ("katyayani-kaal", "sati.rca.kaalreport"),
             ("katyayani-simtoreal", "sati.rca.simtoreport"),
+            ("katyayani-live", "sati.rca.livereport"),
+            ("katyayani-live-signal", "sati.rca.livesignal"),
             ("shailaputri", "sati.detect.report"),
             ("shailaputri-smd", "sati.detect.smdreport"),
             ("kalaratri", "sati.loganomaly.report"),

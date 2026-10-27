@@ -260,6 +260,14 @@ simulator does not.**
   0.660. Paired on the same cases, Katyayani is right where llama3 is wrong 41
   times, and the reverse happens 3 times (Holm-corrected McNemar p 3.2e-09)
   ([rcaeval-diagnosis.md](models/rcaeval-diagnosis.md)).
+- On a third system, built for this test and run on a real cluster (200
+  fault injections declared before any run), the pattern repeats. Trained on
+  RCAEval, Katyayani ranks the root first in 0.895 of incidents, against 0.870
+  for the loudest service and 0.335 for the Kaal-trained ranker
+  ([katyayani-live.md](models/katyayani-live.md)). The stack's flat baselines
+  put every service past 2σ, which is consistent with the Kaal ranker's
+  collapse: its features read which services are anomalous
+  ([katyayani-live-signal.md](models/katyayani-live-signal.md)).
 
 The simulator taught topology-first reasoning, and in real faults the culprit
 is the loudest service. Synthetic data is at most an augmentation here, not a

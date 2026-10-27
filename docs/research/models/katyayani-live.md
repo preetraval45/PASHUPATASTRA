@@ -15,7 +15,7 @@ Kaal training: 50,000 synthetic incidents (seed 1). RCAEval training: 645 real c
 
 ## Realism: Kaal against the live stack (RP-18)
 
-Share of incidents by how many services went anomalous (peak shift ≥ 2σ), and by propagation depth (hops from the root to the furthest anomalous caller).
+Share of incidents by how many services went anomalous (peak shift ≥ 2σ), and by propagation depth (hops from the root to the furthest anomalous caller). **Read with care:** the live baselines are nearly flat, so every live service crosses 2σ in every incident, and the first table is saturated ([katyayani-live-signal.md](katyayani-live-signal.md)).
 
 | Anomalous services | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|

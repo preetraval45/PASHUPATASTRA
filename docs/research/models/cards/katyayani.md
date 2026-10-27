@@ -59,6 +59,15 @@ per run.
 
 Fault type, end to end: about 55–58% per held-out system.
 
+**On a third system it never saw** (the live stack, RP-19: 200 fault injections
+on an eight-service stack in kind, a plan committed before any run;
+[katyayani-live.md](../katyayani-live.md)): trained on RCAEval it ranks the
+root first in 0.895 of incidents, against 0.870 for the loudest service. The
+same design trained on synthetic Kaal incidents scores 0.335. It is weakest on the
+release fault (0.620). In this stack a failed dependency fails its caller's
+request too (`benchmark/live/app.py`), so a bad release raises the error rate
+at every caller up the chain, not only at itself.
+
 ## Known limitations
 
 - **The injection time is given**, as in RCAEval's standard setting. A

@@ -1,0 +1,31 @@
+{
+ "incidents": 200,
+ "services": 8,
+ "median_peak": {
+  "all": {
+   "root": 2711.1,
+   "others": 18.2
+  },
+  "cpu": {
+   "root": 474.2,
+   "others": 22.4
+  },
+  "delay": {
+   "root": 2858.0,
+   "others": 34.7
+  },
+  "mem": {
+   "root": 2058.7,
+   "others": 5.4
+  },
+  "release": {
+   "root": 404750.0,
+   "others": 10.3
+  }
+ },
+ "mean_services_crossing": {
+  "2": 8.0,
+  "10": 5.55,
+  "100": 2.54
+ }
+}
