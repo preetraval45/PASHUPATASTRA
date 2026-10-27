@@ -9,8 +9,9 @@
 | **Brahmacharini v0** | 0.614 | 0.802 | 0.854 | 0.699 |
 | bm25 | 0.268 | 0.478 | 0.580 | 0.372 |
 | tf-idf logistic regression | 0.646 | 0.832 | 0.869 | 0.730 |
+| **Brahmacharini v0 + TF-IDF classifier (fused)** | 0.673 | 0.859 | 0.896 | 0.758 |
 | hashing-embedder (Smriti today) | 0.120 | 0.226 | 0.283 | 0.177 |
 
-Epochs chosen on validation sources: 10.
+Epochs chosen on validation sources: 10. Fusion weight on Brahmacharini, chosen on validation sources: 0.90.
 
 Designed, written and trained by an AI assistant under the owner's direction ([adr/RealDataModels](../../adr/RealDataModels.md)). ATT&CK © MITRE, used under its royalty-free licence.

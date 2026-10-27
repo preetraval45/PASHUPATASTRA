@@ -34,6 +34,13 @@
       "mrr": 0.7297,
       "n": 1727
     },
+    "brahmacharini-v0 + tf-idf (fused)": {
+      "recall@1": 0.6734,
+      "recall@5": 0.8587,
+      "recall@10": 0.8964,
+      "mrr": 0.7578,
+      "n": 1727
+    },
     "hashing-embedder (Smriti today)": {
       "recall@1": 0.1199,
       "recall@5": 0.2264,
@@ -43,6 +50,7 @@
     }
   },
   "best_epoch_by_validation": 10,
+  "fusion_weight_by_validation": 0.9,
   "curve": [
     {
       "epoch": 1,
@@ -92,7 +100,7 @@
     {
       "epoch": 10,
       "loss": 0.0031,
-      "val_mrr": 0.7098
+      "val_mrr": 0.7099
     },
     {
       "epoch": 11,
@@ -105,5 +113,5 @@
       "val_mrr": 0.6958
     }
   ],
-  "seconds": 494.2
+  "seconds": 418.2
 }
