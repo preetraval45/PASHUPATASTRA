@@ -100,3 +100,4 @@ Protocol: before every push, write a topic-named file from
 - [BiggerModels](BiggerModels.md) — Kushmanda v3 + Brahmacharini v1 on Kaggle; Katyayani events 0.90 servable; RP-75 blocked (security console)
 - [VercelLimit](VercelLimit.md) — 100 deploys/day hit; ignoreCommand skips non-web commits; batch pushes
 - [KaggleAndLive](KaggleAndLive.md) — 9/9/9 on Kaggle in progress; trees served exactly; Kushmanda weights stay private pending owner
+- [BrahmachariniTransformer.md](BrahmachariniTransformer.md) — 20M transformer loses to v0 (0.391 vs 0.614); v0 stays served

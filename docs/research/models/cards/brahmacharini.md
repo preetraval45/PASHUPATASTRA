@@ -67,6 +67,18 @@ At test time, every procedure ranks all 706 techniques.
 | BM25 | 0.268 | 0.478 | 0.580 | 0.372 |
 | Hashing embedder (Smriti's previous retriever) | 0.120 | 0.226 | 0.283 | 0.177 |
 
+### A larger encoder did not help (v1, Kaggle run 2)
+
+Brahmacharini v1 replaced the bag of words with a transformer encoder: about
+20M parameters, 4 layers, hashed words kept in order and a masked mean pool. It
+was trained from scratch with InfoNCE, beside v0, on the same split and the
+same test queries ([brahmacharini-transformer.md](../brahmacharini-transformer.md)).
+After 200 epochs, with the best epoch by validation MRR at 190, it reaches
+Recall@1 0.391 and MRR 0.470, against v0's 0.614 and 0.699. About 14,000
+training procedures are too few to train an encoder of that size from nothing,
+and the order it can read matters less here than the vocabulary v0 already
+captures. v0 stays the served model, and v1 is kept as a negative result.
+
 ## Known limitations
 
 - **Bag of words and bigrams.** Word order beyond adjacent pairs is lost, and

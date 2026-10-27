@@ -337,6 +337,14 @@ comes from retrieval and the model writes around it.
 
 Neither verdict closes an incident without a human.
 
+**A larger model is not automatically a better one.** Brahmacharini v0 is a
+bag of hashed words and bigrams. A transformer encoder of about 20M
+parameters, trained from scratch on the same 14,183 procedures and tested on
+the same 1,727, reaches Recall@1 0.391 and MRR 0.470, against v0's 0.614 and
+0.699 ([brahmacharini-transformer.md](models/brahmacharini-transformer.md)).
+Its epoch was chosen on validation sources, and validation MRR had levelled
+off by the end. With this little data, the small model is the one served.
+
 ### 7.3 Against general LLMs, on a benchmark this project did not write
 
 > *Draft written by Claude for the author to revise (RP-33, RP-36). Every number
