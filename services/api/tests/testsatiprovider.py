@@ -205,3 +205,12 @@ def test_an_uncited_answer_falls_back_and_a_refusal_is_said_plainly(provider, mo
     assert _general(_kushmanda(monkeypatch, "Phishing tricks users."), "what is phishing")["area"] != "kushmanda"
     out = _general(_kushmanda(monkeypatch, "The context does not answer this."), "what is phishing")
     assert out["area"] == "kushmanda" and "declines rather than guess" in out["answer"]
+
+
+def test_defences_follow_the_technique_brahmacharini_finds(provider, with_skandamata, monkeypatch):
+    # ATT&CK's links: ransomware's technique is mitigated by Data Backup.
+    monkeypatch.setattr(sati_module, "attack_links", lambda: {"T1486": ["M1053"], "T1566": ["M1017"]})
+    out = _general(provider, "How do we defend against ransomware?")
+    assert out["area"] == "skandamata"
+    assert "Data Encrypted for Impact (T1486)" in out["answer"] and "Data Backup (M1053)" in out["answer"]
+    assert "https://attack.mitre.org/techniques/T1486/" in out["answer"]  # the technique is cited

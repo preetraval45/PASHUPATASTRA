@@ -128,6 +128,16 @@ class Skandamata:
         ranked = sorted(range(len(probs)), key=lambda j: -probs[j])[:k]
         return [(probs[j], meta["mitigations"][j]) for j in ranked]
 
+    def by_id(self) -> dict[str, dict]:
+        return {m["id"]: m for m in self.meta["mitigations"]}
+
+
+@lru_cache
+def attack_links() -> dict[str, list[str]]:
+    """ATT&CK's technique → mitigation links (`sati.serving.attackmap`); empty if not exported."""
+    path = MODELS / "attack_mitigations.json"
+    return json.loads(path.read_text(encoding="utf-8"))["links"] if path.exists() else {}
+
 
 #: Identifiers Kushmanda may write only if the passage it cites contains them.
 IDENTIFIER = re.compile(r"\b(T\d{4}(?:\.\d{3})?|CVE-\d{4}-\d{4,}|CWE-\d+|M1\d{3}|CAPEC-\d+)\b")
@@ -310,6 +320,25 @@ class SatiProvider:
         return self.mode == "skandamata" or bool(MITIGATE.search(question))
 
     def _mitigation_lines(self, text: str) -> list[str] | None:
+        """Brahmacharini finds the technique; ATT&CK's own links give its
+        mitigations; Skandamata orders them. Skandamata alone was trained on
+        analysts' write-ups and misread plain questions ("ransomware encrypting
+        our file shares" → one wrong mitigation), while retrieval reads them well.
+        With no confident technique, Skandamata ranks alone, as before."""
+        ranked = {m["id"]: p for p, m in mitigator().recommend(text, k=1000)}
+        links = attack_links()
+        hits = knowledge().search(embedder().embed(text), k=3, question=text) if links else []
+        technique = next((p for s, p in hits if s >= ANSWERABLE and p.get("kind") == "technique"
+                          and p["id"] in links), None)
+        if technique is not None:
+            names = mitigator().by_id()
+            picks = sorted((m for m in links[technique["id"]] if m in names), key=lambda m: -ranked.get(m, 0.0))[:5]
+            if picks:
+                lines = [f"For {technique['title']} ({technique['id']}), which this matches, ATT&CK lists these "
+                         "defences, most relevant first:", ""]
+                lines += [f"- {names[m]['name']} ({m})" for m in picks]
+                urls = [technique.get("url", "")] + [names[m]["url"] for m in picks]
+                return lines + ["", "Sources: " + " · ".join(u for u in urls if u)]
         picks = [(p, m) for p, m in mitigator().recommend(text, k=5) if p >= RECOMMEND]
         if not picks:
             return None
