@@ -105,35 +105,7 @@ jobs:
               - 'packages/sati/sati/rca/external.py'
               - 'packages/core/pashupatastra/kaal/**'
               - 'benchmark/external/rcaeval/**'
-            katyayani-pooled:
-    # Katyayani v1: RCAEval plus the live stack (RP-19), each of the four
-    # systems held out in turn; v0 and v1 compared on the same cases.
-    needs: [test, changes]
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.katyayani-pooled == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
-        with:
-          path: .cache/rcaeval
-          key: rcaeval-v1
-      - name: train and evaluate on four systems
-        working-directory: packages/sati
-        run: python -m sati.rca.pooled --cache ../../.cache/rcaeval --live ../../benchmark/live/dataset --out ../../results/katyayani-pooled
-      - name: commit the generated results
-        run: |
-          cp results/katyayani-pooled/results.json docs/research/models/katyayani-pooled.results.json
-          (cd packages/sati && python -m sati.rca.pooledreport ../../results/katyayani-pooled/results.json) > docs/research/models/katyayani-pooled.md
-          bash scripts/pushresults.sh "docs(models): Katyayani v1 on four systems from run ${{ github.run_id }}" docs/research/models/katyayani-pooled.results.json docs/research/models/katyayani-pooled.md
-
-  kalaratri:
+            kalaratri:
               - *shared
               - 'packages/sati/sati/loganomaly/**'
             katyayani-pooled:
@@ -437,6 +409,34 @@ jobs:
           cp results/katyayani-simtoreal/results.json docs/research/models/katyayani-simtoreal.results.json
           (cd packages/sati && python -m sati.rca.simtoreport ../../results/katyayani-simtoreal/results.json) > docs/research/models/katyayani-simtoreal.md
           bash scripts/pushresults.sh "docs(models): Katyayani sim-to-real results from run ${{ github.run_id }}" docs/research/models/katyayani-simtoreal.results.json docs/research/models/katyayani-simtoreal.md
+
+  katyayani-pooled:
+    # Katyayani v1: RCAEval plus the live stack (RP-19), each of the four
+    # systems held out in turn; v0 and v1 compared on the same cases.
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.katyayani-pooled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/rcaeval
+          key: rcaeval-v1
+      - name: train and evaluate on four systems
+        working-directory: packages/sati
+        run: python -m sati.rca.pooled --cache ../../.cache/rcaeval --live ../../benchmark/live/dataset --out ../../results/katyayani-pooled
+      - name: commit the generated results
+        run: |
+          cp results/katyayani-pooled/results.json docs/research/models/katyayani-pooled.results.json
+          (cd packages/sati && python -m sati.rca.pooledreport ../../results/katyayani-pooled/results.json) > docs/research/models/katyayani-pooled.md
+          bash scripts/pushresults.sh "docs(models): Katyayani v1 on four systems from run ${{ github.run_id }}" docs/research/models/katyayani-pooled.results.json docs/research/models/katyayani-pooled.md
 
   kalaratri:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
