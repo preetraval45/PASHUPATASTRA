@@ -1,0 +1,105 @@
+name: Incident diagnosis — LLM baselines (RP-15)
+
+# The labelled incidents (benchmark/incidents) × three general LLMs × 3 runs,
+# scored by the RP-14 harness. Refuses to run unless the owner's answer keys
+# (benchmark/answerkeys/rp13.yaml) were committed before every keyed fixture
+# and before any diagnosis result: a key written after a run is not a key.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - benchmark/incidents/**
+      - scripts/benchdiagnosis.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: diagnosis-incidents
+  cancel-in-progress: false
+
+jobs:
+  order:
+    name: answer keys predate the fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          keys=$(git log --diff-filter=A --format=%H -- benchmark/answerkeys/rp13.yaml | tail -1)
+          if [ -z "$keys" ]; then
+            echo "::error::no owner answer keys (benchmark/answerkeys/rp13.yaml); RP-13 must commit them first"
+            exit 1
+          fi
+          # The keys commit must touch nothing but the keys.
+          others=$(git show --name-only --format= "$keys" | grep -v '^benchmark/answerkeys/rp13.yaml$' || true)
+          if [ -n "$others" ]; then echo "::error::the answer-key commit also changed: $others"; exit 1; fi
+          for f in benchmark/incidents/SC-*.yaml; do
+            grep -q '^root_cause_label:' "$f" || continue
+            last=$(git log -1 --format=%H -- "$f")
+            git merge-base --is-ancestor "$keys" "$last" || { echo "::error::$f was keyed before the answer keys were committed"; exit 1; }
+          done
+          first=$(git log --diff-filter=A --format=%H -- benchmark/results/diagnosis | tail -1)
+          if [ -n "$first" ] && ! git merge-base --is-ancestor "$keys" "$first"; then
+            echo "::error::a diagnosis result predates the answer keys"; exit 1
+          fi
+          echo "answer keys $keys predate every keyed fixture and every result"
+
+  diagnose:
+    needs: order
+    name: ${{ matrix.model }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ["qwen2.5:7b", "mistral", "llama3"]
+    env:
+      PASHU_BASELINE_BASE_URL: http://localhost:11434/v1
+      PASHU_BASELINE_MODEL: ${{ matrix.model }}
+      PASHU_BASELINE_TEMPERATURE: "0.2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core
+      - name: Ollama, serving one model on CPU
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          (ollama serve > /tmp/ollama.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 2; done
+          ollama pull "${{ matrix.model }}"
+      - run: python scripts/benchdiagnosis.py --diagnoser "llm:${{ matrix.model }}" --runs 3
+      - name: name the artifact
+        id: slug
+        run: echo "slug=$(echo '${{ matrix.model }}' | tr -c 'a-zA-Z0-9' '_')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diagnosis-${{ steps.slug.outputs.slug }}
+          path: benchmark/results/diagnosis/
+          if-no-files-found: error
+
+  table:
+    needs: diagnose
+    if: always() && needs.diagnose.result != 'skipped'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: diagnosis-*
+          path: benchmark/results/diagnosis
+          merge-multiple: true
+      - run: python scripts/diagnosistable.py > docs/research/models/incident-diagnosis.md
+      - name: commit the records and the table
+        run: |
+          bash scripts/pushresults.sh "docs(research): incident diagnosis, LLM baselines, from run ${{ github.run_id }}" docs/research/models/incident-diagnosis.md benchmark/results/diagnosis

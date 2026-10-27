@@ -31,6 +31,20 @@ example:  # SC-0001, already in the corpus, to show the shape
   red_herrings: db:orders-primary shows high connections, but as the victim, not the cause.
   correct_action: rollback_deployment
 
+# The 8 incidents already in the corpus need keys too: RP-15 scores all 20.
+# Claude PROPOSED these from each fixture's `root_cause` line. Confirm or
+# correct each one, especially the `options`, which set how hard the question
+# is. Two need a decision, not just a confirmation; they are marked DECIDE.
+SC-0001: {expectation: incident, root_cause_label: service:checkout-api, options: [service:checkout-api, service:payments-gateway, db:orders-primary, service:frontend], correct_action: rollback_deployment}
+SC-0002: {expectation: incident, root_cause_label: DECIDE, options: [DECIDE], correct_action: DECIDE, notes: "two independent failures; one label cannot be right. Exclude from RCA@1, or key it as two cases?"}
+SC-0003: {expectation: nothing, root_cause_label: none, options: [none, service:checkout-api, service:payments-gateway, service:frontend], correct_action: none}
+SC-0004: {expectation: incident, root_cause_label: service:payments-gateway, options: [service:payments-gateway, service:checkout-api, db:orders-primary, service:frontend], red_herrings: "the checkout-api deployment", correct_action: escalate}
+SC-0005: {expectation: incident, root_cause_label: service:checkout-api, options: [service:checkout-api, service:payments-gateway, db:orders-primary, service:frontend], correct_action: scale_service}
+SC-0006: {expectation: incident, root_cause_label: service:billing-api, options: [service:billing-api, service:checkout-api, db:billing-primary, service:frontend], correct_action: scale_service}
+SC-0007: {expectation: nothing, root_cause_label: none, options: [none, service:search-api, service:frontend, db:search-index], correct_action: none}
+SC-0008: {expectation: escalate, root_cause_label: DECIDE, options: [DECIDE], correct_action: escalate, notes: "no shared cause is visible. Is the right diagnosis `none` (decline), or should it be excluded from RCA@1?"}
+
+# The 12 new incidents:
 SC-0009: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
 SC-0010: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}
 SC-0011: {expectation: incident, cause: TODO, root_cause_label: TODO, options: [TODO], red_herrings: TODO, correct_action: TODO}

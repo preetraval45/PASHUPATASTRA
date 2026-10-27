@@ -180,7 +180,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   4. Report the deltas against the full architecture, and any `UNSTABLE` scenario.
   *Done when:* Table 2 in [tables.md](tables.md) has n > 0 for both rows.
 
-- [ ] **RP-02 · Learn transformers by building one**
+- [~] **RP-02 · Learn transformers by building one** *Reading done (owner, 27 Oct). Remains: the notebook that trains a tiny character-level GPT, and the one-page note in the owner's words.*
   **You** · 6 h · Depends: —
   *Why:* this is the foundation for Sati-Embed and Sati-LM, not just theory.
   *Steps:*
@@ -205,7 +205,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   3. **Claude** then updates the CLAUDE.md naming table and [GLOSSARY.md](../GLOSSARY.md) to match. That change is yours to approve, because CLAUDE.md is an owner document.
   *Done when:* the ADR is committed, and CLAUDE.md agrees with it.
 
-- [~] **RP-05 · Learn: sampling and structured output** — *Study notes and code map prepared 18 Oct at the owner's request: [notes/RP-05](notes/RP-05-sampling-and-structured-output.md) — sampling settings, why temperature 0 is not deterministic on a GPU, and every failure mode mapped to the line that handles it. Remains: the owner reads it and answers its three check-yourself questions in their own words.*
+- [x] **RP-05 · Learn: sampling and structured output** — *Study notes and code map prepared 18 Oct at the owner's request: [notes/RP-05](notes/RP-05-sampling-and-structured-output.md) — sampling settings, why temperature 0 is not deterministic on a GPU, and every failure mode mapped to the line that handles it. Remains: the owner reads it and answers its three check-yourself questions in their own words.* *Owner-attested 27 Oct: reading done and the done-when met (the owner's word; no written answers committed).*
   **You** · 3 h · Depends: RP-02
   *Steps:* the Hugging Face LLM Course chapters on generation (temperature, top-p, greedy decoding). Then read [gateway.py](../../packages/core/pashupatastra/gateway.py) and `services/api/app/engines/providers/openaicompat.py`, and map each failure mode (refusal, truncation, invalid JSON) to where the code handles it.
   *Done when:* you can explain why temperature 0 is still not fully deterministic on a GPU. You will need this for constrained decoding in Sati-LM.
@@ -229,7 +229,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   4. Confirm the CI gate still passes, with no SDK in core.
   *Done when:* all tests pass, and three scenarios (one negative, one escalation, one remediate) produce clean records against the Oracle endpoint.
 
-- [~] **RP-08 · Learn: PyTorch and backpropagation** — *Study notes prepared 18 Oct: [notes/RP-08](notes/RP-08-pytorch-and-backprop.md), mapped onto this repository's own training loops. Remains: the owner writes the loop from memory and trains it.*
+- [~] **RP-08 · Learn: PyTorch and backpropagation** — *Study notes prepared 18 Oct: [notes/RP-08](notes/RP-08-pytorch-and-backprop.md), mapped onto this repository's own training loops. Remains: the owner writes the loop from memory and trains it.* *Reading done (owner, 27 Oct). Remains: the training loop written from memory and trained on a small public dataset.*
   **You** · 8 h · Depends: RP-02
   *Steps:* the PyTorch "Learn the Basics" tutorial end to end; 3Blue1Brown's *Neural Networks* backpropagation episodes; Karpathy's "micrograd" video, coding along.
   *Done when:* you write a full training loop from memory (Dataset, DataLoader, model, loss, optimizer, train and validation, checkpoint) and train it on any small public dataset.
@@ -243,7 +243,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   The Oracle box is CPU-only, so expect this to take days. Record the hardware in the run records.
   *Done when:* Table 1 shows all four arms with n.
 
-- [~] **RP-10 · Significance between arms** — *Claude's part done 18 Oct: `pashupatastra.significance` (exact McNemar; paired bootstrap resampling scenarios), 7 tests, Table 5 in papertables. Table 5 filled 19 Oct from RP-09's records: pashupatastra beats runbook (18 / 0 disagreements, McNemar p < 0.0001); for each model, the LLM arm with Dharma vs without shows no correctness difference that survives chance; each pashupatastra-llm arm is significantly less often correct than deterministic pashupatastra (0 / 18, 0 / 60, 0 / 75; p < 0.0001). 26 Oct: a Holm–Bonferroni correction across all of Table 5's tests (`significance.holm`; 2 tests, plus 2 for the table logic). Table 5 now prints the raw and adjusted p, and the verdict uses the adjusted one. On the 19 Oct records, every verdict is unchanged: the six that survive have raw p < 0.0001. Reading guide prepared on 26 Oct at the owner's request: [notes/RP-10](notes/RP-10-significance.md). It maps the paper's test families onto our code and Table 5, with four check-yourself questions. The 26 Oct benchmark run (records now committed) regenerated Table 5 with Holm: the six verdicts that survive are unchanged. Remains: the owner reads Dror et al. 2018 and answers the four questions.*
+- [x] **RP-10 · Significance between arms** — *Claude's part done 18 Oct: `pashupatastra.significance` (exact McNemar; paired bootstrap resampling scenarios), 7 tests, Table 5 in papertables. Table 5 filled 19 Oct from RP-09's records: pashupatastra beats runbook (18 / 0 disagreements, McNemar p < 0.0001); for each model, the LLM arm with Dharma vs without shows no correctness difference that survives chance; each pashupatastra-llm arm is significantly less often correct than deterministic pashupatastra (0 / 18, 0 / 60, 0 / 75; p < 0.0001). 26 Oct: a Holm–Bonferroni correction across all of Table 5's tests (`significance.holm`; 2 tests, plus 2 for the table logic). Table 5 now prints the raw and adjusted p, and the verdict uses the adjusted one. On the 19 Oct records, every verdict is unchanged: the six that survive have raw p < 0.0001. Reading guide prepared on 26 Oct at the owner's request: [notes/RP-10](notes/RP-10-significance.md). It maps the paper's test families onto our code and Table 5, with four check-yourself questions. The 26 Oct benchmark run (records now committed) regenerated Table 5 with Holm: the six verdicts that survive are unchanged. Remains: the owner reads Dror et al. 2018 and answers the four questions.* *Owner-attested 27 Oct: reading done and the done-when met (the owner's word; no written answers committed).*
   **Both** · You 3 h; Claude 1 session · Depends: RP-09
   *Steps:* **You** read Dror et al. ACL 2018, *The Hitchhiker's Guide to Testing Statistical Significance in NLP*. **Claude** adds McNemar tests on per-scenario correctness and a paired bootstrap CI on FRR to `papertables.py`.
   *Done when:* the tables say which differences survive.
@@ -254,12 +254,12 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
 
 ### Block B — Ground truth and training data (Weeks 7–12)
 
-- [ ] **RP-12 · Learn: evaluating ML systems honestly** — *Study notes prepared 27 Oct: [notes/RP-12](notes/RP-12-evaluating-honestly.md). It has the eight leakage types, a draft model info sheet for this project with exposures marked (RCAEval repetitions, live `deploy_before`, the subset's narrow test distribution) and four questions. Remains: the owner reads the three sources and answers the done-when question.*
+- [x] **RP-12 · Learn: evaluating ML systems honestly** — *Study notes prepared 27 Oct: [notes/RP-12](notes/RP-12-evaluating-honestly.md). It has the eight leakage types, a draft model info sheet for this project with exposures marked (RCAEval repetitions, live `deploy_before`, the subset's narrow test distribution) and four questions. Remains: the owner reads the three sources and answers the done-when question.* *Owner-attested 27 Oct: reading done and the done-when met (the owner's word; no written answers committed).*
   **You** · 4 h · Depends: —
   *Steps:* Liang et al. 2022 (*HELM*, the framing); Hamel Husain's posts on evals (error analysis first); Kapoor & Narayanan 2023, *Leakage and the Reproducibility Crisis in ML-based Science* (*Patterns*). The last one is the most important paper in this plan for you. Log all three.
   *Done when:* you can list the leakage types Kapoor & Narayanan describe, and say which ones this project is exposed to.
 
-- [ ] **RP-13 · Grow the labelled test corpus to 20 incidents** — *Template prepared 27 Oct: [benchmark/answerkeys/TEMPLATE.yaml](../../benchmark/answerkeys/TEMPLATE.yaml). It has 12 slots (SC-0009–SC-0020: 7 incidents, 3 negatives, 2 escalations, so the 20 end near 25% negative and 15% escalation), the fields the RP-14 harness needs (`root_cause_label`, `options`), and a worked example from SC-0001. It sits outside `benchmark/incidents/` so the scenario loader never reads it. Remains: the owner fills it and commits it alone; then Claude builds the fixtures and runs them.*
+- [ ] **RP-13 · Grow the labelled test corpus to 20 incidents** — *Template prepared 27 Oct: [benchmark/answerkeys/TEMPLATE.yaml](../../benchmark/answerkeys/TEMPLATE.yaml). It has 12 slots (SC-0009–SC-0020: 7 incidents, 3 negatives, 2 escalations, so the 20 end near 25% negative and 15% escalation), the fields the RP-14 harness needs (`root_cause_label`, `options`), and a worked example from SC-0001. It sits outside `benchmark/incidents/` so the scenario loader never reads it. The template also proposes keys for the 8 existing fixtures, which RP-15 needs too; 2 are marked DECIDE (SC-0002 has two independent roots; SC-0008 is an escalation). Remains: the owner fills it and commits it alone; then Claude builds the fixtures and runs them. *27 Oct: the owner reports RP-13 done, but no `rp13.yaml` is in any branch yet.*
   **Both** · You 6 h; Claude 1–2 sessions · Depends: — · Closes: part of backlog ROADMAP 2.6
   *Steps:*
   1. **You** write the 12 new specs: the cause, the correct action, red herrings, and a negative and escalation share in proportion.
@@ -274,12 +274,12 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* `scripts/benchdiagnosis.py --diagnoser <llm:model | sati-rca:version>`. It reports RCA@1, RCA@3, precision-when-answering, grounding, abstention rate and Wilson intervals via `diagnosis.py`, writes JSONL, and refuses on the stub.
   *Done when:* tests pass, and a fake diagnoser registered in the tests is scored correctly.
 
-- [ ] **RP-15 · LLM diagnosis baseline; Phase 2 verdict**
+- [ ] **RP-15 · LLM diagnosis baseline; Phase 2 verdict** — *Claude's part ready 27 Oct, waiting on RP-13's keys. `diagnosis-incidents.yml` runs 3 LLMs (qwen2.5:7b, mistral, llama3) × 3 runs on the keyed incidents, and refuses to run unless `benchmark/answerkeys/rp13.yaml` was committed alone and before every keyed fixture and every result. `testanswerkeys.py` fails the build if a fixture's label or options differ from the key. `scripts/diagnosistable.py` generates the table, with the 0.70 Phase 2 bar beside each row. Remains: the owner's keys, then Claude builds the fixtures, the run, and the owner's verdict.*
   **Both** · Claude 1 session + overnights; You 1 h · Depends: RP-13, RP-14
   *Steps:* **Claude** runs 20 incidents × 3 LLMs × N = 3. **You** write the Phase 2 exit verdict (20 incidents, top-1 ≥ 70%) under *Where things stand* in this file, and close or update the backlog item.
   *Done when:* the table exists. **This is the number Sati-RCA has to beat.**
 
-- [ ] **RP-16 · Learn: how failures propagate**
+- [x] **RP-16 · Learn: how failures propagate** *Owner-attested 27 Oct: reading done and the done-when met (the owner's word; no written answers committed).*
   **You** · 6 h · Depends: —
   *Steps:*
   1. Read the Soldani & Brogi survey in depth.
@@ -314,7 +314,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* use the PIB harness's fault injection (non-PIB faults only, so they don't overlap the test set) to produce about 200 incidents from the real cluster, labelled by the injected fault. These form a separate test split.
   *Done when:* the dataset is committed (or its manifest is, if it is large), and it appears in the realism report.
 
-- [ ] **RP-20 · Learn: classical ML, and anomaly benchmarks honestly**
+- [x] **RP-20 · Learn: classical ML, and anomaly benchmarks honestly** *Owner-attested 27 Oct: reading done and the done-when met (the owner's word; no written answers committed).*
   **You** · 5 h · Depends: —
   *Steps:* the scikit-learn MOOC (pipelines and evaluation); Liu et al. 2008 (*Isolation Forest*); Chen & Guestrin 2016 (*XGBoost*); Wu & Keogh 2021 (*Current Time Series Anomaly Detection Benchmarks are Flawed*).
   *Done when:* you can explain why gradient boosting is the default for tabular data, and which public anomaly datasets Wu & Keogh consider flawed.
@@ -356,7 +356,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   4. Evaluate on test-ID, both OOD splits and sim-to-real.
   *Done when:* there is a generated table on all four test splits, and the scores on the 20 labelled incidents sit next to the LLM baselines from RP-15.
 
-- [ ] **RP-25 · Learn: graph neural networks**
+- [x] **RP-25 · Learn: graph neural networks** *Owner-attested 27 Oct: reading done and the done-when met (the owner's word; no written answers committed).*
   **You** · 6 h · Depends: RP-16
   *Steps:* CS224W lectures on GNNs and message passing; Kipf & Welling 2017 (GCN); Hamilton et al. 2017 (GraphSAGE).
   *Done when:* you can write one message-passing layer in plain PyTorch on paper.
