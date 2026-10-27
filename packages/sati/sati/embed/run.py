@@ -56,6 +56,26 @@ def encode(model: Encoder, texts: list[str]) -> np.ndarray:
     return out
 
 
+def linear_baseline(train, queries: list[str], tech_text: list[str], index: dict) -> np.ndarray:
+    """A strong classical baseline: TF-IDF word uni- and bigrams, multinomial
+    logistic regression over techniques seen in training. Added 27 Oct after
+    the public Kaggle notebook found it beats Brahmacharini on this split; a
+    model is only worth serving if it beats the strongest simple baseline."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
+
+    texts = [p.text for p in train]
+    labels = [index[p.technique] for p in train]
+    scores = np.full((len(queries), len(tech_text)), -np.inf)
+    if len(set(labels)) < 2:
+        return scores  # a fixture too small to fit; never the real data
+    vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2 if len(texts) > 100 else 1, sublinear_tf=True)
+    vec.fit(texts + tech_text)
+    clf = LogisticRegression(max_iter=2000, C=5).fit(vec.transform(texts), labels)
+    scores[:, clf.classes_] = clf.predict_proba(vec.transform(queries))
+    return scores
+
+
 def fit(model, opt, epochs: int, train, val, techniques, index, tech_text, name: str):
     """Contrastive training; the epoch kept is the one best on the validation sources."""
     best_state, best_val, curve = None, -1.0, []
@@ -128,6 +148,7 @@ def main() -> int:
         results_by["brahmacharini-v1 (transformer)"] = summarise(
             ranks(encode(v1, queries) @ encode(v1, tech_text).T, gold))
     results_by["bm25"] = summarise(ranks(bm25(queries, tech_text), gold))
+    results_by["tf-idf logistic regression"] = summarise(ranks(linear_baseline(train, queries, tech_text, index), gold))
     hashed = hashing(queries, tech_text)
     if hashed is not None:
         results_by["hashing-embedder (Smriti today)"] = summarise(ranks(hashed, gold))

@@ -79,6 +79,26 @@ def predict(model: Recommender, texts: list[str]) -> np.ndarray:
     return out
 
 
+def linear_baseline(data: Data, queries: list[str], size: int) -> np.ndarray:
+    """TF-IDF uni- and bigrams with one logistic regression per mitigation.
+    Added 27 Oct after the public Kaggle notebook found it beats Skandamata on
+    this split; it is reported beside the model so the comparison is honest."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.multiclass import OneVsRestClassifier
+
+    texts = [e.text for e in data.train]
+    y = targets([e.gold for e in data.train], size).numpy().astype(int)
+    keep = (y.sum(0) > 0) & (y.sum(0) < len(y))  # a label true for none or all rows cannot be fitted
+    scores = np.full((len(queries), size), -1.0)
+    if keep.sum() == 0:
+        return scores
+    vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2 if len(texts) > 100 else 1, sublinear_tf=True).fit(texts)
+    clf = OneVsRestClassifier(LogisticRegression(max_iter=1000, C=4)).fit(vec.transform(texts), y[:, keep])
+    scores[:, keep] = clf.predict_proba(vec.transform(queries)).reshape(len(queries), -1)
+    return scores
+
+
 def train(data: Data, epochs: int = EPOCHS) -> tuple[Recommender, list[dict]]:
     size = len(data.mitigations)
     model = Recommender(size)
@@ -127,6 +147,7 @@ def main() -> int:
         "bm25 direct": metrics.evaluate(bm25(queries, mit_text), golds),
         "bm25 two-hop": metrics.evaluate(
             metrics.two_hop(bm25(queries, tech_text), [g for _, g in data.techniques], size), golds),
+        "tf-idf logistic regression": metrics.evaluate(linear_baseline(data, queries, size), golds),
     }
     gold_sizes = [len(g) for g in golds]
 

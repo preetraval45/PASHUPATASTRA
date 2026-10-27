@@ -210,10 +210,13 @@ print(f"trained classifier recall@1 {clf.score(vec.transform(test['behaviour']),
             ("code", """from sklearn.model_selection import train_test_split
 ra, rb = train_test_split(b, test_size=0.2, random_state=7)
 leaky = LogisticRegression(max_iter=2000, C=5).fit(vec.transform(ra["behaviour"]), ra["technique_id"])
-print(f"same classifier on a RANDOM split: {leaky.score(vec.transform(rb['behaviour']), rb['technique_id']):.3f}  <- inflated")"""),
-            ("markdown", "**Reading it:** a random split puts the same group's phrasing on both sides and inflates "
-             "the score. Brahmacharini, a dual encoder trained contrastively, reaches recall@1 0.614 and recall@10 "
-             "0.854 on the by-source test, against 0.268 and 0.580 for BM25."),
+print(f"same classifier on a random split: {leaky.score(vec.transform(rb['behaviour']), rb['technique_id']):.3f}")"""),
+            ("markdown", "**Reading it:** two honest surprises. First, the random split scores the same as the "
+             "by-source split here, so for this classifier, a group's phrasing does not leak much. Second, this "
+             "simple TF-IDF + logistic regression classifier (about 0.65 recall@1) **beats Brahmacharini** (0.614), "
+             "the project's dual encoder, on the same split. Brahmacharini's advantage is elsewhere: one vector "
+             "space for behaviours, techniques and knowledge-base passages, so it also retrieves the passage Sati "
+             "cites. The project now reports this baseline beside it."),
         ],
     },
     "skandamata": {
@@ -243,8 +246,10 @@ print(f"trained    hit@1 {Y[test][np.arange(test.sum()), top].mean():.3f}")
 popular = Y[train].sum(0).argmax()
 print(f"popularity hit@1 {Y[test][:, popular].mean():.3f}  (always recommend the most common mitigation)")"""),
             ("markdown", "**Reading it:** a few mitigations (audit, user training) apply to most techniques, so "
-             "popularity is a real baseline. Skandamata gets the first recommendation right 0.792 of the time "
-             "against 0.232 for popularity. It recommends; in Sati, a person or the policy engine decides."),
+             "popularity is a real baseline (0.232). This TF-IDF + logistic regression model (about 0.83 hit@1) "
+             "**beats Skandamata** (0.792), the project's own model, on the same split; the project now reports it "
+             "beside Skandamata. In Sati, recommendations follow the technique Brahmacharini identifies, and a "
+             "person or the policy engine decides."),
         ],
     },
     "kushmanda": {
