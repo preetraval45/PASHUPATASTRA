@@ -288,7 +288,9 @@ substitute.
 **How a model is tested decides its headline.** On CIC-IDS2017, Chandraghanta
 scores F1 0.997 when flows are split at random, the usual protocol, and 0.453
 when the test days hold only attack families it never saw
-([chandraghanta.md](models/chandraghanta.md)).
+([chandraghanta.md](models/chandraghanta.md)). Choosing its threshold for a
+1% false-alarm rate instead of the best F1 raises the unseen-day F1 to 0.604
+and the share of attacks caught from 0.294 to 0.448.
 
 **A learned detector can be both more accurate and quieter.** On 28 real
 servers from a held-out machine group, Shailaputri scores F1 0.556 with 4.6

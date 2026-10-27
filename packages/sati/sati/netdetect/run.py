@@ -125,6 +125,11 @@ KEPT: dict = {}
 """The CIC day-split Chandraghanta, kept for export."""
 
 
+def _note_f1_threshold() -> dict:
+    KEPT["f1_threshold"] = LAST.get("threshold")
+    return {}
+
+
 def _keep(name: str) -> dict:
     """Record the booster `detect` just trained; returns nothing to add to the flags."""
     KEPT.update(booster=LAST["booster"], features=LAST["features"], threshold=LAST.get("threshold"))
@@ -176,8 +181,10 @@ def run_cic(folder: Path) -> dict:
     ytr, yte = train["label"].to_numpy(), test["label"].to_numpy()
     flags = {
         "chandraghanta-v0": detect(train[features], ytr, test[features], "cic")[0],
-        **_keep("cic"),
+        **_note_f1_threshold(),
         "chandraghanta-v2 (1% false-alarm budget)": detect(train[features], ytr, test[features], "cic", FPR_BUDGET)[0],
+        # The served model: the 1% false-alarm operating point, which beat the F1 threshold on every dataset.
+        **_keep("cic"),
         "pca (benign-only)": pca_detect(train[features], ytr, test[features], "cic"),
     }
     # v1: flag a flow if either detector does. They fail on different families (the
@@ -222,7 +229,8 @@ def main() -> int:
         from pashupatastra import trees
 
         (args.out / "model.json").write_text(json.dumps({
-            **trees.compact(KEPT["booster"].dump_model(), KEPT["features"]), "threshold": KEPT["threshold"],
+            **trees.compact(KEPT["booster"].dump_model(), KEPT["features"]), "threshold": KEPT["threshold"], "operating_point": "1% false alarms on benign validation flows",
+            "f1_threshold": KEPT.get("f1_threshold"),
             "split": "CIC-IDS2017 by day: trained Monday-Wednesday", "licence": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026."}), encoding="utf-8")
     (args.out / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     for key, d in results["datasets"].items():

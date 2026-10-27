@@ -71,7 +71,15 @@ appears only on the test days.
   instead of 0.001, so F1 on unseen days falls slightly (0.449 against 0.453)
   and precision drops from 0.989 to 0.660. On UNSW-NB15, F1 falls from 0.897
   to 0.733. The PCA detector's false alarms cost more than the attacks it adds.
-  v0 stays the model to serve; v1 is kept as a recorded negative result.
+  v1 is kept as a recorded negative result.
+- **The operating point mattered more than the model (v2, Kaggle run of 27 Oct).**
+  The same model with its threshold set to flag at most 1% of benign
+  validation flows beats the best-F1 threshold everywhere. On UNSW-NB15, F1
+  rises from 0.897 to 0.939 and the share of normal flows flagged falls from
+  0.263 to 0.058. On CIC-IDS2017's unseen days, F1 rises from 0.453 to 0.604
+  and recall from 0.294 to 0.448, with 0.012 of benign flows flagged. This is
+  now the served Chandraghanta. The 1% budget is not met on UNSW's official
+  test set (0.058): its distribution differs from the training file.
 - **TTL is not doing the work here.** The literature flags UNSW-NB15's TTL
   fields as near-labels. Removing them leaves F1 unchanged (0.897 both ways).
 - **UNSW-NB15's official test set is hard on false alarms.** One normal flow

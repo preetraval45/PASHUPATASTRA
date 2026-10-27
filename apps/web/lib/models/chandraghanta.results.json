@@ -34,6 +34,16 @@
           "fn": 864,
           "tn": 27670
         },
+        "chandraghanta-v2 (1% false-alarm budget)": {
+          "precision": 0.9515,
+          "recall": 0.9263,
+          "f1": 0.9387,
+          "false_positive_rate": 0.05781,
+          "tp": 41991,
+          "fp": 2139,
+          "fn": 3341,
+          "tn": 34861
+        },
         "pca (benign-only)": {
           "precision": 0.5809,
           "recall": 0.9933,
@@ -62,6 +72,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9749,
           "chandraghanta-v0 without TTL": 0.9719,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9158,
           "pca (benign-only)": 0.9941,
           "chandraghanta-v1 (either)": 1.0
         },
@@ -71,6 +82,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 1.0,
           "chandraghanta-v0 without TTL": 1.0,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9897,
           "pca (benign-only)": 0.9966,
           "chandraghanta-v1 (either)": 1.0
         },
@@ -80,6 +92,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9993,
           "chandraghanta-v0 without TTL": 0.9968,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9868,
           "pca (benign-only)": 0.9875,
           "chandraghanta-v1 (either)": 1.0
         },
@@ -89,6 +102,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9958,
           "chandraghanta-v0 without TTL": 0.9915,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9734,
           "pca (benign-only)": 0.9951,
           "chandraghanta-v1 (either)": 0.9996
         },
@@ -98,6 +112,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9193,
           "chandraghanta-v0 without TTL": 0.8809,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.5313,
           "pca (benign-only)": 0.9789,
           "chandraghanta-v1 (either)": 0.9951
         },
@@ -107,6 +122,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9999,
           "chandraghanta-v0 without TTL": 0.9998,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9988,
           "pca (benign-only)": 0.9998,
           "chandraghanta-v1 (either)": 1.0
         },
@@ -116,6 +132,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.2634,
           "chandraghanta-v0 without TTL": 0.2522,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.0578,
           "pca (benign-only)": 0.8782,
           "chandraghanta-v1 (either)": 0.8912
         },
@@ -125,6 +142,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9994,
           "chandraghanta-v0 without TTL": 0.9974,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9903,
           "pca (benign-only)": 0.9843,
           "chandraghanta-v1 (either)": 1.0
         },
@@ -134,6 +152,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9921,
           "chandraghanta-v0 without TTL": 0.9921,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9206,
           "pca (benign-only)": 0.9894,
           "chandraghanta-v1 (either)": 1.0
         },
@@ -143,6 +162,7 @@
           "seen_in_training": true,
           "chandraghanta-v0": 1.0,
           "chandraghanta-v0 without TTL": 1.0,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9773,
           "pca (benign-only)": 1.0,
           "chandraghanta-v1 (either)": 1.0
         }
@@ -178,6 +198,16 @@
           "fn": 205642,
           "tn": 870096
         },
+        "chandraghanta-v2 (1% false-alarm budget)": {
+          "precision": 0.9269,
+          "recall": 0.4475,
+          "f1": 0.6036,
+          "false_positive_rate": 0.01179,
+          "tp": 130274,
+          "fp": 10270,
+          "fn": 160865,
+          "tn": 860804
+        },
         "pca (benign-only)": {
           "precision": 0.44,
           "recall": 0.1352,
@@ -205,6 +235,7 @@
           "attack": false,
           "seen_in_training": true,
           "chandraghanta-v0": 0.0011,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.0118,
           "pca (benign-only)": 0.0575,
           "chandraghanta-v1 (either)": 0.0584
         },
@@ -213,6 +244,7 @@
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.0,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.0,
           "pca (benign-only)": 0.0275,
           "chandraghanta-v1 (either)": 0.0275
         },
@@ -221,6 +253,7 @@
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.636,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.9754,
           "pca (benign-only)": 0.2149,
           "chandraghanta-v1 (either)": 0.6557
         },
@@ -229,6 +262,7 @@
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.0,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.0,
           "pca (benign-only)": 0.7222,
           "chandraghanta-v1 (either)": 0.7222
         },
@@ -237,6 +271,7 @@
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.0129,
+          "chandraghanta-v2 (1% false-alarm budget)": 0.0202,
           "pca (benign-only)": 0.0741,
           "chandraghanta-v1 (either)": 0.0807
         },
@@ -245,6 +280,7 @@
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.9078,
+          "chandraghanta-v2 (1% false-alarm budget)": 1.0,
           "pca (benign-only)": 0.0,
           "chandraghanta-v1 (either)": 0.9078
         },
@@ -253,6 +289,7 @@
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 1.0,
+          "chandraghanta-v2 (1% false-alarm budget)": 1.0,
           "pca (benign-only)": 0.0,
           "chandraghanta-v1 (either)": 1.0
         },
@@ -261,6 +298,7 @@
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.9739,
+          "chandraghanta-v2 (1% false-alarm budget)": 1.0,
           "pca (benign-only)": 0.0,
           "chandraghanta-v1 (either)": 0.9739
         }
@@ -280,7 +318,7 @@
       }
     }
   },
-  "weights_published": false,
-  "weights_note": "UNSW-NB15 and CIC-IDS2017 are research-use only; weights are withheld pending the owner's decision.",
-  "seconds": 254.9
+  "weights_published": true,
+  "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. UNSW-NB15 and CIC-IDS2017 are research-use only.",
+  "seconds": 324.8
 }
