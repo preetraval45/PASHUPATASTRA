@@ -268,6 +268,11 @@ simulator does not.**
   put every service past 2σ, which is consistent with the Kaal ranker's
   collapse: its features read which services are anomalous
   ([katyayani-live-signal.md](models/katyayani-live-signal.md)).
+- Adding those 200 live incidents to the training data does not help on the
+  other systems. Each system was held out in turn and compared on the same
+  cases: Online Boutique 0.879 against 0.893 (p 0.38), Sock Shop 0.949 against
+  0.954, Train Ticket 0.823 against 0.814
+  ([katyayani-pooled.md](models/katyayani-pooled.md)).
 
 The simulator taught topology-first reasoning, and in real faults the culprit
 is the loudest service. Synthetic data is at most an augmentation here, not a
