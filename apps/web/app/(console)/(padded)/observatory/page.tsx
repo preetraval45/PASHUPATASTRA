@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Filter } from "@/components/filter";
 import { Fresh } from "@/components/fresh";
 import { Live } from "@/components/live";
 import { IntelGroupRow, sourceAbout, sourceName } from "@/components/intel";
@@ -218,30 +219,6 @@ export default async function ObservatoryPage({
         claim can be checked against its source rather than believed.
       </p>
     </Page>
-  );
-}
-
-function Filter({
-  href,
-  label,
-  active,
-}: {
-  href: string;
-  label: string;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={`focusable rounded-full border px-3 py-1.5 text-xs transition ${
-        active
-          ? "border-[rgb(var(--edge-strong))] bg-[rgb(var(--raised))] text-[rgb(var(--ink))]"
-          : "border-[rgb(var(--edge))] text-[rgb(var(--muted))] hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]"
-      }`}
-    >
-      {label}
-    </Link>
   );
 }
 
