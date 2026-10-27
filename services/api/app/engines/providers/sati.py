@@ -129,6 +129,33 @@ class Skandamata:
         return [(probs[j], meta["mitigations"][j]) for j in ranked]
 
 
+#: Identifiers Kushmanda may write only if the passage it cites contains them.
+IDENTIFIER = re.compile(r"\b(T\d{4}(?:\.\d{3})?|CVE-\d{4}-\d{4,}|CWE-\d+|M1\d{3}|CAPEC-\d+)\b")
+CITED = re.compile(r"\[(\d)\]\s*$")
+KUSHMANDA_ABSTAIN = "the context does not answer this"
+
+
+def kushmanda_folder() -> Path:
+    return MODELS / "kushmanda"
+
+
+def kushmanda_available() -> bool:
+    """Its weights are private: present only in a deployed archive, fetched at deploy time."""
+    folder = kushmanda_folder()
+    return (folder / "kushmanda.json").exists() and (folder / "tokenizer.json").exists()
+
+
+@lru_cache
+def writer():
+    """Kushmanda's numpy engine and its tokenizer, loaded once per process."""
+    from tokenizers import Tokenizer
+
+    from ..lmengine import Engine
+
+    folder = kushmanda_folder()
+    return Engine.load(folder), Tokenizer.from_file(str(folder / "tokenizer.json"))
+
+
 def skandamata_available(folder: Path | None = None) -> bool:
     folder = folder or MODELS
     return (folder / "skandamata.json").exists() and (folder / "skandamata.bag").exists()
@@ -259,7 +286,7 @@ class SatiProvider:
     structured_evidence = True
 
     #: "auto" picks the model for each question; a model's name uses only that model.
-    MODES = ("auto", "brahmacharini", "skandamata")
+    MODES = ("auto", "brahmacharini", "skandamata", "kushmanda")
 
     def __init__(self, mode: str = "auto") -> None:
         if mode not in self.MODES:
@@ -267,10 +294,14 @@ class SatiProvider:
         self.mode = mode
         if mode == "skandamata":
             self.model = "sati-skandamata-serve-v0"
+        if mode == "kushmanda":
+            self.model = "sati-kushmanda"
 
     def available(self) -> bool:
         if self.mode == "skandamata":
             return skandamata_available()
+        if self.mode == "kushmanda":
+            return kushmanda_available() and (MODELS / "knowledge.json").exists()
         return (MODELS / "brahmacharini.json").exists() and (MODELS / "knowledge.json").exists()
 
     def _wants_mitigations(self, question: str) -> bool:
@@ -331,6 +362,10 @@ class SatiProvider:
                     "declined": False,
                 }
         hits = knowledge().search(embedder().embed(question), k=3, question=question)
+        if self.mode == "kushmanda" and hits and hits[0][0] >= ANSWERABLE:
+            written = self._write(question, [p for _, p in hits])
+            if written:
+                return written
         if not hits or hits[0][0] < ANSWERABLE:
             return {
                 "answer": "That is outside what Sati's own models know so far. Today they know MITRE ATT&CK "
@@ -356,6 +391,40 @@ class SatiProvider:
             "topic": "security",
             "area": AREA_BY_KIND.get(best["kind"], "brahmacharini"),
             "declined": False,
+        }
+
+    def _write(self, question: str, passages: list[dict]) -> dict[str, Any] | None:
+        """Kushmanda answers in its own words from the passages Brahmacharini
+        retrieved, in the chat template it was tuned on, and cites one.
+
+        Measured weakness: it copies identifiers badly (models/kushmanda.md). So
+        every identifier it writes must appear in the passage it cites; if not,
+        this returns None and the retrieved passage is shown instead (rule 1)."""
+        lines = [f"{p['id']} {p['title']}: {first_sentences(p['text'], 450)}" for p in passages]
+        numbered = "\n".join(f"[{i}] {line}" for i, line in enumerate(lines, 1))
+        prompt = f"<|user|> Context:\n{numbered}\nQuestion: {question}\n<|assistant|> "
+        engine, tok = writer()
+        out = engine.generate(tok.encode(prompt).ids, 96, stop=tok.token_to_id("<|end|>"))
+        text = tok.decode(out).replace("<|end|>", "").strip()
+        cite = CITED.search(text)
+        body = CITED.sub("", text).strip()
+        if not body:
+            return None
+        if body.rstrip(".").lower() == KUSHMANDA_ABSTAIN:
+            return {
+                "answer": "Kushmanda read the closest passages in Sati's knowledge and found that none of them "
+                "answers this. It declines rather than guess.",
+                "topic": "security", "area": "kushmanda", "declined": False,
+            }
+        index = int(cite.group(1)) - 1 if cite else None
+        if index is None or not 0 <= index < len(passages):
+            return None  # an answer must cite a passage it was given
+        source = passages[index]
+        if any(found not in lines[index] for found in IDENTIFIER.findall(body)):
+            return None  # an identifier its cited passage does not contain
+        return {
+            "answer": f"{body}\n\nSource: {source['title']} ({source['source']} {source['id']}) {source.get('url', '')}".strip(),
+            "topic": "security", "area": "kushmanda", "declined": False,
         }
 
     # --- questions about one incident --------------------------------------

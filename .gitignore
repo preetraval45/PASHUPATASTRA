@@ -61,3 +61,6 @@ logs/
 
 # Vercel project link — machine-local, not shared.
 .vercel/
+
+# Kushmanda's weights are private (owner decision, 27 Oct 2026): fetched at deploy time, never committed.
+services/api/app/sati_models/kushmanda/

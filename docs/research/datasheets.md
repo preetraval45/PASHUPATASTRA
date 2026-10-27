@@ -16,9 +16,19 @@ it is recorded below.
 | RCAEval | Sati-RCA | MIT | Apache-2.0 ✓ |
 | NAB | Sati-Detect (metrics) | MIT | Apache-2.0 ✓ |
 | SMD | Sati-Detect (metrics) | MIT | Apache-2.0 ✓ |
-| UNSW-NB15 | Sati-Detect (network) | academic free; commercial by agreement | **research-only** — owner decision pending |
-| CIC-IDS2017 | Sati-Detect (network) | "publicly available for researchers"; no formal licence | **research-only** — owner decision pending |
-| LogHub | Sati-Detect (logs), Sati-Embed, Sati-LM | "freely available for research or academic work" | **research-only** — owner decision pending |
+| UNSW-NB15 | Sati-Detect (network) | academic free; commercial by agreement | **research-only** — owner decision 27 Oct 2026: served live and released for research use only |
+| CIC-IDS2017 | Sati-Detect (network) | "publicly available for researchers"; no formal licence | **research-only** — owner decision 27 Oct 2026: served live and released for research use only |
+| LogHub | Sati-Detect (logs), Sati-Embed, Sati-LM | "freely available for research or academic work" | **research-only** — owner decision 27 Oct 2026: served live and released for research use only |
+
+
+**Owner decisions, 27 October 2026.**
+
+- Chandraghanta (UNSW-NB15, CIC-IDS2017) and Kalaratri (LogHub) are served
+  live, and their exported weights are marked **research use only, not for
+  commercial use**, in their model cards and beside every live answer.
+- Kushmanda is served from the API with its weights **private**. They are
+  fetched from the owner's private Kaggle model at deploy time and are never
+  committed to this repository. Publishing them remains a separate decision.
 
 ---
 

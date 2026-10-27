@@ -55,6 +55,34 @@ def aws(*args: str, region: str = REGION) -> str:
     return result.stdout.strip()
 
 
+DIRECT_LIMIT = 45 * 1024 * 1024
+"""Lambda accepts a directly uploaded zip up to 50 MB; above that it must come
+from S3. Kushmanda's weights (private, fetched at deploy time) can push the
+archive past it."""
+
+
+def code_source(path: Path, region: str) -> list[str]:
+    """`--zip-file` when the archive is small enough, otherwise upload it to a
+    private bucket in this account and point Lambda at it."""
+    if path.stat().st_size <= DIRECT_LIMIT:
+        return ["--zip-file", f"fileb://{path.resolve()}"]
+    account = json.loads(aws("sts", "get-caller-identity", region=region))["Account"]
+    bucket = f"pashupatastra-deploy-{account}-{region}"
+    try:
+        aws("s3api", "head-bucket", "--bucket", bucket, region=region)
+    except RuntimeError:
+        create = ["s3api", "create-bucket", "--bucket", bucket]
+        if region != "us-east-1":
+            create += ["--create-bucket-configuration", f"LocationConstraint={region}"]
+        aws(*create, region=region)
+        aws("s3api", "put-public-access-block", "--bucket", bucket, "--public-access-block-configuration",
+            "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true",
+            region=region)
+    key = f"api/{path.name}"
+    aws("s3", "cp", str(path), f"s3://{bucket}/{key}", region=region)
+    return ["--s3-bucket", bucket, "--s3-key", key]
+
+
 def exists(function: str, region: str) -> bool:
     try:
         aws("lambda", "get-function", "--function-name", function, region=region)
@@ -198,7 +226,7 @@ def main() -> int:
 
     if exists(args.function, args.region):
         aws("lambda", "update-function-code",
-            "--function-name", args.function, "--zip-file", archive, region=args.region)
+            "--function-name", args.function, *code_source(Path(args.zip), args.region), region=args.region)
         aws("lambda", "wait", "function-updated", "--function-name", args.function,
             region=args.region)
         aws("lambda", "update-function-configuration",

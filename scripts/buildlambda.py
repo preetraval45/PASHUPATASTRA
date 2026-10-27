@@ -43,6 +43,9 @@ EXTRA_DEPENDENCIES = ["mangum>=0.17"]
 """Needed by the Lambda entry point only, so it is an optional extra rather than
 a runtime dependency of the API."""
 
+KUSHMANDA_DEPENDENCIES = ["numpy>=2", "tokenizers>=0.20"]
+"""Kushmanda's engine and tokenizer: added only when its private weights are present."""
+
 OMIT = ("pashupatastra-", "psycopg")
 """`pashupatastra-*` travel as source, copied by `stage_sources`. `psycopg` is
 imported lazily inside `db.connect`, so a deployment with no database does not
@@ -65,7 +68,12 @@ def dependencies() -> list[str]:
             name = re.split(r"[<>=!\[ ]", requirement, maxsplit=1)[0]
             if not name.startswith(OMIT):
                 found.setdefault(name, requirement)
-    return sorted(found.values()) + EXTRA_DEPENDENCIES
+    extra = list(EXTRA_DEPENDENCIES)
+    if (ROOT / "services" / "api" / "app" / "sati_models" / "kushmanda" / "kushmanda.json").exists():
+        # Kushmanda's private weights were fetched for this deploy (ci.yml);
+        # its numpy engine and tokenizer come with it, and only then.
+        extra += KUSHMANDA_DEPENDENCIES
+    return sorted(found.values()) + extra
 
 
 SOURCES = [

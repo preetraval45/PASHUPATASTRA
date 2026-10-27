@@ -162,3 +162,46 @@ def test_choosing_a_model_by_name_uses_only_that_model(provider, with_skandamata
 def test_without_its_files_skandamata_is_not_offered(provider):
     assert not sati_module.SatiProvider("skandamata").available()
     assert _general(provider, "How do we defend against phishing?")["area"] != "skandamata"
+
+
+class _FakeTok:
+    """Words in, words out: enough to drive `_write` without a real tokenizer."""
+
+    def __init__(self, reply: str):
+        self.reply = reply
+
+    def encode(self, text):
+        return type("E", (), {"ids": [1, 2, 3]})()
+
+    def decode(self, ids):
+        return self.reply
+
+    def token_to_id(self, token):
+        return 0
+
+
+class _FakeEngine:
+    def generate(self, ids, n, stop=None):
+        return [5, 6]
+
+
+def _kushmanda(monkeypatch, reply: str):
+    monkeypatch.setattr(sati_module, "writer", lambda: (_FakeEngine(), _FakeTok(reply)))
+    return sati_module.SatiProvider("kushmanda")
+
+
+def test_kushmanda_answers_in_its_own_words_and_cites_its_passage(provider, monkeypatch):
+    out = _general(_kushmanda(monkeypatch, "Attackers send deceptive messages to trick users. [1]"), "what is phishing")
+    assert out["area"] == "kushmanda" and out["answer"].startswith("Attackers send deceptive messages")
+    assert "Source: Phishing (MITRE ATT&CK T1566)" in out["answer"]
+
+
+def test_an_identifier_its_cited_passage_lacks_is_never_shown(provider, monkeypatch):
+    out = _general(_kushmanda(monkeypatch, "This is technique T1059.001. [1]"), "what is phishing")
+    assert "T1059.001" not in out["answer"] and out["area"] != "kushmanda"  # fell back to the passage itself
+
+
+def test_an_uncited_answer_falls_back_and_a_refusal_is_said_plainly(provider, monkeypatch):
+    assert _general(_kushmanda(monkeypatch, "Phishing tricks users."), "what is phishing")["area"] != "kushmanda"
+    out = _general(_kushmanda(monkeypatch, "The context does not answer this."), "what is phishing")
+    assert out["area"] == "kushmanda" and "declines rather than guess" in out["answer"]

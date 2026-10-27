@@ -81,6 +81,7 @@ DEFAULT_CHOICE = "default"
 SATI_MODELS = (
     ("brahmacharini", "Brahmacharini", "Finds the ATT&CK technique, CVE or attack pattern"),
     ("skandamata", "Skandamata", "Recommends the mitigations that defend against an attack"),
+    ("kushmanda", "Kushmanda", "Writes the answer in its own words from the evidence, and cites it"),
 )
 
 
