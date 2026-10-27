@@ -2930,6 +2930,69 @@
         "summary": "Models"
       }
     },
+    "/api/v1/models/katyayani/cases": {
+      "get": {
+        "description": "Incidents Katyayani never trained on, which a visitor can run it on.\n\n503 until the training workflow has exported the served model, rather than\nan empty list that would read as \"no incidents\".",
+        "operationId": "katyayani_cases_api_v1_models_katyayani_cases_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Katyayani Cases Api V1 Models Katyayani Cases Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Katyayani Cases"
+      }
+    },
+    "/api/v1/models/katyayani/cases/{case_id}": {
+      "get": {
+        "description": "Rank one reserved incident's services, live, with the true root cause beside the ranking.",
+        "operationId": "katyayani_rank_api_v1_models_katyayani_cases__case_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Katyayani Rank Api V1 Models Katyayani Cases  Case Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Katyayani Rank"
+      }
+    },
     "/api/v1/policy/approvals/fatigue": {
       "get": {
         "description": "Whether the approval step is doing anything.\n\nExposed as an endpoint rather than buried in a log because a metric nobody\nlooks at cannot change behaviour \u2014 and this one is meant to be uncomfortable.\n`looks_decorative` requires *both* near-total approval and near-instant\ndecisions; either alone is consistent with a well-calibrated system.",

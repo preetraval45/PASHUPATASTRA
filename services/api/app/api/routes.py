@@ -1768,6 +1768,33 @@ def models() -> dict[str, object]:
     return {"models": [asdict(choice) for choice in model_choices()]}
 
 
+@router.get("/models/katyayani/cases")
+def katyayani_cases() -> dict[str, object]:
+    """Incidents Katyayani never trained on, which a visitor can run it on.
+
+    503 until the training workflow has exported the served model, rather than
+    an empty list that would read as "no incidents".
+    """
+    from ..engines import katyayani
+
+    if not katyayani.available():
+        raise HTTPException(status_code=503, detail="Katyayani's served model has not been exported yet")
+    return katyayani.summary()
+
+
+@router.get("/models/katyayani/cases/{case_id}")
+def katyayani_rank(case_id: str) -> dict[str, object]:
+    """Rank one reserved incident's services, live, with the true root cause beside the ranking."""
+    from ..engines import katyayani
+
+    if not katyayani.available():
+        raise HTTPException(status_code=503, detail="Katyayani's served model has not been exported yet")
+    try:
+        return katyayani.rank(case_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"no reserved incident {case_id!r}") from None
+
+
 @router.post("/agent/chat")
 def agent_chat(request: ChatRequest) -> dict[str, object]:
     """Ask Sati about one incident.
