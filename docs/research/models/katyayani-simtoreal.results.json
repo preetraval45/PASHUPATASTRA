@@ -320,5 +320,5 @@
     "source": "sati-rca.results.json",
     "note": "Katyayani trained on RCAEval (leave-one-system-out); see sati-rca.md for its per-system rows"
   },
-  "seconds": 83.4
+  "seconds": 83.9
 }
