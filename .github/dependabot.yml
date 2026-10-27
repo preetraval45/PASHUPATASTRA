@@ -23,6 +23,18 @@ updates:
         patterns: ["next", "react", "react-dom", "@types/react", "@types/react-dom"]
       build-tooling:
         patterns: ["typescript", "tailwindcss", "postcss", "autoprefixer", "@types/node"]
+        update-types: ["minor", "patch"]
+    # Majors that are migrations, not bumps. Tailwind 4 replaces the PostCSS
+    # plugin and the config format; TypeScript 7 is the new native compiler.
+    # Grouped with patches they failed the whole build (27 Oct 2026, 8d3304e).
+    # Each is a deliberate task when it is taken on.
+    ignore:
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: pip
     directory: /packages/core
