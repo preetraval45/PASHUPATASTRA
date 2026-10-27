@@ -6,7 +6,7 @@ The declared sample (`benchmark/external/rcaeval/subset.json`, `llm_sample`: 50 
 
 | Diagnoser | n | RCA@1 [95% CI] | RCA@3 [95% CI] | Abstained | Errors |
 |---|---:|---:|---:|---:|---:|
-| Katyayani (trained on real RCAEval, other systems) | 100 | 0.930 [0.863, 0.966] | 0.970 [0.915, 0.990] | 0 | 0 |
+| Katyayani (trained on real RCAEval, other systems) | 100 | 0.940 [0.875, 0.972] | 0.970 [0.915, 0.990] | 0 | 0 |
 | llm:llama3 | 100 | 0.550 [0.452, 0.644] | 0.790 [0.700, 0.858] | 0 | 0 |
 | llm:qwen2.5:7b | 100 | 0.510 [0.413, 0.606] | 0.620 [0.522, 0.709] | 7 | 0 |
 | Loudest service (no learning) | 100 | 0.660 [0.563, 0.745] | 0.920 [0.850, 0.959] | 0 | 0 |
@@ -16,9 +16,9 @@ The declared sample (`benchmark/external/rcaeval/subset.json`, `llm_sample`: 50 
 
 | Against | Cases | Only Katyayani right | Only the other right | McNemar p | Holm p |
 |---|---:|---:|---:|---:|---:|
-| llm:llama3 | 100 | 41 | 3 | 1.6e-09 | 3.2e-09 |
-| llm:qwen2.5:7b | 100 | 44 | 2 | 3.1e-11 | 9.2e-11 |
-| Loudest service (no learning) | 100 | 30 | 3 | 1.4e-06 | 1.4e-06 |
-| Sati-RCA (trained on Kaal, zero-shot) | 100 | 59 | 1 | 1.1e-16 | 4.2e-16 |
+| llm:llama3 | 100 | 41 | 2 | 2.2e-10 | 4.3e-10 |
+| llm:qwen2.5:7b | 100 | 44 | 1 | 2.6e-12 | 7.8e-12 |
+| Loudest service (no learning) | 100 | 30 | 2 | 2.5e-07 | 2.5e-07 |
+| Sati-RCA (trained on Kaal, zero-shot) | 100 | 60 | 1 | 5.4e-17 | 2.2e-16 |
 
 An error (provider timeout or invalid schema) counts as a miss and is also listed on its own. LLMs run on CPU through Ollama on GitHub's runners, at temperature 0.2, through the Gateway.
