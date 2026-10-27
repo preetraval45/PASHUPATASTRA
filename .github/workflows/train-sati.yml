@@ -326,13 +326,16 @@ jobs:
       - name: train and evaluate on ATT&CK
         working-directory: packages/sati
         run: python -m sati.respond.run --cache ../../.cache/corpus --out ../../results/skandamata
+      - name: export the served model (checked against PyTorch before it is written)
+        working-directory: packages/sati
+        run: python -m sati.respond.export --cache ../../.cache/corpus --out ../../services/api/app/sati_models
       - name: commit the generated results
         run: |
           mkdir -p docs/research/models apps/web/lib/models
           cp results/skandamata/results.json docs/research/models/skandamata.results.json
           cp results/skandamata/results.json apps/web/lib/models/skandamata.results.json
           (cd packages/sati && python -m sati.respond.report ../../results/skandamata/results.json) > docs/research/models/skandamata.md
-          bash scripts/pushresults.sh "docs(models): Skandamata v0 results from run ${{ github.run_id }}" docs/research/models/skandamata.results.json docs/research/models/skandamata.md apps/web/lib/models/skandamata.results.json
+          bash scripts/pushresults.sh "docs(models): Skandamata v0 results from run ${{ github.run_id }}" docs/research/models/skandamata.results.json docs/research/models/skandamata.md apps/web/lib/models/skandamata.results.json services/api/app/sati_models/skandamata.json services/api/app/sati_models/skandamata.bag
 
   siddhidatri:
     # Model 9 of the nine (adr/Navadurga): Shailaputri, max robust z and PCA

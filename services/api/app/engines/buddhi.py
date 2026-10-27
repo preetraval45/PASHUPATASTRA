@@ -71,9 +71,17 @@ class ModelChoice:
     provider: str
     model: str
     default: bool = False
+    description: str = ""
+    """What the model does, in a few words, shown under its name in the picker."""
 
 
 DEFAULT_CHOICE = "default"
+
+#: Sati's own models a visitor may pick by name, with the job each one does.
+SATI_MODELS = (
+    ("brahmacharini", "Brahmacharini", "Finds the ATT&CK technique, CVE or attack pattern"),
+    ("skandamata", "Skandamata", "Recommends the mitigations that defend against an attack"),
+)
 
 
 def model_choices() -> list[ModelChoice]:
@@ -88,7 +96,7 @@ def model_choices() -> list[ModelChoice]:
     if settings.model_provider == "echo":
         default_label = "echo (deterministic stub)"
     elif settings.model_provider == "sati":
-        default_label = "Sati — the project's own models"
+        default_label = "Sati AI"
     elif settings.model_provider == "failover" and settings.fallback_base_url:
         default_label = f"{settings.model_id}, falling back to {settings.fallback_model}"
 
@@ -99,8 +107,16 @@ def model_choices() -> list[ModelChoice]:
             provider=settings.model_provider,
             model=settings.model_id,
             default=True,
+            description="Picks the right model for each question" if settings.model_provider == "sati" else "",
         )
     ]
+    if settings.model_provider == "sati":
+        from .providers.sati import SatiProvider
+
+        for mode, label, description in SATI_MODELS:
+            if SatiProvider(mode).available():
+                choices.append(ModelChoice(id=f"sati:{mode}", label=label, provider="sati",
+                                           model=f"sati-{mode}", description=description))
     if not settings.fallback_base_url:
         return choices
 
@@ -136,6 +152,15 @@ def gateway_for(choice_id: str) -> Gateway:
     choice = next((c for c in model_choices() if c.id == choice_id), None)
     if choice is None:
         raise KeyError(choice_id)
+    if choice.id.startswith("sati:"):
+        from .providers.sati import SatiProvider
+
+        settings = get_settings()
+        return Gateway(
+            provider=SatiProvider(choice.id.removeprefix("sati:")),
+            accountant=Accountant(ceiling_per_incident=settings.model_token_ceiling),
+            breaker=CircuitBreaker(),
+        )
 
     settings = get_settings()
     from .providers.openaicompat import OpenAICompatProvider

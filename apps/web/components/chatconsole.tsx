@@ -365,11 +365,12 @@ export function ChatConsole({
                   value: choice.id,
                   label: choice.label,
                   hint:
-                    choice.provider === "echo"
+                    choice.description ||
+                    (choice.provider === "echo"
                       ? "Deterministic stub — no model is configured"
                       : choice.default
-                        ? `Default · ${choice.provider}`
-                        : `${choice.provider} · runs on the self-hosted box`,
+                        ? "Default"
+                        : "Runs on the self-hosted box"),
                 }))}
               />
             )}

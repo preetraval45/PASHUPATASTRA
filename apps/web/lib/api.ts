@@ -590,6 +590,8 @@ export type ModelChoice = {
   provider: string;
   model: string;
   default: boolean;
+  /** What the model does, shown under its name. Absent from older API builds. */
+  description?: string;
 };
 
 export async function getModels(): Promise<ModelChoice[] | null> {

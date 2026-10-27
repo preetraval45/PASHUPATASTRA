@@ -28,7 +28,9 @@ type Item = { href: string; label: string; icon: keyof typeof ICONS; hint?: stri
  * One rail for the whole site since the owner's review of RP-48: the public
  * pages and the console had become two products with two headers, and moving
  * between them felt like leaving. Grouped by what a person is doing — finding
- * their feet, operating, analysing, responding, governing, learning.
+ * their feet, operating, analysing, responding, learning. The audit trail and
+ * infrastructure map left the rail at the owner's request (27 Oct 2026); both
+ * pages remain, linked from the incidents, analytics and search they serve.
  */
 const SECTIONS: { title: string; items: Item[] }[] = [
   {
@@ -64,13 +66,6 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { href: "/actions", label: "Actions", icon: "bolt" },
       { href: "/detections", label: "Detections", icon: "shield" },
       { href: "/attack", label: "ATT&CK coverage", icon: "matrix" },
-    ],
-  },
-  {
-    title: "Govern",
-    items: [
-      { href: "/audit", label: "Audit trail", icon: "ledger" },
-      { href: "/infrastructure", label: "Infrastructure", icon: "network" },
     ],
   },
   {

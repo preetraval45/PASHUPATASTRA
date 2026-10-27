@@ -53,6 +53,16 @@ HARMFUL = re.compile(
     re.IGNORECASE,
 )
 
+#: Questions about defending, which Skandamata answers.
+MITIGATE = re.compile(
+    r"\b(mitigat\w*|defend\w*|defen[cs]e|prevent\w*|protect\w*|stop|harden\w*|block\w*|remediat\w*|"
+    r"counter\w*|how (do|can|should) (i|we) (fix|respond))\b",
+    re.IGNORECASE,
+)
+
+#: Below this probability a mitigation is not recommended.
+RECOMMEND = 0.2
+
 AREA_BY_KIND = {
     "technique": "katyayani",
     "attack pattern": "katyayani",
@@ -89,6 +99,39 @@ class Brahmacharini:
         out = [sum(w * x for w, x in zip(row, pooled, strict=True)) + b for row, b in zip(self.projection, self.bias, strict=True)]
         norm = math.sqrt(sum(x * x for x in out)) or 1.0
         return [x / norm for x in out]
+
+
+class Skandamata:
+    """The served mitigation recommender: hashed n-grams → mean of int8 rows →
+    ReLU layer → one probability per ATT&CK mitigation. The export checked that
+    this ranks as the trained PyTorch model does (`sati.respond.export`)."""
+
+    def __init__(self, folder: Path = MODELS) -> None:
+        self.meta = json.loads((folder / "skandamata.json").read_text(encoding="utf-8"))
+        self.bag = (folder / "skandamata.bag").read_bytes()
+
+    def recommend(self, text: str, k: int = 5) -> list[tuple[float, dict]]:
+        meta, width = self.meta, self.meta["width"]
+        words = WORD.findall(text.lower())
+        grams = words + [f"{a} {b}" for a, b in zip(words, words[1:], strict=False)]
+        ids = [zlib.crc32(g.encode()) % meta["buckets"] for g in grams] or [0]
+        pooled = [0.0] * width
+        for i in ids:
+            s = meta["bag_scale"][i]
+            for j, v in enumerate(array("b", self.bag[i * width : (i + 1) * width])):
+                pooled[j] += v * s
+        pooled = [x / len(ids) for x in pooled]
+        hidden = [max(0.0, sum(w * x for w, x in zip(r, pooled, strict=True)) + b)
+                  for r, b in zip(meta["w1"], meta["b1"], strict=True)]
+        logits = [sum(w * h for w, h in zip(r, hidden, strict=True)) + b for r, b in zip(meta["w2"], meta["b2"], strict=True)]
+        probs = [1 / (1 + math.exp(-z)) for z in logits]
+        ranked = sorted(range(len(probs)), key=lambda j: -probs[j])[:k]
+        return [(probs[j], meta["mitigations"][j]) for j in ranked]
+
+
+def skandamata_available(folder: Path | None = None) -> bool:
+    folder = folder or MODELS
+    return (folder / "skandamata.json").exists() and (folder / "skandamata.bag").exists()
 
 
 STOP = frozenset(
@@ -176,6 +219,11 @@ class Knowledge:
 
 
 @lru_cache
+def mitigator() -> Skandamata:
+    return Skandamata()
+
+
+@lru_cache
 def embedder() -> Brahmacharini:
     return Brahmacharini()
 
@@ -210,8 +258,32 @@ class SatiProvider:
     supports_tools = False
     structured_evidence = True
 
+    #: "auto" picks the model for each question; a model's name uses only that model.
+    MODES = ("auto", "brahmacharini", "skandamata")
+
+    def __init__(self, mode: str = "auto") -> None:
+        if mode not in self.MODES:
+            raise ValueError(f"unknown Sati model {mode!r}")
+        self.mode = mode
+        if mode == "skandamata":
+            self.model = "sati-skandamata-serve-v0"
+
     def available(self) -> bool:
+        if self.mode == "skandamata":
+            return skandamata_available()
         return (MODELS / "brahmacharini.json").exists() and (MODELS / "knowledge.json").exists()
+
+    def _wants_mitigations(self, question: str) -> bool:
+        if self.mode == "brahmacharini" or not skandamata_available():
+            return False
+        return self.mode == "skandamata" or bool(MITIGATE.search(question))
+
+    def _mitigation_lines(self, text: str) -> list[str] | None:
+        picks = [(p, m) for p, m in mitigator().recommend(text, k=5) if p >= RECOMMEND]
+        if not picks:
+            return None
+        lines = [f"- {m['name']} ({m['id']}) — {p:.0%}" for p, m in picks]
+        return lines + ["", "Sources: " + " · ".join(m["url"] for _, m in picks)]
 
     def complete(self, prompt: str, request: ModelRequest) -> tuple[dict[str, Any], Usage]:
         if request.schema_name == "general_answer_v1":
@@ -237,6 +309,27 @@ class SatiProvider:
                 "area": "skandamata",
                 "declined": True,
             }
+        if self._wants_mitigations(question):
+            lines = self._mitigation_lines(question)
+            if lines:
+                return {
+                    "answer": "\n".join(["The ATT&CK mitigations that defend against what you describe, most "
+                                         "likely first (Skandamata's confidence in brackets):", "", *lines,
+                                         "", "These are recommendations. Applying any of them is a decision "
+                                         "for a person, and Dharma authorises every action."]),
+                    "topic": "security",
+                    "area": "skandamata",
+                    "declined": False,
+                }
+            if self.mode == "skandamata":
+                return {
+                    "answer": "Skandamata found no ATT&CK mitigation it is confident about for that. Describe "
+                    "the attacker behaviour you saw (what was run, accessed or changed), and it will rank "
+                    "the mitigations that defend against it.",
+                    "topic": "security",
+                    "area": "skandamata",
+                    "declined": False,
+                }
         hits = knowledge().search(embedder().embed(question), k=3, question=question)
         if not hits or hits[0][0] < ANSWERABLE:
             return {
@@ -279,6 +372,20 @@ class SatiProvider:
             return first_sentences(" ".join(e.content.split()), 240)
 
         chosen: list = []
+        if self._wants_mitigations(question):
+            # Skandamata reads the incident's own account of what the attacker did.
+            basis = by("hypothesis")[:1] + by("causal_chain")
+            lines = self._mitigation_lines(" ".join(e.content for e in basis)) if basis else None
+            if lines:
+                return {
+                    "answer": "\n".join(["From this incident's evidence, the ATT&CK mitigations that defend "
+                                         "against it, most likely first:", "", *lines, "",
+                                         "Recommendations only: a human authorises any change."]),
+                    "evidence_refs": [e.ref for e in basis],
+                    "answerable": True,
+                    "proposed_action_id": None,
+                    "considered": [],
+                }
         if q.startswith("what happened"):
             chosen = by("incident")[:1] + by("causal_chain")
             lead = "From the stored evidence, in order:"

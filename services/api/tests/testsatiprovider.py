@@ -114,3 +114,51 @@ def test_markup_in_a_passage_never_reaches_the_answer():
     text = "<xhtml:p>An adversary tries known username/password combinations.</xhtml:p> <xhtml:p>More.</xhtml:p>"
     out = first_sentences(text)
     assert "<" not in out and out.startswith("An adversary tries")
+
+
+@pytest.fixture
+def with_skandamata(provider, tmp_path, monkeypatch):
+    # "phishing" → user training (M1017); "ransomware" → data backup (M1053).
+    # Its own, larger hash space: at 64 buckets a long question collides with
+    # "phishing" and the test would measure the collision, not the routing.
+    buckets, hidden = 4096, 2
+    bag = bytearray(buckets * WIDTH)
+    for word, dim in (("phishing", 0), ("ransomware", 1)):
+        bag[(zlib.crc32(word.encode()) % buckets) * WIDTH + dim] = 127
+    (tmp_path / "skandamata.bag").write_bytes(bytes(bag))
+    (tmp_path / "skandamata.json").write_text(json.dumps({
+        "buckets": buckets, "width": WIDTH, "hidden": hidden, "bag_scale": [1 / 127] * buckets,
+        "w1": [[1, 0, 0, 0], [0, 1, 0, 0]], "b1": [0, 0],
+        "w2": [[40, 0], [0, 40]], "b2": [-3, -3],
+        "mitigations": [{"id": "M1017", "name": "User Training", "url": "https://attack.mitre.org/mitigations/M1017/"},
+                        {"id": "M1053", "name": "Data Backup", "url": "https://attack.mitre.org/mitigations/M1053/"}],
+    }))
+    monkeypatch.setattr(sati_module.Skandamata.__init__, "__defaults__", (tmp_path,))
+    sati_module.mitigator.cache_clear()
+    yield
+    sati_module.mitigator.cache_clear()
+
+
+def _general(provider, question: str) -> dict:
+    return ask(provider, "general_answer_v1", question)
+
+
+def test_a_defence_question_is_answered_by_skandamata_with_sources(provider, with_skandamata):
+    out = _general(provider, "How do we defend against ransomware encrypting our files?")
+    assert out["area"] == "skandamata"
+    assert "Data Backup (M1053)" in out["answer"] and "https://attack.mitre.org/mitigations/M1053/" in out["answer"]
+    assert "User Training" not in out["answer"]  # below the confidence floor for this question
+
+
+def test_choosing_a_model_by_name_uses_only_that_model(provider, with_skandamata):
+    lookup = sati_module.SatiProvider("brahmacharini")
+    assert _general(lookup, "How do we defend against phishing?")["area"] != "skandamata"
+    only = sati_module.SatiProvider("skandamata")
+    assert only.available() and _general(only, "phishing emails to staff")["area"] == "skandamata"
+    with pytest.raises(ValueError):
+        sati_module.SatiProvider("not-a-model")
+
+
+def test_without_its_files_skandamata_is_not_offered(provider):
+    assert not sati_module.SatiProvider("skandamata").available()
+    assert _general(provider, "How do we defend against phishing?")["area"] != "skandamata"
