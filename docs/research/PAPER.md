@@ -307,6 +307,55 @@ comes from retrieval and the model writes around it.
 
 Neither verdict closes an incident without a human.
 
+### 7.3 Against general LLMs, on a benchmark this project did not write
+
+> *Draft written by Claude for the author to revise (RP-33, RP-36). Every number
+> is in [models/rcaeval-diagnosis.md](models/rcaeval-diagnosis.md), generated from
+> the per-answer records in `benchmark/results/rcaeval/`.*
+
+**Protocol.** The cases come from RCAEval (Pham et al., 2025): fault injections
+on real microservice deployments, labelled by the injected root-cause service.
+The sample was declared and hash-locked before any run: 50 Online Boutique and
+50 Sock Shop cases. Every diagnoser receives the same per-service evidence. The
+adapter builds it from the metrics and the call graph, and a test checks that
+it never carries the label. Each diagnoser ranks up to three services from the
+listed options. The RP-14 harness scores every answer the same way, and counts
+abstentions and errors apart from wrong answers. The LLMs (llama3 and
+qwen2.5:7b) run through the AI Gateway at temperature 0.2, on CPU.
+
+**Result.** Katyayani, trained on the other RCAEval systems and never on the
+tested one, names the root cause first in 0.930 [0.863, 0.966] of cases.
+
+| Diagnoser | RCA@1 | RCA@3 |
+|---|---:|---:|
+| Katyayani (real data, other systems) | 0.930 | 0.970 |
+| Loudest service (no learning) | 0.660 | 0.920 |
+| llama3 | 0.550 | 0.790 |
+| qwen2.5:7b | 0.510 | 0.620 |
+| Sati-RCA trained on Kaal (zero-shot) | 0.350 | 0.620 |
+
+Paired on the same cases, exact McNemar tests on RCA@1 with Holm's correction:
+
+- against llama3, Katyayani alone is right 41 times and llama3 alone 3 times (p 3.2e-09);
+- against qwen2.5:7b, 44 against 2 (p 9.2e-11);
+- against the loudest-service rule, 30 against 3 (p 1.4e-06).
+
+**What it does and does not show.** It shows that a small ranker trained on real
+incidents beats two general LLMs on the same evidence. It also shows that
+neither LLM beats the no-learning rule of naming the loudest service. It does
+not show that every LLM loses. These are 7–8B open models on CPU, run once each.
+A frontier model behind the same Gateway is the obvious next arm. The cases
+come from two systems, and Train Ticket is excluded because no call graph was
+authored for it. The test distribution is therefore narrower than RCAEval's.
+
+**Where they fail.** Of the 200 wrong, abstained or errored answers across the
+five diagnosers ([review/rp34-failures.md](review/rp34-failures.md)), packet
+loss is the fault every diagnoser misses most, Katyayani included. The two LLMs
+fail differently. qwen2.5:7b most often names the loudest service when it is
+not the root. llama3 most often names a service next to the root, with the root
+in its top three. Categories are proposed by rule and await the author's assignment
+(RP-34).
+
 ## 8. Failure analysis
 
 *(To write once the corrected corpus has been run at N≥3. The question the

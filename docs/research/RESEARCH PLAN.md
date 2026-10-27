@@ -434,7 +434,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
 
 ### Block E — Paper (Weeks 24–26)
 
-- [ ] **RP-36 · §7 complete**
+- [ ] **RP-36 · §7 complete** — *Claude's draft so far (27 Oct): §7.1 baselines, §7.2 Sati's own models on real data (with the OOD-split and sim-to-real results), and §7.3 Sati against general LLMs on RCAEval. Every number is guarded by `testpaper.py`. Remains: the live-stack sim-to-real result (RP-19), RP-29's head-to-head, and the owner's revision.*
   **Both** · Claude draft; You 4 h · Depends: RP-29, RP-33
   *Done when:* §7 covers the baselines, Sati vs LLMs, the OOD splits, sim-to-real and the external benchmark, and every number traces to a table.
 
