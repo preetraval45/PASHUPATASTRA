@@ -1,15 +1,30 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "//": [
+    "ignoreCommand skips the build when a commit leaves this folder unchanged (exit 0 = skip).",
+    "On 27 Oct 2026 every push built the site, including the training bot's result commits,",
+    "and the free plan's 100 deployments a day ran out. A git error builds, the safe default."
+  ],
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . || exit 1",
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=63072000; includeSubDomains; preload"
