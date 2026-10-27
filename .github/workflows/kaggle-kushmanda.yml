@@ -13,7 +13,16 @@ on:
   push:
     branches: [main]
     paths:
-      - packages/sati/sati/lm/**
+      # The files training runs, not all of sati/lm: constrained decoding and the
+      # numpy inference engine live there too, and touching them must not spend
+      # a Kaggle GPU session retraining an unchanged model.
+      - packages/sati/sati/lm/clean.py
+      - packages/sati/sati/lm/corpus.py
+      - packages/sati/sati/lm/evaluate.py
+      - packages/sati/sati/lm/model.py
+      - packages/sati/sati/lm/report.py
+      - packages/sati/sati/lm/sft.py
+      - packages/sati/sati/lm/train.py
       - kaggle/kushmanda/**
       - .github/workflows/kaggle-kushmanda.yml
 

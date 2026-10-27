@@ -28,6 +28,89 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  changes:
+    # Which models this push touched. Every retrain moves LightGBM's numbers
+    # by a few hundredths (runner CPUs differ, and `deterministic` does not
+    # hold across them), so retraining models whose code and data did not
+    # change only churns the published tables. A manual dispatch runs them all.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      kushmanda-smoke: ${{ steps.filter.outputs.kushmanda-smoke }}
+      sati-rca: ${{ steps.filter.outputs.sati-rca }}
+      shailaputri: ${{ steps.filter.outputs.shailaputri }}
+      shailaputri-smd: ${{ steps.filter.outputs.shailaputri-smd }}
+      mahagauri: ${{ steps.filter.outputs.mahagauri }}
+      skandamata: ${{ steps.filter.outputs.skandamata }}
+      siddhidatri: ${{ steps.filter.outputs.siddhidatri }}
+      katyayani-kaal: ${{ steps.filter.outputs.katyayani-kaal }}
+      katyayani-simtoreal: ${{ steps.filter.outputs.katyayani-simtoreal }}
+      kalaratri: ${{ steps.filter.outputs.kalaratri }}
+      brahmacharini: ${{ steps.filter.outputs.brahmacharini }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared: &shared
+              - 'packages/sati/sati/sources/**'
+              - 'packages/sati/pyproject.toml'
+            kushmanda-smoke:
+              - *shared
+              - 'packages/sati/sati/lm/**'
+            sati-rca:
+              - *shared
+              - 'packages/sati/sati/rca/run.py'
+              - 'packages/sati/sati/rca/model.py'
+              - 'packages/sati/sati/rca/features.py'
+              - 'packages/sati/sati/rca/report.py'
+            shailaputri:
+              - *shared
+              - 'packages/sati/sati/detect/**'
+              - 'packages/core/pashupatastra/evaluation.py'
+            shailaputri-smd:
+              - *shared
+              - 'packages/sati/sati/detect/**'
+              - 'packages/core/pashupatastra/evaluation.py'
+            mahagauri:
+              - *shared
+              - 'packages/sati/sati/verify/**'
+              - 'packages/sati/sati/detect/**'
+            skandamata:
+              - *shared
+              - 'packages/sati/sati/respond/**'
+            siddhidatri:
+              - *shared
+              - 'packages/sati/sati/fuse/**'
+              - 'packages/sati/sati/detect/**'
+              - 'packages/core/pashupatastra/evaluation.py'
+            katyayani-kaal:
+              - *shared
+              - 'packages/sati/sati/rca/kaal.py'
+              - 'packages/sati/sati/rca/kaalreport.py'
+              - 'packages/sati/sati/rca/model.py'
+              - 'packages/core/pashupatastra/kaal/**'
+              - 'docs/research/datasets/**'
+            katyayani-simtoreal:
+              - *shared
+              - 'packages/sati/sati/rca/simtoreal.py'
+              - 'packages/sati/sati/rca/simtoreport.py'
+              - 'packages/sati/sati/rca/kaal.py'
+              - 'packages/sati/sati/rca/model.py'
+              - 'packages/sati/sati/rca/features.py'
+              - 'packages/sati/sati/rca/external.py'
+              - 'packages/core/pashupatastra/kaal/**'
+              - 'benchmark/external/rcaeval/**'
+            kalaratri:
+              - *shared
+              - 'packages/sati/sati/loganomaly/**'
+            brahmacharini:
+              - *shared
+              - 'packages/sati/sati/embed/**'
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -48,7 +131,8 @@ jobs:
     # the real sources at toy size on CPU: corpus, tokenizer, pretraining,
     # grounded tuning, evaluation and report. A mistake then costs minutes
     # here, not a Kaggle session. NVD is left out (--tiny) to keep it short.
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.kushmanda-smoke == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -65,7 +149,8 @@ jobs:
           python -m sati.lm.report ../../results/kushmanda-smoke/results.json
 
   sati-rca:
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.sati-rca == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -103,7 +188,8 @@ jobs:
   shailaputri:
     # Model 1 of the nine (adr/Navadurga): metric anomaly detection on NAB's
     # real series, leave-one-family-out, against the four statistical detectors.
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.shailaputri == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -140,7 +226,8 @@ jobs:
     # Shailaputri v1 (RP-60): 28 real servers x 38 metrics from SMD (MIT),
     # leave one machine group out, against max-robust-z and per-machine PCA,
     # plus an onset-weighted variant for earlier flags. Pinned commit.
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.shailaputri-smd == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 150
     permissions:
@@ -172,7 +259,8 @@ jobs:
     # Model 8 of the nine (adr/Navadurga): verification on SMD's real
     # incidents: has the server returned to normal? Leave one machine group
     # out; premature all-clears are the error that matters.
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.mahagauri == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 150
     permissions:
@@ -202,7 +290,8 @@ jobs:
     # Model 5 of the nine (adr/Navadurga): observed behaviour -> the ATT&CK
     # mitigations that defend against it, split by source, against popularity
     # and BM25 baselines. CPU. It recommends; Dharma authorises (rule 2).
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.skandamata == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -232,7 +321,8 @@ jobs:
   siddhidatri:
     # Model 9 of the nine (adr/Navadurga): Shailaputri, max robust z and PCA
     # fused into one calibrated probability on SMD, stacked out of fold.
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.siddhidatri == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
@@ -261,7 +351,8 @@ jobs:
   katyayani-kaal:
     # RP-24: Katyayani's ranker on Kaal dataset v1 (synthetic), on the committed
     # manifest's splits; about a minute on CPU.
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.katyayani-kaal == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -285,7 +376,8 @@ jobs:
   katyayani-simtoreal:
     # RP-24 sim-to-real: the Kaal-trained ranker, zero-shot on RCAEval's
     # Online Boutique and Sock Shop cases with authored call graphs.
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.katyayani-simtoreal == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -314,7 +406,8 @@ jobs:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
     # split by time. LogHub is research-use only, so this job publishes metrics
     # and no weights (datasheets.md).
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.kalaratri == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -353,7 +446,8 @@ jobs:
     # Model 2 of the nine (adr/Navadurga): embeddings for memory and recall,
     # trained contrastively on ATT&CK procedure examples, tested on sources
     # never seen in training. Small enough for CPU.
-    needs: test
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.brahmacharini == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
