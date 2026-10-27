@@ -1759,6 +1759,7 @@
     },
     "/api/v1/audit": {
       "get": {
+        "description": "Newest first. `kind` is validated against the enum, so a mistyped one is\na 422 rather than an empty list that reads as \"never happened\".",
         "operationId": "audit_api_v1_audit_get",
         "parameters": [
           {
@@ -1785,6 +1786,22 @@
               "default": 100,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AuditKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
             }
           }
         ],
