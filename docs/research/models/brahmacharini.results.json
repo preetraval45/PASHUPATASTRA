@@ -1,5 +1,6 @@
 {
   "model": "sati-brahmacharini-v0",
+  "v1": null,
   "dataset": {
     "name": "MITRE ATT&CK enterprise procedure examples",
     "techniques": 706,
@@ -84,7 +85,7 @@
     {
       "epoch": 10,
       "loss": 0.0031,
-      "val_mrr": 0.7099
+      "val_mrr": 0.7098
     },
     {
       "epoch": 11,
@@ -97,5 +98,5 @@
       "val_mrr": 0.6958
     }
   ],
-  "seconds": 562.6
+  "seconds": 335.5
 }
