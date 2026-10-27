@@ -50,6 +50,7 @@ jobs:
       kalaratri: ${{ steps.filter.outputs.kalaratri }}
       brahmacharini: ${{ steps.filter.outputs.brahmacharini }}
       katyayani-pooled: ${{ steps.filter.outputs.katyayani-pooled }}
+      katyayani-events: ${{ steps.filter.outputs.katyayani-events }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -108,6 +109,13 @@ jobs:
             kalaratri:
               - *shared
               - 'packages/sati/sati/loganomaly/**'
+            katyayani-events:
+              - *shared
+              - 'packages/sati/sati/rca/events.py'
+              - 'packages/sati/sati/rca/eventsreport.py'
+              - 'packages/sati/sati/rca/kaal.py'
+              - 'packages/sati/sati/rca/simtoreal.py'
+              - 'benchmark/live/dataset/**'
             katyayani-pooled:
               - *shared
               - 'packages/sati/sati/rca/pooled.py'
@@ -437,6 +445,34 @@ jobs:
           cp results/katyayani-pooled/results.json docs/research/models/katyayani-pooled.results.json
           (cd packages/sati && python -m sati.rca.pooledreport ../../results/katyayani-pooled/results.json) > docs/research/models/katyayani-pooled.md
           bash scripts/pushresults.sh "docs(models): Katyayani v1 on four systems from run ${{ github.run_id }}" docs/research/models/katyayani-pooled.results.json docs/research/models/katyayani-pooled.md
+
+  katyayani-events:
+    # Can the real-data Katyayani be served? Trained on real incidents in the
+    # event-level features the API can compute, each system held out in turn.
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.katyayani-events == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/rcaeval
+          key: rcaeval-v1
+      - name: train and evaluate on event-level features
+        working-directory: packages/sati
+        run: python -m sati.rca.events --cache ../../.cache/rcaeval --live ../../benchmark/live/dataset --out ../../results/katyayani-events
+      - name: commit the generated results
+        run: |
+          cp results/katyayani-events/results.json docs/research/models/katyayani-events.results.json
+          (cd packages/sati && python -m sati.rca.eventsreport ../../results/katyayani-events/results.json) > docs/research/models/katyayani-events.md
+          bash scripts/pushresults.sh "docs(models): Katyayani on event features from run ${{ github.run_id }}" docs/research/models/katyayani-events.results.json docs/research/models/katyayani-events.md
 
   kalaratri:
     # Model 7 of the nine (adr/Navadurga): log anomaly detection on LogHub HDFS,
