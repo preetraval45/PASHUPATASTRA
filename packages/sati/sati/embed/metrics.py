@@ -44,3 +44,27 @@ def bm25(queries: list[str], docs: list[str], k1: float = 1.5, b: float = 0.75) 
                 if f:
                     out[i, j] += idf[w] * f * (k1 + 1) / (f + k1 * (1 - b + b * len(tok[j]) / avg))
     return out
+
+
+def standardise(scores: np.ndarray) -> np.ndarray:
+    """Per-query z-scores, so two scorers on different scales can be added.
+    A column a scorer cannot rank (-inf) goes just below that row's lowest finite score."""
+    s = np.array(scores, dtype=float)
+    finite = np.isfinite(s)
+    low = np.where(finite, s, np.inf).min(axis=1, keepdims=True)
+    s = np.where(finite, s, np.where(np.isfinite(low), low - 1e-6, 0.0))
+    return (s - s.mean(axis=1, keepdims=True)) / (s.std(axis=1, keepdims=True) + 1e-9)
+
+
+def fuse(a: np.ndarray, b: np.ndarray, weight: float) -> np.ndarray:
+    return weight * standardise(a) + (1 - weight) * standardise(b)
+
+
+def choose_weight(a: np.ndarray, b: np.ndarray, gold: list[int], grid: int = 11) -> float:
+    """The weight on `a` with the best MRR on these (validation) rows; ties keep the lower weight."""
+    best, best_mrr = 0.0, -1.0
+    for w in np.linspace(0, 1, grid):
+        m = summarise(ranks(fuse(a, b, w), gold))["mrr"]
+        if m > best_mrr:
+            best, best_mrr = float(w), m
+    return round(best, 2)

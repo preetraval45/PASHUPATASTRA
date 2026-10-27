@@ -51,3 +51,15 @@ def test_the_encoder_is_normalised_and_learns_a_pairing():
         loss.backward()
         opt.step()
     assert loss.item() < first / 3
+
+
+def test_fusion_weight_is_chosen_on_the_rows_given_and_unrankable_columns_go_last():
+    from sati.embed.metrics import choose_weight, fuse, standardise
+
+    a = np.array([[0.9, 0.1, 0.0], [0.0, 0.9, 0.1]])  # right on row 1 only
+    b = np.array([[0.1, 0.9, -np.inf], [0.1, 0.9, -np.inf]])  # right on row 2 only
+    gold = [0, 1]
+    assert ranks(standardise(b), [2, 2]) == [3, 3]
+    w = choose_weight(a, b, gold)
+    assert summarise(ranks(fuse(a, b, w), gold))["mrr"] >= max(summarise(ranks(a, gold))["mrr"],
+                                                               summarise(ranks(b, gold))["mrr"])

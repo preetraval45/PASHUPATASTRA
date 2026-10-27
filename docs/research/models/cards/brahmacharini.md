@@ -65,7 +65,18 @@ At test time, every procedure ranks all 706 techniques.
 |---|---:|---:|---:|---:|
 | Brahmacharini v0 | 0.614 | 0.802 | 0.854 | 0.699 |
 | BM25 | 0.268 | 0.478 | 0.580 | 0.372 |
+| TF-IDF + logistic regression | 0.646 | 0.832 | 0.869 | 0.730 |
 | Hashing embedder (Smriti's previous retriever) | 0.120 | 0.226 | 0.283 | 0.177 |
+
+### The strongest simple baseline wins
+
+A TF-IDF model over word unigrams and bigrams, with a multinomial logistic
+regression across the techniques seen in training, beats Brahmacharini on
+every column: Recall@1 0.646 against 0.614, MRR 0.730 against 0.699. It was
+added to the training run after the public Kaggle notebook found the same gap.
+Brahmacharini is still the served retriever because it embeds passages as well
+as techniques, and Sati AI's grounding needs that. The classifier only ranks
+techniques it saw in training. Fusing the two is an open task.
 
 ### A larger encoder did not help (v1, Kaggle run 2)
 

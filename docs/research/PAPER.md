@@ -345,6 +345,13 @@ the same 1,727, reaches Recall@1 0.391 and MRR 0.470, against v0's 0.614 and
 Its epoch was chosen on validation sources, and validation MRR had levelled
 off by the end. With this little data, the small model is the one served.
 
+The strongest simple baseline is stronger still. TF-IDF features with a
+logistic regression over techniques reach Recall@1 0.646 and MRR 0.730 on the
+same queries, against Brahmacharini v0's 0.614 and 0.699
+([brahmacharini.md](models/brahmacharini.md)). Brahmacharini stays in service
+because it also retrieves the passages behind each answer, which a classifier
+cannot do. Its value as a technique classifier alone is not established.
+
 ### 7.3 Against general LLMs, on a benchmark this project did not write
 
 > *Draft written by Claude for the author to revise (RP-33, RP-36). Every number

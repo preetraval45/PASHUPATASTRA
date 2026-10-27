@@ -29,7 +29,7 @@ import numpy as np
 import torch
 
 from sati.embed import data as d
-from sati.embed.metrics import bm25, ranks, summarise
+from sati.embed.metrics import bm25, choose_weight, fuse, ranks, summarise
 from sati.embed.model import Encoder, TransformerEncoder, info_nce
 
 EPOCHS = 12
@@ -57,6 +57,10 @@ def encode(model: Encoder, texts: list[str]) -> np.ndarray:
 
 
 def linear_baseline(train, queries: list[str], tech_text: list[str], index: dict) -> np.ndarray:
+    return linear_scorer(train, tech_text, index)(queries)
+
+
+def linear_scorer(train, tech_text: list[str], index: dict):
     """A strong classical baseline: TF-IDF word uni- and bigrams, multinomial
     logistic regression over techniques seen in training. Added 27 Oct after
     the public Kaggle notebook found it beats Brahmacharini on this split; a
@@ -66,14 +70,19 @@ def linear_baseline(train, queries: list[str], tech_text: list[str], index: dict
 
     texts = [p.text for p in train]
     labels = [index[p.technique] for p in train]
-    scores = np.full((len(queries), len(tech_text)), -np.inf)
     if len(set(labels)) < 2:
-        return scores  # a fixture too small to fit; never the real data
+        # a fixture too small to fit; never the real data
+        return lambda queries: np.full((len(queries), len(tech_text)), -np.inf)
     vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2 if len(texts) > 100 else 1, sublinear_tf=True)
     vec.fit(texts + tech_text)
     clf = LogisticRegression(max_iter=2000, C=5).fit(vec.transform(texts), labels)
-    scores[:, clf.classes_] = clf.predict_proba(vec.transform(queries))
-    return scores
+
+    def score(queries: list[str]) -> np.ndarray:
+        scores = np.full((len(queries), len(tech_text)), -np.inf)
+        scores[:, clf.classes_] = clf.predict_proba(vec.transform(queries))
+        return scores
+
+    return score
 
 
 def fit(model, opt, epochs: int, train, val, techniques, index, tech_text, name: str):
@@ -148,7 +157,17 @@ def main() -> int:
         results_by["brahmacharini-v1 (transformer)"] = summarise(
             ranks(encode(v1, queries) @ encode(v1, tech_text).T, gold))
     results_by["bm25"] = summarise(ranks(bm25(queries, tech_text), gold))
-    results_by["tf-idf logistic regression"] = summarise(ranks(linear_baseline(train, queries, tech_text, index), gold))
+    # Fusion: Brahmacharini's cosine and the classifier's probability, each
+    # z-scored per query, weighted by the share that is best on the validation
+    # sources. The test never chooses it.
+    linear = linear_scorer(train, tech_text, index)
+    linear_test = linear(queries)
+    results_by["tf-idf logistic regression"] = summarise(ranks(linear_test, gold))
+    val_queries = [p.text for p in val]
+    weight = choose_weight(encode(model, val_queries) @ encode(model, tech_text).T, linear(val_queries),
+                           [index[p.technique] for p in val])
+    results_by["brahmacharini-v0 + tf-idf (fused)"] = summarise(
+        ranks(fuse(encode(model, queries) @ encode(model, tech_text).T, linear_test, weight), gold))
     hashed = hashing(queries, tech_text)
     if hashed is not None:
         results_by["hashing-embedder (Smriti today)"] = summarise(ranks(hashed, gold))
@@ -167,6 +186,7 @@ def main() -> int:
         "task": "rank all techniques for an observed behaviour",
         "test": results_by,
         "best_epoch_by_validation": max(curve, key=lambda c: c["val_mrr"])["epoch"],
+        "fusion_weight_by_validation": weight,
         "curve": curve,
         "seconds": round(time.time() - started, 1),
     }
