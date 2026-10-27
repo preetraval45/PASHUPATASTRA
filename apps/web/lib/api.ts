@@ -1198,3 +1198,25 @@ export type KatyayaniRanking = {
 export const getKatyayaniCases = () => get<KatyayaniCases>("/models/katyayani/cases");
 export const rankKatyayani = (id: string) =>
   get<KatyayaniRanking>(`/models/katyayani/cases/${encodeURIComponent(id)}`);
+
+/** Shailaputri, Siddhidatri and Mahagauri, served live on server incidents from unseen machines. */
+export type ServerIncidents = {
+  held_out_group: string;
+  trained_on: string[];
+  incidents: { id: string; machine: string; minutes: number; length: number }[];
+};
+
+export type ServerRun = {
+  id: string;
+  machine: string;
+  minutes: number;
+  incident: [number, number];
+  truth: number[];
+  shailaputri: { score: number[]; flags: boolean[]; caught: boolean; first_flag: number | null; false_flags_before: number };
+  siddhidatri: { probability: number[]; flags: boolean[] };
+  mahagauri: { declared_over: number | null; verdict: "confirmed" | "premature" | "unconfirmed" };
+};
+
+export const getServerIncidents = () => get<ServerIncidents>("/models/servers/incidents");
+export const runServerIncident = (id: string) =>
+  get<ServerRun>(`/models/servers/incidents/${encodeURIComponent(id)}`);

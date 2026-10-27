@@ -1,4 +1,5 @@
 import { TryKatyayani } from "@/components/trykatyayani";
+import { TryServers } from "@/components/tryservers";
 import { isOurs, isShown, shownEntries, shownName } from "@/lib/modelnames";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -470,14 +471,27 @@ export default function ModelsPage() {
       )}
 
       {!MAHAGAURI.pending && (
+        <section id="try-servers" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Try Shailaputri, Siddhidatri and Mahagauri</h2>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+              The three models that watch servers, run live on incidents from machines none of them trained on.
+            </p>
+          </div>
+          <Panel title="Try it" aside="runs live in the API">
+            <TryServers />
+          </Panel>
+        </section>
+
         <section id="mahagauri-results" className="scroll-mt-24 space-y-4">
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Mahagauri — is it really over?</h2>
             <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
               {MAHAGAURI.dataset.incidents} real server incidents. Once a minute, from onset until{" "}
               {MAHAGAURI.protocol.horizon_minutes} minutes after the end, the verifier says whether the server has
-              recovered; all clear after {MAHAGAURI.protocol.consecutive} yeses in a row. The error that matters is a
-              premature all-clear. This version is not yet safe: read the first column.
+              recovered, and declares it over once recovery has held long enough. The error that matters is a
+              premature all-clear. It now stays within its 5% budget on servers it never saw, but it confirms few
+              recoveries: most incidents still go back to a person.
             </p>
           </div>
           <Panel title="Held-out machine groups" aside="premature all-clear: lower is safer">
