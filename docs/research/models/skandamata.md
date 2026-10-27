@@ -10,6 +10,7 @@
 | popularity | 0.232 | 0.398 | 0.206 | 0.443 | 0.433 |
 | bm25 direct | 0.195 | 0.259 | 0.128 | 0.344 | 0.276 |
 | bm25 two-hop | 0.537 | 0.646 | 0.335 | 0.659 | 0.652 |
+| tf-idf logistic regression | 0.827 | 0.873 | 0.464 | 0.880 | 0.881 |
 
 Epoch chosen on validation behaviours: 20.
 

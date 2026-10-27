@@ -44,6 +44,14 @@
       "mrr": 0.6595,
       "ndcg@10": 0.6517,
       "n": 1269
+    },
+    "tf-idf logistic regression": {
+      "hit@1": 0.8266,
+      "recall@5": 0.8733,
+      "precision@5": 0.4641,
+      "mrr": 0.8796,
+      "ndcg@10": 0.8808,
+      "n": 1269
     }
   },
   "best_epoch_by_validation": 20,
@@ -223,5 +231,5 @@
       ]
     }
   ],
-  "seconds": 962.8
+  "seconds": 1372.6
 }
