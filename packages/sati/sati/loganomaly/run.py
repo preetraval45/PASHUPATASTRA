@@ -26,6 +26,11 @@ Two classic baselines on exactly the same test blocks:
   training normal block. Simple, and a strong baseline on HDFS.
 
 Weights are not saved: the data is research-use only (datasheets.md).
+
+**Exported model (27 Oct 2026).** The trained booster is written to
+`model.json` for `pashupatastra.trees`, with its threshold and event
+vocabulary. LogHub is research-use only, so the model is released for research
+use only (owner decision; docs/research/datasheets.md).
 """
 
 from __future__ import annotations
