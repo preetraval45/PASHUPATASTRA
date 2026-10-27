@@ -97,3 +97,4 @@ Protocol: before every push, write a topic-named file from
 - [LiveResults](LiveResults.md) — RP-19 done: live 0.895 RCAEval-trained vs 0.335 Kaal; 2σ realism saturated, measured
 - [ConsoleFiltersAudit](ConsoleFiltersAudit.md) — RP-53 filters; API route changes need exportopenapi or deploy-api is skipped
 - [OwnerReadingRP15](OwnerReadingRP15.md) — reading tasks owner-attested; RP-15 wired, waiting on rp13.yaml committed alone first
+- [BiggerModels](BiggerModels.md) — Kushmanda v3 + Brahmacharini v1 on Kaggle; Katyayani events 0.90 servable; RP-75 blocked (security console)
