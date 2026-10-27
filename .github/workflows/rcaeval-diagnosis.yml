@@ -76,6 +76,7 @@ jobs:
           pattern: rcaeval-*
           path: benchmark/results/rcaeval
           merge-multiple: true
+      - run: pip install -e packages/core
       - run: python scripts/rcaevaltable.py > docs/research/models/rcaeval-diagnosis.md
       - name: commit the records and the table
         run: |

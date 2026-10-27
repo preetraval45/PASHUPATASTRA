@@ -4,7 +4,9 @@
 
 Recomputed from `benchmark/results/rcaeval/*.jsonl`, one line per answer, so a
 reader can check every cell. Wilson 95% intervals; errors and abstentions are
-counted apart from wrong answers (adr/LLMBaselines).
+counted apart from wrong answers (adr/LLMBaselines). Then Katyayani against
+each other diagnoser, paired on the same cases: exact McNemar on RCA@1, with
+Holm's correction across the comparisons (RP-10).
 """
 
 from __future__ import annotations
@@ -13,6 +15,8 @@ import json
 import math
 import sys
 from pathlib import Path
+
+from pashupatastra.significance import holm, mcnemar
 
 RECORDS = Path(__file__).resolve().parents[1] / "benchmark" / "results" / "rcaeval"
 LABEL = {"katyayani": "Katyayani (trained on real RCAEval, other systems)",
@@ -30,12 +34,13 @@ def wilson(k: int, n: int, z: float = 1.96) -> str:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
-    rows = []
+    rows, hits = [], {}
     for path in sorted(RECORDS.glob("*.jsonl")):
         lines = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
         if not lines:
             continue
         name = lines[0]["diagnoser"]
+        hits[name] = {x["case"]: bool(x["hit1"]) for x in lines}
         n = len(lines)
         rows.append((LABEL.get(name, name), n, sum(x["hit1"] for x in lines), sum(x["hit3"] for x in lines),
                      sum(x["abstained"] for x in lines), sum(bool(x["error"]) for x in lines)))
@@ -50,6 +55,18 @@ def main() -> int:
         print(f"| {label} | {n} | {wilson(h1, n)} | {wilson(h3, n)} | {ab} | {err} |")
     if not rows:
         print("| — | 0 | — | — | — | no records yet |")
+    if "katyayani" in hits and len(hits) > 1:
+        ref = hits["katyayani"]
+        tests = []
+        for name in (n for n in hits if n != "katyayani"):
+            shared = sorted(set(ref) & set(hits[name]))
+            tests.append((name, len(shared), mcnemar([(ref[c], hits[name][c]) for c in shared])))
+        adjusted = holm([t.p_value for _, _, t in tests])
+        print("\n## Katyayani against each, paired on the same cases (RCA@1)\n")
+        print("| Against | Cases | Only Katyayani right | Only the other right | McNemar p | Holm p |")
+        print("|---|---:|---:|---:|---:|---:|")
+        for (name, n, t), adj in zip(tests, adjusted, strict=True):
+            print(f"| {LABEL.get(name, name)} | {n} | {t.only_a} | {t.only_b} | {t.p_value:.2g} | {adj:.2g} |")
     print("\nAn error (provider timeout or invalid schema) counts as a miss and is also listed on its own. LLMs run "
           "on CPU through Ollama on GitHub's runners, at temperature 0.2, through the Gateway.")
     return 0

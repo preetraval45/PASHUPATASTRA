@@ -253,6 +253,13 @@ simulator does not.**
   but zero-shot on real cases it scores 0.490 on Online Boutique and 0.265 on
   Sock Shop. Ranking by the loudest service alone scores 0.608 and 0.747
   ([katyayani-simtoreal.md](models/katyayani-simtoreal.md)).
+- Against general LLMs on a sample of 100 Online Boutique and Sock Shop cases
+  declared before any run, every diagnoser sees the same label-free evidence.
+  Katyayani, trained on the other systems, ranks the root cause first in 0.930
+  of cases. llama3 manages 0.550, qwen2.5:7b 0.510, and the loudest service
+  0.660. Paired on the same cases, Katyayani is right where llama3 is wrong 41
+  times, and the reverse happens 3 times (Holm-corrected McNemar p 3.2e-09)
+  ([rcaeval-diagnosis.md](models/rcaeval-diagnosis.md)).
 
 The simulator taught topology-first reasoning, and in real faults the culprit
 is the loudest service. Synthetic data is at most an augmentation here, not a
@@ -264,10 +271,10 @@ when the test days hold only attack families it never saw
 ([chandraghanta.md](models/chandraghanta.md)).
 
 **A learned detector can be both more accurate and quieter.** On 28 real
-servers from a held-out machine group, Shailaputri scores F1 0.556 with 4.6
+servers from a held-out machine group, Shailaputri scores F1 0.525 with 4.5
 false alarms per 1000 minutes, against 0.419 and 86.6 for per-machine PCA
 ([shailaputri-smd.md](models/shailaputri-smd.md)). On NAB, the five-seed
-spread is F1 0.435 [0.382, 0.475] with 25.6 false alarms per 1000 against 74.7
+spread is F1 0.430 [0.394, 0.474] with 24.3 false alarms per 1000 against 74.7
 for `SeasonalRobustZ`. It still flags later (lead 180.4 against 241.3), so the
 architecture keeps the statistical detector as default
 ([shailaputri.md](models/shailaputri.md); adr/SatiDetect).
@@ -294,8 +301,8 @@ comes from retrieval and the model writes around it.
 - Mahagauri, the recovery verifier, declared 0.199 of incidents over while
   still anomalous. Requiring agreement with a 3σ check lowers that to 0.061,
   but confirms only 0.211 of recoveries ([mahagauri.md](models/mahagauri.md)).
-- Siddhidatri's fusion matched Shailaputri alone on F1 (0.534 against 0.530)
-  while raising false alarms from 4.0 to 47.9
+- Siddhidatri's fusion matched Shailaputri alone on F1 (0.537 against 0.539)
+  while raising false alarms from 3.8 to 47.8
   ([siddhidatri.md](models/siddhidatri.md)).
 
 Neither verdict closes an incident without a human.

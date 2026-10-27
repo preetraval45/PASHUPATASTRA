@@ -12,4 +12,13 @@ The declared sample (`benchmark/external/rcaeval/subset.json`, `llm_sample`: 50 
 | Loudest service (no learning) | 100 | 0.660 [0.563, 0.745] | 0.920 [0.850, 0.959] | 0 | 0 |
 | Sati-RCA (trained on Kaal, zero-shot) | 100 | 0.350 [0.264, 0.447] | 0.620 [0.522, 0.709] | 0 | 0 |
 
+## Katyayani against each, paired on the same cases (RCA@1)
+
+| Against | Cases | Only Katyayani right | Only the other right | McNemar p | Holm p |
+|---|---:|---:|---:|---:|---:|
+| llm:llama3 | 100 | 41 | 3 | 1.6e-09 | 3.2e-09 |
+| llm:qwen2.5:7b | 100 | 44 | 2 | 3.1e-11 | 9.2e-11 |
+| Loudest service (no learning) | 100 | 30 | 3 | 1.4e-06 | 1.4e-06 |
+| Sati-RCA (trained on Kaal, zero-shot) | 100 | 59 | 1 | 1.1e-16 | 4.2e-16 |
+
 An error (provider timeout or invalid schema) counts as a miss and is also listed on its own. LLMs run on CPU through Ollama on GitHub's runners, at temperature 0.2, through the Gateway.
