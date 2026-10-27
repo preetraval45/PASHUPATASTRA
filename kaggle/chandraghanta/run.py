@@ -11,6 +11,7 @@ by their distinctive file names, because Kaggle's mount layout has changed
 before (the first run looked in /kaggle/input/unsw-nb15 and found nothing).
 """
 
+import os
 import shutil
 import subprocess
 import sys
@@ -27,5 +28,7 @@ subprocess.run(
      "--unsw", "/kaggle/input", "--cic", "/kaggle/input"],
     check=True,
     cwd=f"{WORK}/repo/packages/sati",
+    # packages/core supplies pashupatastra.trees, which exports the model at the end.
+    env={**os.environ, "PYTHONPATH": f"{WORK}/repo/packages/core"},
 )
 shutil.rmtree(f"{WORK}/repo", ignore_errors=True)

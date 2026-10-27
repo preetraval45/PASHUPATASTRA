@@ -85,6 +85,8 @@ def fit_lgb(x: pd.DataFrame, y: np.ndarray) -> lgb.Booster:
 
 
 FPR_BUDGET = 0.01
+LAST: dict = {}
+"""The most recently trained booster, so `main` can export the CIC day-split model."""
 
 
 def detect(xtr: pd.DataFrame, ytr: np.ndarray, xte: pd.DataFrame, salt: str,
@@ -99,10 +101,12 @@ def detect(xtr: pd.DataFrame, ytr: np.ndarray, xte: pd.DataFrame, salt: str,
     val = validation_mask(len(xtr), salt)
     booster = fit_lgb(xtr[~val], ytr[~val])
     val_scores = booster.predict(xtr[val])
+    LAST.update(booster=booster, features=list(xtr.columns))
     if fpr is None:
         t = threshold(ytr[val], val_scores)
     else:
         t = float(np.quantile(val_scores[ytr[val] == 0], 1 - fpr))
+    LAST["threshold"] = float(t)
     return (booster.predict(xte) >= t).astype(int), t
 
 
@@ -115,6 +119,16 @@ def pca_detect(xtr: pd.DataFrame, ytr: np.ndarray, xte: pd.DataFrame, salt: str)
         benign = benign[np.random.default_rng(7).choice(len(benign), PCA_SAMPLE, replace=False)]
     t = threshold(ytr[val], pca_scores(benign, a[val]))
     return (pca_scores(benign, b) >= t).astype(int)
+
+
+KEPT: dict = {}
+"""The CIC day-split Chandraghanta, kept for export."""
+
+
+def _keep(name: str) -> dict:
+    """Record the booster `detect` just trained; returns nothing to add to the flags."""
+    KEPT.update(booster=LAST["booster"], features=LAST["features"], threshold=LAST.get("threshold"))
+    return {}
 
 
 def per_family(families: pd.Series, flags: dict[str, np.ndarray], seen: set[str]) -> dict[str, dict]:
@@ -162,6 +176,7 @@ def run_cic(folder: Path) -> dict:
     ytr, yte = train["label"].to_numpy(), test["label"].to_numpy()
     flags = {
         "chandraghanta-v0": detect(train[features], ytr, test[features], "cic")[0],
+        **_keep("cic"),
         "chandraghanta-v2 (1% false-alarm budget)": detect(train[features], ytr, test[features], "cic", FPR_BUDGET)[0],
         "pca (benign-only)": pca_detect(train[features], ytr, test[features], "cic"),
     }
@@ -198,11 +213,17 @@ def main() -> int:
     results = {
         "model": "sati-chandraghanta-v0",
         "datasets": {"unsw": run_unsw(args.unsw), "cic": run_cic(args.cic)},
-        "weights_published": False,
-        "weights_note": "UNSW-NB15 and CIC-IDS2017 are research-use only; weights are withheld pending the owner's decision.",
+        "weights_published": True,
+        "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. UNSW-NB15 and CIC-IDS2017 are research-use only.",
         "seconds": round(time.time() - started, 1),
     }
     args.out.mkdir(parents=True, exist_ok=True)
+    if KEPT:
+        from pashupatastra import trees
+
+        (args.out / "model.json").write_text(json.dumps({
+            **trees.compact(KEPT["booster"].dump_model(), KEPT["features"]), "threshold": KEPT["threshold"],
+            "split": "CIC-IDS2017 by day: trained Monday-Wednesday", "licence": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026."}), encoding="utf-8")
     (args.out / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     for key, d in results["datasets"].items():
         for name, m in d["detectors"].items():

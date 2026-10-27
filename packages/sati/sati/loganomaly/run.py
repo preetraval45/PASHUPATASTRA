@@ -169,10 +169,16 @@ def main() -> int:
              **({"template": data.attrs["templates"][f]} if f in data.attrs.get("templates", {}) else {})}
             for f, g in importance
         ],
-        "weights_published": False,
-        "weights_note": "LogHub is research-use only; weights are withheld pending the owner's decision.",
+        "weights_published": True,
+        "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. LogHub is research-use only.",
         "seconds": round(time.time() - started, 1),
     }
+    args.out.mkdir(parents=True, exist_ok=True)
+    from pashupatastra import trees
+
+    (args.out / "model.json").write_text(json.dumps({
+        **trees.compact(booster.dump_model(), list(Xtr.columns)), "threshold": float(t_model),
+        "vocabulary": vocab, "dataset": spec["name"], "licence": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026."}), encoding="utf-8")
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     for name, m in results["test"].items():
