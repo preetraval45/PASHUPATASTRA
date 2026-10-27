@@ -11,7 +11,6 @@ by their distinctive file names, because Kaggle's mount layout has changed
 before (the first run looked in /kaggle/input/unsw-nb15 and found nothing).
 """
 
-import os
 import shutil
 import subprocess
 import sys
@@ -23,12 +22,12 @@ WORK = "/kaggle/working"
 print(subprocess.run(["find", "/kaggle/input", "-maxdepth", "4"], capture_output=True, text=True).stdout[:4000])
 subprocess.run(["git", "clone", "--quiet", REPO, f"{WORK}/repo"], check=True)
 subprocess.run(["git", "-C", f"{WORK}/repo", "checkout", "--quiet", COMMIT], check=True)
+# packages/core supplies pashupatastra.trees for the export, with its dependencies (ulid, pydantic).
+subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "-e", f"{WORK}/repo/packages/core"], check=True)
 subprocess.run(
     [sys.executable, "-m", "sati.netdetect.run", "--out", f"{WORK}/out",
      "--unsw", "/kaggle/input", "--cic", "/kaggle/input"],
     check=True,
     cwd=f"{WORK}/repo/packages/sati",
-    # packages/core supplies pashupatastra.trees, which exports the model at the end.
-    env={**os.environ, "PYTHONPATH": f"{WORK}/repo/packages/core"},
 )
 shutil.rmtree(f"{WORK}/repo", ignore_errors=True)
