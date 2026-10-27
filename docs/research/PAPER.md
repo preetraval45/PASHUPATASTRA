@@ -386,10 +386,51 @@ in its top three. Categories are proposed by rule and await the author's assignm
 
 ## 8. Failure analysis
 
-*(To write once the corrected corpus has been run at N≥3. The question the
-outline poses — what the escalation cases have in common — is answerable from
-the per-scenario table and the recorded escalation causes, and answering it from
-a single run of each scenario would be over-reading.)*
+> *Draft written by Claude for the author to revise (RP-35). The categories are
+> proposed by a fixed rule ([review/rp34-failures.md](review/rp34-failures.md),
+> `scripts/failuresheet.py`) and are not yet assigned by the author (RP-34), so
+> the counts below are the rule's, not a reader's judgement. The question about
+> escalation cases waits on the 20 labelled incidents (RP-13).*
+
+**Where Sati's root-cause model fails, and where the LLMs fail.** On the 100
+RCAEval cases of §7.3, Katyayani misses 6, llama3 45 and qwen2.5:7b 49.
+Katyayani's misses are not where the LLMs succeed: of the cases one gets right
+and the other wrong, llama3 alone is right twice and qwen2.5:7b once
+([rcaeval-diagnosis.md](models/rcaeval-diagnosis.md)).
+
+- **Packet loss is the shared blind spot.** Half of Katyayani's misses are
+  packet-loss faults, and loss is the fault every diagnoser misses most. In 4
+  of its 6 misses the true root is not among the three services whose metrics
+  moved most. Dropped packets show up where traffic arrives late, in the
+  callers' latency, while the root's own CPU and memory stay quiet. A ranker
+  that reads how much each service moved cannot see a fault that does not move
+  its own service.
+- **The two LLMs fail differently.** llama3 most often names a service next to
+  the root (16 of its 45 misses), with the root in its top three. qwen2.5:7b
+  most often names the loudest service when it is not the root (20 of 49), and
+  declines on 7 cases. Neither beats the no-learning rule of naming the loudest
+  service.
+- **The simulator-trained ranker fails for a structural reason.** Its misses
+  (65) are mostly a service near the root (25) or none the rule can explain
+  (32). This is consistent with §7.2: it learned to read which services are
+  anomalous and how they connect, and on real systems, and on the live stack's
+  flat baselines, that signal is either different or saturated.
+
+**On the live stack, a bad release is the hard case.** Katyayani, trained on
+RCAEval, ranks the root first for every CPU and memory fault but for only 0.620
+of bad releases ([katyayani-live.md](models/katyayani-live.md)). In that stack a
+failed dependency fails its caller's request too, so a bad release raises the
+error rate all the way up the call chain, and the loudest error is not at the
+root.
+
+**Verification and fusion fail by trading one error for another.** Mahagauri,
+tuned honestly, keeps early all-clears within budget only by rarely confirming
+recovery (§7.2), and Siddhidatri buys recall with false alarms. Both failures
+are ones a threshold cannot fix: the inputs do not separate the cases sharply
+enough. Better signals are the next step, not better tuning.
+
+**Not yet answered: what the escalation cases share.** That needs the labelled
+incidents with escalation answers (RP-13), run at N ≥ 3 (RP-15).
 
 ## 9. Limitations and threats to validity
 
@@ -460,7 +501,7 @@ the results rather than derived from them.)*
 |---|---|
 | §2 Background and related work | A literature review; nothing else blocks it |
 | §7 Evaluation prose | §7.1 baselines and §7.2 Sati's own models drafted 26 Oct for the author's revision, each guarded by a CI test against the generated tables; diagnosis on the 20 labelled incidents waits on RP-13 and RP-15 |
-| §8 Failure analysis | The same runs |
+| §8 Failure analysis | Drafted 27 Oct from the RCAEval failures (categories proposed by rule, awaiting the author's assignment, RP-34); the escalation question waits on RP-13 and RP-15 |
 | §10 Conclusion | §8 |
 | Human arm | Recruiting operators |
 | Naive LLM arm | Done 19 Oct: three local models in both LLM arms, N = 3 (Table 1). Larger or hosted models are not yet run |

@@ -2,7 +2,7 @@
 
 # RP-34 review sheet: wrong RCAEval diagnoses, with proposed categories
 
-200 failures (missed RCA@1, abstained or errored) across 5 diagnosers on the declared 100-case sample. Each one is in [rp34-failures.csv](rp34-failures.csv) with a **proposed** category from a fixed rule (see the script). The `owner_category` column is the owner's to fill; RP-34 is done when every row has one.
+199 failures (missed RCA@1, abstained or errored) across 5 diagnosers on the declared 100-case sample. Each one is in [rp34-failures.csv](rp34-failures.csv) with a **proposed** category from a fixed rule (see the script). The `owner_category` column is the owner's to fill; RP-34 is done when every row has one.
 
 ## Proposed categories, by diagnoser
 
@@ -12,16 +12,16 @@
 | citation dropped | 0 | 2 | 0 | 0 | 0 |
 | red herring followed | 0 | 11 | 20 | 34 | 4 |
 | weak signal at the root | 4 | 4 | 2 | 0 | 4 |
-| right area, wrong service | 1 | 16 | 3 | 0 | 25 |
+| right area, wrong service | 0 | 16 | 3 | 0 | 25 |
 | unexplained | 2 | 12 | 17 | 0 | 32 |
-| **total** | 7 | 45 | 49 | 34 | 65 |
+| **total** | 6 | 45 | 49 | 34 | 65 |
 
 ## Failures by injected fault
 
 | Fault | katyayani | llm:llama3 | llm:qwen2.5:7b | loudest | sati-kaal |
 |---|---:|---:|---:|---:|---:|
 | cpu | 0 | 4 | 3 | 2 | 6 |
-| delay | 1 | 5 | 5 | 2 | 12 |
+| delay | 0 | 5 | 5 | 2 | 12 |
 | disk | 0 | 3 | 7 | 2 | 8 |
 | f1 | 0 | 1 | 2 | 1 | 2 |
 | f2 | 0 | 2 | 1 | 1 | 1 |

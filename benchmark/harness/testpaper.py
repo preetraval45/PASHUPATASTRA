@@ -59,3 +59,21 @@ def test_every_number_in_section_7_2_is_in_a_generated_model_table():
             if not any(v in tables for v in variants):
                 missing.append(n)
     assert not missing, f"§7.2 cites numbers no model table contains: {missing}"
+
+
+def test_every_number_in_section_8_is_in_the_table_it_links():
+    """§8 is drafted from generated tables too; the same per-paragraph rule."""
+    paper = (ROOT / "docs" / "research" / "PAPER.md").read_text(encoding="utf-8")
+    start = paper.index("## 8. Failure analysis")
+    body = paper[start : paper.index("\n## 9", start)]
+    research = ROOT / "docs" / "research"
+    missing = []
+    for block in re.split(r"\n\s*\n|\n(?=- )", body):
+        linked = [research / f for f in re.findall(r"\(((?:models|review)/[\w.-]+\.md)\)", block)]
+        tables = "\n".join(p.read_text(encoding="utf-8") for p in linked if p.exists())
+        if not tables:
+            continue  # a paragraph with no table link cites no table numbers
+        for n in sorted(set(re.findall(r"\b\d+\.\d{1,4}\b", block))):
+            if n not in tables:
+                missing.append(n)
+    assert not missing, f"§8 cites numbers its linked tables do not contain: {missing}"
