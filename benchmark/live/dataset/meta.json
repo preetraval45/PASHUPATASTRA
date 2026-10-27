@@ -1,0 +1,70 @@
+{
+ "plan_sha256": "83f1c3a58b3b08c5ddb9068b406ed9d53c972331901ad79c69b939d9a5f8a614",
+ "services": [
+  "account",
+  "billing",
+  "db",
+  "ledger",
+  "orders",
+  "search",
+  "stock",
+  "web"
+ ],
+ "graph": {
+  "name": "live stack (RP-19)",
+  "calls": [
+   [
+    "web",
+    "orders"
+   ],
+   [
+    "web",
+    "search"
+   ],
+   [
+    "web",
+    "account"
+   ],
+   [
+    "orders",
+    "stock"
+   ],
+   [
+    "orders",
+    "billing"
+   ],
+   [
+    "orders",
+    "account"
+   ],
+   [
+    "search",
+    "stock"
+   ],
+   [
+    "billing",
+    "ledger"
+   ],
+   [
+    "stock",
+    "db"
+   ],
+   [
+    "ledger",
+    "db"
+   ],
+   [
+    "account",
+    "db"
+   ]
+  ],
+  "layer": {
+   "web": "edge",
+   "orders": "api",
+   "db": "store"
+  },
+  "kind": {}
+ },
+ "incidents": 200,
+ "errors": {}
+}
