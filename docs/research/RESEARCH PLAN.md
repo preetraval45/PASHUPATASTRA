@@ -422,7 +422,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
   *Steps:* run Sati-RCA zero-shot (no training on this benchmark), the best LLM baseline, and the benchmark's own published baselines where they are comparable. **You** write the §7 subsection and update §9's first threat.
   *Done when:* there is a generated table from data this repository did not author.
 
-- [ ] **RP-34 · Failure categorisation**
+- [~] **RP-34 · Failure categorisation** — *Claude's part done 27 Oct for RCAEval: `scripts/failuresheet.py` extracts all 200 wrong, abstained or errored diagnoses (5 diagnosers × 100 declared cases) into [review/rp34-failures.csv](review/rp34-failures.csv). Each row has a category proposed by a fixed rule (red herring followed, weak signal at the root, right area wrong service, citation dropped, abstained, provider error, unexplained), with a summary in [rp34-failures.md](review/rp34-failures.md). Packet loss is the fault every diagnoser misses most. Remains: the owner fills `owner_category` on every row; then Claude tabulates. Escalation cases come with RP-29.*
   **Both** · Claude 1 session; You 4 h · Depends: RP-29, RP-33
   *Steps:* **Claude** extracts every wrong diagnosis (Sati and LLM) and every escalation into a review sheet, and proposes categories: missing telemetry, red herring followed, unseen topology shape, unseen fault type, right cause but wrong action, citation dropped, policy ceiling. **You** assign every case. **Claude** tabulates.
   *Done when:* every failure is categorised by you.
