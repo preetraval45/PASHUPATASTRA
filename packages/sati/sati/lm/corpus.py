@@ -14,6 +14,12 @@ allow that:
   prepare derivative works; NVD's own data is a U.S. government work. About
   20x the rest of the corpus put together: v1 (1.1M tokens) overfitted after
   a few hundred steps, because the corpus was too small for the model.
+* **GitHub Security Advisories** (from v3, `more=True`) — reviewed and
+  unreviewed advisories, through OSV's GHSA export. The advisory database is
+  CC-BY-4.0. Its *details* are often longer than NVD's one-line descriptions
+  (affected versions, the patch, a workaround). Advisories that only copy a
+  CVE description are removed by the deduplication.
+* **ATT&CK Mobile and ICS** (from v3) — the same MITRE licence as enterprise.
 * **This repository's own writing** — the training course and the docs.
 
 LogHub is deliberately excluded: it is research-use only (datasheets.md).
@@ -36,6 +42,10 @@ KEV = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabil
 CWE = "https://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
 NVD = "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{year}.json.gz"
 NVD_YEARS = range(2002, 2027)
+GHSA_ECOSYSTEMS = ("npm", "PyPI", "Maven", "Go", "NuGet", "RubyGems", "crates.io", "Packagist", "GitHub%20Actions")
+OSV = "https://osv-vulnerabilities.storage.googleapis.com/{ecosystem}/all.zip"
+ATTACK_MOBILE = "https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json"
+ATTACK_ICS = "https://raw.githubusercontent.com/mitre/cti/master/ics-attack/ics-attack.json"
 
 CITATION = re.compile(r"\(Citation: [^)]*\)")
 MARKUP = re.compile(r"<[^>]+>")
@@ -170,6 +180,40 @@ def nvd_documents(cache: Path, years: range = NVD_YEARS) -> list[dict]:
     return docs
 
 
+def ghsa_record(item: dict) -> dict | None:
+    """One OSV record → a document, if it is a GitHub advisory with real text."""
+    if not str(item.get("id", "")).startswith("GHSA-") or item.get("withdrawn"):
+        return None
+    summary, details = (item.get("summary") or "").strip(), _clean(item.get("details") or "")
+    if len(details) < 120:
+        return None
+    aliases = [a for a in item.get("aliases", []) if a.startswith("CVE-")]
+    header = f"{item['id']}" + (f" ({', '.join(aliases)})" if aliases else "")
+    return {"source": "github-advisory", "id": item["id"], "text": f"{header}: {summary}\n{details}"}
+
+
+def ghsa_documents(cache: Path) -> list[dict]:
+    """GitHub advisories across the main package ecosystems (OSV's per-ecosystem exports)."""
+    import io
+    import urllib.error
+    import zipfile
+
+    seen, docs = set(), []
+    for ecosystem in GHSA_ECOSYSTEMS:
+        try:
+            archive = zipfile.ZipFile(io.BytesIO(_get(OSV.format(ecosystem=ecosystem), cache)))
+        except urllib.error.HTTPError:
+            continue
+        for name in archive.namelist():
+            if not name.startswith("GHSA-") or name in seen:
+                continue
+            seen.add(name)
+            doc = ghsa_record(json.loads(archive.read(name)))
+            if doc:
+                docs.append(doc)
+    return docs
+
+
 def repo_documents(root: Path) -> list[dict]:
     docs = []
     for path in sorted([*root.glob("docs/**/*.md"), root / "apps" / "web" / "lib" / "training.ts"]):
@@ -183,7 +227,7 @@ def repo_documents(root: Path) -> list[dict]:
     return docs
 
 
-def build(cache: Path, root: Path, clean: bool = True, cve: bool = False) -> list[dict]:
+def build(cache: Path, root: Path, clean: bool = True, cve: bool = False, more: bool = False) -> list[dict]:
     docs = [
         *stix_documents(ATTACK, "mitre-attack", cache),
         *procedure_documents(cache),
@@ -192,6 +236,9 @@ def build(cache: Path, root: Path, clean: bool = True, cve: bool = False) -> lis
         *kev_documents(cache),
         *repo_documents(root),
         *(nvd_documents(cache) if cve else []),
+        *(stix_documents(ATTACK_MOBILE, "mitre-attack-mobile", cache) if more else []),
+        *(stix_documents(ATTACK_ICS, "mitre-attack-ics", cache) if more else []),
+        *(ghsa_documents(cache) if more else []),
     ]
     if not clean:
         return docs

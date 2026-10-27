@@ -203,6 +203,7 @@ def main() -> int:
     parser.add_argument("--no-cve", action="store_true", help="leave the NVD descriptions out (v1's corpus)")
     parser.add_argument("--eval-questions", type=int, default=1200)
     parser.add_argument("--tiny", action="store_true")
+    parser.add_argument("--version", default="v2", help="v3 adds GitHub advisories and ATT&CK Mobile/ICS to the corpus")
     args = parser.parse_args()
 
     started = time.time()
@@ -215,7 +216,8 @@ def main() -> int:
         return torch.autocast("cuda", dtype=dtype) if device == "cuda" else nullcontext()
     args.out.mkdir(parents=True, exist_ok=True)
 
-    docs = corpus_mod.build(args.cache, args.root, cve=not (args.no_cve or args.tiny))
+    docs = corpus_mod.build(args.cache, args.root, cve=not (args.no_cve or args.tiny),
+                            more=args.version != "v2" and not args.tiny)
     train_docs, test_docs = corpus_mod.split(docs)
     by_source: dict[str, int] = {}
     for d in docs:
@@ -289,10 +291,10 @@ def main() -> int:
         out = model.generate(ids, 24 if args.tiny else 80, temperature=0.7)
         samples.append({"prompt": prompt, "completion": tok.decode(out[0].tolist()[ids.size(1):])})
 
-    torch.save({"config": cfg.__dict__, "state": model.state_dict()}, args.out / "kushmanda-v2.pt")
+    torch.save({"config": cfg.__dict__, "state": model.state_dict()}, args.out / f"kushmanda-{args.version}.pt")
     best_step = min((c for c in curve if c["phase"] == "pretrain"), key=lambda c: c["val_loss"])["step"]
     results = {
-        "model": "sati-kushmanda-v2",
+        "model": f"sati-kushmanda-{args.version}",
         "architecture": "decoder-only transformer: RMSNorm, RoPE, SwiGLU, fused causal attention, tied embeddings",
         "parameters": model.parameters_count(),
         "config": cfg.__dict__,
