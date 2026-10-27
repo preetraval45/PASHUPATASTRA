@@ -74,6 +74,29 @@ Two variants were measured beside v0, pooled over held-out groups:
   err, so **v1 + 3σ agreement is the variant to serve**. Even so, it is not
   yet within budget, and it must not close incidents unattended.
 
+## v2 (run 40577370883, 27 October 2026)
+
+v0 and v1 chose their threshold from the model's predictions on its own
+training data, which are over-confident. v2 chooses on out-of-fold predictions
+and also chooses how long recovery must hold (3, 5 or 10 minutes).
+
+| Verifier | Premature all-clear ↓ | Confirmed | Unconfirmed |
+|---|---:|---:|---:|
+| v2, out-of-fold, hold chosen | 0.015 | 0.006 | 0.979 |
+| v2 + 3σ agreement | 0.021 | 0.092 | 0.887 |
+
+- **It is within the 5% budget on unseen machines for the first time.**
+- **But almost only by staying silent.** With honest tuning, the only
+  settings that meet the budget are strict ones (threshold 0.96–0.98, a
+  10-minute hold), and those confirm almost nothing. With the 3σ check it
+  confirms 0.092 of recoveries and hands 0.887 back to a person.
+- So the threshold was never the real problem. The model does not separate
+  "recovered" from "not yet" sharply enough to be both safe and useful. The
+  next step is better signal, not better tuning: for example, features
+  comparing the incident's own metrics to the minutes just before it ended.
+  Until then, when it declares an incident over it is almost always right,
+  but it rarely does, and people make the call.
+
 ## Known limitations and what would fix them
 
 - **Labels are the operators' judgement.** SMD marks when operators

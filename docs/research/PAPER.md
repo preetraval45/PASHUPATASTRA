@@ -321,6 +321,12 @@ comes from retrieval and the model writes around it.
 - Mahagauri, the recovery verifier, declared 0.220 of incidents over while
   still anomalous. Requiring agreement with a 3σ check lowers that to 0.070,
   but confirms only 0.223 of recoveries ([mahagauri.md](models/mahagauri.md)).
+  Choosing the threshold on out-of-fold scores, instead of the model's
+  over-confident scores on its own training data (v2), brings early
+  all-clears within budget for the first time (0.021 with the 3σ check). But
+  then it confirms only 0.092 of recoveries: honest tuning shows the model
+  cannot separate "recovered" from "not yet" sharply enough to be both safe and
+  useful.
 - Siddhidatri's fusion matched Shailaputri alone on F1 (0.537 against 0.539)
   while raising false alarms from 3.8 to 47.8
   ([siddhidatri.md](models/siddhidatri.md)).
