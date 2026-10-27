@@ -112,6 +112,39 @@ MODELS = {
     },
 }
 
+RESEARCH_NOTE = ("**Research use only, not for commercial use (CC BY-NC-SA 4.0).** Trained on data whose terms "
+                 "allow research use only; released on that basis by the owner's decision (27 Oct 2026).")
+MODELS["kalaratri"] = {
+    "title": "Kalaratri: Log Anomaly Detector", "subtitle": "Flags failing sessions from the counts of their log events",
+    "files": {"kalaratri.json": "kalaratri.json"}, "dataset": "sati-kalaratri-log-anomaly-time-split",
+    "licence": "CC BY-NC-SA 4.0",
+    "description": card(
+        "Reads a log session (an HDFS block's events) as counts of event templates and says whether it is failing.",
+        "LightGBM over event-template counts, trained on the earlier 60% of sessions in log order, with the "
+        "threshold chosen on the next 20%; exported as JSON with its event vocabulary.",
+        "LogHub HDFS (research or academic use only).",
+        "On the later 20% of sessions: F1 0.966, against 0.866 for the classic PCA detector. On BGL, where "
+        "failures are rarer, the same design reaches 0.355: HDFS alone flatters log anomaly detection.",
+        RESEARCH_NOTE),
+    "usage": TREES_USAGE.replace("MODEL.json", "kalaratri.json") + "\nFeatures are counts of the event templates "
+             "in `vocabulary`, in that order.\n",
+}
+MODELS["chandraghanta"] = {
+    "title": "Chandraghanta: Network Intrusion Detector",
+    "subtitle": "Flags malicious network flows, tested on attack families it never saw",
+    "files": {"chandraghanta.json": "chandraghanta.json"}, "dataset": "sati-chandraghanta-ids-split-benchmark",
+    "licence": "CC BY-NC-SA 4.0",
+    "description": card(
+        "Classifies a network flow (CICFlowMeter features) as benign or attack.",
+        "LightGBM with class weighting, the threshold chosen on a validation slice of the training days; "
+        "exported as JSON.",
+        "CIC-IDS2017 split by day: trained Monday to Wednesday (research use only).",
+        "On Thursday and Friday, where every attack family is unseen, F1 0.453; on a random split the same model "
+        "scores 0.997. It catches web attacks it never saw and misses port scans and bots.",
+        RESEARCH_NOTE),
+    "usage": TREES_USAGE.replace("MODEL.json", "chandraghanta.json"),
+}
+
 SMD_NOTE = "Apache-2.0. Trained on the Server Machine Dataset (SMD, MIT licence; Su et al., KDD 2019)."
 for form, title, subtitle, job, results in (
     ("shailaputri", "Shailaputri: Server Anomaly Detector", "Flags anomalous minutes across a server's metrics",
