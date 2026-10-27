@@ -6,7 +6,7 @@
 #
 # How:
 #   1. Fill every TODO below. Plain sentences are fine; keep labels short.
-#   2. Save as `benchmark/answerkeys/rp13.yaml` (drop `.template`).
+#   2. Save a copy as `benchmark/answerkeys/rp13.yaml`.
 #   3. Commit that file ALONE:  git add benchmark/answerkeys/rp13.yaml
 #                              git commit -m "test(rp-13): answer keys, before any run"
 #   4. Tell Claude. Claude then builds SC-0009..SC-0020 from your specs and runs
