@@ -1,3 +1,4 @@
+import { TryKatyayani } from "@/components/trykatyayani";
 import { isOurs, isShown, shownEntries, shownName } from "@/lib/modelnames";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -561,6 +562,10 @@ export default function ModelsPage() {
             scored on exactly the same incidents. Hover a row for its interval.
           </p>
         </div>
+
+        <Panel title="Try it" aside="runs live in the API">
+          <TryKatyayani />
+        </Panel>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Panel title="A system it has never seen" aside="top-1 accuracy">

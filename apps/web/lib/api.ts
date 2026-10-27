@@ -1178,3 +1178,23 @@ export interface BlastRadius {
 
 export const getBlastRadius = (entityKey: string) =>
   get<BlastRadius>(`/topology/blast-radius/${encodeURIComponent(entityKey)}`);
+
+/** Katyayani, served live: incidents it never trained on, and its ranking of one. */
+export type KatyayaniCases = {
+  trained_on: { incidents: number; systems: string[] };
+  reserved: { incidents: number; "rca@1": number | null };
+  cases: { id: string; system: string; services: number }[];
+};
+
+export type KatyayaniRanking = {
+  case: string;
+  system: string;
+  ranking: { service: string; score: number; evidence: Record<string, number | null> }[];
+  root: string;
+  correct: boolean;
+  position: number;
+};
+
+export const getKatyayaniCases = () => get<KatyayaniCases>("/models/katyayani/cases");
+export const rankKatyayani = (id: string) =>
+  get<KatyayaniRanking>(`/models/katyayani/cases/${encodeURIComponent(id)}`);
