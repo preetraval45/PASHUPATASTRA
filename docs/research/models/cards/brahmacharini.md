@@ -59,13 +59,13 @@ The split is **by source**:
 
 At test time, every procedure ranks all 706 techniques.
 
-## Metrics (snapshot, run 39181027757; test = 1,727 procedures)
+## Metrics (run 40393999333; test = 1,727 procedures)
 
 | Retriever | Recall@1 | Recall@5 | Recall@10 | MRR |
 |---|---:|---:|---:|---:|
-| Brahmacharini v0 | 0.609 | 0.790 | 0.845 | 0.691 |
-| BM25 | 0.270 | 0.481 | 0.577 | 0.373 |
-| Hashing embedder (Smriti's previous retriever) | 0.112 | 0.212 | 0.269 | 0.168 |
+| Brahmacharini v0 | 0.614 | 0.802 | 0.854 | 0.699 |
+| BM25 | 0.268 | 0.478 | 0.580 | 0.372 |
+| Hashing embedder (Smriti's previous retriever) | 0.120 | 0.226 | 0.283 | 0.177 |
 
 ## Known limitations
 

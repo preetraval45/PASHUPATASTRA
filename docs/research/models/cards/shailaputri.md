@@ -37,13 +37,15 @@ family out**: trained on four families and tested on the fifth. It is scored
 online by the same harness as the four statistical strategies, on the same
 series.
 
-## Metrics (snapshot, run 39169841856; mean across held-out families)
+## Metrics (run 40406026750, seed 7; mean across held-out families)
 
 | Detector | F1 | Recall | False alarms / 1000 | Lead |
 |---|---:|---:|---:|---:|
-| Shailaputri v0 | 0.457 | 0.824 | 226.5 | 195 |
-| seasonal-robust-z | 0.312 | 0.761 | 228.7 | 241 |
-| seasonal-naive | 0.346 | 0.930 | 372.2 | 240 |
+| Shailaputri v0 | 0.424 | 0.739 | 24.1 | 179.3 |
+| seasonal-robust-z | 0.312 | 0.761 | 74.7 | 241.3 |
+| seasonal-naive | 0.346 | 0.930 | 74.7 | 240.0 |
+
+Across 5 training seeds, F1 is 0.430 [0.394, 0.474] and false alarms per 1000 are 24.3 [20.0, 32.8]: read the spread, not one run. An earlier version of this card showed false alarms near 230 for both detectors. Those came from a scoring bug that measured 1000 × (1 − precision), since fixed ([adr/SatiDetect](../../../adr/SatiDetect.md)).
 
 ## Known limitations
 
