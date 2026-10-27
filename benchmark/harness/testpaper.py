@@ -73,7 +73,7 @@ def test_every_number_in_section_8_is_in_the_table_it_links():
         tables = "\n".join(p.read_text(encoding="utf-8") for p in linked if p.exists())
         if not tables:
             continue  # a paragraph with no table link cites no table numbers
-        for n in sorted(set(re.findall(r"\b\d+\.\d{1,4}\b", block))):
+        for n in sorted(set(re.findall(r"(?<!§)\b\d+\.\d{1,4}\b", block))):  # not a section, "§7.3"
             if n not in tables:
                 missing.append(n)
     assert not missing, f"§8 cites numbers its linked tables do not contain: {missing}"
