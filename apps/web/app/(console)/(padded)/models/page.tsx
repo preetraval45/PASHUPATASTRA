@@ -1,3 +1,4 @@
+import { isOurs, isShown, shownEntries, shownName } from "@/lib/modelnames";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -189,9 +190,9 @@ export default function ModelsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[rgb(var(--edge))]">
-                    {Object.entries(s.mean_across_families).map(([name, m]) => (
+                    {shownEntries(s.mean_across_families).map(([name, m]) => (
                       <tr key={name}>
-                        <td className="py-2 pr-3">{name === "shailaputri-v0" ? <strong>Shailaputri</strong> : name}</td>
+                        <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
                         <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>
                         <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
                         <td className="tnum py-2 pr-3 text-right">{m.false_alarms_per_1000.toFixed(1)}</td>
@@ -234,9 +235,9 @@ export default function ModelsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
-                  {Object.entries(BRAHMACHARINI.test).map(([name, m]) => (
+                  {shownEntries(BRAHMACHARINI.test).map(([name, m]) => (
                     <tr key={name}>
-                      <td className="py-2 pr-3">{name.startsWith("brahmacharini") ? <strong>Brahmacharini</strong> : name}</td>
+                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
                       <td className="tnum py-2 pr-3 text-right">{m["recall@1"].toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m["recall@5"].toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m["recall@10"].toFixed(3)}</td>
@@ -263,7 +264,7 @@ export default function ModelsPage() {
           {(["unsw", "cic"] as const).map((key) => {
             const d = CHANDRAGHANTA.datasets[key];
             const ref = d.reference_random_split;
-            const detectors = Object.keys(d.detectors);
+            const detectors = Object.keys(d.detectors).filter(isShown);
             return (
               <Panel
                 key={key}
@@ -282,9 +283,9 @@ export default function ModelsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[rgb(var(--edge))]">
-                      {[...Object.entries(d.detectors), ...(ref ? [["random split (reference only)", ref["chandraghanta-v0"]] as const] : [])].map(([name, m]) => (
+                      {[...shownEntries(d.detectors), ...(ref ? [["random split (reference only)", ref["chandraghanta-v0"]] as const] : [])].map(([name, m]) => (
                         <tr key={name} className={name.startsWith("random") ? "text-[rgb(var(--faint))]" : undefined}>
-                          <td className="py-2 pr-3">{name.startsWith("chandraghanta") ? <strong>{name.replace("chandraghanta-v0", "Chandraghanta")}</strong> : name}</td>
+                          <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
                           <td className="tnum py-2 pr-3 text-right">{m.precision.toFixed(3)}</td>
                           <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
                           <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>
@@ -302,7 +303,7 @@ export default function ModelsPage() {
                         <th className="py-2 pr-3 text-right font-normal">Flows</th>
                         <th className="py-2 pr-3 font-normal">Seen in training</th>
                         {detectors.map((n) => (
-                          <th key={n} className="py-2 pr-3 text-right font-normal">{n.replace("chandraghanta-v0", "Chandraghanta")} recall</th>
+                          <th key={n} className="py-2 pr-3 text-right font-normal">{shownName(n)} recall</th>
                         ))}
                       </tr>
                     </thead>
@@ -404,7 +405,7 @@ export default function ModelsPage() {
                 </thead>
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
                   {Object.entries(SIM_TO_REAL.test).flatMap(([system, rankers]) =>
-                    Object.entries(rankers).map(([name, m]) => (
+                    shownEntries(rankers).map(([name, m]) => (
                       <tr key={`${system}-${name}`}>
                         <td className="py-2 pr-3">{system === "ob" ? "Online Boutique" : system === "ss" ? "Sock Shop" : system}</td>
                         <td className="py-2 pr-3">{name.startsWith("katyayani") ? <strong>Trained on simulator</strong> : name}</td>
@@ -443,9 +444,9 @@ export default function ModelsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
-                  {Object.entries(SKANDAMATA.test).map(([name, m]) => (
+                  {shownEntries(SKANDAMATA.test).map(([name, m]) => (
                     <tr key={name}>
-                      <td className="py-2 pr-3">{name.startsWith("skandamata") ? <strong>Skandamata</strong> : name}</td>
+                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
                       {[m["hit@1"], m["recall@5"], m["precision@5"], m.mrr, m["ndcg@10"]].map((v, i) => (
                         <td key={i} className="tnum py-2 pr-3 text-right">{v.toFixed(3)}</td>
                       ))}
@@ -490,9 +491,9 @@ export default function ModelsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
-                  {Object.entries(MAHAGAURI.pooled).map(([name, v]) => (
+                  {shownEntries(MAHAGAURI.pooled).map(([name, v]) => (
                     <tr key={name}>
-                      <td className="py-2 pr-3">{name.startsWith("mahagauri") ? <strong>Mahagauri</strong> : name}</td>
+                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
                       <td className="tnum py-2 pr-3 text-right">{v.premature_rate.toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{v.confirmed_rate.toFixed(3)}</td>
                       <td className="tnum py-2 text-right">{v.unconfirmed_rate.toFixed(3)}</td>
@@ -533,9 +534,9 @@ export default function ModelsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
-                  {Object.entries(run.test).map(([name, m]) => (
+                  {shownEntries(run.test).map(([name, m]) => (
                     <tr key={name}>
-                      <td className="py-2 pr-3">{name.startsWith("kalaratri") ? <strong>Kalaratri</strong> : name}</td>
+                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
                       <td className="tnum py-2 pr-3 text-right">{m.precision.toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>

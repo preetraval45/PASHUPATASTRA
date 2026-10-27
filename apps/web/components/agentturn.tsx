@@ -13,6 +13,7 @@
 
 import type { AuditRecord } from "@/lib/api";
 import { Ident } from "@/components/ui";
+import { servedName } from "@/lib/modelnames";
 
 type TraceEntry = {
   hop: number;
@@ -209,7 +210,7 @@ export function AgentTurn({ record }: { record: AuditRecord }) {
             the version is written by hand, and is therefore wrong exactly when
             someone edited the prompt and forgot to bump it. */}
         <p className="break-words text-[rgb(var(--faint))]">
-          <span className="mono">{detail.model}</span>
+          <span className="mono">{servedName(detail.model)}</span>
           {detail.provider && ` via ${detail.provider}`}
           {detail.prompt_version && ` · prompt v${detail.prompt_version}`}
           {detail.prompt_digest && (

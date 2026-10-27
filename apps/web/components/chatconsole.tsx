@@ -24,6 +24,7 @@ import { Icon } from "@/components/sidebar";
 import { Badge, Stated, statusForSeverity } from "@/components/ui";
 import { askAgent, askGeneral, type GeneralAnswer, type Incident, type ModelChoice } from "@/lib/api";
 import { MODELS } from "@/lib/navadurga";
+import { servedName } from "@/lib/modelnames";
 
 type Turn = IncidentTurn | { role: "general"; answer: GeneralAnswer };
 
@@ -494,7 +495,7 @@ function GeneralTurn({ answer }: { answer: GeneralAnswer }) {
         <Badge status="neutral">general knowledge — not from your evidence</Badge>
         {answer.declined && <Badge status="warning">declined</Badge>}
         <span>{answer.tokens} tokens</span>
-        <span className="mono">{answer.model}</span>
+        <span className="mono">{servedName(answer.model)}</span>
       </p>
     </div>
   );

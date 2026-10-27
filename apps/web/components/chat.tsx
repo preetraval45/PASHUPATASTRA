@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { askAgent, tierLabel, type ChatAnswer, type Incident } from "@/lib/api";
 import { Badge, Ident } from "@/components/ui";
+import { servedName } from "@/lib/modelnames";
 
 /**
  * Four openings, in the order an analyst actually asks them: what happened,
@@ -314,7 +315,7 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
         {!answer.answerable && <Badge status="neutral">not in the evidence</Badge>}
         {answer.truncated && <Badge status="neutral">cut short</Badge>}
         <span>{answer.cached ? "from cache" : `${answer.tokens} tokens`}</span>
-        <span className="mono">{answer.model}</span>
+        <span className="mono">{servedName(answer.model)}</span>
         {answer.dropped_refs.length > 0 && (
           <span title="Cited by the model, but matching nothing that was retrieved">
             {answer.dropped_refs.length} unresolved citation

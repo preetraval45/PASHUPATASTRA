@@ -58,6 +58,10 @@ function findings(): Finding[] {
 
   const g = (kushmanda.sft?.grounded ?? {}) as Record<string, Record<string, Record<string, number>>>;
   const fused = siddhidatri.mean_across_groups["siddhidatri-v0"];
+  // The variant the site presents as Mahagauri: the one within its safety budget.
+  const mg = (mahagauri.pooled as Record<string, { premature_rate: number; confirmed_rate: number }>)[
+    "mahagauri-v2 + 3σ agreement"
+  ] ?? mahagauri.pooled["mahagauri-v0"];
   const alone = siddhidatri.mean_across_groups.shailaputri;
 
   const d1 = diagnosis["rca@1"] as Record<string, number>;
@@ -146,19 +150,16 @@ function findings(): Finding[] {
     {
       id: "negatives",
       kicker: "Reported as found",
-      title: "Two models that did not earn their place",
-      headline: pct(mahagauri.pooled["mahagauri-v0"].premature_rate),
+      title: "Safe, or useful — two models cannot yet be both",
+      headline: pct(mg.premature_rate),
       versus: [
-        { label: "Mahagauri v0 — incidents declared over too early", value: pct(mahagauri.pooled["mahagauri-v0"].premature_rate) },
-        {
-          label: "v1 with a second check — early, and still confirmed",
-          value: `${pct((mahagauri.pooled as Record<string, { premature_rate: number; confirmed_rate: number }>)["mahagauri-v1 + 3σ agreement"]?.premature_rate ?? 0)} · ${pct((mahagauri.pooled as Record<string, { premature_rate: number; confirmed_rate: number }>)["mahagauri-v1 + 3σ agreement"]?.confirmed_rate ?? 0)}`,
-        },
+        { label: "Mahagauri — incidents declared over too early", value: pct(mg.premature_rate) },
+        { label: "Mahagauri — recoveries it confirms", value: pct(mg.confirmed_rate) },
         { label: "Siddhidatri fusion F1 vs Shailaputri alone", value: `${f3(fused.f1)} vs ${f3(alone.f1)}` },
         { label: "fusion's false alarms vs Shailaputri alone", value: `${fused.false_alarms_per_1000.toFixed(1)} vs ${alone.false_alarms_per_1000.toFixed(1)}` },
       ],
       body:
-        "The recovery verifier called one incident in five over too early on unseen servers. Requiring a second check brings that near the 5% budget, but then most incidents go back to a human — safety bought with usefulness, so it still may not close incidents alone. Fusing three detectors bought recall with twelve times the false alarms. Both stay published, with what would fix them.",
+        "Tuned honestly, Mahagauri now stays inside its 5% safety budget on servers it never saw: it rarely calls an incident over too early. But it confirms few recoveries, so most incidents still go back to a person — the model needs sharper signals, not a different threshold. Fusing three detectors bought recall with far more false alarms. Both are published, with what would fix them.",
       href: "/models#mahagauri-results",
       tone: "negative",
     },
