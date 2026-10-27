@@ -143,8 +143,10 @@ print(f"F1 on a random split: {f1_score(yb, lgb.LGBMClassifier(n_estimators=300,
 test[test["attack"] == 1].groupby(label)["pred"].agg(["mean", "size"]).rename(columns={"mean": "recall", "size": "flows"}).round(3)'''),
             ("markdown", "**Reading it:** the gap between the two F1 scores is the point. A random split puts flows "
              "from the same attack session on both sides, so it measures recognition of known traffic, not "
-             "detection of new attacks. Per family, brute-force-like web attacks transfer; port scans and bots do "
-             "not. The attached results file holds Chandraghanta's own numbers (F1 0.997 random, 0.453 unseen days)."),
+             "detection of new attacks. This plain model (no class weighting, default threshold) falls to about "
+             "0.12 on unseen days; Chandraghanta, with class weighting and a threshold chosen on a validation "
+             "slice, reaches 0.453, still far below the 0.997 a random split suggests. Per family, web attacks "
+             "transfer; port scans and bots do not. Its numbers are in the attached results file."),
         ],
     },
     "kalaratri": {
@@ -175,10 +177,11 @@ pca = PCA(n_components=0.95).fit(normal)
 err = ((X[cut:] - pca.inverse_transform(pca.transform(X[cut:]))) ** 2).sum(axis=1)
 threshold = np.quantile(((normal - pca.inverse_transform(pca.transform(normal))) ** 2).sum(axis=1), 0.995)
 print(f"PCA baseline F1: {f1_score(y[cut:], err > threshold):.3f}")'''),
-            ("markdown", "**Reading it:** on HDFS, event counts separate failing sessions almost perfectly, and a "
-             "learned model beats the classic PCA detector (Xu et al., 2009). Kalaratri reaches F1 0.966 here, but "
-             "only 0.355 on BGL, where failures are rarer and less templated: HDFS alone flatters log anomaly "
-             "detection. Both results are in the attached files."),
+            ("markdown", "**Reading it:** on HDFS, event counts separate failing sessions almost perfectly; a plain "
+             "model on this copy's row order scores about 0.999, and beats the classic PCA detector (Xu et al., "
+             "2009). This copy's rows are not strictly in time order, so the split is easier than a true time "
+             "split: Kalaratri, split by each session's first timestamp, reaches 0.966. On BGL, where failures are "
+             "rarer and less templated, it reaches only 0.355. HDFS alone flatters log anomaly detection."),
         ],
     },
 
