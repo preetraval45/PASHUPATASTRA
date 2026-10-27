@@ -342,7 +342,8 @@ class SatiProvider:
         picks = [(p, m) for p, m in mitigator().recommend(text, k=5) if p >= RECOMMEND]
         if not picks:
             return None
-        lines = [f"- {m['name']} ({m['id']}) — {p:.0%}" for p, m in picks]
+        lines = ["The ATT&CK mitigations Skandamata ranks highest for what you describe (its confidence in "
+                 "brackets):", ""] + [f"- {m['name']} ({m['id']}) — {p:.0%}" for p, m in picks]
         return lines + ["", "Sources: " + " · ".join(m["url"] for _, m in picks)]
 
     def complete(self, prompt: str, request: ModelRequest) -> tuple[dict[str, Any], Usage]:
@@ -373,9 +374,7 @@ class SatiProvider:
             lines = self._mitigation_lines(question)
             if lines:
                 return {
-                    "answer": "\n".join(["The ATT&CK mitigations that defend against what you describe, most "
-                                         "likely first (Skandamata's confidence in brackets):", "", *lines,
-                                         "", "These are recommendations. Applying any of them is a decision "
+                    "answer": "\n".join([*lines, "", "These are recommendations. Applying any of them is a decision "
                                          "for a person, and Dharma authorises every action."]),
                     "topic": "security",
                     "area": "skandamata",
@@ -476,8 +475,7 @@ class SatiProvider:
             lines = self._mitigation_lines(" ".join(e.content for e in basis)) if basis else None
             if lines:
                 return {
-                    "answer": "\n".join(["From this incident's evidence, the ATT&CK mitigations that defend "
-                                         "against it, most likely first:", "", *lines, "",
+                    "answer": "\n".join(["From this incident's evidence:", "", *lines, "",
                                          "Recommendations only: a human authorises any change."]),
                     "evidence_refs": [e.ref for e in basis],
                     "answerable": True,
