@@ -6,8 +6,9 @@ The declared sample (`benchmark/external/rcaeval/subset.json`, `llm_sample`: 50 
 
 | Diagnoser | n | RCA@1 [95% CI] | RCA@3 [95% CI] | Abstained | Errors |
 |---|---:|---:|---:|---:|---:|
-| llm:llama3 | 100 | 0.540 [0.443, 0.634] | 0.770 [0.678, 0.842] | 0 | 0 |
-| llm:qwen2.5:7b | 100 | 0.540 [0.443, 0.634] | 0.650 [0.553, 0.736] | 4 | 0 |
+| Katyayani (trained on real RCAEval, other systems) | 100 | 0.930 [0.863, 0.966] | 0.970 [0.915, 0.990] | 0 | 0 |
+| llm:llama3 | 100 | 0.550 [0.452, 0.644] | 0.790 [0.700, 0.858] | 0 | 0 |
+| llm:qwen2.5:7b | 100 | 0.510 [0.413, 0.606] | 0.620 [0.522, 0.709] | 7 | 0 |
 | Loudest service (no learning) | 100 | 0.660 [0.563, 0.745] | 0.920 [0.850, 0.959] | 0 | 0 |
 | Sati-RCA (trained on Kaal, zero-shot) | 100 | 0.350 [0.264, 0.447] | 0.620 [0.522, 0.709] | 0 | 0 |
 
