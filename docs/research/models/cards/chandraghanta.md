@@ -64,7 +64,14 @@ appears only on the test days.
   - The benign-only PCA baseline catches more of the infiltration flows
     (0.72) and nothing of the web attacks.
 
-  The two detectors fail differently, which argues for running both.
+  The two detectors fail differently, which seemed to argue for running both.
+- **Running both did not pay (v1, Kaggle run of 27 Oct).** Flagging a flow
+  when *either* detector does catches the infiltration flows (0.722) and
+  keeps the web attacks. It also flags 0.058 of the 871,074 benign flows
+  instead of 0.001, so F1 on unseen days falls slightly (0.449 against 0.453)
+  and precision drops from 0.989 to 0.660. On UNSW-NB15, F1 falls from 0.897
+  to 0.733. The PCA detector's false alarms cost more than the attacks it adds.
+  v0 stays the model to serve; v1 is kept as a recorded negative result.
 - **TTL is not doing the work here.** The literature flags UNSW-NB15's TTL
   fields as near-labels. Removing them leaves F1 unchanged (0.897 both ways).
 - **UNSW-NB15's official test set is hard on false alarms.** One normal flow

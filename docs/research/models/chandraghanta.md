@@ -13,23 +13,24 @@ A LightGBM classifier over each flow's features, with its threshold chosen on a 
 | **chandraghanta-v0** | 0.821 | 0.988 | 0.897 | 0.2634 |
 | **chandraghanta-v0 without TTL** | 0.827 | 0.981 | 0.897 | 0.2522 |
 | pca (benign-only) | 0.581 | 0.993 | 0.733 | 0.8782 |
+| **chandraghanta-v1 (either)** | 0.579 | 0.999 | 0.733 | 0.8912 |
 
 Without the TTL fields, the score shows how much of the detection rests on TTL values that nearly identify the testbed's attack traffic, which a real network would not provide. Measured: removing them changes F1 by +0.000.
 
 ### Recall by attack family
 
-| Family | Flows | Seen in training | chandraghanta-v0 | chandraghanta-v0 without TTL | pca (benign-only) |
-|---|---:|---|---:|---:|---:|
-| Analysis | 677 | yes | 0.975 | 0.972 | 0.994 |
-| Backdoor | 583 | yes | 1.000 | 1.000 | 0.997 |
-| DoS | 4,089 | yes | 0.999 | 0.997 | 0.988 |
-| Exploits | 11,132 | yes | 0.996 | 0.992 | 0.995 |
-| Fuzzers | 6,062 | yes | 0.919 | 0.881 | 0.979 |
-| Generic | 18,871 | yes | 1.000 | 1.000 | 1.000 |
-| Normal *(share wrongly flagged)* | 37,000 | yes | 0.263 | 0.252 | 0.878 |
-| Reconnaissance | 3,496 | yes | 0.999 | 0.997 | 0.984 |
-| Shellcode | 378 | yes | 0.992 | 0.992 | 0.989 |
-| Worms | 44 | yes | 1.000 | 1.000 | 1.000 |
+| Family | Flows | Seen in training | chandraghanta-v0 | chandraghanta-v0 without TTL | pca (benign-only) | chandraghanta-v1 (either) |
+|---|---:|---|---:|---:|---:|---:|
+| Analysis | 677 | yes | 0.975 | 0.972 | 0.994 | 1.000 |
+| Backdoor | 583 | yes | 1.000 | 1.000 | 0.997 | 1.000 |
+| DoS | 4,089 | yes | 0.999 | 0.997 | 0.988 | 1.000 |
+| Exploits | 11,132 | yes | 0.996 | 0.992 | 0.995 | 1.000 |
+| Fuzzers | 6,062 | yes | 0.919 | 0.881 | 0.979 | 0.995 |
+| Generic | 18,871 | yes | 1.000 | 1.000 | 1.000 | 1.000 |
+| Normal *(share wrongly flagged)* | 37,000 | yes | 0.263 | 0.252 | 0.878 | 0.891 |
+| Reconnaissance | 3,496 | yes | 0.999 | 0.997 | 0.984 | 1.000 |
+| Shellcode | 378 | yes | 0.992 | 0.992 | 0.989 | 1.000 |
+| Worms | 44 | yes | 1.000 | 1.000 | 1.000 | 1.000 |
 
 ## CIC-IDS2017 — by day: trained on Monday to Wednesday, tested on Thursday and Friday
 
@@ -39,22 +40,23 @@ Without the TTL fields, the score shows how much of the detection rests on TTL v
 |---|---:|---:|---:|---:|
 | **chandraghanta-v0** | 0.989 | 0.294 | 0.453 | 0.0011 |
 | pca (benign-only) | 0.440 | 0.135 | 0.207 | 0.0575 |
+| **chandraghanta-v1 (either)** | 0.660 | 0.340 | 0.449 | 0.0584 |
 | *chandraghanta-v0, random split (reference)* | 0.998 | 0.996 | 0.997 | 0.0005 |
 
 Every test attack family appears only on Thursday or Friday, so the classifier has never seen any of them. The random-split row is the setting most published results use. The gap between that row and the by-day result is how much those results owe to the split. Measured: F1 0.997 on a random split, 0.453 on unseen days.
 
 ### Recall by attack family
 
-| Family | Flows | Seen in training | chandraghanta-v0 | pca (benign-only) |
-|---|---:|---|---:|---:|
-| BENIGN *(share wrongly flagged)* | 871,074 | yes | 0.001 | 0.058 |
-| Bot | 1,966 | **no** | 0.000 | 0.028 |
-| DDoS | 128,027 | **no** | 0.636 | 0.215 |
-| Infiltration | 36 | **no** | 0.000 | 0.722 |
-| PortScan | 158,930 | **no** | 0.013 | 0.074 |
-| Web Attack - Brute Force | 1,507 | **no** | 0.908 | 0.000 |
-| Web Attack - Sql Injection | 21 | **no** | 1.000 | 0.000 |
-| Web Attack - XSS | 652 | **no** | 0.974 | 0.000 |
+| Family | Flows | Seen in training | chandraghanta-v0 | pca (benign-only) | chandraghanta-v1 (either) |
+|---|---:|---|---:|---:|---:|
+| BENIGN *(share wrongly flagged)* | 871,074 | yes | 0.001 | 0.058 | 0.058 |
+| Bot | 1,966 | **no** | 0.000 | 0.028 | 0.028 |
+| DDoS | 128,027 | **no** | 0.636 | 0.215 | 0.656 |
+| Infiltration | 36 | **no** | 0.000 | 0.722 | 0.722 |
+| PortScan | 158,930 | **no** | 0.013 | 0.074 | 0.081 |
+| Web Attack - Brute Force | 1,507 | **no** | 0.908 | 0.000 | 0.908 |
+| Web Attack - Sql Injection | 21 | **no** | 1.000 | 0.000 | 1.000 |
+| Web Attack - XSS | 652 | **no** | 0.974 | 0.000 | 0.974 |
 
 ## How to read this
 

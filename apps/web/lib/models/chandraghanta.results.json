@@ -43,6 +43,16 @@
           "fp": 32493,
           "fn": 302,
           "tn": 4507
+        },
+        "chandraghanta-v1 (either)": {
+          "precision": 0.5787,
+          "recall": 0.9992,
+          "f1": 0.7329,
+          "false_positive_rate": 0.89124,
+          "tp": 45298,
+          "fp": 32976,
+          "fn": 34,
+          "tn": 4024
         }
       },
       "per_family": {
@@ -52,7 +62,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9749,
           "chandraghanta-v0 without TTL": 0.9719,
-          "pca (benign-only)": 0.9941
+          "pca (benign-only)": 0.9941,
+          "chandraghanta-v1 (either)": 1.0
         },
         "Backdoor": {
           "n": 583,
@@ -60,7 +71,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 1.0,
           "chandraghanta-v0 without TTL": 1.0,
-          "pca (benign-only)": 0.9966
+          "pca (benign-only)": 0.9966,
+          "chandraghanta-v1 (either)": 1.0
         },
         "DoS": {
           "n": 4089,
@@ -68,7 +80,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9993,
           "chandraghanta-v0 without TTL": 0.9968,
-          "pca (benign-only)": 0.9875
+          "pca (benign-only)": 0.9875,
+          "chandraghanta-v1 (either)": 1.0
         },
         "Exploits": {
           "n": 11132,
@@ -76,7 +89,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9958,
           "chandraghanta-v0 without TTL": 0.9915,
-          "pca (benign-only)": 0.9951
+          "pca (benign-only)": 0.9951,
+          "chandraghanta-v1 (either)": 0.9996
         },
         "Fuzzers": {
           "n": 6062,
@@ -84,7 +98,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9193,
           "chandraghanta-v0 without TTL": 0.8809,
-          "pca (benign-only)": 0.9789
+          "pca (benign-only)": 0.9789,
+          "chandraghanta-v1 (either)": 0.9951
         },
         "Generic": {
           "n": 18871,
@@ -92,7 +107,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9999,
           "chandraghanta-v0 without TTL": 0.9998,
-          "pca (benign-only)": 0.9998
+          "pca (benign-only)": 0.9998,
+          "chandraghanta-v1 (either)": 1.0
         },
         "Normal": {
           "n": 37000,
@@ -100,7 +116,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.2634,
           "chandraghanta-v0 without TTL": 0.2522,
-          "pca (benign-only)": 0.8782
+          "pca (benign-only)": 0.8782,
+          "chandraghanta-v1 (either)": 0.8912
         },
         "Reconnaissance": {
           "n": 3496,
@@ -108,7 +125,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9994,
           "chandraghanta-v0 without TTL": 0.9974,
-          "pca (benign-only)": 0.9843
+          "pca (benign-only)": 0.9843,
+          "chandraghanta-v1 (either)": 1.0
         },
         "Shellcode": {
           "n": 378,
@@ -116,7 +134,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 0.9921,
           "chandraghanta-v0 without TTL": 0.9921,
-          "pca (benign-only)": 0.9894
+          "pca (benign-only)": 0.9894,
+          "chandraghanta-v1 (either)": 1.0
         },
         "Worms": {
           "n": 44,
@@ -124,7 +143,8 @@
           "seen_in_training": true,
           "chandraghanta-v0": 1.0,
           "chandraghanta-v0 without TTL": 1.0,
-          "pca (benign-only)": 1.0
+          "pca (benign-only)": 1.0,
+          "chandraghanta-v1 (either)": 1.0
         }
       }
     },
@@ -167,6 +187,16 @@
           "fp": 50090,
           "fn": 251778,
           "tn": 820984
+        },
+        "chandraghanta-v1 (either)": {
+          "precision": 0.6601,
+          "recall": 0.3396,
+          "f1": 0.4485,
+          "false_positive_rate": 0.05844,
+          "tp": 98865,
+          "fp": 50907,
+          "fn": 192274,
+          "tn": 820167
         }
       },
       "per_family": {
@@ -175,56 +205,64 @@
           "attack": false,
           "seen_in_training": true,
           "chandraghanta-v0": 0.0011,
-          "pca (benign-only)": 0.0575
+          "pca (benign-only)": 0.0575,
+          "chandraghanta-v1 (either)": 0.0584
         },
         "Bot": {
           "n": 1966,
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.0,
-          "pca (benign-only)": 0.0275
+          "pca (benign-only)": 0.0275,
+          "chandraghanta-v1 (either)": 0.0275
         },
         "DDoS": {
           "n": 128027,
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.636,
-          "pca (benign-only)": 0.2149
+          "pca (benign-only)": 0.2149,
+          "chandraghanta-v1 (either)": 0.6557
         },
         "Infiltration": {
           "n": 36,
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.0,
-          "pca (benign-only)": 0.7222
+          "pca (benign-only)": 0.7222,
+          "chandraghanta-v1 (either)": 0.7222
         },
         "PortScan": {
           "n": 158930,
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.0129,
-          "pca (benign-only)": 0.0741
+          "pca (benign-only)": 0.0741,
+          "chandraghanta-v1 (either)": 0.0807
         },
-        "Web Attack \u00ef\u00bf\u00bd Brute Force": {
+        "Web Attack - Brute Force": {
           "n": 1507,
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.9078,
-          "pca (benign-only)": 0.0
+          "pca (benign-only)": 0.0,
+          "chandraghanta-v1 (either)": 0.9078
         },
-        "Web Attack \u00ef\u00bf\u00bd Sql Injection": {
+        "Web Attack - Sql Injection": {
           "n": 21,
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 1.0,
-          "pca (benign-only)": 0.0
+          "pca (benign-only)": 0.0,
+          "chandraghanta-v1 (either)": 1.0
         },
-        "Web Attack \u00ef\u00bf\u00bd XSS": {
+        "Web Attack - XSS": {
           "n": 652,
           "attack": true,
           "seen_in_training": false,
           "chandraghanta-v0": 0.9739,
-          "pca (benign-only)": 0.0
+          "pca (benign-only)": 0.0,
+          "chandraghanta-v1 (either)": 0.9739
         }
       },
       "reference_random_split": {
@@ -244,5 +282,5 @@
   },
   "weights_published": false,
   "weights_note": "UNSW-NB15 and CIC-IDS2017 are research-use only; weights are withheld pending the owner's decision.",
-  "seconds": 231.5
+  "seconds": 254.9
 }

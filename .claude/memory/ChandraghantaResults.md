@@ -38,3 +38,6 @@ model scores F1 0.997 on a random split and 0.453 on unseen days.
 PCA does; they fail on different families. It runs on Kaggle CPU via
 `kaggle/chandraghanta`. Also added this session: PAPER §7.2, guarded by
 `testpaper.py`.
+
+## v1 result (2026-10-27)
+"Either detector" (v0 OR benign-only PCA) is a negative result. It catches CIC infiltration (0.722) but flags 5.8% of benign flows instead of 0.1%. CIC F1 is 0.449 against 0.453, and UNSW 0.733 against 0.897. v0 stays the served model; the v1 row stays in the table as a recorded negative.
