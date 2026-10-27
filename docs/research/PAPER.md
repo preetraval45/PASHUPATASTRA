@@ -271,7 +271,7 @@ when the test days hold only attack families it never saw
 ([chandraghanta.md](models/chandraghanta.md)).
 
 **A learned detector can be both more accurate and quieter.** On 28 real
-servers from a held-out machine group, Shailaputri scores F1 0.525 with 4.5
+servers from a held-out machine group, Shailaputri scores F1 0.556 with 4.6
 false alarms per 1000 minutes, against 0.419 and 86.6 for per-machine PCA
 ([shailaputri-smd.md](models/shailaputri-smd.md)). On NAB, the five-seed
 spread is F1 0.430 [0.394, 0.474] with 24.3 false alarms per 1000 against 74.7
@@ -298,9 +298,9 @@ comes from retrieval and the model writes around it.
 
 **Two models did not earn their place, and the architecture reflects it.**
 
-- Mahagauri, the recovery verifier, declared 0.199 of incidents over while
-  still anomalous. Requiring agreement with a 3σ check lowers that to 0.061,
-  but confirms only 0.211 of recoveries ([mahagauri.md](models/mahagauri.md)).
+- Mahagauri, the recovery verifier, declared 0.220 of incidents over while
+  still anomalous. Requiring agreement with a 3σ check lowers that to 0.070,
+  but confirms only 0.223 of recoveries ([mahagauri.md](models/mahagauri.md)).
 - Siddhidatri's fusion matched Shailaputri alone on F1 (0.537 against 0.539)
   while raising false alarms from 3.8 to 47.8
   ([siddhidatri.md](models/siddhidatri.md)).

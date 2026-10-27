@@ -38,7 +38,7 @@ onset to 60 minutes after it ends. Leave one machine group out.
 
 | Verifier | Premature all-clear ↓ | Confirmed | Unconfirmed within the hour |
 |---|---:|---:|---:|
-| Mahagauri v0 | 0.199 | 0.560 | 0.242 |
+| Mahagauri v0 | 0.220 | 0.590 | 0.190 |
 | Back within 3σ of the pre-incident hour | 0.165 | 0.248 | 0.587 |
 | Fixed timer (median training duration) | 0.480 | 0.520 | 0.000 |
 
@@ -46,28 +46,28 @@ onset to 60 minutes after it ends. Leave one machine group out.
 
 - **The 5% budget did not generalise.** The threshold held premature
   all-clears to 5% on the training groups, but on held-out groups the rate is
-  0.199: one incident in five is declared over while still labelled
+  0.220: one incident in five is declared over while still labelled
   anomalous. This is the headline, and it is a negative result.
 - **It confirms recovery more than twice as often as the hand-written
-  check:** 0.560 against 0.248. The check is safer (0.165 premature) mainly
+  check:** 0.590 against 0.248. The check is safer (0.165 premature) mainly
   because it rarely says anything: 0.587 of incidents stay unconfirmed.
 - **A fixed timer is the worst on safety (0.480).** Incidents vary too much
   in length for any single wait to work.
 
-## v1 (26 October 2026, run 40403217142)
+## v1 (run 40514270660, 27 October 2026)
 
 Two variants were measured beside v0, pooled over held-out groups:
 
 | Verifier | Premature all-clear ↓ | Confirmed | Unconfirmed |
 |---|---:|---:|---:|
-| v0, point-estimate threshold | 0.199 | 0.560 | 0.242 |
-| v1, upper-bound threshold | 0.132 | 0.486 | 0.382 |
-| v1 + 3σ agreement | 0.061 | 0.211 | 0.728 |
+| v0, point-estimate threshold | 0.220 | 0.590 | 0.190 |
+| v1, upper-bound threshold | 0.144 | 0.498 | 0.358 |
+| v1 + 3σ agreement | 0.070 | 0.223 | 0.707 |
 
-- **Holding the upper bound helps but is not enough:** 0.132, still well above
+- **Holding the upper bound helps but is not enough:** 0.144, still well above
   5%.
-- **Requiring agreement with the 3σ check gets close to the budget (0.061),**
-  at a price. It confirms only 0.211 of recoveries and leaves 0.728 to a
+- **Requiring agreement with the 3σ check gets close to the budget (0.070),**
+  at a price. It confirms only 0.223 of recoveries and leaves 0.707 to a
   human.
 - **The trade-off is now explicit:** every step toward safety hands more
   incidents back to people. For a verifier that is the right direction to
