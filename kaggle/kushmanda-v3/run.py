@@ -6,7 +6,8 @@ Clones this repository at the commit below, then trains with `sati.lm.train
 --version v3`. The corpus adds GitHub Security Advisories (CC-BY-4.0) and
 ATT&CK Mobile and ICS. The model is about 33M parameters (v2: 16.9M). The
 held-out questions are v2's, so the two are compared like for like. Sized to
-finish inside one 12-hour Kaggle session: v2 took 4.2 h.
+finish inside one 12-hour Kaggle session: v2 took 4.2 h, and building v3's
+corpus takes about 32 minutes.
 """
 
 import shutil
@@ -23,7 +24,11 @@ subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "tokenizers",
 subprocess.run(
     [sys.executable, "-m", "sati.lm.train", "--version", "v3", "--out", f"{WORK}/out",
      "--root", f"{WORK}/repo", "--cache", f"{WORK}/cache",
-     "--width", "512", "--layers", "8", "--heads", "8", "--steps", "5000", "--sft-steps", "2000"],
+     "--width", "512", "--layers", "8", "--heads", "8", "--steps", "4000", "--sft-steps", "2000",
+     # Run 1 ran out of memory on Kaggle's 14.6 GiB T4 at batch 32 (the loss over
+     # a 16k vocabulary is 1.3 GiB per copy). Same effective batch (64), half the
+     # memory; 4,000 steps like v2, so it fits one 12-hour session.
+     "--batch", "16", "--accumulate", "4"],
     check=True,
     cwd=f"{WORK}/repo/packages/sati",
 )
