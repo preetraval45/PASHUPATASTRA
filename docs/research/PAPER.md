@@ -273,6 +273,13 @@ simulator does not.**
   cases: Online Boutique 0.879 against 0.893 (p 0.38), Sock Shop 0.949 against
   0.954, Train Ticket 0.823 against 0.814
   ([katyayani-pooled.md](models/katyayani-pooled.md)).
+- The deployed API does not hold raw metric series, only events (a deviation
+  in σ, an onset, a deploy). Trained on real incidents expressed in those event
+  features, Katyayani ranks the root first in 0.900 of live-stack incidents,
+  0.845 on Online Boutique and 0.894 on Sock Shop. The same features trained on
+  Kaal score 0.265, 0.490 and 0.265
+  ([katyayani-events.md](models/katyayani-events.md)). Little is lost by
+  giving up the raw series, so the real-data model is the one to serve.
 
 The simulator taught topology-first reasoning, and in real faults the culprit
 is the loudest service. Synthetic data is at most an augmentation here, not a
