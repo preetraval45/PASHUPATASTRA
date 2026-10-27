@@ -37,3 +37,18 @@ def test_deploy_before_counts_only_deploys_inside_the_window():
     _, released = features(record(deployed=True), GRAPH)
     assert quiet.set_index("service")["deploy_before"].sum() == 0  # the stack's own creation is outside it
     assert released.set_index("service").loc["orders", "deploy_before"] == 1
+
+
+def test_pooled_live_table_labels_exactly_one_root_per_incident(tmp_path):
+    import gzip
+    import json
+
+    from sati.rca.pooled import live_table
+
+    (tmp_path / "meta.json").write_text(json.dumps({"graph": GRAPH}), encoding="utf-8")
+    with gzip.open(tmp_path / "incidents.jsonl.gz", "wt", encoding="utf-8") as f:
+        f.write(json.dumps(record()) + "\n")
+        f.write(json.dumps({"id": "live-bad", "error": "shard failed"}) + "\n")
+    table = live_table(tmp_path)
+    assert set(table["system"]) == {"live"} and table.groupby("case")["label"].sum().tolist() == [1]
+    assert "deploy_before" not in table  # no feature the RCAEval systems lack
