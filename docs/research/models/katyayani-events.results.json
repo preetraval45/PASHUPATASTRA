@@ -1,0 +1,123 @@
+{
+  "model": "sati-katyayani-events",
+  "features": [
+    "onset_min",
+    "onset_rank",
+    "peak",
+    "n_anomalous",
+    "own_metric",
+    "deploy_before",
+    "error_log",
+    "in_degree",
+    "out_degree",
+    "anomalous_callees",
+    "anomalous_callers",
+    "callee_share",
+    "caller_share",
+    "layer_edge",
+    "layer_api",
+    "layer_backend",
+    "layer_store"
+  ],
+  "deploy_before": "zeroed",
+  "kaal_training": {
+    "n": 50000,
+    "seed": 1
+  },
+  "systems": {
+    "live": {
+      "cases": 200,
+      "train_systems": [
+        "ob",
+        "ss"
+      ],
+      "events, real-trained": {
+        "value": 0.9,
+        "ci95": [
+          0.8506,
+          0.9343
+        ],
+        "n": 200
+      },
+      "events, Kaal-trained": {
+        "value": 0.265,
+        "ci95": [
+          0.2087,
+          0.3302
+        ],
+        "n": 200
+      },
+      "loudest service": {
+        "value": 0.87,
+        "ci95": [
+          0.8163,
+          0.9097
+        ],
+        "n": 200
+      }
+    },
+    "ob": {
+      "cases": 245,
+      "train_systems": [
+        "live",
+        "ss"
+      ],
+      "events, real-trained": {
+        "value": 0.8449,
+        "ci95": [
+          0.7943,
+          0.8849
+        ],
+        "n": 245
+      },
+      "events, Kaal-trained": {
+        "value": 0.4898,
+        "ci95": [
+          0.4278,
+          0.5521
+        ],
+        "n": 245
+      },
+      "loudest service": {
+        "value": 0.6082,
+        "ci95": [
+          0.5458,
+          0.6672
+        ],
+        "n": 245
+      }
+    },
+    "ss": {
+      "cases": 245,
+      "train_systems": [
+        "live",
+        "ob"
+      ],
+      "events, real-trained": {
+        "value": 0.8939,
+        "ci95": [
+          0.849,
+          0.9265
+        ],
+        "n": 245
+      },
+      "events, Kaal-trained": {
+        "value": 0.2653,
+        "ci95": [
+          0.214,
+          0.3239
+        ],
+        "n": 245
+      },
+      "loudest service": {
+        "value": 0.7469,
+        "ci95": [
+          0.689,
+          0.7973
+        ],
+        "n": 245
+      }
+    }
+  },
+  "seconds": 52.5
+}
