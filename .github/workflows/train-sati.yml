@@ -23,9 +23,11 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: train-sati
-  cancel-in-progress: false
+# No concurrency group. GitHub keeps only the newest *pending* run in a group
+# and cancels the rest, and each run trains only the models its own push
+# changed (the `changes` job), so a cancelled run's models were never trained
+# (Katyayani's served export, 27 Oct). Runs may overlap; scripts/pushresults.sh
+# commits their results safely in parallel.
 
 jobs:
   changes:

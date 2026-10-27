@@ -81,7 +81,8 @@ def main() -> int:
     out = {
         "model": "katyayani", "features": kaal.FEATURES, "booster": served,
         "trained_on": {"incidents": int(train["case"].nunique()),
-                       "systems": sorted(SYSTEMS[s] for s in train["system"].unique())},
+                       "systems": sorted(SYSTEMS[s] for s in train["system"].unique()),
+                       "by_system": {SYSTEMS[k]: int(v) for k, v in train.groupby("system")["case"].nunique().items()}},
         "reserved": {"incidents": len(cases), "rca@1": round(hits / len(cases), 4) if cases else None},
         "cases": cases,
     }
