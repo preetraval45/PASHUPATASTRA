@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Badge, Ident, Offline, Page, Panel } from "@/components/ui";
+import { Filter, FilterRow } from "@/components/filter";
+import { Badge, Empty, Ident, Offline, Page, Panel } from "@/components/ui";
 import { getDetections, type DetectionSummary } from "@/lib/api";
 
 export const metadata: Metadata = {
@@ -26,12 +27,22 @@ export const dynamic = "force-dynamic";
  * Grouped by incident, because that is what the task asks a rule to name and
  * what a reader arrives wanting: "what would have caught this?"
  */
-export default async function DetectionsPage() {
+export default async function DetectionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ by?: string | string[] }>;
+}) {
   const library = await getDetections();
   if (library === null) return <Offline />;
 
+  // The library comes back whole, so filtering here hides nothing the count
+  // above does not still state. Unknown values show everything.
+  const raw = (await searchParams).by;
+  const by = raw === "drafted" ? "agent" : raw === "written" ? "human" : null;
+  const shown = by ? library.rules.filter((r) => r.author.kind === by) : library.rules;
+
   const byIncident = new Map<string, DetectionSummary[]>();
-  for (const rule of library.rules) {
+  for (const rule of shown) {
     for (const incident of rule.incidents) {
       byIncident.set(incident, [...(byIncident.get(incident) ?? []), rule]);
     }
@@ -69,6 +80,18 @@ export default async function DetectionsPage() {
           </li>
         </ul>
       </Panel>
+
+      <FilterRow label="Show">
+        <Filter href="/detections" label="Both kinds" active={!by} />
+        <Filter href="/detections?by=drafted" label="Drafted" active={by === "agent"} />
+        <Filter href="/detections?by=written" label="Written" active={by === "human"} />
+      </FilterRow>
+
+      {by && shown.length === 0 && (
+        <Empty art="quiet" title={`No ${by === "agent" ? "drafted" : "written"} rules yet.`}>
+          The library holds {library.rules.length} rule{library.rules.length === 1 ? "" : "s"} of the other kind.
+        </Empty>
+      )}
 
       {[...byIncident.entries()].map(([incident, rules]) => (
         <Panel
