@@ -3056,6 +3056,99 @@
         "summary": "Smd Run"
       }
     },
+    "/api/v1/models/{form}/examples": {
+      "get": {
+        "description": "Held-out examples for Kalaratri or Chandraghanta, which a visitor can run the model on.",
+        "operationId": "tree_examples_api_v1_models__form__examples_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "form",
+            "required": true,
+            "schema": {
+              "title": "Form",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Tree Examples Api V1 Models  Form  Examples Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tree Examples"
+      }
+    },
+    "/api/v1/models/{form}/examples/{example_id}": {
+      "get": {
+        "description": "Score one held-out example live, with its truth beside the answer.",
+        "operationId": "tree_run_api_v1_models__form__examples__example_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "form",
+            "required": true,
+            "schema": {
+              "title": "Form",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "example_id",
+            "required": true,
+            "schema": {
+              "title": "Example Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Tree Run Api V1 Models  Form  Examples  Example Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tree Run"
+      }
+    },
     "/api/v1/policy/approvals/fatigue": {
       "get": {
         "description": "Whether the approval step is doing anything.\n\nExposed as an endpoint rather than buried in a log because a metric nobody\nlooks at cannot change behaviour \u2014 and this one is meant to be uncomfortable.\n`looks_decorative` requires *both* near-total approval and near-instant\ndecisions; either alone is consistent with a well-calibrated system.",

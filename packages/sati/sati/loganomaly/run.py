@@ -183,7 +183,11 @@ def main() -> int:
 
     (args.out / "model.json").write_text(json.dumps({
         **trees.compact(booster.dump_model(), list(Xtr.columns)), "threshold": float(t_model),
-        "vocabulary": vocab, "dataset": spec["name"], "licence": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026."}), encoding="utf-8")
+        "vocabulary": vocab, "dataset": spec["name"],
+        # Held-out sessions from the later part of the log, for the live demo.
+        "examples": [{"id": f"session-{i}", "label": "failing" if yte[i] else "normal", "truth": int(yte[i]),
+                      "features": {c: float(Xte.iloc[i][c]) for c in Xtr.columns}}
+                     for i in [*np.flatnonzero(yte == 1)[:12], *np.flatnonzero(yte == 0)[:12]]], "licence": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026."}), encoding="utf-8")
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     for name, m in results["test"].items():

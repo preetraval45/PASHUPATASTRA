@@ -187,6 +187,13 @@ def run_cic(folder: Path) -> dict:
         **_keep("cic"),
         "pca (benign-only)": pca_detect(train[features], ytr, test[features], "cic"),
     }
+    # Held-out flows a visitor can run the served model on: two per family from
+    # the unseen test days, with the truth beside them.
+    KEPT["examples"] = [
+        {"id": f"{fam}-{k}", "label": str(fam), "truth": int(row["label"]),
+         "features": {f: (None if pd.isna(row[f]) else float(row[f])) for f in features}}
+        for fam, part in test.groupby("family", sort=True) for k, (_, row) in enumerate(part.head(2).iterrows())
+    ]
     # v1: flag a flow if either detector does. They fail on different families (the
     # classifier misses infiltration and PCA catches it), so the union is measured,
     # with its false-positive cost shown beside it.
@@ -230,7 +237,7 @@ def main() -> int:
 
         (args.out / "model.json").write_text(json.dumps({
             **trees.compact(KEPT["booster"].dump_model(), KEPT["features"]), "threshold": KEPT["threshold"], "operating_point": "1% false alarms on benign validation flows",
-            "f1_threshold": KEPT.get("f1_threshold"),
+            "f1_threshold": KEPT.get("f1_threshold"), "examples": KEPT.get("examples", []),
             "split": "CIC-IDS2017 by day: trained Monday-Wednesday", "licence": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026."}), encoding="utf-8")
     (args.out / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     for key, d in results["datasets"].items():

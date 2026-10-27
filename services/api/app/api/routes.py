@@ -1782,6 +1782,33 @@ def katyayani_cases() -> dict[str, object]:
     return katyayani.summary()
 
 
+@router.get("/models/{form}/examples")
+def tree_examples(form: str) -> dict[str, object]:
+    """Held-out examples for Kalaratri or Chandraghanta, which a visitor can run the model on."""
+    from ..engines import treedemo
+
+    if form not in treedemo.FORMS:
+        raise HTTPException(status_code=404, detail=f"no example route for {form!r}")
+    if not treedemo.available(form):
+        raise HTTPException(status_code=503, detail=f"{form}'s served model has not been exported yet")
+    return treedemo.summary(form)
+
+
+@router.get("/models/{form}/examples/{example_id}")
+def tree_run(form: str, example_id: str) -> dict[str, object]:
+    """Score one held-out example live, with its truth beside the answer."""
+    from ..engines import treedemo
+
+    if form not in treedemo.FORMS:
+        raise HTTPException(status_code=404, detail=f"no example route for {form!r}")
+    if not treedemo.available(form):
+        raise HTTPException(status_code=503, detail=f"{form}'s served model has not been exported yet")
+    try:
+        return treedemo.run(form, example_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"no held-out example {example_id!r}") from None
+
+
 @router.get("/models/servers/incidents")
 def smd_incidents() -> dict[str, object]:
     """Server incidents from machines Shailaputri, Siddhidatri and Mahagauri never trained on."""
