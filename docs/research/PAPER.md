@@ -352,6 +352,10 @@ same queries, against Brahmacharini v0's 0.614 and 0.699
 because it also retrieves the passages behind each answer, which a classifier
 cannot do. Its value as a technique classifier alone is not established.
 
+The same holds for Skandamata, the mitigation recommender. A one-vs-rest
+logistic regression on TF-IDF features reaches hit@1 0.827 and MRR 0.880,
+against Skandamata's 0.792 and 0.852 ([skandamata.md](models/skandamata.md)).
+
 ### 7.3 Against general LLMs, on a benchmark this project did not write
 
 > *Draft written by Claude for the author to revise (RP-33, RP-36). Every number

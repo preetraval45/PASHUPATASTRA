@@ -85,6 +85,72 @@ def table(rows: list[list[str]], widths: list[int]) -> str:
     return "".join(out) + "</w:tbl>"
 
 
+FIGURES = ROOT / "docs" / "research" / "figures"
+SERVED = ROOT / "services" / "api" / "app" / "sati_models"
+# file: (relationship id, docPr id) for the images this script adds, drawn by scripts/ieeefigures.py
+IMAGES = {"nine-models.png": ("rIdClaude1", 9101), "rq5-rca.png": ("rIdClaude2", 9102)}
+
+
+def _png_size(path: Path) -> tuple[int, int]:
+    head = path.read_bytes()[:24]
+    return int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+
+
+def figure(name: str, number: int, text: str) -> str:
+    """A tracked image paragraph and its caption, in the form of the paper's Fig. 1."""
+    rid, pid = IMAGES[name]
+    w_px, h_px = _png_size(FIGURES / name)
+    cx = 3048000
+    cy = round(cx * h_px / w_px)
+    alt = escape(text, {'"': "&quot;"})
+    drawing = (
+        f'<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="{cx}" cy="{cy}"/>'
+        f'<wp:effectExtent t="0" r="0" b="0" l="0"/><wp:docPr id="{pid}" name="Figure {number}" descr="{alt}" '
+        f'title="Figure {number}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>'
+        '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData '
+        'uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic '
+        'xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" '
+        f'name="{name}" descr=""/><pic:cNvPicPr><a:picLocks noChangeAspect="1" noChangeArrowheads="1"/></pic:cNvPicPr>'
+        f'</pic:nvPicPr><pic:blipFill><a:blip r:embed="{rid}" cstate="none"/><a:srcRect/><a:stretch><a:fillRect/>'
+        f'</a:stretch></pic:blipFill><pic:spPr bwMode="auto"><a:xfrm><a:off x="0" y="0"/><a:ext cx="{cx}" '
+        f'cy="{cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData>'
+        "</a:graphic></wp:inline></w:drawing>")
+    image = (f'<w:p><w:pPr><w:keepNext/><w:spacing w:after="60" w:before="120"/><w:jc w:val="center"/>'
+             f'<w:rPr><w:ins {_mark()}/></w:rPr></w:pPr><w:ins {_mark()}><w:r>{drawing}</w:r></w:ins></w:p>')
+    small = '<w:sz w:val="16"/><w:szCs w:val="16"/>'
+    return image + _para('<w:spacing w:after="140"/><w:jc w:val="both"/>', f"Fig. {number}. {text}", small)
+
+
+def renumber(xml: str, old: str, new: str) -> str:
+    """Change a figure number in the author's text as a tracked deletion and insertion."""
+    pattern = re.compile(r'<w:r>(<w:rPr>(?:(?!</w:rPr>).)*</w:rPr>)?<w:t xml:space="preserve">([^<]*?)'
+                         + re.escape(old) + r"([^<]*)</w:t></w:r>", re.S)
+
+    def swap(m: re.Match) -> str:
+        rpr, before, after = m.group(1) or "", m.group(2), m.group(3)
+
+        def keep(t: str) -> str:
+            return f'<w:r>{rpr}<w:t xml:space="preserve">{t}</w:t></w:r>' if t else ""
+
+        return (keep(before) + f'<w:del {_mark()}><w:r>{rpr}<w:delText>{old}</w:delText></w:r></w:del>'
+                + f'<w:ins {_mark()}><w:r>{rpr}<w:t>{new}</w:t></w:r></w:ins>' + keep(after))
+
+    xml, count = pattern.subn(swap, xml)
+    assert count, f"nothing to renumber: {old!r}"
+    return xml
+
+
+def live_examples(form: str) -> tuple[int, int]:
+    """How many of a served tree model's held-out examples it gets right, scored as the API scores them."""
+    from pashupatastra import trees
+
+    m = json.loads((SERVED / f"{form}.json").read_text(encoding="utf-8"))
+    right = sum((trees.predict(m, trees.row_from(m, e["features"])) >= m["threshold"]) == bool(e["truth"])
+                for e in m["examples"])
+    return right, len(m["examples"])
+
+
 # --- the content ---------------------------------------------------------------
 
 def content() -> dict[str, list[str]]:
@@ -153,6 +219,28 @@ def content() -> dict[str, list[str]]:
                   f"split reached R@1 {f3(t['recall@1'])}, against {f3(brt['brahmacharini-v0']['recall@1'])} for "
                   "the bag-of-words encoder that is served. ")
 
+    roles = [
+        "Server metric anomalies (Shailaputri) scores each minute of a server's metrics. It is trained on SMD "
+        "machine groups and tested on a group it never saw, and separately on NAB.",
+        "Log session anomalies (Kalaratri) flags failing sessions from counts of their log templates, trained on "
+        "the earlier part of HDFS and of BGL and tested on the later part.",
+        "Network intrusion (Chandraghanta) flags attack flows. On CIC-IDS2017 it trains on Monday to Wednesday and "
+        "is tested on Thursday and Friday, whose attack families it has not seen.",
+        "Fusion (Siddhidatri) combines three detectors' scores into one alarm, on the same held-out servers.",
+        "Root-cause service (Katyayani) ranks an incident's services by how likely each is the root, trained on "
+        "RCAEval fault injections with whole systems held out.",
+        "Behaviour to technique (Brahmacharini) maps an observed behaviour to its ATT&CK technique and retrieves "
+        "the passages that ground Sati's answers. Its test procedures describe groups and tools unseen in training.",
+        "Answer from passages (Kushmanda) is a 17M-parameter language model trained from scratch. It writes an "
+        "answer from retrieved passages and declines when none answers.",
+        f"Mitigations (Skandamata) ranks ATT&CK's {j('skandamata.results.json')['dataset']['mitigations']} "
+        "mitigations for an observed behaviour, with the same split by source.",
+        "Is it over (Mahagauri) reads a server's metrics after an incident and says, minute by minute, whether "
+        "recovery has held. An early all-clear is the error that counts.",
+    ]
+    kal_ok, kal_n = live_examples("kalaratri")
+    ch_ok, ch_n = live_examples("chandraghanta")
+
     names = {"live": "Live cluster", "ob": "Online Boutique", "ss": "Sock Shop"}
     s2r_rows = [["Held out", "Real-trained", "Simulator-trained", "Loudest"]]
     for key in ("live", "ob", "ss"):
@@ -179,6 +267,11 @@ def content() -> dict[str, list[str]]:
                  "test measures something unseen: a held-out machine group, attacker, system, day or time, never a "
                  "random split where that would leak. Each is compared with the strongest simple baseline found, "
                  "and the results that went against the project are reported beside the rest (Table XI)."),
+            body("Fig. 2 shows where each model works in the loop, each named by its job first."),
+            figure("nine-models.png", 2, "Where the nine models work in the incident loop. Each box on the right "
+                   "is one model, its job first and its name below. Dharma, the policy gate, is shaded and has no "
+                   "model: whatever the models conclude, an action still needs Dharma's verdict."),
+            *[body(t) for t in roles],
             caption("XI", "Sati's Models on Held-Out Data"),
             table(nine, [1000, 1440, 1340, 1260]),
             body("Two of the nine do not yet earn a decision on their own. Mahagauri, the recovery verifier, stays "
@@ -200,6 +293,9 @@ def content() -> dict[str, list[str]]:
                  f"every other diagnoser (largest corrected p {worst_p:.1g}). Neither language model beats the "
                  "no-learning rule of naming the loudest service. The models are 7 to 8 billion parameters on CPU, "
                  "run once each; a frontier model behind the same Gateway is the obvious next arm."),
+            figure("rq5-rca.png", 4, f"RQ5: the share of the {diag['cases']} pre-declared RCAEval cases in which "
+                   "each diagnoser ranks the injected root service first, with 95% Wilson intervals. The "
+                   "simulator-trained ranker is the RQ6 contrast."),
             subhead("H. RQ6: From a Simulator to Real Systems"),
             body("RQ6 asks whether a root-cause model trained on synthetic incidents works on real ones. The same "
                  "ranker was trained twice: on 50,000 incidents from the project's simulator, and on real "
@@ -238,6 +334,11 @@ def content() -> dict[str, list[str]]:
                  "to defend against ransomware encrypting file shares, the mitigation model recommended one wrong "
                  "defence, while the retrieval model read the question correctly as Data Encrypted for Impact "
                  "(T1486). The deployed system now chains them, so every recommendation traces to a cited technique."),
+            body(f"Kalaratri and Chandraghanta run live on held-out test examples, with the truth shown beside "
+                 f"each answer. Kalaratri is right on {kal_ok} of {kal_n} log sessions. Chandraghanta is right on "
+                 f"{ch_ok} of {ch_n} flows from the unseen days, two per family; the families it misses on the "
+                 "test days it also misses live. Both are trained on research-use-only data and are served for "
+                 "research use only."),
         ],
         "discussion": [body(
             "The project's own models add a second, measured claim. On a benchmark it did not write, a small ranker "
@@ -316,7 +417,17 @@ def main() -> int:
         assert f'w:author="{AUTHOR}"' not in xml, "already updated: start from the untracked original"
         names = z.namelist()
         blobs = {n: z.read(n) for n in names}
+    # The new models figure is Fig. 2, so the author's Fig. 2 becomes Fig. 3.
+    xml = renumber(xml, "Fig. 2", "Fig. 3")
     blobs["word/document.xml"] = apply(xml, content()).encode("utf-8")
+    rels = blobs["word/_rels/document.xml.rels"].decode("utf-8")
+    for name, (rid, _) in IMAGES.items():
+        part = f"word/media/claude-{name}"
+        blobs[part] = (FIGURES / name).read_bytes()
+        names.append(part)
+        rels = rels.replace("</Relationships>", f'<Relationship Id="{rid}" Type="http://schemas.openxmlformats.org/'
+                            f'officeDocument/2006/relationships/image" Target="media/claude-{name}"/></Relationships>')
+    blobs["word/_rels/document.xml.rels"] = rels.encode("utf-8")
     tmp = Path(tempfile.mkdtemp()) / "paper.docx"
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as out:
         for n in names:
