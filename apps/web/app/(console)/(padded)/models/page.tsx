@@ -1,5 +1,6 @@
 import { TryKatyayani } from "@/components/trykatyayani";
 import { TryServers } from "@/components/tryservers";
+import { TryTree } from "@/components/trytree";
 import { isOurs, isShown, shownEntries, shownName } from "@/lib/modelnames";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -263,6 +264,9 @@ export default function ModelsPage() {
               random-split row shows what the usual evaluation would have claimed instead.
             </p>
           </div>
+          <Panel title="Try it" aside="runs live in the API · research use only">
+            <TryTree form="chandraghanta" />
+          </Panel>
           {(["unsw", "cic"] as const).map((key) => {
             const d = CHANDRAGHANTA.datasets[key];
             const ref = d.reference_random_split;
@@ -531,6 +535,9 @@ export default function ModelsPage() {
               log over seven months, is the hard one.
             </p>
           </div>
+          <Panel title="Try it" aside="runs live in the API · research use only">
+            <TryTree form="kalaratri" />
+          </Panel>
           {[KALARATRI, KALARATRI_BGL].filter((run) => !run.pending).map((run) => (
           <Panel
             key={run.dataset.name}

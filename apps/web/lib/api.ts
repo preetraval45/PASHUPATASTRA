@@ -1220,3 +1220,30 @@ export type ServerRun = {
 export const getServerIncidents = () => get<ServerIncidents>("/models/servers/incidents");
 export const runServerIncident = (id: string) =>
   get<ServerRun>(`/models/servers/incidents/${encodeURIComponent(id)}`);
+
+/** Kalaratri and Chandraghanta, served live (research use only): held-out examples and one scored. */
+export type TreeForm = "kalaratri" | "chandraghanta";
+
+export type TreeExamples = {
+  model: TreeForm;
+  dataset: string | null;
+  licence: string | null;
+  operating_point: string | null;
+  examples: { id: string; label: string }[];
+};
+
+export type TreeRun = {
+  model: TreeForm;
+  example: string;
+  label: string;
+  score: number;
+  threshold: number;
+  flagged: boolean;
+  truth: boolean;
+  correct: boolean;
+  licence: string | null;
+};
+
+export const getTreeExamples = (form: TreeForm) => get<TreeExamples>(`/models/${form}/examples`);
+export const runTreeExample = (form: TreeForm, id: string) =>
+  get<TreeRun>(`/models/${form}/examples/${encodeURIComponent(id)}`);
