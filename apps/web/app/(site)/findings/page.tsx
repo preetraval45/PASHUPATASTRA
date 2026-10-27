@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Filter, FilterRow } from "@/components/filter";
 import { Page, Panel } from "@/components/ui";
 import chandraghanta from "@/lib/models/chandraghanta.results.json";
 import katyayani from "@/lib/models/katyayani.results.json";
@@ -184,7 +185,35 @@ const TONE: Record<Finding["tone"], string> = {
   method: "text-sky-600 dark:text-sky-400",
 };
 
-export default function FindingsPage() {
+const BAR: Record<Finding["tone"], string> = {
+  positive: "bg-emerald-500/70",
+  negative: "bg-amber-500/70",
+  method: "bg-sky-500/70",
+};
+
+/** Said in words and a glyph, so the kind never rests on colour alone. */
+const KIND: Record<Finding["tone"], { glyph: string; label: string; plural: string }> = {
+  positive: { glyph: "▲", label: "Went for us", plural: "went for us" },
+  negative: { glyph: "▼", label: "Went against us", plural: "went against us" },
+  method: { glyph: "◆", label: "About method", plural: "are about method" },
+};
+
+/** A share between 0 and 1 gets a bar; anything else (a rate per 1000, "a vs b") is left as text. */
+function share(value: string): number | null {
+  const n = Number(value.replace("%", "")) / (value.endsWith("%") ? 100 : 1);
+  return /^\d*\.?\d+%?$/.test(value) && n >= 0 && n <= 1 ? n : null;
+}
+
+export default async function FindingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kind?: string | string[] }>;
+}) {
+  const all = findings();
+  const raw = (await searchParams).kind;
+  const kind = typeof raw === "string" && raw in KIND ? (raw as Finding["tone"]) : null;
+  const shown = kind ? all.filter((f) => f.tone === kind) : all;
+  const counts = (Object.keys(KIND) as Finding["tone"][]).map((t) => [t, all.filter((f) => f.tone === t).length] as const);
   return (
     <Page
       title="Findings"
@@ -195,18 +224,51 @@ export default function FindingsPage() {
         </Link>
       }
     >
-      <div className="grid gap-5 lg:grid-cols-2">
-        {findings().map((f) => (
-          <Panel key={f.id} title={f.kicker}>
+      <p className="mb-4 text-sm text-[rgb(var(--muted))]">
+        {all.length} findings: {counts.map(([t, n], i) => (
+          <span key={t}>
+            {i > 0 && (i === counts.length - 1 ? " and " : ", ")}
+            <span className={`font-medium ${TONE[t]}`}>{n}</span> {KIND[t].plural}
+          </span>
+        ))}
+        .
+      </p>
+      <FilterRow label="Show">
+        <Filter href="/findings" label="All" active={!kind} />
+        {counts.map(([t, n]) => (
+          <Filter key={t} href={`/findings?kind=${t}`} label={`${KIND[t].glyph} ${KIND[t].label} (${n})`} active={kind === t} />
+        ))}
+      </FilterRow>
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        {shown.map((f) => (
+          <Panel
+            key={f.id}
+            title={f.kicker}
+            aside={
+              <span className={`text-xs font-medium ${TONE[f.tone]}`}>
+                <span aria-hidden="true">{KIND[f.tone].glyph}</span> {KIND[f.tone].label}
+              </span>
+            }
+          >
             <h2 className="text-lg font-semibold leading-snug tracking-tight">{f.title}</h2>
             <p className={`tnum mt-3 text-3xl font-semibold ${TONE[f.tone]}`}>{f.headline}</p>
-            <dl className="mt-3 space-y-1.5 text-sm">
-              {f.versus.map((v) => (
-                <div key={v.label} className="flex items-baseline justify-between gap-4">
-                  <dt className="text-[rgb(var(--muted))]">{v.label}</dt>
-                  <dd className="tnum shrink-0 font-medium">{v.value}</dd>
-                </div>
-              ))}
+            <dl className="mt-4 space-y-2.5 text-sm">
+              {f.versus.map((v) => {
+                const bar = share(v.value);
+                return (
+                  <div key={v.label}>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <dt className="text-[rgb(var(--muted))]">{v.label}</dt>
+                      <dd className="tnum shrink-0 font-medium">{v.value}</dd>
+                    </div>
+                    {bar !== null && (
+                      <div className="mt-1 h-1.5 rounded-full bg-[rgb(var(--raised))]" aria-hidden="true">
+                        <div className={`h-1.5 rounded-full ${BAR[f.tone]}`} style={{ width: `${Math.max(2, bar * 100)}%` }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </dl>
             <p className="mt-3 text-sm leading-relaxed text-[rgb(var(--muted))]">{f.body}</p>
             <Link href={f.href} className="mt-3 inline-block text-sm underline-offset-4 hover:underline">

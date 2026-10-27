@@ -214,11 +214,16 @@ export function Evaluation() {
             />
           ))}
         </ol>
-        <p className="mt-2 text-xs text-[rgb(var(--faint))]">
-          {level < MODULES.length
-            ? `Next: level ${level + 1} — ${MODULES[level]?.title}`
-            : "All nine levels passed."}
-        </p>
+        {level < MODULES.length ? (
+          <Link
+            href={`/training/${MODULES[level].slug}`}
+            className="focusable mt-3 inline-flex items-center gap-2 rounded-lg bg-[rgb(var(--astra))] px-3.5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+          >
+            {level === 0 ? "Start level 1" : `Continue: level ${level + 1}`} — {MODULES[level].title} →
+          </Link>
+        ) : (
+          <p className="mt-2 text-sm font-medium text-[rgb(var(--astra))]">All nine levels passed.</p>
+        )}
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--ground))] p-4">
@@ -287,6 +292,14 @@ export function Evaluation() {
 export function ModuleStatus({ slug }: { slug: string }) {
   const { store } = useCourse();
   const r = store[slug];
+  const level = levelReached((s) => Boolean(store[s]?.passed));
+  const next = MODULES[level]?.slug === slug;
+  if (!r && next)
+    return (
+      <span className="rounded-full bg-[rgb(var(--astra))] px-2 py-0.5 text-[11px] font-semibold text-white">
+        Up next
+      </span>
+    );
   if (!r) return <span className="text-xs text-[rgb(var(--astra))]">Start →</span>;
   return <Badge status={r.passed ? "ok" : "warning"}>{r.passed ? `passed · ${Math.round(r.best * 100)}%` : `best ${Math.round(r.best * 100)}%`}</Badge>;
 }

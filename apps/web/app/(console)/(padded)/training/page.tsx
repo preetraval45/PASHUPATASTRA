@@ -33,6 +33,10 @@ export default async function TrainingPage() {
       title="Training"
       description="A cyber defence course you can use at work tomorrow. Each module teaches one skill, shows how to apply it in real life, and tests you on it — then the drills let you practise on a full investigation."
     >
+      <Panel title="Your evaluation" aside="kept in this browser only">
+        <Evaluation />
+      </Panel>
+
       <section className="grid gap-4 md:grid-cols-4">
         {[
           { n: "1", t: "Learn", b: `${MODULES.length} levels, about ${minutes} minutes in all` },
@@ -51,10 +55,6 @@ export default async function TrainingPage() {
           </div>
         ))}
       </section>
-
-      <Panel title="Your evaluation" aside="kept in this browser only">
-        <Evaluation />
-      </Panel>
 
       <section className="space-y-4">
         <div>
