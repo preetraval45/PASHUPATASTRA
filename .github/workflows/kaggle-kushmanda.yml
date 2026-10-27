@@ -24,7 +24,6 @@ on:
       - packages/sati/sati/lm/sft.py
       - packages/sati/sati/lm/train.py
       - kaggle/kushmanda/**
-      - .github/workflows/kaggle-kushmanda.yml
 
 permissions:
   contents: write
