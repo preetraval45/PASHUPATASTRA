@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Page, Panel } from "@/components/ui";
 import chandraghanta from "@/lib/models/chandraghanta.results.json";
 import katyayani from "@/lib/models/katyayani.results.json";
+import live from "@/lib/models/katyayani-live.results.json";
 import simtoreal from "@/lib/models/katyayani-simtoreal.results.json";
 import kushmanda from "@/lib/models/kushmanda.results.json";
 import mahagauri from "@/lib/models/mahagauri.results.json";
@@ -100,6 +101,10 @@ function findings(): Finding[] {
         { label: "trained on 50,000 synthetic incidents · Online Boutique", value: f3(ob["katyayani-kaal-v0 (zero-shot)"]["rca@1"].value) },
         { label: "trained on 50,000 synthetic incidents · Sock Shop", value: f3(ss["katyayani-kaal-v0 (zero-shot)"]["rca@1"].value) },
         { label: "just pick the loudest service · Sock Shop", value: f3(ss["loudest service"]["rca@1"].value) },
+        {
+          label: "a third system, on a live cluster · trained on real vs synthetic",
+          value: `${f3(live.test["katyayani (trained on RCAEval, zero-shot)"]["rca@1"].value)} vs ${f3(live.test["katyayani-kaal-v0 (trained on Kaal, zero-shot)"]["rca@1"].value)}`,
+        },
       ],
       body:
         "Trained on real fault injections, Katyayani names the root cause first on a system it never saw this often. The same design trained on synthetic incidents falls below a no-learning baseline on real ones: the simulator taught it to trust topology, and real faults make the culprit the loudest.",

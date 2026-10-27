@@ -1,8 +1,9 @@
 name: Live incidents — the sim-to-real set (RP-19)
 
 # Runs the pre-declared plan (benchmark/live/plan.json) on an eight-service
-# stack in kind, one fresh namespace per incident, in 20 shards on free
-# runners. Then the dataset is committed and Katyayani is scored on it:
+# stack in kind, one fresh namespace per incident, in 10 shards on free
+# runners: 20 held every concurrent runner for an hour and queued CI (27 Oct).
+# Then the dataset is committed and Katyayani is scored on it:
 # trained on Kaal, and trained on RCAEval, both zero-shot.
 
 on:
@@ -10,7 +11,7 @@ on:
   push:
     branches: [main]
     paths:
-      - .github/workflows/live-incidents.yml
+      # Not this file: editing the workflow must not rerun 200 incidents.
       - benchmark/live/app.py
       - benchmark/live/run.py
       - benchmark/live/plan.json
@@ -26,11 +27,11 @@ jobs:
   shard:
     name: shard ${{ matrix.shard }}
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -43,7 +44,7 @@ jobs:
         run: |
           docker pull python:3.12-slim
           kind load docker-image python:3.12-slim --name live
-      - run: python -m benchmark.live.run --shard ${{ matrix.shard }} --shards 20 --out live-out
+      - run: python -m benchmark.live.run --shard ${{ matrix.shard }} --shards 10 --out live-out
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -79,5 +80,6 @@ jobs:
       - name: commit the dataset and the generated results
         run: |
           cp results/katyayani-live/results.json docs/research/models/katyayani-live.results.json
+          cp results/katyayani-live/results.json apps/web/lib/models/katyayani-live.results.json
           (cd packages/sati && python -m sati.rca.livereport ../../results/katyayani-live/results.json) > docs/research/models/katyayani-live.md
-          bash scripts/pushresults.sh "data(live): sim-to-real set and Katyayani results from run ${{ github.run_id }}" benchmark/live/dataset docs/research/models/katyayani-live.results.json docs/research/models/katyayani-live.md
+          bash scripts/pushresults.sh "data(live): sim-to-real set and Katyayani results from run ${{ github.run_id }}" benchmark/live/dataset docs/research/models/katyayani-live.results.json docs/research/models/katyayani-live.md apps/web/lib/models/katyayani-live.results.json
