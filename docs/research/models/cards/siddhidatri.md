@@ -28,21 +28,21 @@ logistic calibration, so every row in the table states a probability.
 
 | Verdict from | F1 | Episode recall | False alarms / 1000 | ECE ↓ | Brier ↓ |
 |---|---:|---:|---:|---:|---:|
-| Siddhidatri v0 (fused) | 0.537 | 0.774 | 47.8 | 0.0419 | 0.0571 |
-| Shailaputri alone, calibrated | 0.539 | 0.597 | 3.8 | 0.0182 | 0.0415 |
+| Siddhidatri v0 (fused) | 0.534 | 0.768 | 47.9 | 0.0419 | 0.0571 |
+| Shailaputri alone, calibrated | 0.530 | 0.590 | 4.0 | 0.0183 | 0.0415 |
 | PCA alone, calibrated | 0.416 | 0.724 | 84.5 | 0.0422 | 0.0582 |
 | Max robust z alone, calibrated | 0.253 | 0.778 | 20.4 | 0.0183 | 0.0420 |
 
-*Copied from the generated table at run 40406026750 (27 Oct). LightGBM on CI's shared CPUs moves these
+*Copied from the generated table at run 40577370883 (27 Oct). LightGBM on CI's shared CPUs moves these
 by a few hundredths between runs; the generated table is authoritative.*
 
 ## What the numbers say
 
 **Fusion did not earn its place on SMD.**
 
-- Its F1 equals Shailaputri's alone (0.537 against 0.539).
-- It catches more episodes (recall 0.774 against 0.597), but raises false
-  alarms twelve-fold (47.8 against 3.8).
+- Its F1 equals Shailaputri's alone (0.534 against 0.530).
+- It catches more episodes (recall 0.768 against 0.590), but raises false
+  alarms twelve-fold (47.9 against 4.0).
 - It is **worse calibrated** (ECE 0.042 against 0.018).
 
 The weights put most trust in Shailaputri, and the other two add mostly
@@ -51,6 +51,16 @@ a better verdict. A verdict-maker earns its place when its inputs disagree in
 useful ways. Here, as Chandraghanta's results showed for network detectors,
 that would need detectors that fail on different incidents, not
 three views of the same metrics.
+
+
+## v1 (run 40577370883, 27 October 2026): fusion at Shailaputri's false-alarm rate
+
+v1 held the fused threshold to Shailaputri's own false-alarm rate on the
+training groups' out-of-fold scores, to ask whether fusion catches more at the
+same cost. It does not. On held-out groups it scores F1 0.503 with 37.6 false
+alarms per 1000, against Shailaputri's 0.530 and 4.0. The budget set on the
+training groups does not hold on unseen machines, so fusion stays a recorded
+negative and Shailaputri alone is the detector to use.
 
 ## Known limitations
 

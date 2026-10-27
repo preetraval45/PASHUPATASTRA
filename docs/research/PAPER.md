@@ -327,8 +327,10 @@ comes from retrieval and the model writes around it.
   then it confirms only 0.092 of recoveries: honest tuning shows the model
   cannot separate "recovered" from "not yet" sharply enough to be both safe and
   useful.
-- Siddhidatri's fusion matched Shailaputri alone on F1 (0.537 against 0.539)
-  while raising false alarms from 3.8 to 47.8
+- Siddhidatri's fusion matched Shailaputri alone on F1 (0.534 against 0.530)
+  while raising false alarms from 4.0 to 47.9. Held to Shailaputri's
+  false-alarm rate on the training groups, it still reached 37.6 on unseen
+  machines, with F1 0.503
   ([siddhidatri.md](models/siddhidatri.md)).
 
 Neither verdict closes an incident without a human.

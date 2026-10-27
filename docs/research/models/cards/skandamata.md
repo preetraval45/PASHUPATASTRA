@@ -41,11 +41,11 @@ are a snapshot of training run 40360156287 (26 October 2026).
   test 1,269. The test behaviours describe 115 groups, malware families,
   tools and campaigns that never appear in training.
 
-## Metrics (run 40403217142; test, 1,269 behaviours)
+## Metrics (run 40578527282; test, 1,269 behaviours)
 
 | Recommender | Hit@1 | Recall@5 | Precision@5 | MRR | nDCG@10 |
 |---|---:|---:|---:|---:|---:|
-| Skandamata v0 | 0.787 | 0.824 | 0.436 | 0.849 | 0.839 |
+| Skandamata v0 | 0.792 | 0.824 | 0.437 | 0.852 | 0.840 |
 | BM25 two-hop (behaviour → techniques → their mitigations) | 0.537 | 0.646 | 0.335 | 0.659 | 0.652 |
 | Popularity (the same list for everyone) | 0.232 | 0.398 | 0.206 | 0.443 | 0.433 |
 | BM25 direct (behaviour → mitigation text) | 0.195 | 0.259 | 0.128 | 0.344 | 0.276 |
