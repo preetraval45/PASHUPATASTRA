@@ -254,7 +254,7 @@ Format: **Owner · Effort · Depends · Closes**, then *Why*, *Steps*, *Done whe
 
 ### Block B — Ground truth and training data (Weeks 7–12)
 
-- [ ] **RP-12 · Learn: evaluating ML systems honestly**
+- [ ] **RP-12 · Learn: evaluating ML systems honestly** — *Study notes prepared 27 Oct: [notes/RP-12](notes/RP-12-evaluating-honestly.md). It has the eight leakage types, a draft model info sheet for this project with exposures marked (RCAEval repetitions, live `deploy_before`, the subset's narrow test distribution) and four questions. Remains: the owner reads the three sources and answers the done-when question.*
   **You** · 4 h · Depends: —
   *Steps:* Liang et al. 2022 (*HELM*, the framing); Hamel Husain's posts on evals (error analysis first); Kapoor & Narayanan 2023, *Leakage and the Reproducibility Crisis in ML-based Science* (*Patterns*). The last one is the most important paper in this plan for you. Log all three.
   *Done when:* you can list the leakage types Kapoor & Narayanan describe, and say which ones this project is exposed to.
