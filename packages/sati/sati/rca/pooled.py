@@ -80,7 +80,10 @@ def main() -> int:
         roots = test.groupby("case")["root"].first().to_dict()
         others = table[table["system"] != held]
         v0 = model.predict(model.train_ranker(others[others["system"] != "live"], features), test, features)
-        row = {"cases": len(roots), "v0 (other RCAEval systems)": kaal.at_k(v0, roots, 1)}
+        row = {"cases": len(roots), "v0 (other RCAEval systems)": kaal.at_k(v0, roots, 1),
+               # How much each side learned from, so a gain can be read against its cost in data.
+               "train_cases": {"v0": int(others.loc[others["system"] != "live", "case"].nunique()),
+                               "v1": int(others["case"].nunique())}}
         if held != "live":
             v1 = model.predict(model.train_ranker(others, features), test, features)
             row["v1 (+ live stack)"] = kaal.at_k(v1, roots, 1)
