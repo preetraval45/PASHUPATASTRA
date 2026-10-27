@@ -10,8 +10,8 @@ Recall is per anomaly *episode*; precision is per flagged minute; false alarms a
 
 | Detector | F1 | Precision | Episode recall | False alarms / 1000 | Lead |
 |---|---:|---:|---:|---:|---:|
-| **shailaputri-v1** | 0.525 | 0.611 | 0.601 | 4.5 | 122.0 |
-| **shailaputri-v1 onset-weighted** | 0.564 | 0.617 | 0.643 | 4.6 | 106.9 |
+| **shailaputri-v1** | 0.531 | 0.551 | 0.663 | 6.5 | 110.4 |
+| **shailaputri-v1 onset-weighted** | 0.556 | 0.628 | 0.623 | 4.6 | 108.5 |
 | max robust z | 0.279 | 0.188 | 0.798 | 18.0 | 105.8 |
 | pca per machine | 0.419 | 0.426 | 0.728 | 86.6 | 101.1 |
 
@@ -19,16 +19,16 @@ Recall is per anomaly *episode*; precision is per flagged minute; false alarms a
 
 | Held out | Machines | Detector | F1 | Recall | FA / 1000 | Lead |
 |---|---:|---|---:|---:|---:|---:|
-| `machine-1` | 8 | shailaputri-v1 | 0.548 | 0.743 | 9.9 | 127.4 |
-| `machine-1` | 8 | shailaputri-v1 onset-weighted | 0.588 | 0.794 | 10.5 | 111.2 |
+| `machine-1` | 8 | shailaputri-v1 | 0.555 | 0.759 | 10.0 | 119.5 |
+| `machine-1` | 8 | shailaputri-v1 onset-weighted | 0.588 | 0.776 | 10.5 | 114.1 |
 | `machine-1` | 8 | max robust z | 0.372 | 0.837 | 28.3 | 111.9 |
 | `machine-1` | 8 | pca per machine | 0.364 | 0.577 | 65.0 | 104.3 |
-| `machine-2` | 9 | shailaputri-v1 | 0.539 | 0.520 | 1.4 | 95.3 |
-| `machine-2` | 9 | shailaputri-v1 onset-weighted | 0.587 | 0.563 | 1.1 | 87.3 |
+| `machine-2` | 9 | shailaputri-v1 | 0.556 | 0.518 | 1.3 | 92.0 |
+| `machine-2` | 9 | shailaputri-v1 onset-weighted | 0.563 | 0.530 | 1.0 | 87.1 |
 | `machine-2` | 9 | max robust z | 0.279 | 0.751 | 5.9 | 100.9 |
 | `machine-2` | 9 | pca per machine | 0.562 | 0.878 | 38.8 | 95.2 |
-| `machine-3` | 11 | shailaputri-v1 | 0.488 | 0.540 | 2.3 | 143.2 |
-| `machine-3` | 11 | shailaputri-v1 onset-weighted | 0.517 | 0.571 | 2.3 | 122.0 |
+| `machine-3` | 11 | shailaputri-v1 | 0.482 | 0.711 | 8.1 | 119.8 |
+| `machine-3` | 11 | shailaputri-v1 onset-weighted | 0.518 | 0.564 | 2.3 | 124.3 |
 | `machine-3` | 11 | max robust z | 0.185 | 0.805 | 19.8 | 104.6 |
 | `machine-3` | 11 | pca per machine | 0.330 | 0.728 | 156.0 | 103.8 |
 
