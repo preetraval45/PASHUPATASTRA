@@ -84,12 +84,25 @@ def fit_lgb(x: pd.DataFrame, y: np.ndarray) -> lgb.Booster:
     return lgb.train({**PARAMS, "scale_pos_weight": weight}, lgb.Dataset(x, label=y), num_boost_round=ROUNDS)
 
 
-def detect(xtr: pd.DataFrame, ytr: np.ndarray, xte: pd.DataFrame, salt: str) -> tuple[np.ndarray, float]:
+FPR_BUDGET = 0.01
+
+
+def detect(xtr: pd.DataFrame, ytr: np.ndarray, xte: pd.DataFrame, salt: str,
+           fpr: float | None = None) -> tuple[np.ndarray, float]:
     """Train on the training rows outside the validation slice, choose the
-    threshold on the slice, and return 0/1 flags for the test rows."""
+    threshold on the slice, and return 0/1 flags for the test rows.
+
+    `fpr` (v2) sets the threshold so that at most that share of the slice's
+    benign flows is flagged, instead of the F1-best one. v0's F1 threshold
+    flagged one normal UNSW-NB15 flow in four; an alerting system is judged at
+    a fixed false-alarm rate, so that is the operating point v2 reports."""
     val = validation_mask(len(xtr), salt)
     booster = fit_lgb(xtr[~val], ytr[~val])
-    t = threshold(ytr[val], booster.predict(xtr[val]))
+    val_scores = booster.predict(xtr[val])
+    if fpr is None:
+        t = threshold(ytr[val], val_scores)
+    else:
+        t = float(np.quantile(val_scores[ytr[val] == 0], 1 - fpr))
     return (booster.predict(xte) >= t).astype(int), t
 
 
@@ -126,6 +139,7 @@ def run_unsw(folder: Path) -> dict:
     flags = {
         "chandraghanta-v0": detect(xtr, ytr, xte, "unsw")[0],
         "chandraghanta-v0 without TTL": detect(xtr_nt, ytr, xte_nt, "unsw")[0],
+        "chandraghanta-v2 (1% false-alarm budget)": detect(xtr, ytr, xte, "unsw", FPR_BUDGET)[0],
         "pca (benign-only)": pca_detect(xtr, ytr, xte, "unsw"),
     }
     flags["chandraghanta-v1 (either)"] = flags["chandraghanta-v0"] | flags["pca (benign-only)"]
@@ -148,6 +162,7 @@ def run_cic(folder: Path) -> dict:
     ytr, yte = train["label"].to_numpy(), test["label"].to_numpy()
     flags = {
         "chandraghanta-v0": detect(train[features], ytr, test[features], "cic")[0],
+        "chandraghanta-v2 (1% false-alarm budget)": detect(train[features], ytr, test[features], "cic", FPR_BUDGET)[0],
         "pca (benign-only)": pca_detect(train[features], ytr, test[features], "cic"),
     }
     # v1: flag a flow if either detector does. They fail on different families (the
