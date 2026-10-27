@@ -27,6 +27,13 @@
       "mrr": 0.3716,
       "n": 1727
     },
+    "tf-idf logistic regression": {
+      "recall@1": 0.6462,
+      "recall@5": 0.8321,
+      "recall@10": 0.8691,
+      "mrr": 0.7297,
+      "n": 1727
+    },
     "hashing-embedder (Smriti today)": {
       "recall@1": 0.1199,
       "recall@5": 0.2264,
@@ -85,7 +92,7 @@
     {
       "epoch": 10,
       "loss": 0.0031,
-      "val_mrr": 0.7099
+      "val_mrr": 0.7098
     },
     {
       "epoch": 11,
@@ -98,5 +105,5 @@
       "val_mrr": 0.6958
     }
   ],
-  "seconds": 234.7
+  "seconds": 492.1
 }

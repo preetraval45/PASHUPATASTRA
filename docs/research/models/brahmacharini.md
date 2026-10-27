@@ -8,6 +8,7 @@
 |---|---:|---:|---:|---:|
 | **Brahmacharini v0** | 0.614 | 0.802 | 0.854 | 0.699 |
 | bm25 | 0.268 | 0.478 | 0.580 | 0.372 |
+| tf-idf logistic regression | 0.646 | 0.832 | 0.869 | 0.730 |
 | hashing-embedder (Smriti today) | 0.120 | 0.226 | 0.283 | 0.177 |
 
 Epochs chosen on validation sources: 10.
