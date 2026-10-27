@@ -1,0 +1,16 @@
+{
+ "id": "preetraval4518071604/shailaputri-server-anomalies-on-unseen-machines",
+ "title": "Shailaputri: Server Anomalies on Unseen Machines",
+ "code_file": "notebook.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": false,
+ "enable_gpu": false,
+ "enable_internet": false,
+ "dataset_sources": [
+  "preetraval4518071604/sati-shailaputri-smd-server-anomalies"
+ ],
+ "competition_sources": [],
+ "kernel_sources": [],
+ "model_sources": []
+}

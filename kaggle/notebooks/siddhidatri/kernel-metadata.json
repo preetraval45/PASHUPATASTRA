@@ -1,0 +1,16 @@
+{
+ "id": "preetraval4518071604/siddhidatri-fusing-detectors-and-calibration",
+ "title": "Siddhidatri: Fusing Detectors, and Calibration",
+ "code_file": "notebook.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": false,
+ "enable_gpu": false,
+ "enable_internet": false,
+ "dataset_sources": [
+  "preetraval4518071604/sati-siddhidatri-detector-scores"
+ ],
+ "competition_sources": [],
+ "kernel_sources": [],
+ "model_sources": []
+}

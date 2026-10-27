@@ -181,6 +181,206 @@ print(f"PCA baseline F1: {f1_score(y[cut:], err > threshold):.3f}")'''),
              "detection. Both results are in the attached files."),
         ],
     },
+
+    "brahmacharini": {
+        "title": "Brahmacharini: Which ATT&CK Technique Is This?",
+        "datasets": [f"{OWNER}/sati-brahmacharini-attack-behaviour-to-technique"],
+        "cells": [
+            ("markdown", intro("Brahmacharini", "which ATT&CK technique is this behaviour?",
+             "Real attacker behaviours from MITRE ATT&CK, each labelled with its technique. The test split holds "
+             "groups, malware and tools never seen in training. Below: a TF-IDF retriever, a trained classifier, "
+             "and what a random split would have claimed.")),
+            ("code", FIND + """
+import pandas as pd, numpy as np
+b = pd.read_csv(find("behaviours.csv")); t = pd.read_csv(find("techniques.csv"))
+print(b["split"].value_counts().to_dict(), len(t), "techniques")"""),
+            ("code", """from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+train, test = b[b["split"] == "train"], b[b["split"] == "test"]
+vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True).fit(pd.concat([train["behaviour"], t["text"]]))
+sims = (vec.transform(test["behaviour"]) @ vec.transform(t["text"]).T).toarray()
+ranked = t["technique_id"].values[np.argsort(-sims, axis=1)]
+print(f"TF-IDF retrieval  recall@1 {np.mean(ranked[:, 0] == test['technique_id'].values):.3f}  "
+      f"recall@10 {np.mean([g in r[:10] for g, r in zip(test['technique_id'], ranked)]):.3f}")
+clf = LogisticRegression(max_iter=2000, C=5).fit(vec.transform(train["behaviour"]), train["technique_id"])
+print(f"trained classifier recall@1 {clf.score(vec.transform(test['behaviour']), test['technique_id']):.3f}")"""),
+            ("code", """from sklearn.model_selection import train_test_split
+ra, rb = train_test_split(b, test_size=0.2, random_state=7)
+leaky = LogisticRegression(max_iter=2000, C=5).fit(vec.transform(ra["behaviour"]), ra["technique_id"])
+print(f"same classifier on a RANDOM split: {leaky.score(vec.transform(rb['behaviour']), rb['technique_id']):.3f}  <- inflated")"""),
+            ("markdown", "**Reading it:** a random split puts the same group's phrasing on both sides and inflates "
+             "the score. Brahmacharini, a dual encoder trained contrastively, reaches recall@1 0.614 and recall@10 "
+             "0.854 on the by-source test, against 0.268 and 0.580 for BM25."),
+        ],
+    },
+    "skandamata": {
+        "title": "Skandamata: Which Mitigations Stop This Attack?",
+        "datasets": [f"{OWNER}/sati-skandamata-attack-behaviour-to-mitigations"],
+        "cells": [
+            ("markdown", intro("Skandamata", "which defences stop what the attacker did?",
+             "Each behaviour is labelled with every ATT&CK mitigation linked to its technique (2.8 on average). "
+             "Rank the 44 mitigations; the split is by source, so test behaviours describe unseen attackers.")),
+            ("code", FIND + """
+import pandas as pd, numpy as np
+b = pd.read_csv(find("behaviours.csv")); mit = pd.read_csv(find("mitigations.csv"))
+ids = list(mit["mitigation_id"])
+Y = np.array([[m in set(str(x).split(";")) for m in ids] for x in b["mitigation_ids"]], dtype=int)
+train, test = (b["split"] == "train").values, (b["split"] == "test").values
+print(Y.sum(1).mean().round(2), "right mitigations per behaviour")"""),
+            ("code", """from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
+vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True).fit(b.loc[train, "behaviour"])
+keep = Y[train].sum(0) > 0
+model = OneVsRestClassifier(LogisticRegression(max_iter=1000, C=4)).fit(vec.transform(b.loc[train, "behaviour"]), Y[train][:, keep])
+scores = np.full((test.sum(), len(ids)), -1.0)
+scores[:, keep] = model.predict_proba(vec.transform(b.loc[test, "behaviour"]))
+top = scores.argmax(1)
+print(f"trained    hit@1 {Y[test][np.arange(test.sum()), top].mean():.3f}")
+popular = Y[train].sum(0).argmax()
+print(f"popularity hit@1 {Y[test][:, popular].mean():.3f}  (always recommend the most common mitigation)")"""),
+            ("markdown", "**Reading it:** a few mitigations (audit, user training) apply to most techniques, so "
+             "popularity is a real baseline. Skandamata gets the first recommendation right 0.792 of the time "
+             "against 0.232 for popularity. It recommends; in Sati, a person or the policy engine decides."),
+        ],
+    },
+    "kushmanda": {
+        "title": "Kushmanda: Answer From Evidence, Cite, or Decline",
+        "datasets": [f"{OWNER}/sati-kushmanda-data"],
+        "cells": [
+            ("markdown", intro("Kushmanda", "answer from the evidence, cite it, or decline",
+             "Each question comes with three passages. A good answer is written from one passage and ends with its "
+             "citation, e.g. `[2]`; when no passage answers, the right reply is `The context does not answer "
+             "this.` Below: the data, and the baselines any model must beat.")),
+            ("code", FIND + """
+import json, re, pandas as pd
+def load(name):
+    return pd.DataFrame([json.loads(line) for line in open(find(name), encoding="utf-8")])
+train, test = load("train.jsonl"), load("test.jsonl")
+print(len(train), "train /", len(test), "test")
+print(test["kind"].value_counts().to_dict())
+r = test.iloc[0]
+print("Q:", r["question"])
+for i, p in enumerate(r["passages"], 1):
+    print(f"[{i}]", p[:160])
+print("A:", r["answer"])"""),
+            ("code", """def words(s):
+    return set(re.findall(r"[a-z0-9]+", s.lower()))
+def pick(q, passages):
+    scores = [len(words(q) & words(p)) for p in passages]
+    return max(range(len(passages)), key=lambda i: scores[i]) + 1
+def cited(a):
+    m = re.search(r"\\[(\\d)\\]\\s*$", a)
+    return int(m.group(1)) if m else None
+gold = [cited(a) for a in test["answer"]]
+picked = [pick(q, ps) for q, ps in zip(test["question"], test["passages"])]
+answerable = [g is not None for g in gold]
+print(f"word overlap picks the right passage: {sum(p == g for p, g in zip(picked, gold) if g) / sum(answerable):.3f}")
+print(f"share of questions that must be declined: {1 - sum(answerable) / len(test):.3f}")"""),
+            ("markdown", "**Reading it:** picking the right passage is easy for word overlap; writing the answer, "
+             "and knowing when to decline, is the task. Kushmanda (17M parameters, trained from scratch on this "
+             "data's train split) reaches ROUGE-L 0.938 on required actions and declines on 0.543 of unanswerable "
+             "questions, but copies exact identifiers worse than word overlap, so Sati takes identifiers from "
+             "retrieval and lets the model write around them."),
+        ],
+    },
+    "shailaputri": {
+        "title": "Shailaputri: Server Anomalies on Unseen Machines",
+        "datasets": [f"{OWNER}/sati-shailaputri-smd-server-anomalies"],
+        "cells": [
+            ("markdown", intro("Shailaputri", "is this server behaving abnormally right now?",
+             "28 real servers (SMD), one row per minute with causal features. Hold out one machine group at a time: "
+             "the model is always tested on servers it never saw. The false-alarm rate is reported beside F1, "
+             "because an alert stream nobody reads is the real failure.")),
+            ("code", FIND + """
+import pandas as pd, numpy as np
+d = pd.read_parquet(find("minutes.parquet"))
+feats = [c for c in d.columns if c not in ("machine", "group", "minute", "anomaly")]
+print(d.shape, d.groupby("group")["machine"].nunique().to_dict(), "anomaly share", round(d["anomaly"].mean(), 4))"""),
+            ("code", """import lightgbm as lgb
+from sklearn.metrics import f1_score
+rows = []
+for held in sorted(d["group"].unique()):
+    tr, te = d[d["group"] != held], d[d["group"] == held]
+    m = lgb.LGBMClassifier(n_estimators=300, learning_rate=0.05, num_leaves=31, verbose=-1).fit(tr[feats], tr["anomaly"])
+    p_tr = m.predict_proba(tr[feats])[:, 1]
+    t = max(np.arange(0.3, 0.96, 0.05), key=lambda t: f1_score(tr["anomaly"], p_tr >= t))  # chosen on training groups
+    flag = m.predict_proba(te[feats])[:, 1] >= t
+    rows.append({"held out": held, "F1 (per minute)": f1_score(te["anomaly"], flag),
+                 "false alarms / 1000 normal minutes": 1000 * flag[te["anomaly"].values == 0].mean()})
+pd.DataFrame(rows).round(3)"""),
+            ("markdown", "**Reading it:** these are per-minute scores. The project scores per anomaly *episode* "
+             "with lead time, where Shailaputri reaches F1 0.556 with 4.6 false alarms per 1000 minutes, against "
+             "0.419 and 86.6 for per-machine PCA."),
+        ],
+    },
+    "mahagauri": {
+        "title": "Mahagauri: Is the Incident Really Over?",
+        "datasets": [f"{OWNER}/sati-mahagauri-server-recovery"],
+        "cells": [
+            ("markdown", intro("Mahagauri", "has the server really recovered?",
+             "327 real server incidents, minute by minute from onset to an hour after. Declare the incident over "
+             "once the model says 'recovered' for several minutes running. The dangerous error is declaring it "
+             "over while it is still going.")),
+            ("code", FIND + """
+import pandas as pd, numpy as np
+d = pd.read_parquet(find("recovery.parquet"))
+feats = [c for c in d.columns if c not in ("incident", "group", "recovered")]
+print(d["incident"].nunique(), "incidents")"""),
+            ("code", """import lightgbm as lgb
+def outcome(recovered, ok, hold):
+    end = int(recovered.argmax()) if recovered.any() else len(recovered)
+    run = 0
+    for i, v in enumerate(ok):
+        run = run + 1 if v else 0
+        if run >= hold:
+            return "premature" if i < end else "confirmed"
+    return "unconfirmed"
+rows = []
+for held in sorted(d["group"].unique()):
+    tr, te = d[d["group"] != held], d[d["group"] == held].copy()
+    m = lgb.LGBMClassifier(n_estimators=300, learning_rate=0.05, verbose=-1).fit(tr[feats], tr["recovered"])
+    te["p"] = m.predict_proba(te[feats])[:, 1]
+    for t, hold in ((0.5, 3), (0.9, 10)):
+        res = pd.Series([outcome(g["recovered"].values, g["p"].values >= t, hold) for _, g in te.groupby("incident")])
+        rows.append({"held out": held, "threshold": t, "hold (min)": hold, **res.value_counts(normalize=True).round(3).to_dict()})
+pd.DataFrame(rows).fillna(0)"""),
+            ("markdown", "**Reading it:** a lenient rule confirms more recoveries but declares many too early; a "
+             "strict one is safe and rarely says anything. Mahagauri, tuned on out-of-fold scores, keeps premature "
+             "all-clears at 0.021 on unseen groups but confirms only 0.092: making a verifier both safe and useful "
+             "is open."),
+        ],
+    },
+    "siddhidatri": {
+        "title": "Siddhidatri: Fusing Detectors, and Calibration",
+        "datasets": [f"{OWNER}/sati-siddhidatri-detector-scores"],
+        "cells": [
+            ("markdown", intro("Siddhidatri", "one calibrated verdict from three detectors",
+             "Per-minute scores from a learned detector (trained without the minute's machine group) and two "
+             "statistical ones. Fuse them with logistic regression, held out by group, and check whether fusion "
+             "beats the best single detector and whether its probabilities mean what they say.")),
+            ("code", FIND + """
+import pandas as pd, numpy as np
+d = pd.read_parquet(find("detector_scores.parquet")).fillna(0)
+S = ["shailaputri", "max_robust_z", "pca"]
+print(d.shape)"""),
+            ("code", """from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score, brier_score_loss
+rows = []
+for held in sorted(d["group"].unique()):
+    tr, te = d[d["group"] != held], d[d["group"] == held]
+    fused = LogisticRegression(max_iter=1000).fit(tr[S], tr["anomaly"]).predict_proba(te[S])[:, 1]
+    row = {"held out": held, "fused AUC": roc_auc_score(te["anomaly"], fused),
+           "fused Brier": brier_score_loss(te["anomaly"], fused)}
+    for s in S:
+        row[f"{s} AUC"] = roc_auc_score(te["anomaly"], te[s])
+    rows.append(row)
+pd.DataFrame(rows).round(3)"""),
+            ("markdown", "**Reading it:** if fused AUC barely beats the learned detector alone, fusion buys little. "
+             "Siddhidatri matched Shailaputri's F1 (0.534 against 0.530) with far more false alarms (47.9 against "
+             "4.0 per 1000). A fusion that catches more at the same false-alarm rate would be a new result."),
+        ],
+    },
 }
 
 

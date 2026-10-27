@@ -1,0 +1,16 @@
+{
+ "id": "preetraval4518071604/skandamata-which-mitigations-stop-this-attack",
+ "title": "Skandamata: Which Mitigations Stop This Attack?",
+ "code_file": "notebook.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": false,
+ "enable_gpu": false,
+ "enable_internet": false,
+ "dataset_sources": [
+  "preetraval4518071604/sati-skandamata-attack-behaviour-to-mitigations"
+ ],
+ "competition_sources": [],
+ "kernel_sources": [],
+ "model_sources": []
+}
