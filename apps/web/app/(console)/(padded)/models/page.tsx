@@ -470,19 +470,19 @@ export default function ModelsPage() {
         </section>
       )}
 
-      {!MAHAGAURI.pending && (
-        <section id="try-servers" className="scroll-mt-24 space-y-4">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">Try Shailaputri, Siddhidatri and Mahagauri</h2>
-            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
-              The three models that watch servers, run live on incidents from machines none of them trained on.
-            </p>
-          </div>
-          <Panel title="Try it" aside="runs live in the API">
-            <TryServers />
-          </Panel>
-        </section>
+      <section id="try-servers" className="scroll-mt-24 space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Try Shailaputri, Siddhidatri and Mahagauri</h2>
+          <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+            The three models that watch servers, run live on incidents from machines none of them trained on.
+          </p>
+        </div>
+        <Panel title="Try it" aside="runs live in the API">
+          <TryServers />
+        </Panel>
+      </section>
 
+      {!MAHAGAURI.pending && (
         <section id="mahagauri-results" className="scroll-mt-24 space-y-4">
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Mahagauri — is it really over?</h2>
