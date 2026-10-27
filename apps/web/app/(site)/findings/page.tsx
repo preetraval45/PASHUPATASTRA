@@ -7,6 +7,7 @@ import katyayani from "@/lib/models/katyayani.results.json";
 import simtoreal from "@/lib/models/katyayani-simtoreal.results.json";
 import kushmanda from "@/lib/models/kushmanda.results.json";
 import mahagauri from "@/lib/models/mahagauri.results.json";
+import diagnosis from "@/lib/models/rcaeval-diagnosis.results.json";
 import siddhidatri from "@/lib/models/siddhidatri.results.json";
 import smd from "@/lib/models/shailaputri-smd.results.json";
 
@@ -57,7 +58,25 @@ function findings(): Finding[] {
   const fused = siddhidatri.mean_across_groups["siddhidatri-v0"];
   const alone = siddhidatri.mean_across_groups.shailaputri;
 
+  const d1 = diagnosis["rca@1"] as Record<string, number>;
+  const llama = diagnosis.paired_vs_katyayani["llm:llama3"];
+
   return [
+    {
+      id: "llm",
+      kicker: "Root cause · RCAEval, a benchmark we did not write",
+      title: "Our own model beats general LLMs at naming the root cause",
+      headline: pct(d1.katyayani),
+      versus: [
+        { label: "Katyayani, trained on other real systems", value: f3(d1.katyayani) },
+        { label: "llama3, same evidence", value: f3(d1["llm:llama3"]) },
+        { label: "qwen2.5 7B, same evidence", value: f3(d1["llm:qwen2.5:7b"]) },
+        { label: "just pick the loudest service", value: f3(d1.loudest) },
+      ],
+      body: `On ${diagnosis.cases} cases declared before any run, every diagnoser saw the same evidence and was scored by the same harness. Where Katyayani and llama3 disagreed, Katyayani was right ${llama.only_katyayani} times and llama3 ${llama.only_other}; the difference holds after correcting for every comparison made. A small model trained on real incidents beats general models reading the same data.`,
+      href: "/models#sim-to-real",
+      tone: "positive",
+    },
     {
       id: "split",
       kicker: "Network intrusion · CIC-IDS2017",

@@ -1,0 +1,32 @@
+{
+ "cases": 100,
+ "rca@1": {
+  "katyayani": 0.93,
+  "llm:llama3": 0.55,
+  "llm:qwen2.5:7b": 0.51,
+  "loudest": 0.66,
+  "sati-kaal": 0.35
+ },
+ "paired_vs_katyayani": {
+  "llm:llama3": {
+   "only_katyayani": 41,
+   "only_other": 3,
+   "holm_p": 3.2366642699344084e-09
+  },
+  "llm:qwen2.5:7b": {
+   "only_katyayani": 44,
+   "only_other": 2,
+   "holm_p": 9.225686881109141e-11
+  },
+  "loudest": {
+   "only_katyayani": 30,
+   "only_other": 3,
+   "holm_p": 1.4011748135089874e-06
+  },
+  "sati-kaal": {
+   "only_katyayani": 59,
+   "only_other": 1,
+   "holm_p": 4.2327252813834093e-16
+  }
+ }
+}

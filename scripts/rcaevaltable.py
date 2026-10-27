@@ -1,6 +1,9 @@
 """The RP-33 table: every diagnoser on the declared RCAEval sample, from its JSONL records.
 
     python scripts/rcaevaltable.py > docs/research/models/rcaeval-diagnosis.md
+    python scripts/rcaevaltable.py --json apps/web/lib/models/rcaeval-diagnosis.results.json
+
+`--json` writes the same numbers as data, for the website's Findings page.
 
 Recomputed from `benchmark/results/rcaeval/*.jsonl`, one line per answer, so a
 reader can check every cell. Wilson 95% intervals; errors and abstentions are
@@ -34,6 +37,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> str:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
+    json_out = Path(sys.argv[sys.argv.index("--json") + 1]) if "--json" in sys.argv else None
     rows, hits = [], {}
     for path in sorted(RECORDS.glob("*.jsonl")):
         lines = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
@@ -67,6 +71,13 @@ def main() -> int:
         print("|---|---:|---:|---:|---:|---:|")
         for (name, n, t), adj in zip(tests, adjusted, strict=True):
             print(f"| {LABEL.get(name, name)} | {n} | {t.only_a} | {t.only_b} | {t.p_value:.2g} | {adj:.2g} |")
+        if json_out:
+            json_out.write_text(json.dumps({
+                "cases": rows[0][1] if rows else 0,
+                "rca@1": {name: round(sum(v.values()) / len(v), 4) for name, v in hits.items()},
+                "paired_vs_katyayani": {name: {"only_katyayani": t.only_a, "only_other": t.only_b, "holm_p": adj}
+                                        for (name, _, t), adj in zip(tests, adjusted, strict=True)},
+            }, indent=1) + "\n", encoding="utf-8")
     print("\nAn error (provider timeout or invalid schema) counts as a miss and is also listed on its own. LLMs run "
           "on CPU through Ollama on GitHub's runners, at temperature 0.2, through the Gateway.")
     return 0

@@ -77,7 +77,7 @@ jobs:
           path: benchmark/results/rcaeval
           merge-multiple: true
       - run: pip install -e packages/core
-      - run: python scripts/rcaevaltable.py > docs/research/models/rcaeval-diagnosis.md
+      - run: python scripts/rcaevaltable.py --json apps/web/lib/models/rcaeval-diagnosis.results.json > docs/research/models/rcaeval-diagnosis.md
       - name: commit the records and the table
         run: |
-          bash scripts/pushresults.sh "docs(research): RCAEval diagnosis, Sati vs LLMs, from run ${{ github.run_id }}" docs/research/models/rcaeval-diagnosis.md benchmark/results/rcaeval
+          bash scripts/pushresults.sh "docs(research): RCAEval diagnosis, Sati vs LLMs, from run ${{ github.run_id }}" docs/research/models/rcaeval-diagnosis.md apps/web/lib/models/rcaeval-diagnosis.results.json benchmark/results/rcaeval
