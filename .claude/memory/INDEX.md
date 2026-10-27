@@ -96,3 +96,4 @@ Protocol: before every push, write a topic-named file from
 - [RetrainChurn](RetrainChurn.md) — per-model path gating so retrains stop drifting published numbers
 - [LiveResults](LiveResults.md) — RP-19 done: live 0.895 RCAEval-trained vs 0.335 Kaal; 2σ realism saturated, measured
 - [ConsoleFiltersAudit](ConsoleFiltersAudit.md) — RP-53 filters; API route changes need exportopenapi or deploy-api is skipped
+- [OwnerReadingRP15](OwnerReadingRP15.md) — reading tasks owner-attested; RP-15 wired, waiting on rp13.yaml committed alone first
