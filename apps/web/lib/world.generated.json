@@ -1,10 +1,10 @@
 {
-  "as_of": "2026-10-27T12:16:00+00:00",
+  "as_of": "2026-10-28T12:58:48+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.10.26",
-    "total": 1758,
+    "catalog_version": "2026.10.27",
+    "total": 1760,
     "added_last_30_days": 32,
     "known_ransomware_use": 361,
     "by_month": [
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-10",
-        "value": 28
+        "value": 30
       }
     ],
     "top_vendors": [
@@ -76,11 +76,11 @@
       },
       {
         "label": "Adobe",
-        "value": 82
+        "value": 83
       },
       {
         "label": "Google",
-        "value": 75
+        "value": 76
       },
       {
         "label": "Oracle",
@@ -104,6 +104,22 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-48356",
+        "vendor": "Adobe",
+        "product": "Commerce and Magento",
+        "name": "Adobe Commerce and Magento Unrestricted Upload of File with Dangerous Type Vulnerability",
+        "added": "2026-10-27",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-111497",
+        "vendor": "Google",
+        "product": "Brotli",
+        "name": "Google Brotli Unchecked Return Value Vulnerability",
+        "added": "2026-10-27",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-109618",
         "vendor": "PHP Group",
@@ -183,22 +199,6 @@
         "name": "Siemens Software Center Uncontrolled Search Path Element Vulnerability",
         "added": "2026-10-20",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-102764",
-        "vendor": "BeyondTrust",
-        "product": "Remote Support",
-        "name": "BeyondTrust Remote Support Authentication Bypass by Spoofing Vulnerability",
-        "added": "2026-10-16",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2025-61624",
-        "vendor": "Fortinet",
-        "product": "Multiple Products",
-        "name": "Fortinet Multiple Products Path Traversal Vulnerability",
-        "added": "2026-10-16",
-        "ransomware": false
       }
     ]
   },
@@ -207,14 +207,6 @@
     "source": "https://api.ransomware.live/v2/recentvictims",
     "victims": 100,
     "by_day": [
-      {
-        "label": "2026-10-23",
-        "value": 9
-      },
-      {
-        "label": "2026-10-24",
-        "value": 21
-      },
       {
         "label": "2026-10-25",
         "value": 21
@@ -225,32 +217,40 @@
       },
       {
         "label": "2026-10-27",
-        "value": 16
+        "value": 42
+      },
+      {
+        "label": "2026-10-28",
+        "value": 4
       }
     ],
     "by_group": [
       {
         "label": "qilin",
-        "value": 27
+        "value": 23
+      },
+      {
+        "label": "Whitearmor",
+        "value": 12
+      },
+      {
+        "label": "Booba Project",
+        "value": 10
       },
       {
         "label": "N0n",
-        "value": 14
+        "value": 9
       },
       {
         "label": "everest",
         "value": 8
       },
       {
-        "label": "Whitearmor",
-        "value": 8
+        "label": "play",
+        "value": 7
       },
       {
         "label": "emperador",
-        "value": 8
-      },
-      {
-        "label": "krybit",
         "value": 6
       },
       {
@@ -262,33 +262,25 @@
         "value": 3
       },
       {
-        "label": "crypto24",
-        "value": 2
-      },
-      {
-        "label": "ULose",
+        "label": "rhysida",
         "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 32
+        "value": 38
       },
       {
         "label": "DE",
-        "value": 11
+        "value": 8
       },
       {
         "label": "MY",
         "value": 4
       },
       {
-        "label": "IT",
-        "value": 3
-      },
-      {
-        "label": "ES",
+        "label": "BE",
         "value": 3
       },
       {
@@ -296,26 +288,26 @@
         "value": 3
       },
       {
-        "label": "FR",
-        "value": 2
+        "label": "IT",
+        "value": 3
       },
       {
         "label": "MX",
         "value": 2
       },
       {
-        "label": "TR",
+        "label": "CA",
+        "value": 2
+      },
+      {
+        "label": "ES",
         "value": 2
       }
     ],
     "by_sector": [
       {
-        "label": "Manufacturing",
-        "value": 19
-      },
-      {
         "label": "Technology",
-        "value": 15
+        "value": 13
       },
       {
         "label": "Professional Services",
@@ -323,31 +315,35 @@
       },
       {
         "label": "Healthcare",
-        "value": 12
-      },
-      {
-        "label": "Retail & E-Commerce",
-        "value": 11
+        "value": 13
       },
       {
         "label": "Not Found",
-        "value": 8
+        "value": 10
+      },
+      {
+        "label": "Manufacturing",
+        "value": 10
+      },
+      {
+        "label": "Retail & E-Commerce",
+        "value": 9
       },
       {
         "label": "Energy & Utilities",
         "value": 8
       },
       {
+        "label": "Education",
+        "value": 5
+      },
+      {
+        "label": "Government & Defense",
+        "value": 5
+      },
+      {
         "label": "Other",
-        "value": 3
-      },
-      {
-        "label": "Financial Services",
-        "value": 2
-      },
-      {
-        "label": "Transportation",
-        "value": 2
+        "value": 4
       }
     ]
   },
