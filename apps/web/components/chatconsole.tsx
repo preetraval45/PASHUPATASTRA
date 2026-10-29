@@ -124,6 +124,7 @@ export function ChatConsole({
   const [busy, setBusy] = useState(false);
   const [facts, setFacts] = useState(true);
   const [special, setSpecial] = useState("auto");
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [examples, setExamples] = useState<Example[] | null | undefined>(undefined);
 
   const log = useRef<HTMLDivElement>(null);
@@ -406,6 +407,59 @@ export function ChatConsole({
         {allowance && <div className="shrink-0 border-t border-[rgb(var(--edge))] px-4 py-3">{allowance}</div>}
       </aside>
 
+      {historyOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Conversation history">
+          <button type="button" aria-label="Close history" onClick={() => setHistoryOpen(false)} className="absolute inset-0 bg-black/50" />
+          <div className="rise absolute inset-x-0 bottom-0 flex max-h-[75vh] flex-col rounded-t-3xl border-t border-[rgb(var(--edge))] bg-[rgb(var(--panel))] pb-[env(safe-area-inset-bottom)] shadow-2xl">
+            <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-[rgb(var(--edge-strong))]" aria-hidden="true" />
+            <div className="flex items-center justify-between px-4 pb-2 pt-3">
+              <p className="font-semibold">History</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setHistoryOpen(false);
+                  startNew(GENERAL);
+                }}
+                className="focusable rounded-lg bg-[rgb(var(--astra))] px-3 py-1.5 text-sm font-medium text-[rgb(var(--ground))]"
+              >
+                + New chat
+              </button>
+            </div>
+            <ul className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+              {conversations.length === 0 && (
+                <li className="px-2 py-4 text-sm text-[rgb(var(--faint))]">No conversations yet. They are kept on this device only.</li>
+              )}
+              {conversations.map((c) => (
+                <li key={c.id} className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveId(c.id);
+                      go(c.scope);
+                      setHistoryOpen(false);
+                    }}
+                    className={`focusable min-w-0 flex-1 rounded-xl px-3 py-2.5 text-left ${c.id === activeId ? "bg-[rgb(var(--raised))]" : ""}`}
+                  >
+                    <span className="block truncate text-sm">{c.title}</span>
+                    <span className="text-[11px] text-[rgb(var(--faint))]">
+                      {c.scope === GENERAL ? "General" : c.scope} · {ago(c.updated)}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remove(c.id)}
+                    aria-label={`Delete conversation: ${c.title}`}
+                    className="focusable h-10 w-10 shrink-0 rounded-lg text-[rgb(var(--faint))] hover:text-[rgb(var(--crit))]"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       <section className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[rgb(var(--edge))] px-3 sm:gap-3 sm:px-4">
           <button
@@ -415,6 +469,18 @@ export function ChatConsole({
             className="focusable inline-flex h-8 w-8 items-center justify-center rounded-md border border-[rgb(var(--edge))] text-[rgb(var(--muted))] lg:hidden"
           >
             +
+          </button>
+          {/* Below lg the history sidebar is hidden; this opens it as a sheet, so past chats stay reachable on a phone. */}
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            aria-label={`History, ${conversations.length} conversation${conversations.length === 1 ? "" : "s"}`}
+            className="focusable inline-flex h-8 items-center gap-1.5 rounded-md border border-[rgb(var(--edge))] px-2 text-xs text-[rgb(var(--muted))] lg:hidden"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {conversations.length > 0 && <span className="tnum">{conversations.length}</span>}
           </button>
           <div className="min-w-0">
             <Listbox
