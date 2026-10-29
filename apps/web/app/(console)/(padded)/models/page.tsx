@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
+import kushmandaLarge from "@/lib/models/kushmanda-v3.results.json";
 import siddhidatri from "@/lib/models/siddhidatri.results.json";
 import { BRAHMACHARINI, CHANDRAGHANTA, KALARATRI, KALARATRI_BGL, KATYAYANI, KUSHMANDA, MAHAGAURI, SIM_TO_REAL, SKANDAMATA, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
@@ -417,6 +418,8 @@ export default function ModelsPage() {
               it is given, cites one, and says so when none holds the answer — tested on{" "}
               {KUSHMANDA.sft.evaluated_questions.toLocaleString()} questions about techniques, CVEs and weaknesses it never
               saw in tuning. It writes answers well and copies exact IDs badly, so IDs are checked against the citation.
+              A model twice its size, on a larger corpus, copies IDs better but declines less often when no passage
+              holds the answer, and declining is what Sati depends on, so the smaller one is served.
             </p>
           </div>
           <Panel title="Held-out questions" aside="higher is better">
@@ -427,6 +430,9 @@ export default function ModelsPage() {
                     <th className="py-2 pr-3 font-normal">Question</th>
                     <th className="py-2 pr-3 font-normal">Measure</th>
                     <th className="py-2 pr-3 text-right font-normal">Kushmanda</th>
+                    <th className="py-2 pr-3 text-right font-normal">
+                      Kushmanda, {(kushmandaLarge.parameters / 1e6).toFixed(0)}M
+                    </th>
                     <th className="py-2 pr-3 text-right font-normal">Word overlap</th>
                     <th className="py-2 text-right font-normal">Chance</th>
                   </tr>
@@ -441,14 +447,15 @@ export default function ModelsPage() {
                     ["classify", "exact_match", "Behaviour → technique"],
                   ] as const).map(([kind, metric, label]) => {
                     const g = KUSHMANDA.sft!.grounded!;
+                    const large = (kushmandaLarge.sft.grounded as Record<string, Record<string, Record<string, number>>>).kushmanda;
                     const cell = (who: string) => g[who]?.[kind]?.[metric];
                     return (
                       <tr key={kind}>
                         <td className="py-2 pr-3">{label}</td>
                         <td className="py-2 pr-3 text-xs text-[rgb(var(--faint))]">{metric.replace("_", " ")}</td>
-                        {["kushmanda", "lexical baseline", "chance"].map((who) => (
+                        {["kushmanda", "larger", "lexical baseline", "chance"].map((who) => (
                           <td key={who} className={`tnum py-2 pr-3 text-right ${who === "kushmanda" ? "font-semibold" : ""}`}>
-                            {cell(who)?.toFixed(3) ?? "—"}
+                            {(who === "larger" ? large?.[kind]?.[metric] : cell(who))?.toFixed(3) ?? "—"}
                           </td>
                         ))}
                       </tr>
