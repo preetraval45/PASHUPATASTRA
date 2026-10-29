@@ -102,3 +102,4 @@ Protocol: before every push, write a topic-named file from
 - [KaggleAndLive](KaggleAndLive.md) — 9/9/9 on Kaggle in progress; trees served exactly; Kushmanda weights stay private pending owner
 - [BrahmachariniTransformer.md](BrahmachariniTransformer.md) — 20M transformer loses to v0 (0.391 vs 0.614); v0 stays served
 - [VercelSchema.md](VercelSchema.md) — a "//" key in vercel.json failed every deploy for a day; how to read Vercel's real error
+- [ServeWhatWins.md](ServeWhatWins.md) — fused/classifier serving gated on same-run measurement; jobs commit only their own files
