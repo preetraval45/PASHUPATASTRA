@@ -5,6 +5,7 @@ import { BuiltWith } from "@/components/builtwith";
 import { Cite } from "@/components/cite";
 import { Badge, Offline, Page, Panel, statusForRisk } from "@/components/ui";
 import { getActions, getAttackMatrix, getHealth, getPolicyModel, tierLabel } from "@/lib/api";
+import { MODELS } from "@/lib/navadurga";
 
 /**
  * For the visitor who got interested and now wants to know whether to believe
@@ -83,6 +84,34 @@ export default async function HowItWorksPage() {
           Most tools stop after the second. Everything from Decide onwards is
           what makes the difference between explaining an incident and closing
           it.
+        </p>
+      </Panel>
+
+      {/* --- the models ---------------------------------------------------- */}
+      <Panel title="The models behind the stages" aside="trained and tested here">
+        <p className="text-sm leading-relaxed text-[rgb(var(--muted))]">
+          Sati, the investigation agent, runs on nine models designed and trained in this project on public data.
+          Each is tested on data held out from training, against the strongest simple baseline found, and none of
+          them decides on its own: every action still needs the policy engine&rsquo;s verdict.
+        </p>
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          {MODELS.map((m) => (
+            <li key={m.id} className="text-sm">
+              <Link
+                href={`/models#${m.id}`}
+                className="focusable rounded hover:text-[rgb(var(--astra))]"
+              >
+                <span className="text-[rgb(var(--ink))]">{m.job}</span>
+                <span className="text-[rgb(var(--faint))]"> · {m.name} · {m.stage}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 border-t border-[rgb(var(--edge))] pt-3 text-xs text-[rgb(var(--faint))]">
+          <Link href="/findings" className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--astra))]">
+            What the measurements showed
+          </Link>{" "}
+          — including where a simple baseline won.
         </p>
       </Panel>
 
