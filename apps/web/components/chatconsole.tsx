@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { AnswerText, defendFollowUp } from "@/components/answertext";
 import { TurnView, type Turn as IncidentTurn } from "@/components/chat";
 import { Listbox } from "@/components/listbox";
 import { Icon } from "@/components/sidebar";
@@ -401,7 +402,11 @@ export function ChatConsole({
               <div className="space-y-6">
                 {turns.map((turn, index) =>
                   turn.role === "general" ? (
-                    <GeneralTurn key={index} answer={turn.answer} />
+                    <GeneralTurn
+                      key={index}
+                      answer={turn.answer}
+                      onAsk={index === turns.length - 1 && !busy ? ask : undefined}
+                    />
                   ) : turn.role === "sati" && !incident ? null : (
                     <TurnView key={index} turn={turn} incident={(incident ?? incidents[0]) as Incident} />
                   ),
@@ -473,8 +478,9 @@ export function ChatConsole({
 
 /** A general answer: which Navadurga area it was routed to, the answer, and
  *  plainly that it is general knowledge rather than a finding. */
-function GeneralTurn({ answer }: { answer: GeneralAnswer }) {
+function GeneralTurn({ answer, onAsk }: { answer: GeneralAnswer; onAsk?: (question: string) => void }) {
   const area = AREA[answer.area];
+  const followUp = !answer.declined ? defendFollowUp(answer.answer) : null;
   return (
     <div data-turn="general" className="max-w-[95%] space-y-2">
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
@@ -486,16 +492,27 @@ function GeneralTurn({ answer }: { answer: GeneralAnswer }) {
           </span>
         )}
       </p>
-      <p
+      <div
         data-answer
         className={
           answer.declined
-            ? "whitespace-pre-wrap rounded-lg border border-dashed border-[rgb(var(--edge))] px-3 py-2 text-sm leading-relaxed text-[rgb(var(--muted))]"
-            : "whitespace-pre-wrap border-l-2 border-[rgb(var(--astra))]/40 pl-3 text-[0.9375rem] leading-relaxed"
+            ? "rounded-lg border border-dashed border-[rgb(var(--edge))] px-3 py-2"
+            : "rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-4 py-3.5"
         }
       >
-        {answer.answer}
-      </p>
+        <AnswerText text={answer.answer} muted={answer.declined} />
+        <AnswerActions text={answer.answer} />
+      </div>
+      {followUp && onAsk && (
+        <button
+          type="button"
+          onClick={() => onAsk(followUp)}
+          className="focusable rise inline-flex max-w-full items-center gap-2 rounded-full border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/5 px-3.5 py-1.5 text-left text-sm text-[rgb(var(--ink))] transition hover:bg-[rgb(var(--astra))]/10"
+        >
+          <span aria-hidden="true" className="text-[rgb(var(--astra))]">↳</span>
+          <span className="min-w-0">{followUp}</span>
+        </button>
+      )}
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[rgb(var(--faint))]">
         <Badge status="neutral">general knowledge — not from your evidence</Badge>
         {answer.declined && <Badge status="warning">declined</Badge>}
@@ -503,6 +520,55 @@ function GeneralTurn({ answer }: { answer: GeneralAnswer }) {
         <span className="mono">{servedName(answer.model)}</span>
       </p>
     </div>
+  );
+}
+
+/** Copy the answer, or share it: Android's share sheet inside the app, the system one elsewhere. */
+function AnswerActions({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Clipboard blocked: nothing to undo.
+    }
+  };
+  const share = async () => {
+    const app = (window as { PashupatastraApp?: { share?: (title: string, url: string) => void } }).PashupatastraApp;
+    const body = `${text}
+
+— Sati, the investigation agent · ${window.location.origin}/ask`;
+    if (app?.share) return app.share("Sati AI", body);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Sati AI", text: body });
+      } catch {
+        // Dismissed.
+      }
+    } else {
+      copy();
+    }
+  };
+  return (
+    <p className="mt-3 flex gap-1 border-t border-[rgb(var(--edge))] pt-2">
+      {(
+        [
+          [copied ? "Copied" : "Copy", copy],
+          ["Share", share],
+        ] as const
+      ).map(([label, action]) => (
+        <button
+          key={label === "Copied" ? "Copy" : label}
+          type="button"
+          onClick={action}
+          className="focusable rounded-md px-2 py-1 text-xs text-[rgb(var(--faint))] transition hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]"
+        >
+          {label}
+        </button>
+      ))}
+    </p>
   );
 }
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { AnswerText } from "@/components/answertext";
 import { askGeneral, type GeneralAnswer } from "@/lib/api";
 
 /**
@@ -34,45 +35,6 @@ type State =
   | { kind: "busy"; q: string }
   | { kind: "done"; q: string; answer: GeneralAnswer }
   | { kind: "error"; q: string; message: string };
-
-/** Turns the answer's text into paragraphs and list items, and its "Sources:" line into links. */
-function Answer({ text }: { text: string }) {
-  const lines = text.split("\n");
-  return (
-    <div className="space-y-2 text-sm leading-relaxed">
-      {lines.map((line, i) => {
-        if (!line.trim()) return null;
-        if (line.startsWith("Sources: ")) {
-          const urls = line.slice(9).split(" · ").filter((u) => u.startsWith("http"));
-          return (
-            <p key={i} className="flex flex-wrap gap-x-3 gap-y-1 pt-1 text-xs text-[rgb(var(--faint))]">
-              <span>Sources:</span>
-              {urls.map((u) => (
-                <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="hover:text-[rgb(var(--astra))] hover:underline">
-                  {u.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")} ↗
-                </a>
-              ))}
-            </p>
-          );
-        }
-        const item = line.match(/^(?:- |\d+\. )(.*)$/);
-        if (item) {
-          return (
-            <p key={i} className="flex gap-2">
-              <span aria-hidden="true" className="text-[rgb(var(--astra))]">›</span>
-              <span>{item[1]}</span>
-            </p>
-          );
-        }
-        return (
-          <p key={i} className={i === 0 ? "font-medium text-[rgb(var(--ink))]" : "text-[rgb(var(--muted))]"}>
-            {line}
-          </p>
-        );
-      })}
-    </div>
-  );
-}
 
 export function AskStrip() {
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -123,7 +85,7 @@ export function AskStrip() {
         {state.kind === "error" && <p className="text-sm text-[rgb(var(--warn))]">{state.message}</p>}
         {state.kind === "done" && (
           <div className="rise rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--ground))] p-4">
-            <Answer text={state.answer.answer} />
+            <AnswerText text={state.answer.answer} />
             <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[rgb(var(--edge))] pt-3 text-xs">
               <span className="text-[rgb(var(--faint))]">Answered live · no external AI</span>
               <Link href="/ask" className="focusable rounded font-medium text-[rgb(var(--astra))] hover:underline">
