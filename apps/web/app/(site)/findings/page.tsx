@@ -73,6 +73,11 @@ function findings(): Finding[] {
   const big = (transformer.test as Record<string, { "recall@1": number }>)["brahmacharini-v1 (transformer)"];
   const gl = (kushmandaLarge.sft?.grounded ?? {}) as Record<string, Record<string, Record<string, number>>>;
 
+  const cicDetectors = cic.detectors as Record<string, { f1: number }>;
+  const cicV2 = cicDetectors["chandraghanta-v2 (1% false-alarm budget)"];
+  const cicV3 = cicDetectors["chandraghanta-v3 (fused, weight from held-out families)"];
+  const fusion = (cic as { v3_fusion?: { weight: number } }).v3_fusion;
+
   const d1 = diagnosis["rca@1"] as Record<string, number>;
   const llama = diagnosis.paired_vs_katyayani["llm:llama3"];
 
@@ -202,6 +207,21 @@ function findings(): Finding[] {
       body:
         "Both larger models were trained on Kaggle's GPUs with the epoch or step chosen on validation data. The larger encoder had too little data to learn from scratch. The larger language model copies identifiers better but declines less often when no passage holds the answer, and declining is what Sati depends on. The smaller models stay served.",
       href: "/models#kushmanda-results",
+      tone: "negative",
+    },
+    {
+      id: "novelty",
+      kicker: "Reported as found · network intrusion, attack families never seen",
+      title: "Rehearsing for new attacks with old ones did not prepare the model",
+      headline: `${f3(cicV3?.f1 ?? 0)} vs ${f3(cicV2.f1)}`,
+      versus: [
+        { label: "the served detector, 1% false-alarm budget · F1", value: f3(cicV2.f1) },
+        { label: "fused with a benign-only detector, tuned on held-out training families · F1", value: f3(cicV3?.f1 ?? 0) },
+        { label: "weight it chose on the classifier", value: String(fusion?.weight ?? "—") },
+      ],
+      body:
+        "To find a weight for new attacks without peeking at the test days, each attack family in the training days was hidden from the classifier in turn. Those families are mostly denial-of-service variants the classifier generalises across, so the rehearsal saw no need for the second detector. The real unseen attacks (botnets, infiltration, port scans, web attacks) needed it. The served model is unchanged.",
+      href: "/models#chandraghanta-results",
       tone: "negative",
     },
     {
