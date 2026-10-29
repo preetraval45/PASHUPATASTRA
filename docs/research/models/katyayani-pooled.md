@@ -11,4 +11,4 @@ Four systems with real fault injections: RCAEval (revision `afeacb1`, suites RE1
 | Sock Shop | 215 | 0.954 [0.916, 0.975] | 0.949 [0.911, 0.971] | 2 | 3 | 1 | 0.767 [0.707, 0.819] |
 | Train Ticket | 215 | 0.819 [0.762, 0.864] | 0.814 [0.757, 0.860] | 2 | 3 | 1 | 0.372 [0.310, 0.438] |
 
-Held out, the live stack has no v1 row: its v0 *is* the zero-shot transfer from RCAEval ([katyayani-live.md](katyayani-live.md)). 32 features, the same for every system. Run time 42.5 s.
+Held out, the live stack has no v1 row: its v0 *is* the zero-shot transfer from RCAEval ([katyayani-live.md](katyayani-live.md)). 32 features, the same for every system. Run time 57.1 s.
