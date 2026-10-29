@@ -168,12 +168,12 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/90 px-3 backdrop-blur sm:px-5">
+        <header className="app-header flex h-14 shrink-0 items-center gap-3 border-b border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/90 px-3 backdrop-blur sm:px-5">
           <button
             type="button"
             onClick={() => setDrawer(true)}
             aria-label="Open navigation"
-            className="focusable inline-flex h-9 w-9 items-center justify-center rounded-md border border-[rgb(var(--edge))] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))] lg:hidden"
+            className="app-hide focusable inline-flex h-9 w-9 items-center justify-center rounded-md border border-[rgb(var(--edge))] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))] lg:hidden"
           >
             <Icon name="menu" />
           </button>
@@ -184,9 +184,11 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
             {titleFor(pathname)}
           </p>
           <div className="ml-auto flex min-w-0 items-center gap-x-3">
-            <Suspense fallback={null}>
-              <Search />
-            </Suspense>
+            <span className="app-hide">
+              <Suspense fallback={null}>
+                <Search />
+              </Suspense>
+            </span>
             {status}
             <ThemeToggle />
           </div>
@@ -219,7 +221,7 @@ function TabBar({ pathname, onMore }: { pathname: string; onMore: () => void }) 
   return (
     <nav
       aria-label="Main sections"
-      className="shrink-0 border-t border-[rgb(var(--edge))] bg-[rgb(var(--panel))]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="app-tabbar shrink-0 border-t border-[rgb(var(--edge))] bg-[rgb(var(--panel))]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
       <ul className="grid grid-cols-5">
         {TABS.map((tab) => {
@@ -234,9 +236,11 @@ function TabBar({ pathname, onMore }: { pathname: string; onMore: () => void }) 
                 }`}
               >
                 {current && (
-                  <span aria-hidden="true" className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-[rgb(var(--astra))]" />
+                  <span aria-hidden="true" className="app-hide absolute inset-x-5 top-0 h-0.5 rounded-full bg-[rgb(var(--astra))]" />
                 )}
-                <Icon name={tab.icon} />
+                <span className="tab-pill">
+                  <Icon name={tab.icon} />
+                </span>
                 <span>{tab.label}</span>
                 <span className="absolute right-3 top-2">
                   <Pending />
@@ -254,7 +258,9 @@ function TabBar({ pathname, onMore }: { pathname: string; onMore: () => void }) 
               inTabs ? "text-[rgb(var(--faint))]" : "text-[rgb(var(--astra))]"
             }`}
           >
-            <Icon name="menu" />
+            <span className="tab-pill">
+              <Icon name="menu" />
+            </span>
             <span>More</span>
           </button>
         </li>

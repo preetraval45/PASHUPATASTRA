@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 
+import { AppHome } from "@/components/apphome";
 import { AskStrip } from "@/components/askstrip";
 import { LoopExplorer } from "@/components/loopexplorer";
 import { Icon } from "@/components/sidebar";
@@ -63,6 +64,17 @@ export default async function LandingPage() {
   const [incidents, figures] = await Promise.all([getIncidents(), getFigures()]);
   // The Android app adds "PashupatastraApp" to its user agent; inside it, the download card is noise.
   const inApp = ((await headers()).get("user-agent") ?? "").includes("PashupatastraApp");
+  if (inApp) {
+    // The app's own home screen (components/apphome.tsx): doing, not a pitch.
+    const live = incidents?.filter((i) => !["resolved", "rolled_back"].includes(i.state)) ?? null;
+    return (
+      <AppHome
+        open={live ? live.length : null}
+        awaiting={live ? live.filter((i) => i.state === "awaiting_approval").length : null}
+        critical={live ? live.filter((i) => i.severity === "critical").length : null}
+      />
+    );
+  }
 
   // The incident this page describes, not merely the first one.
   //

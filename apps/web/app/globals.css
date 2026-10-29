@@ -544,3 +544,68 @@ body::before {
     transform: translate3d(2.5%, 3%, 0) scale(1.05);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   The Android app's own look (html[data-app], set before first paint when the
+   user agent says PashupatastraApp). The website on a phone keeps its layout;
+   the app gets app conventions: no website search box or hamburger, the page's
+   name as the title, a floating tab bar with a pill on the active tab, and
+   roomier, rounder surfaces.
+   --------------------------------------------------------------------------- */
+.app-only {
+  display: none;
+}
+
+html[data-app] .app-only {
+  display: block;
+}
+
+html[data-app] .app-hide {
+  display: none !important;
+}
+
+html[data-app] body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-app] .app-header {
+  height: calc(3.5rem + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  border-bottom-color: transparent;
+  background: rgb(var(--ground));
+}
+
+.tab-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.125rem 0.875rem;
+  transition: background-color 200ms ease;
+}
+
+html[data-app] .app-tabbar {
+  margin: 0 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
+  padding-bottom: 0;
+  border: 1px solid rgb(var(--edge));
+  border-radius: 1.5rem;
+  background: rgb(var(--panel) / 0.92);
+  box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.65);
+}
+
+html[data-app] .app-tabbar [aria-current="page"] .tab-pill {
+  background: rgb(var(--astra) / 0.18);
+}
+
+html[data-app] .app-tabbar [aria-current="page"] > span:first-child + span:not(.tab-pill) {
+  font-weight: 600;
+}
+
+/* Rounder, softer panels in the app: cards read as touchable surfaces. */
+html[data-app] .rounded-xl {
+  border-radius: 1rem;
+}
+
+html[data-app] .rounded-2xl {
+  border-radius: 1.5rem;
+}

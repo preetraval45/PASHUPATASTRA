@@ -113,6 +113,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Before first paint: a flash of the wrong theme on every navigation
             makes a tool feel unreliable. */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Inside the Android app (its user agent says PashupatastraApp), before first paint: the
+            app has its own look (globals.css, html[data-app]), not the website squeezed onto a phone. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if(/PashupatastraApp/.test(navigator.userAgent))document.documentElement.setAttribute("data-app","")`,
+          }}
+        />
       </head>
       <body className="min-h-screen antialiased">
         <ShortcutsProvider>
