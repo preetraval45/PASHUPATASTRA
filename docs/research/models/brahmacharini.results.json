@@ -47,10 +47,29 @@
       "recall@10": 0.2826,
       "mrr": 0.1771,
       "n": 1727
+    },
+    "served design (int8)": {
+      "recall@1": 0.557,
+      "recall@5": 0.7354,
+      "recall@10": 0.7973,
+      "mrr": 0.6379,
+      "n": 1727
+    },
+    "served design + pruned tf-idf (fused)": {
+      "recall@1": 0.6497,
+      "recall@5": 0.8471,
+      "recall@10": 0.8871,
+      "mrr": 0.738,
+      "n": 1727
     }
   },
   "best_epoch_by_validation": 10,
   "fusion_weight_by_validation": 0.9,
+  "served": {
+    "fusion_weight_by_validation": 0.8,
+    "weights_kept_per_technique": 400,
+    "vocabulary_kept": 27516
+  },
   "curve": [
     {
       "epoch": 1,
@@ -113,5 +132,5 @@
       "val_mrr": 0.6958
     }
   ],
-  "seconds": 418.2
+  "seconds": 653.1
 }

@@ -11,7 +11,9 @@
 | tf-idf logistic regression | 0.646 | 0.832 | 0.869 | 0.730 |
 | **Brahmacharini v0 + TF-IDF classifier (fused)** | 0.673 | 0.859 | 0.896 | 0.758 |
 | hashing-embedder (Smriti today) | 0.120 | 0.226 | 0.283 | 0.177 |
+| **Served design (int8, training sources only)** | 0.557 | 0.735 | 0.797 | 0.638 |
+| **Served design + pruned TF-IDF classifier (fused)** | 0.650 | 0.847 | 0.887 | 0.738 |
 
-Epochs chosen on validation sources: 10. Fusion weight on Brahmacharini, chosen on validation sources: 0.90.
+Epochs chosen on validation sources: 10. Fusion weight on Brahmacharini, chosen on validation sources: 0.90. Served rows: the classifier keeps 400 int8 weights per technique (27,516 features in all); fusion weight 0.80, chosen on validation sources.
 
 Designed, written and trained by an AI assistant under the owner's direction ([adr/RealDataModels](../../adr/RealDataModels.md)). ATT&CK © MITRE, used under its royalty-free licence.
