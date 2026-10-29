@@ -60,25 +60,34 @@ def linear_baseline(train, queries: list[str], tech_text: list[str], index: dict
     return linear_scorer(train, tech_text, index)(queries)
 
 
-def linear_scorer(train, tech_text: list[str], index: dict):
-    """A strong classical baseline: TF-IDF word uni- and bigrams, multinomial
-    logistic regression over techniques seen in training. Added 27 Oct after
-    the public Kaggle notebook found it beats Brahmacharini on this split; a
-    model is only worth serving if it beats the strongest simple baseline."""
+def fit_linear(train, tech_text: list[str], index: dict):
+    """TF-IDF word uni- and bigrams and a multinomial logistic regression over the techniques seen in
+    training; None when there are too few to fit. Shared with export.py, which serves it."""
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.linear_model import LogisticRegression
 
     texts = [p.text for p in train]
     labels = [index[p.technique] for p in train]
     if len(set(labels)) < 2:
+        return None
+    vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2 if len(texts) > 100 else 1, sublinear_tf=True)
+    vec.fit(texts + tech_text)
+    return vec, LogisticRegression(max_iter=2000, C=5).fit(vec.transform(texts), labels)
+
+
+def linear_scorer(train, tech_text: list[str], index: dict):
+    """A strong classical baseline: TF-IDF word uni- and bigrams, multinomial
+    logistic regression over techniques seen in training. Added 27 Oct after
+    the public Kaggle notebook found it beats Brahmacharini on this split; a
+    model is only worth serving if it beats the strongest simple baseline."""
+    fitted = fit_linear(train, tech_text, index)
+    if fitted is None:
         # a fixture too small to fit; never the real data
         def nothing(queries: list[str], keep: int | None = None) -> np.ndarray:
             return np.full((len(queries), len(tech_text)), -np.inf)
 
         return nothing
-    vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2 if len(texts) > 100 else 1, sublinear_tf=True)
-    vec.fit(texts + tech_text)
-    clf = LogisticRegression(max_iter=2000, C=5).fit(vec.transform(texts), labels)
+    vec, clf = fitted
     pruned: dict[int, np.ndarray] = {}
 
     def score(queries: list[str], keep: int | None = None) -> np.ndarray:

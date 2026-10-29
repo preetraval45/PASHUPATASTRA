@@ -31,6 +31,7 @@ from typing import Any
 
 from pashupatastra.gateway import ModelRequest, SchemaViolation, Usage
 
+from .. import techniqueclassifier
 from .echo import EchoProvider
 from .schemas import schema_for
 
@@ -59,6 +60,9 @@ MITIGATE = re.compile(
     r"counter\w*|how (do|can|should) (i|we) (fix|respond))\b",
     re.IGNORECASE,
 )
+
+#: Questions asking which ATT&CK technique a behaviour is.
+WHICH_TECHNIQUE = re.compile(r"\b(which|what)\b[^?]{0,60}\b(technique|ttp|att&ck)", re.IGNORECASE)
 
 #: Below this probability a mitigation is not recommended.
 RECOMMEND = 0.2
@@ -231,6 +235,14 @@ class Knowledge:
                 scores[i] = scores.get(i, 0.0) + idf * norm
         return scores
 
+    def technique_cosines(self, query: list[float]) -> dict[str, float]:
+        """Brahmacharini's similarity to every ATT&CK technique passage: its half of the fused ranking."""
+        return {p["id"]: sum(a * b for a, b in zip(query, self.vectors[i], strict=True))
+                for i, p in enumerate(self.passages) if p["kind"] == "technique"}
+
+    def technique(self, attack_id: str) -> dict | None:
+        return next((p for p in self.passages if p["kind"] == "technique" and p["id"] == attack_id), None)
+
     def search(self, query: list[float], k: int = 3, question: str = "") -> list[tuple[float, dict]]:
         lexical = self.bm25(question)
         # A product-specific vulnerability answers only a question that names
@@ -268,6 +280,18 @@ def embedder() -> Brahmacharini:
 @lru_cache
 def knowledge() -> Knowledge:
     return Knowledge()
+
+
+def rank_techniques(text: str, query: list[float]) -> list[tuple[float, str]] | None:
+    """Techniques ranked by Brahmacharini fused with its TF-IDF classifier, with the weight the
+    validation sources chose. Served alone the encoder ranks the right technique first for 0.557
+    of held-out behaviours; fused, 0.650 (brahmacharini.md). None when the classifier is not
+    exported, so the caller falls back to retrieval alone."""
+    if not techniqueclassifier.available():
+        return None
+    model = techniqueclassifier.served()
+    return techniqueclassifier.fuse(knowledge().technique_cosines(query), model.probabilities(text),
+                                    model.fusion_weight)
 
 
 def cosine(a: list[float], b: list[float]) -> float:
@@ -327,9 +351,16 @@ class SatiProvider:
         With no confident technique, Skandamata ranks alone, as before."""
         ranked = {m["id"]: p for p, m in mitigator().recommend(text, k=1000)}
         links = attack_links()
-        hits = knowledge().search(embedder().embed(text), k=3, question=text) if links else []
+        query = embedder().embed(text)
+        hits = knowledge().search(query, k=3, question=text) if links else []
         technique = next((p for s, p in hits if s >= ANSWERABLE and p.get("kind") == "technique"
                           and p["id"] in links), None)
+        # Retrieval decides whether the question is about an ATT&CK technique at all; when it is,
+        # the fused ranking, measured better on held-out attackers, decides which one.
+        fused = rank_techniques(text, query) if technique is not None else None
+        if fused:
+            best = next((t for _, t in fused if t in links), None)
+            technique = knowledge().technique(best) or technique if best else technique
         if technique is not None:
             names = mitigator().by_id()
             picks = sorted((m for m in links[technique["id"]] if m in names), key=lambda m: -ranked.get(m, 0.0))[:5]
@@ -389,7 +420,12 @@ class SatiProvider:
                     "area": "skandamata",
                     "declined": False,
                 }
-        hits = knowledge().search(embedder().embed(question), k=3, question=question)
+        query = embedder().embed(question)
+        hits = knowledge().search(query, k=3, question=question)
+        if self.mode != "skandamata" and WHICH_TECHNIQUE.search(question):
+            named = self._which_technique(question, query, hits)
+            if named:
+                return named
         if self.mode == "kushmanda" and hits and hits[0][0] >= ANSWERABLE:
             written = self._write(question, [p for _, p in hits])
             if written:
@@ -420,6 +456,25 @@ class SatiProvider:
             "area": AREA_BY_KIND.get(best["kind"], "brahmacharini"),
             "declined": False,
         }
+
+    def _which_technique(self, question: str, query: list[float], hits: list[tuple[float, dict]]) -> dict | None:
+        """Answers "which technique is this?" from the fused ranking, the three most likely first.
+        Only when retrieval finds the question is about an ATT&CK technique at all."""
+        if not any(s >= ANSWERABLE and p.get("kind") == "technique" for s, p in hits):
+            return None
+        ranked = rank_techniques(question, query)
+        if not ranked:
+            return None
+        picks = [p for p in (knowledge().technique(t) for _, t in ranked[:3]) if p]
+        if not picks:
+            return None
+        lines = ["The ATT&CK techniques this most resembles, most likely first:", ""]
+        lines += [f"{i}. {p['title']} ({p['id']})" for i, p in enumerate(picks, 1)]
+        lines += ["", first_sentences(picks[0]["text"]), "",
+                  "Ranked by Brahmacharini with its TF-IDF classifier. On attackers it never trained on, the "
+                  "first is right about two times in three, so check it against what you saw.",
+                  "", "Sources: " + " · ".join(p["url"] for p in picks if p.get("url"))]
+        return {"answer": "\n".join(lines), "topic": "security", "area": "brahmacharini", "declined": False}
 
     def _write(self, question: str, passages: list[dict]) -> dict[str, Any] | None:
         """Kushmanda answers in its own words from the passages Brahmacharini

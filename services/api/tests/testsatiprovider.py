@@ -214,3 +214,25 @@ def test_defences_follow_the_technique_brahmacharini_finds(provider, with_skanda
     assert out["area"] == "skandamata"
     assert "Data Encrypted for Impact (T1486)" in out["answer"] and "Data Backup (M1053)" in out["answer"]
     assert "https://attack.mitre.org/techniques/T1486/" in out["answer"]  # the technique is cited
+
+
+def test_which_technique_is_answered_from_the_fused_ranking(provider, monkeypatch):
+    # The fused ranking (encoder + TF-IDF classifier) decides the order, here against retrieval's own pick.
+    monkeypatch.setattr(sati_module, "rank_techniques", lambda text, query: [(2.0, "T1486"), (1.0, "T1566")])
+    out = ask(provider, "general_answer_v1", "which technique is a phishing email with a link?")
+    assert out["area"] == "brahmacharini"
+    assert out["answer"].index("Data Encrypted for Impact (T1486)") < out["answer"].index("Phishing (T1566)")
+    assert "attack.mitre.org/techniques/T1486/" in out["answer"]
+
+
+def test_which_technique_still_declines_without_a_foothold_in_attack(provider, monkeypatch):
+    monkeypatch.setattr(sati_module, "rank_techniques", lambda text, query: [(2.0, "T1486")])
+    out = ask(provider, "general_answer_v1", "which technique is the capital of france")
+    assert "outside what Sati's own models know" in out["answer"]
+
+
+def test_without_the_classifier_retrieval_alone_answers(provider, monkeypatch):
+    monkeypatch.setattr(sati_module.techniqueclassifier, "available", lambda: False)
+    assert sati_module.rank_techniques("phishing", [1.0, 0.0, 0.0]) is None
+    out = ask(provider, "general_answer_v1", "which technique is phishing")
+    assert "Phishing" in out["answer"] and "most resembles" not in out["answer"]

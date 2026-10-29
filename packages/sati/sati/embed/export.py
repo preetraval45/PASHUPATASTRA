@@ -100,6 +100,42 @@ def train(cache: Path) -> Encoder:
     return model
 
 
+def classifier(cache: Path, results: Path) -> dict:
+    """The TF-IDF classifier served beside the encoder, fused with it as the test measured
+    ("served design + pruned tf-idf (fused)" in brahmacharini.md).
+
+    Trained on every procedure, as the served encoder is, then pruned to KEEP int8 weights per
+    technique. The whole vocabulary and its idf are kept: TF-IDF divides by the norm over every
+    feature, so dropping any would change the scores. `parity` holds texts and the top techniques
+    with probabilities as numpy computes them; the API's pure-Python scorer is tested against it.
+    """
+    from sati.embed.metrics import prune, softmax
+    from sati.embed.run import KEEP, fit_linear
+
+    techniques, procedures = d.load(cache)
+    index = {t.stix_id: i for i, t in enumerate(techniques)}
+    vec, clf = fit_linear(procedures, [t.text for t in techniques], index)
+    weights = prune(clf.coef_, KEEP)
+    classes = []
+    for row, cls in enumerate(clf.classes_):
+        cols = np.flatnonzero(weights[row])
+        scale = float(np.abs(weights[row, cols]).max() / 127.0) if len(cols) else 1.0
+        classes.append({"id": techniques[cls].attack_id, "bias": round(float(clf.intercept_[row]), 6),
+                        "scale": round(scale, 9), "features": cols.tolist(),
+                        "weights": np.round(weights[row, cols] / scale).astype(int).tolist()})
+    terms = sorted(vec.vocabulary_, key=vec.vocabulary_.get)
+    samples = [p.text for p in procedures[:: max(1, len(procedures) // 12)]][:12]
+    probs = softmax(np.asarray(vec.transform(samples) @ weights.T) + clf.intercept_)
+    parity = [{"text": t, "top": [[techniques[clf.classes_[j]].attack_id, round(float(p[j]), 6)]
+                                  for j in np.argsort(-p)[:5]]} for t, p in zip(samples, probs, strict=True)]
+    weight = 0.8
+    if results.exists():
+        weight = json.loads(results.read_text(encoding="utf-8")).get("served", {}).get(
+            "fusion_weight_by_validation", weight)
+    return {"model": "sati-brahmacharini-classifier-v0", "keep": KEEP, "fusion_weight": weight,
+            "terms": terms, "idf": [round(float(x), 6) for x in vec.idf_], "classes": classes, "parity": parity}
+
+
 def quantise(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     scale = np.abs(matrix).max(axis=1) / 127.0
     scale[scale == 0] = 1.0
@@ -110,6 +146,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--cache", type=Path, default=Path(".cache/corpus"))
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--results", type=Path, default=Path("../../results/brahmacharini/results.json"),
+                        help="the evaluation run, for the fusion weight it chose on validation sources")
+    parser.add_argument("--no-classifier", dest="classifier", action="store_false")
     args = parser.parse_args()
 
     model = train(args.cache).eval()
@@ -138,6 +177,10 @@ def main() -> int:
         handle.write(q_kb.tobytes())
     (args.out / "knowledge.json").write_text(json.dumps(kb, ensure_ascii=False), encoding="utf-8")
     print(f"exported: {len(kb)} passages, bag {q_bag.nbytes / 1e6:.1f} MB")
+    if args.classifier:
+        served = classifier(args.cache, args.results)
+        (args.out / "technique_classifier.json").write_text(json.dumps(served, ensure_ascii=False), encoding="utf-8")
+        print(f"exported: classifier over {len(served['classes'])} techniques, {len(served['terms']):,} terms")
     return 0
 
 
