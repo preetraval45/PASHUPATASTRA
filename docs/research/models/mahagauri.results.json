@@ -32,6 +32,12 @@
         "agree_threshold": 0.92,
         "agree_hold": 3
       },
+      "v3": {
+        "threshold": 0.98,
+        "hold": 5,
+        "agree_threshold": 0.96,
+        "agree_hold": 3
+      },
       "verifiers": {
         "mahagauri-v0": {
           "incidents": 112,
@@ -73,6 +79,22 @@
           "median_delay": 33.5,
           "mean_delay": 30.8
         },
+        "mahagauri-v3 (trajectory features)": {
+          "incidents": 112,
+          "premature_rate": 0.0268,
+          "confirmed_rate": 0.0536,
+          "unconfirmed_rate": 0.9196,
+          "median_delay": 50.0,
+          "mean_delay": 48.8
+        },
+        "mahagauri-v3 + 3σ agreement": {
+          "incidents": 112,
+          "premature_rate": 0.0089,
+          "confirmed_rate": 0.0804,
+          "unconfirmed_rate": 0.9107,
+          "median_delay": 33.0,
+          "mean_delay": 31.8
+        },
         "back within 3σ": {
           "incidents": 112,
           "premature_rate": 0.1518,
@@ -104,6 +126,12 @@
         "hold": 10,
         "agree_threshold": 0.8,
         "agree_hold": 5
+      },
+      "v3": {
+        "threshold": 0.98,
+        "hold": 10,
+        "agree_threshold": 0.94,
+        "agree_hold": 3
       },
       "verifiers": {
         "mahagauri-v0": {
@@ -146,6 +174,22 @@
           "median_delay": 19.0,
           "mean_delay": 17.0
         },
+        "mahagauri-v3 (trajectory features)": {
+          "incidents": 114,
+          "premature_rate": 0.0,
+          "confirmed_rate": 0.0,
+          "unconfirmed_rate": 1.0,
+          "median_delay": null,
+          "mean_delay": null
+        },
+        "mahagauri-v3 + 3σ agreement": {
+          "incidents": 114,
+          "premature_rate": 0.0263,
+          "confirmed_rate": 0.0965,
+          "unconfirmed_rate": 0.8772,
+          "median_delay": 28.0,
+          "mean_delay": 28.0
+        },
         "back within 3σ": {
           "incidents": 114,
           "premature_rate": 0.1754,
@@ -176,6 +220,12 @@
         "threshold": 0.98,
         "hold": 10,
         "agree_threshold": 0.78,
+        "agree_hold": 5
+      },
+      "v3": {
+        "threshold": 0.98,
+        "hold": 10,
+        "agree_threshold": 0.76,
         "agree_hold": 5
       },
       "verifiers": {
@@ -218,6 +268,22 @@
           "unconfirmed_rate": 0.8416,
           "median_delay": 26.0,
           "mean_delay": 26.0
+        },
+        "mahagauri-v3 (trajectory features)": {
+          "incidents": 101,
+          "premature_rate": 0.0099,
+          "confirmed_rate": 0.0198,
+          "unconfirmed_rate": 0.9703,
+          "median_delay": 44.0,
+          "mean_delay": 44.0
+        },
+        "mahagauri-v3 + 3σ agreement": {
+          "incidents": 101,
+          "premature_rate": 0.0099,
+          "confirmed_rate": 0.099,
+          "unconfirmed_rate": 0.8911,
+          "median_delay": 13.0,
+          "mean_delay": 18.7
         },
         "back within 3σ": {
           "incidents": 101,
@@ -264,6 +330,16 @@
       "confirmed_rate": 0.0917,
       "unconfirmed_rate": 0.8868
     },
+    "mahagauri-v3 (trajectory features)": {
+      "premature_rate": 0.0122,
+      "confirmed_rate": 0.0245,
+      "unconfirmed_rate": 0.9633
+    },
+    "mahagauri-v3 + 3σ agreement": {
+      "premature_rate": 0.0153,
+      "confirmed_rate": 0.0918,
+      "unconfirmed_rate": 0.893
+    },
     "back within 3σ": {
       "premature_rate": 0.1651,
       "confirmed_rate": 0.2477,
@@ -275,5 +351,5 @@
       "unconfirmed_rate": 0.0
     }
   },
-  "seconds": 283.7
+  "seconds": 297.3
 }
