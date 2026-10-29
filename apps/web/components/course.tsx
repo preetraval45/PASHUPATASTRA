@@ -10,10 +10,10 @@
  */
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui";
-import { levelReached, MODULES, PASS_MARK, type Question } from "@/lib/training";
+import { arranged, levelReached, MODULES, PASS_MARK, type Question } from "@/lib/training";
 
 const KEY = "pashu.training.v1";
 
@@ -64,8 +64,10 @@ export function useCourse() {
 
 /** The test at the end of a module: answer everything, submit, then every
  *  question shows whether you were right and why. */
-export function Quiz({ slug, questions }: { slug: string; questions: Question[] }) {
+export function Quiz({ slug, questions: written }: { slug: string; questions: Question[] }) {
   const { store, record } = useCourse();
+  // Options in a stable shuffled order, so the right answer is not always in one place (lib/training.ts).
+  const questions = useMemo(() => written.map(arranged), [written]);
   const [answers, setAnswers] = useState<(number | null)[]>(() => questions.map(() => null));
   const [submitted, setSubmitted] = useState(false);
 
@@ -253,11 +255,12 @@ export function Evaluation() {
         {MODULES.map((m) => {
           const r = store[m.slug];
           return (
-            <li key={m.slug} className="flex items-center gap-3 text-sm">
-              <Link href={`/training/${m.slug}`} className="focusable w-64 shrink-0 truncate rounded hover:text-[rgb(var(--astra))]">
+            <li key={m.slug} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              {/* Full width on a phone, a fixed column from sm up, so the bar is never squeezed to nothing. */}
+              <Link href={`/training/${m.slug}`} className="focusable w-full truncate rounded hover:text-[rgb(var(--astra))] sm:w-64 sm:shrink-0">
                 <span className="tnum text-[rgb(var(--faint))]">{m.level}.</span> {m.title}
               </Link>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgb(var(--raised))]" aria-hidden="true">
+              <div className="h-2 min-w-[4rem] flex-1 overflow-hidden rounded-full bg-[rgb(var(--raised))]" aria-hidden="true">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Evaluation, ModuleStatus } from "@/components/course";
+import { DailyQuestion } from "@/components/dailyquestion";
 import { TrainingBoard } from "@/components/training";
 import { Page, Panel } from "@/components/ui";
 import { getScenarios } from "@/lib/api";
@@ -33,6 +34,8 @@ export default async function TrainingPage() {
       title="Training"
       description="A cyber defence course you can use at work tomorrow. Each module teaches one skill, shows how to apply it in real life, and tests you on it — then the drills let you practise on a full investigation."
     >
+      <DailyQuestion />
+
       <Panel title="Your evaluation" aside="kept in this browser only">
         <Evaluation />
       </Panel>

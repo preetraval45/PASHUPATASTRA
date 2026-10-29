@@ -454,3 +454,30 @@ export function levelReached(passed: (slug: string) => boolean): number {
 export function moduleBySlug(slug: string): Module | undefined {
   return MODULES.find((m) => m.slug === slug);
 }
+
+/**
+ * A question with its options in a stable shuffled order.
+ *
+ * 43 of the 46 questions were written with the right answer second, so
+ * always picking B passed every test (found 29 Oct 2026). Rather than hand-
+ * edit each question, the options are reordered by a permutation seeded from
+ * the question's own text. The order is the same on every visit, on the server
+ * and on every phone, but the right answer no longer sits in one position.
+ */
+export function arranged(question: Question): Question {
+  let seed = 2166136261;
+  for (const ch of question.q) seed = Math.imul(seed ^ ch.charCodeAt(0), 16777619) >>> 0;
+  const next = () => {
+    seed = (seed + 0x6d2b79f5) >>> 0;
+    let t = seed;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const order = question.options.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(next() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return { ...question, options: order.map((i) => question.options[i]), answer: order.indexOf(question.answer) };
+}
