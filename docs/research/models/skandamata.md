@@ -6,32 +6,33 @@
 
 | Recommender | Hit@1 | Recall@5 | Precision@5 | MRR | nDCG@10 |
 |---|---:|---:|---:|---:|---:|
-| **skandamata-v0** | 0.790 | 0.826 | 0.437 | 0.851 | 0.840 |
+| **skandamata-v0** | 0.787 | 0.824 | 0.436 | 0.849 | 0.839 |
 | popularity | 0.232 | 0.398 | 0.206 | 0.443 | 0.433 |
 | bm25 direct | 0.195 | 0.259 | 0.128 | 0.344 | 0.276 |
 | bm25 two-hop | 0.537 | 0.646 | 0.335 | 0.659 | 0.652 |
 | tf-idf logistic regression | 0.827 | 0.873 | 0.464 | 0.880 | 0.881 |
-| **skandamata-v0 + tf-idf (fused)** | 0.824 | 0.877 | 0.465 | 0.879 | 0.881 |
+| **skandamata-v0 + tf-idf (fused)** | 0.822 | 0.882 | 0.465 | 0.877 | 0.880 |
+| tf-idf logistic regression (pruned, as served) | 0.780 | 0.842 | 0.450 | 0.850 | 0.850 |
 
-Epoch chosen on validation behaviours: 17. Fusion weight on Skandamata, chosen on validation behaviours: 0.30.
+Epoch chosen on validation behaviours: 18. Fusion weight on Skandamata, chosen on validation behaviours: 0.40.
 
 ## Examples (test behaviours, unedited)
 
 - **Behaviour:** Mori can communicate using HTTP over IPv4 or IPv6 depending on a flag set.
   **ATT&CK says:** Filter Network Traffic, Network Intrusion Prevention
-  **Skandamata recommends:** Network Intrusion Prevention, Filter Network Traffic, Network Segmentation, Data Loss Prevention, Disable or Remove Feature or Program
+  **Skandamata recommends:** Network Intrusion Prevention, Filter Network Traffic, Network Segmentation, Disable or Remove Feature or Program, Data Loss Prevention
 - **Behaviour:** Qilin can employ several code obfuscation methods, including renaming functions, altering control flows, and encrypting strings.
   **ATT&CK says:** Antivirus/Antimalware, Behavior Prevention on Endpoint
   **Skandamata recommends:** Behavior Prevention on Endpoint, Antivirus/Antimalware, User Training, Audit, Execution Prevention
 - **Behaviour:** GoldMax has used scheduled tasks to maintain persistence.
   **ATT&CK says:** Audit, Operating System Configuration, Privileged Account Management, User Account Management
-  **Skandamata recommends:** Operating System Configuration, User Account Management, Audit, Privileged Account Management, Password Policies
+  **Skandamata recommends:** User Account Management, Audit, Operating System Configuration, Privileged Account Management, Multi-factor Authentication
 - **Behaviour:** APT41 DUST used compromised Google Workspace accounts for command and control.
   **ATT&CK says:** Network Intrusion Prevention, Restrict Web-Based Content
-  **Skandamata recommends:** Multi-factor Authentication, Password Policies, Account Use Policies, Restrict Web-Based Content, Pre-compromise
+  **Skandamata recommends:** Multi-factor Authentication, Account Use Policies, Restrict Web-Based Content, Password Policies, User Training
 - **Behaviour:** Star Blizzard has registered impersonation email accounts to spoof experts in a particular field or individuals and organizations affiliated with the intended target.
   **ATT&CK says:** Threat Intelligence Program, User Training
-  **Skandamata recommends:** Pre-compromise, Data Backup, Behavior Prevention on Endpoint, User Account Management, User Training
+  **Skandamata recommends:** Pre-compromise, Behavior Prevention on Endpoint, Data Backup, User Account Management, User Training
 
 ## How to read this
 
