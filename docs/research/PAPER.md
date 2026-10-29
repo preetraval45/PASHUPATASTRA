@@ -322,7 +322,8 @@ Doubling the model to 34.1M parameters, with a corpus that adds GitHub
 Security Advisories, trades one failure for another. On the same held-out
 questions, lookup exact match rises to 0.717 and behaviour → technique to
 0.567, but the model declines on only 0.417 of unanswerable questions,
-against 0.543 ([kushmanda-v3.md](models/kushmanda-v3.md)). The smaller model
+against 0.543 ([kushmanda-v3.md](models/kushmanda-v3.md);
+[kushmanda.md](models/kushmanda.md)). The smaller model
 stays served, since declining is the property Sati depends on.
 
 **Two models did not earn their place, and the architecture reflects it.**
