@@ -473,9 +473,9 @@ export default function ModelsPage() {
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Can a simulator teach root cause? Not yet.</h2>
             <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
-              The same ranker, trained only on 50,000 synthetic incidents, scores about 0.998 on synthetic tests — and below
-              a no-learning baseline on real fault-injection cases. Katyayani, trained on real data, reaches 88% on a
-              system it never saw. This is why Sati&apos;s root-cause model learns from real incidents.
+              The same ranker, trained only on 50,000 synthetic incidents, scores nearly perfectly on synthetic tests — and
+              below a no-learning baseline on real fault-injection cases. Katyayani, trained on real data, reaches{" "}
+              {pct(loso.sati["ac@1"])} on a system it never saw. This is why Sati&apos;s root-cause model learns from real incidents.
             </p>
           </div>
           <Panel title="Zero-shot on real RCAEval cases" aside="RCA@1 — the right service ranked first">
