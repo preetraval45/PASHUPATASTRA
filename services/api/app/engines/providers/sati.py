@@ -250,11 +250,14 @@ class Knowledge:
         # Small Business" entries, which is word matching, not understanding.
         asked = set(terms(question))
         named_cve = bool(CVE.search(question))
+        # A passage with no link cannot be cited, so it is never an answer (rule 1). Until 28 Oct the
+        # export kept CAPEC's mitigations under STIX ids, titled "coa-1-0" with no link.
         lexical = {
             i: v for i, v in lexical.items()
-            if self.passages[i]["kind"] != "exploited vulnerability"
-            or named_cve
-            or (terms(self.passages[i]["title"])[:1] and terms(self.passages[i]["title"])[0] in asked)
+            if self.passages[i].get("url")
+            and (self.passages[i]["kind"] != "exploited vulnerability"
+                 or named_cve
+                 or (terms(self.passages[i]["title"])[:1] and terms(self.passages[i]["title"])[0] in asked))
         }
         if not lexical:
             return []

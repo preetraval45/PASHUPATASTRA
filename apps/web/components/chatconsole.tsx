@@ -51,11 +51,13 @@ const INCIDENT_STARTERS = [
   { q: "What should we do first?", hint: "A next step, routed through policy" },
 ];
 
+/** Questions Sati's own models answer well today, each showing a different one at work. Chosen by
+ *  asking them of the served models (28 Oct 2026); broader questions wait for Kushmanda. */
 const GENERAL_STARTERS = [
-  { q: "How do I spot a phishing email?", hint: "Look-alike domains, links, urgency" },
-  { q: "What is the difference between credential stuffing and password spraying?", hint: "Two attacks, two defences" },
-  { q: "How should a small company prepare for ransomware?", hint: "Backups, access, a plan" },
-  { q: "Explain MITRE ATT&CK in simple terms", hint: "Tactics, techniques, IDs" },
+  { q: "Which ATT&CK technique is it when an attacker schedules a task to run their malware at every logon?", hint: "Brahmacharini names the technique" },
+  { q: "How do we defend against phishing emails?", hint: "ATT&CK's defences, ordered by Skandamata" },
+  { q: "What should we do about Log4Shell (CVE-2021-44228)?", hint: "CISA's required action, cited" },
+  { q: "What is credential stuffing?", hint: "The attack pattern, explained and cited" },
 ];
 
 const AREA = Object.fromEntries(

@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import struct
 from pathlib import Path
 
@@ -44,6 +45,13 @@ def passages(cache: Path) -> list[dict]:
     out = []
     for url, source in ((ATTACK, "MITRE ATT&CK"), (CAPEC, "MITRE CAPEC")):
         bundle = json.loads(_get(url, cache))
+        # CAPEC's mitigations have no id or link of their own; they are named "coa-<pattern>-<n>". Each is
+        # filed under its attack pattern, so it can be cited (until 28 Oct they went out as "coa-1-0").
+        patterns = {}
+        for o in bundle["objects"]:
+            ref = next((r for r in o.get("external_references", []) if r.get("external_id")), {})
+            if o["type"] == "attack-pattern" and ref.get("external_id", "").startswith("CAPEC-"):
+                patterns[ref["external_id"].removeprefix("CAPEC-")] = (o.get("name", ""), ref.get("url", ""))
         for o in bundle["objects"]:
             if o.get("revoked") or o.get("x_mitre_deprecated"):
                 continue
@@ -54,14 +62,22 @@ def passages(cache: Path) -> list[dict]:
                 continue
             ref = next((r for r in o.get("external_references", []) if r.get("external_id")), {})
             kind = "mitigation" if o["type"] == "course-of-action" else "technique" if source == "MITRE ATT&CK" else "attack pattern"
-            out.append({
+            entry = {
                 "id": ref.get("external_id", o["id"]),
                 "source": source,
                 "kind": kind,
                 "title": o.get("name", ""),
                 "url": ref.get("url", ""),
                 "text": text[:900],
-            })
+            }
+            parent = re.fullmatch(r"coa-(\d+)-(\d+)", entry["title"]) if source == "MITRE CAPEC" else None
+            if parent and parent.group(1) in patterns:
+                name, link = patterns[parent.group(1)]
+                entry.update(id=f"CAPEC-{parent.group(1)} mitigation {int(parent.group(2)) + 1}",
+                             title=f"Mitigation for {name}", url=link)
+            if not entry["url"]:
+                continue  # nothing to cite
+            out.append(entry)
     for v in json.loads(_get(KEV, cache)).get("vulnerabilities", []):
         out.append({
             "id": v["cveID"],
