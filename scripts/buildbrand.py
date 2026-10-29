@@ -57,6 +57,8 @@ FAVICON_48 = WEB / "public" / "favicon-48x48.png"
 FAVICON_96 = WEB / "public" / "favicon-96x96.png"
 
 OG_OUT = WEB / "public" / "og.png"
+ICON_192 = WEB / "public" / "icon-192.png"
+MASKABLE = WEB / "public" / "icon-maskable-512.png"
 OG_SIZE = (1200, 630)
 """What every link preview crops to. Smaller and it is upscaled; a different
 ratio and the sides are cut."""
@@ -189,6 +191,39 @@ def social_card(lockup: Image.Image) -> Image.Image:
     return card
 
 
+ANDROID = WEB.parent / "android" / "app" / "src" / "main" / "res"
+LAUNCHER = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
+"""Android's launcher densities. The app is the website in a Trusted Web Activity, so its icon is the same spear."""
+
+
+def on_ground(spear: Image.Image, size: int, safe: float) -> Image.Image:
+    """The spear centred on the page's ground colour, filling `safe` of the square.
+
+    A maskable icon is cropped by the launcher to a circle, squircle or square,
+    and only the central 80% is guaranteed to survive, so the artwork sits
+    inside it; the ground fills the rest so no mask ever shows a transparent
+    corner."""
+    canvas = Image.new("RGBA", (size, size), (*GROUND, 255))
+    inner = round(size * safe)
+    art = spear.resize((inner, inner), Image.LANCZOS)
+    canvas.alpha_composite(art, ((size - inner) // 2, (size - inner) // 2))
+    return canvas
+
+
+def app_icons(spear: Image.Image) -> None:
+    """Icons for installing the site: the manifest's 192 and maskable 512, and the Android launcher set."""
+    spear.resize((192, 192), Image.LANCZOS).save(ICON_192, "PNG", optimize=True)
+    on_ground(spear, 512, 0.72).save(MASKABLE, "PNG", optimize=True)
+    print(f"{ICON_192.name:18} 192x192")
+    print(f"{MASKABLE.name:18} 512x512, artwork in the central 72%")
+    if ANDROID.parent.exists():
+        for density, size in LAUNCHER.items():
+            folder = ANDROID / f"mipmap-{density}"
+            folder.mkdir(parents=True, exist_ok=True)
+            on_ground(spear, size, 0.80).save(folder / "ic_launcher.png", "PNG", optimize=True)
+        print(f"android launcher   {', '.join(f'{d} {n}px' for d, n in LAUNCHER.items())}")
+
+
 def main() -> int:
     lockup = dehalo(Image.open(LOCKUP_SOURCE))
     lockup.save(LOCKUP_OUT, "WEBP", quality=92, method=6, exact=True)
@@ -212,6 +247,8 @@ def main() -> int:
     print(f"{FAVICON_48.name:18} 48x48")
     print(f"{FAVICON_96.name:18} 96x96")
     print(f"{FAVICON_ICO.name:18} {', '.join(f'{w}x{h}' for w, h in ICO_SIZES)}")
+
+    app_icons(spear)
 
     card = social_card(lockup)
     card.save(OG_OUT, "PNG", optimize=True)
