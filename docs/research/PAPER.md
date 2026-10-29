@@ -326,6 +326,14 @@ against 0.543 ([kushmanda-v3.md](models/kushmanda-v3.md);
 [kushmanda.md](models/kushmanda.md)). The smaller model
 stays served, since declining is the property Sati depends on.
 
+**Simulating novelty did not anticipate it.** Chandraghanta's classifier
+was fused with its benign-only PCA detector, with the weight chosen by
+holding each training-day attack family out in turn
+([chandraghanta.md](models/chandraghanta.md)). The training days' families
+are mostly DoS variants, which the classifier generalises to, so the
+procedure chose a weight of 0.9. On the unseen test days, F1 was 0.601
+against 0.604 at the same 1% false-alarm budget.
+
 **Telling a model what is new did not find new failures.** Kalaratri's
 features count log templates seen in training, so a failure type that first
 appears months later is invisible to it. Causal novelty features (lines whose
@@ -348,10 +356,10 @@ not first-seen templates.
   useful. Features describing where the incident is heading (the share of its
   peak left, minutes since the peak and since 3σ) move that only a little:
   0.110 confirmed at 0.025 premature, with the 3σ check.
-- Siddhidatri's fusion matched Shailaputri alone on F1 (0.534 against 0.530)
-  while raising false alarms from 4.0 to 47.9. Held to Shailaputri's
-  false-alarm rate on the training groups, it still reached 37.6 on unseen
-  machines, with F1 0.503
+- Siddhidatri's fusion matched Shailaputri alone on F1 (0.537 against 0.539)
+  while raising false alarms from 3.8 to 47.8. Held to Shailaputri's
+  false-alarm rate on the training groups, it still reached 37.5 on unseen
+  machines, with F1 0.505
   ([siddhidatri.md](models/siddhidatri.md)).
 
 Neither verdict closes an incident without a human.

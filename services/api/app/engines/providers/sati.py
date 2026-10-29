@@ -298,8 +298,9 @@ def rank_techniques(text: str, query: list[float]) -> list[tuple[float, str]] | 
 
 
 def mitigation_scores(text: str) -> dict[str, float]:
-    """Each ATT&CK mitigation's probability for this behaviour. Skandamata's TF-IDF classifier when it is
-    exported (the best mitigation ranker measured, skandamata.md), else Skandamata's own network."""
+    """Each ATT&CK mitigation's probability for this behaviour. Skandamata's TF-IDF classifier when its
+    export says to serve it, else Skandamata's own network. Run 40801721276 measured the pruned classifier
+    at nDCG@10 0.850 against the network's 0.839 on held-out attackers (skandamata.md), so it serves."""
     if techniqueclassifier.mitigations_available():
         return techniqueclassifier.mitigations().probabilities(text)
     return {m["id"]: p for p, m in mitigator().recommend(text, k=1000)}

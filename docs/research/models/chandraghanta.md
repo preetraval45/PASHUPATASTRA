@@ -43,22 +43,23 @@ Without the TTL fields, the score shows how much of the detection rests on TTL v
 | **chandraghanta-v2 (1% false-alarm budget)** | 0.927 | 0.448 | 0.604 | 0.0118 |
 | pca (benign-only) | 0.440 | 0.135 | 0.207 | 0.0575 |
 | **chandraghanta-v1 (either)** | 0.660 | 0.340 | 0.449 | 0.0584 |
+| **chandraghanta-v3 (fused, weight from held-out families)** | 0.920 | 0.447 | 0.601 | 0.0130 |
 | *chandraghanta-v0, random split (reference)* | 0.998 | 0.996 | 0.997 | 0.0005 |
 
 Every test attack family appears only on Thursday or Friday, so the classifier has never seen any of them. The random-split row is the setting most published results use. The gap between that row and the by-day result is how much those results owe to the split. Measured: F1 0.997 on a random split, 0.453 on unseen days.
 
 ### Recall by attack family
 
-| Family | Flows | Seen in training | chandraghanta-v0 | chandraghanta-v2 (1% false-alarm budget) | pca (benign-only) | chandraghanta-v1 (either) |
-|---|---:|---|---:|---:|---:|---:|
-| BENIGN *(share wrongly flagged)* | 871,074 | yes | 0.001 | 0.012 | 0.058 | 0.058 |
-| Bot | 1,966 | **no** | 0.000 | 0.000 | 0.028 | 0.028 |
-| DDoS | 128,027 | **no** | 0.636 | 0.975 | 0.215 | 0.656 |
-| Infiltration | 36 | **no** | 0.000 | 0.000 | 0.722 | 0.722 |
-| PortScan | 158,930 | **no** | 0.013 | 0.020 | 0.074 | 0.081 |
-| Web Attack - Brute Force | 1,507 | **no** | 0.908 | 1.000 | 0.000 | 0.908 |
-| Web Attack - Sql Injection | 21 | **no** | 1.000 | 1.000 | 0.000 | 1.000 |
-| Web Attack - XSS | 652 | **no** | 0.974 | 1.000 | 0.000 | 0.974 |
+| Family | Flows | Seen in training | chandraghanta-v0 | chandraghanta-v2 (1% false-alarm budget) | pca (benign-only) | chandraghanta-v1 (either) | chandraghanta-v3 (fused, weight from held-out families) |
+|---|---:|---|---:|---:|---:|---:|---:|
+| BENIGN *(share wrongly flagged)* | 871,074 | yes | 0.001 | 0.012 | 0.058 | 0.058 | 0.013 |
+| Bot | 1,966 | **no** | 0.000 | 0.000 | 0.028 | 0.028 | 0.000 |
+| DDoS | 128,027 | **no** | 0.636 | 0.975 | 0.215 | 0.656 | 0.974 |
+| Infiltration | 36 | **no** | 0.000 | 0.000 | 0.722 | 0.722 | 0.000 |
+| PortScan | 158,930 | **no** | 0.013 | 0.020 | 0.074 | 0.081 | 0.021 |
+| Web Attack - Brute Force | 1,507 | **no** | 0.908 | 1.000 | 0.000 | 0.908 | 0.949 |
+| Web Attack - Sql Injection | 21 | **no** | 1.000 | 1.000 | 0.000 | 1.000 | 0.809 |
+| Web Attack - XSS | 652 | **no** | 0.974 | 1.000 | 0.000 | 0.974 | 0.968 |
 
 ## How to read this
 

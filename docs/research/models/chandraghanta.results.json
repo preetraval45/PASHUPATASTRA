@@ -227,6 +227,16 @@
           "fp": 50907,
           "fn": 192274,
           "tn": 820167
+        },
+        "chandraghanta-v3 (fused, weight from held-out families)": {
+          "precision": 0.9201,
+          "recall": 0.4466,
+          "f1": 0.6013,
+          "false_positive_rate": 0.01297,
+          "tp": 130026,
+          "fp": 11298,
+          "fn": 161113,
+          "tn": 859776
         }
       },
       "per_family": {
@@ -237,7 +247,8 @@
           "chandraghanta-v0": 0.0011,
           "chandraghanta-v2 (1% false-alarm budget)": 0.0118,
           "pca (benign-only)": 0.0575,
-          "chandraghanta-v1 (either)": 0.0584
+          "chandraghanta-v1 (either)": 0.0584,
+          "chandraghanta-v3 (fused, weight from held-out families)": 0.013
         },
         "Bot": {
           "n": 1966,
@@ -246,7 +257,8 @@
           "chandraghanta-v0": 0.0,
           "chandraghanta-v2 (1% false-alarm budget)": 0.0,
           "pca (benign-only)": 0.0275,
-          "chandraghanta-v1 (either)": 0.0275
+          "chandraghanta-v1 (either)": 0.0275,
+          "chandraghanta-v3 (fused, weight from held-out families)": 0.0
         },
         "DDoS": {
           "n": 128027,
@@ -255,7 +267,8 @@
           "chandraghanta-v0": 0.636,
           "chandraghanta-v2 (1% false-alarm budget)": 0.9754,
           "pca (benign-only)": 0.2149,
-          "chandraghanta-v1 (either)": 0.6557
+          "chandraghanta-v1 (either)": 0.6557,
+          "chandraghanta-v3 (fused, weight from held-out families)": 0.9735
         },
         "Infiltration": {
           "n": 36,
@@ -264,7 +277,8 @@
           "chandraghanta-v0": 0.0,
           "chandraghanta-v2 (1% false-alarm budget)": 0.0,
           "pca (benign-only)": 0.7222,
-          "chandraghanta-v1 (either)": 0.7222
+          "chandraghanta-v1 (either)": 0.7222,
+          "chandraghanta-v3 (fused, weight from held-out families)": 0.0
         },
         "PortScan": {
           "n": 158930,
@@ -273,7 +287,8 @@
           "chandraghanta-v0": 0.0129,
           "chandraghanta-v2 (1% false-alarm budget)": 0.0202,
           "pca (benign-only)": 0.0741,
-          "chandraghanta-v1 (either)": 0.0807
+          "chandraghanta-v1 (either)": 0.0807,
+          "chandraghanta-v3 (fused, weight from held-out families)": 0.0208
         },
         "Web Attack - Brute Force": {
           "n": 1507,
@@ -282,7 +297,8 @@
           "chandraghanta-v0": 0.9078,
           "chandraghanta-v2 (1% false-alarm budget)": 1.0,
           "pca (benign-only)": 0.0,
-          "chandraghanta-v1 (either)": 0.9078
+          "chandraghanta-v1 (either)": 0.9078,
+          "chandraghanta-v3 (fused, weight from held-out families)": 0.9489
         },
         "Web Attack - Sql Injection": {
           "n": 21,
@@ -291,7 +307,8 @@
           "chandraghanta-v0": 1.0,
           "chandraghanta-v2 (1% false-alarm budget)": 1.0,
           "pca (benign-only)": 0.0,
-          "chandraghanta-v1 (either)": 1.0
+          "chandraghanta-v1 (either)": 1.0,
+          "chandraghanta-v3 (fused, weight from held-out families)": 0.8095
         },
         "Web Attack - XSS": {
           "n": 652,
@@ -300,7 +317,8 @@
           "chandraghanta-v0": 0.9739,
           "chandraghanta-v2 (1% false-alarm budget)": 1.0,
           "pca (benign-only)": 0.0,
-          "chandraghanta-v1 (either)": 0.9739
+          "chandraghanta-v1 (either)": 0.9739,
+          "chandraghanta-v3 (fused, weight from held-out families)": 0.9678
         }
       },
       "reference_random_split": {
@@ -315,10 +333,30 @@
           "fn": 491,
           "tn": 453643
         }
+      },
+      "v3_fusion": {
+        "weight": 0.9,
+        "held_out_families": [
+          "DoS GoldenEye",
+          "DoS Hulk",
+          "DoS Slowhttptest",
+          "DoS slowloris",
+          "FTP-Patator",
+          "Heartbleed",
+          "SSH-Patator"
+        ],
+        "mean_held_out_recall": {
+          "0.0": 0.3464,
+          "0.25": 0.5809,
+          "0.5": 0.7012,
+          "0.75": 0.7975,
+          "0.9": 0.9215,
+          "1.0": 0.9094
+        }
       }
     }
   },
   "weights_published": true,
   "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. UNSW-NB15 and CIC-IDS2017 are research-use only.",
-  "seconds": 324.8
+  "seconds": 851.7
 }

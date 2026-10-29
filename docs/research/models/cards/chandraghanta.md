@@ -87,6 +87,27 @@ appears only on the test days.
   threshold chosen on training data does not carry over. As an alerting
   system, it would be unusable at this rate.
 
+## v3: fusing with the benign-only detector (Kaggle kernel v10, 29 Oct 2026)
+
+The classifier misses families it never saw. The benign-only PCA catches some
+of them (Infiltration among them), and a union of the two raised false alarms
+fivefold. v3 fuses them instead, both on the scale of benign validation
+percentiles. The weight is chosen without the test days: each training-day
+attack family is held out of the classifier in turn, and the weight kept is
+the one that catches the most of the held-out family at the 1% budget.
+
+| Detector (CIC-IDS2017, unseen days) | Precision | Recall | F1 | False-positive rate |
+|---|---:|---:|---:|---:|
+| v2, 1% budget (served) | 0.927 | 0.448 | 0.604 | 0.0118 |
+| v3, fused, weight from held-out families | 0.920 | 0.447 | 0.601 | 0.0130 |
+
+It chose a weight of 0.9, almost the classifier alone. The training days'
+families are mostly DoS variants, and the classifier generalises across them.
+Held out of training, they were still caught 0.92 of the time. So the
+procedure saw no need for PCA, but the test days' Bot, Infiltration, PortScan
+and web attacks needed it. Simulated novelty helps only if it resembles the
+real thing. v2 stays served.
+
 ## Known limitations
 
 - Lab traffic only: IXIA-generated attacks (UNSW-NB15) and a scripted
