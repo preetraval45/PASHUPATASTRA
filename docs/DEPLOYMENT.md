@@ -30,6 +30,11 @@ Consequences:
   set per environment; a wildcard is never acceptable.
 - On-prem customers run the dashboard themselves from the same container as the
   API. Vercel is a convenience for the hosted product, not a dependency of it.
+- `apps/web/vercel.json` sets `ignoreCommand` so a push that leaves `apps/web`
+  unchanged does not build. On 27 Oct 2026 the training bot's result commits
+  each built the site and used up the free plan's 100 deployments a day. The
+  file must hold only keys Vercel's schema knows. A `"//"` comment key failed
+  every deployment for a day (`lib/vercelconfig.test.ts` now checks this).
 
 ## Topology
 
