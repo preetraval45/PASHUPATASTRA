@@ -41,7 +41,7 @@ const DESTINATIONS = [
   { href: "/analytics", icon: "chart", title: "Analytics", body: "Activity, incident severity, response risk and feed health, charted from the live API." },
   { href: "/training", icon: "cap", title: "Training", body: "Cyber defence drills: start from one alert, investigate, diagnose, respond — and get scored." },
   { href: "/observatory", icon: "radar", title: "Observatory", body: "Real attacks, polled hourly: ransomware leak sites, botnet controllers, exploited CVEs." },
-  { href: "/evaluation", icon: "check", title: "Evaluation", body: "What has been measured, what has not, and the models trained on real data." },
+  { href: "/models", icon: "cube", title: "Sati models", body: "Nine models built and trained here on public data. Run them live on examples they never trained on, with the truth beside each answer." },
 ] as const;
 
 const LOOP = ["Observe", "Understand", "Predict", "Decide", "Act", "Verify", "Learn"];
