@@ -276,7 +276,7 @@ simulator does not.**
 - The deployed API does not hold raw metric series, only events (a deviation
   in σ, an onset, a deploy). Trained on real incidents expressed in those event
   features, Katyayani ranks the root first in 0.900 of live-stack incidents,
-  0.845 on Online Boutique and 0.894 on Sock Shop. The same features trained on
+  0.849 on Online Boutique and 0.894 on Sock Shop. The same features trained on
   Kaal score 0.265, 0.490 and 0.265
   ([katyayani-events.md](models/katyayani-events.md)). Little is lost by
   giving up the raw series, so the real-data model is the one to serve.
@@ -337,15 +337,17 @@ not first-seen templates.
 
 **Two models did not earn their place, and the architecture reflects it.**
 
-- Mahagauri, the recovery verifier, declared 0.220 of incidents over while
-  still anomalous. Requiring agreement with a 3σ check lowers that to 0.070,
-  but confirms only 0.223 of recoveries ([mahagauri.md](models/mahagauri.md)).
+- Mahagauri, the recovery verifier, declared 0.199 of incidents over while
+  still anomalous. Requiring agreement with a 3σ check lowers that to 0.061,
+  but confirms only 0.211 of recoveries ([mahagauri.md](models/mahagauri.md)).
   Choosing the threshold on out-of-fold scores, instead of the model's
   over-confident scores on its own training data (v2), brings early
   all-clears within budget for the first time (0.021 with the 3σ check). But
-  then it confirms only 0.092 of recoveries: honest tuning shows the model
+  then it confirms only 0.095 of recoveries: honest tuning shows the model
   cannot separate "recovered" from "not yet" sharply enough to be both safe and
-  useful.
+  useful. Features describing where the incident is heading (the share of its
+  peak left, minutes since the peak and since 3σ) move that only a little:
+  0.110 confirmed at 0.025 premature, with the 3σ check.
 - Siddhidatri's fusion matched Shailaputri alone on F1 (0.534 against 0.530)
   while raising false alarms from 4.0 to 47.9. Held to Shailaputri's
   false-alarm rate on the training groups, it still reached 37.6 on unseen
@@ -374,7 +376,8 @@ weight chosen on the validation sources, they reach Recall@1 0.673 and MRR
 
 The same holds for Skandamata, the mitigation recommender. A one-vs-rest
 logistic regression on TF-IDF features reaches hit@1 0.827 and MRR 0.880,
-against Skandamata's 0.792 and 0.852 ([skandamata.md](models/skandamata.md)).
+against Skandamata's 0.787 and 0.849. Fusing the two does not help (0.822)
+([skandamata.md](models/skandamata.md)): there, the simple model is the best one measured.
 
 ### 7.3 Against general LLMs, on a benchmark this project did not write
 

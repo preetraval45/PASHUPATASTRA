@@ -31,6 +31,7 @@ const SHOWN: Record<string, string> = {
   "skandamata-v0": "Skandamata",
   "skandamata-v0 + tf-idf (fused)": "Skandamata + TF-IDF classifier, fused",
   "mahagauri-v2 + 3σ agreement": "Mahagauri",
+  "mahagauri-v3 + 3σ agreement": "Mahagauri + trajectory features",
   "siddhidatri-v0": "Siddhidatri",
   "katyayani-kaal-v0 (zero-shot)": "Katyayani, trained on synthetic incidents",
   "katyayani-kaal-v0 (trained on Kaal, zero-shot)": "Katyayani, trained on synthetic incidents",
@@ -49,7 +50,6 @@ const HIDDEN = new Set([
   "mahagauri-v1 + 3σ agreement",
   "mahagauri-v2 (out-of-fold, hold chosen)",
   "mahagauri-v3 (trajectory features)",
-  "mahagauri-v3 + 3σ agreement",
   "siddhidatri-v1 (at Shailaputri's false-alarm budget)",
 ]);
 
