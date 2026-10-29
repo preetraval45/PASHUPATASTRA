@@ -90,6 +90,8 @@ export const metadata: Metadata = {
  *  what this console opens as. */
 export const viewport = {
   themeColor: "#0b0d11",
+  // Lets the bottom tab bar pad itself clear of a phone's home indicator (env(safe-area-inset-bottom)).
+  viewportFit: "cover",
 };
 
 /**

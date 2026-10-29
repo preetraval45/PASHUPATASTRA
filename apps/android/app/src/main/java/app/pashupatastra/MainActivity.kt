@@ -37,6 +37,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progress: ProgressBar
     private val site: Uri = Uri.parse(BuildConfig.SITE_URL)
 
+    /** Set by the page (AppBridge.atTop): the site scrolls inside a panel, so the WebView's own scrollY stays 0. */
+    @Volatile
+    var pageAtTop = true
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -66,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             addView(web, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             setOnRefreshListener { web.reload() }
             // Only pull-to-refresh at the very top of a page, so scrolling inside panels still works.
-            setOnChildScrollUpCallback { _, _ -> web.scrollY > 0 }
+            setOnChildScrollUpCallback { _, _ -> !pageAtTop || web.scrollY > 0 }
         }
         progress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
@@ -112,6 +116,10 @@ class MainActivity : AppCompatActivity() {
             // Everything else (other sites, mailto:, tel:) goes to the app that handles it.
             runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
             return true
+        }
+
+        override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+            pageAtTop = true
         }
 
         override fun onPageFinished(view: WebView, url: String) {

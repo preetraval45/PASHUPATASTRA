@@ -105,6 +105,20 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
     }
   }, []);
 
+  // Inside the Android app: tell it whether what the user is scrolling is at its top, so its
+  // pull-to-refresh fires only there (the page scrolls inside a panel, not the window).
+  useEffect(() => {
+    const app = (window as { PashupatastraApp?: { atTop?: (top: boolean) => void } }).PashupatastraApp;
+    if (!app?.atTop) return;
+    const report = (event: Event) => {
+      const target = event.target;
+      const top = target instanceof Element ? target.scrollTop <= 0 : window.scrollY <= 0;
+      app.atTop?.(top);
+    };
+    document.addEventListener("scroll", report, { capture: true, passive: true });
+    return () => document.removeEventListener("scroll", report, { capture: true });
+  }, []);
+
   // Navigating closes the drawer, or it stays open over the page it opened.
   useEffect(() => setDrawer(false), [pathname]);
 
@@ -179,8 +193,73 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
         </header>
 
         {children}
+
+        <TabBar pathname={pathname} onMore={() => setDrawer(true)} />
       </div>
     </div>
+  );
+}
+
+/** The four places a phone user goes most, plus everything else behind "More". */
+const TABS: Item[] = [
+  { href: "/", label: "Home", icon: "home", exact: true },
+  { href: "/incidents", label: "Incidents", icon: "alert" },
+  { href: "/ask", label: "Sati AI", icon: "chat" },
+  { href: "/training", label: "Learn", icon: "cap" },
+];
+
+/**
+ * A bottom tab bar below `lg`, as phone apps have. The drawer alone made every
+ * move on a phone two taps from a corner the thumb does not reach; the tabs
+ * sit where it does. It respects the phone's home-indicator inset, so it also
+ * works inside the Android app and when the site is installed to a home screen.
+ */
+function TabBar({ pathname, onMore }: { pathname: string; onMore: () => void }) {
+  const inTabs = TABS.some((tab) => isCurrent(tab, pathname));
+  return (
+    <nav
+      aria-label="Main sections"
+      className="shrink-0 border-t border-[rgb(var(--edge))] bg-[rgb(var(--panel))]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+    >
+      <ul className="grid grid-cols-5">
+        {TABS.map((tab) => {
+          const current = isCurrent(tab, pathname);
+          return (
+            <li key={tab.href}>
+              <Link
+                href={tab.href}
+                aria-current={current ? "page" : undefined}
+                className={`focusable relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition ${
+                  current ? "text-[rgb(var(--astra))]" : "text-[rgb(var(--faint))] active:text-[rgb(var(--ink))]"
+                }`}
+              >
+                {current && (
+                  <span aria-hidden="true" className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-[rgb(var(--astra))]" />
+                )}
+                <Icon name={tab.icon} />
+                <span>{tab.label}</span>
+                <span className="absolute right-3 top-2">
+                  <Pending />
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+        <li>
+          <button
+            type="button"
+            onClick={onMore}
+            aria-label="More sections"
+            className={`focusable flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
+              inTabs ? "text-[rgb(var(--faint))]" : "text-[rgb(var(--astra))]"
+            }`}
+          >
+            <Icon name="menu" />
+            <span>More</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
   );
 }
 
