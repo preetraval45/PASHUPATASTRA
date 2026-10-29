@@ -26,7 +26,8 @@ export default async function ModulePage({ params }: { params: Params }) {
   if (!m) notFound();
 
   const index = MODULES.findIndex((x) => x.slug === m.slug);
-  const nature = NAVADURGA.find((x) => x.name === m.form)?.nature;
+  const model = NAVADURGA.find((x) => x.name === m.form);
+  const nature = model?.nature;
   const next = MODULES[index + 1];
 
   return (
@@ -87,6 +88,17 @@ export default async function ModulePage({ params }: { params: Params }) {
                   </li>
                 ))}
               </ul>
+            </Panel>
+          )}
+          {model && (
+            <Panel title={`The model named ${model.name}`}>
+              <p className="text-sm text-[rgb(var(--muted))]">{model.job}.</p>
+              <Link
+                href={`/models#${model.id}`}
+                className="focusable mt-2 inline-block rounded text-sm text-[rgb(var(--astra))] hover:underline"
+              >
+                How it was trained and tested →
+              </Link>
             </Panel>
           )}
           {m.drill && (

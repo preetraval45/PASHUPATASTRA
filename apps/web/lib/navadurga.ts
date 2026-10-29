@@ -42,7 +42,7 @@ export const MODELS: SatiModel[] = [
   { n: 6, id: "sati-katyayani", name: "Katyayani", nature: "the warrior who finds the adversary", job: "Root-cause ranking — names the service at fault and the fault type, citing the metric series", stage: "Understand", data: ["RCAEval"], status: "trained", task: "RP-58" },
   { n: 7, id: "sati-kalaratri", name: "Kalaratri", nature: "the night that dispels darkness", job: "Log anomaly detection — what hides in the noise", stage: "Observe", data: ["LogHub HDFS", "LogHub BGL"], status: "training", task: "RP-62" },
   { n: 8, id: "sati-mahagauri", name: "Mahagauri", nature: "calm restored", job: "Verification — confirms a system has truly returned to normal after an action", stage: "Verify", data: ["SMD incidents"], status: "training", task: "RP-71" },
-  { n: 9, id: "sati-siddhidatri", name: "Siddhidatri", nature: "completion", job: "Fusion — combines the other eight into one calibrated verdict", stage: "Decide", data: ["SMD: Shailaputri + baselines, stacked out of fold"], status: "training", task: "RP-73" },
+  { n: 9, id: "sati-siddhidatri", name: "Siddhidatri", nature: "completion", job: "Fusion — combines several detectors into one calibrated verdict", stage: "Decide", data: ["SMD: Shailaputri + baselines, stacked out of fold"], status: "training", task: "RP-73" },
 ];
 
 export const STAGES: Stage[] = ["Observe", "Remember", "Understand", "Explain", "Act", "Verify", "Decide"];
