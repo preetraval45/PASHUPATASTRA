@@ -58,7 +58,7 @@
   "thresholds": {
     "kalaratri-v0": 0.9996684324889528,
     "v1": 0.9994566260029777,
-    "pca": 0.20397068696625942
+    "pca": 0.2039706869662387
   },
   "top_features": [
     {
@@ -71,30 +71,36 @@
     },
     {
       "feature": "E26",
-      "gain": 1324242.3
+      "gain": 1324242.3,
+      "template": "[*]BLOCK* NameSystem[*]addStoredBlock: blockMap updated:[*]is added to[*]size[*]"
     },
     {
       "feature": "E2",
-      "gain": 648486.5
+      "gain": 648486.5,
+      "template": "[*]Verification succeeded for[*]"
     },
     {
       "feature": "E4",
-      "gain": 618408.2
+      "gain": 618408.2,
+      "template": "[*]Got exception while serving[*]to[*]"
     },
     {
       "feature": "E27",
-      "gain": 215732.2
+      "gain": 215732.2,
+      "template": "[*]BLOCK* NameSystem[*]addStoredBlock: Redundant addStoredBlock request received for[*]on[*]size[*]"
     },
     {
       "feature": "E3",
-      "gain": 201849.1
+      "gain": 201849.1,
+      "template": "[*]Served block[*]to[*]"
     },
     {
       "feature": "E20",
-      "gain": 191618.2
+      "gain": 191618.2,
+      "template": "[*]Unexpected error trying to delete block[*]BlockInfo not found in volumeMap[*]"
     }
   ],
   "weights_published": true,
   "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. LogHub is research-use only.",
-  "seconds": 14.8
+  "seconds": 19.3
 }

@@ -17,12 +17,12 @@
 |---|---:|
 | `distinct_share` | 2748627.9 |
 | `length` | 1795887.2 |
-| `E26` | 1324242.3 |
-| `E2` | 648486.5 |
-| `E4` | 618408.2 |
-| `E27` | 215732.2 |
-| `E3` | 201849.1 |
-| `E20` | 191618.2 |
+| `E26` [*]BLOCK* NameSystem[*]addStoredBlock: blockMap updated:[*]is added to[*]size[*] | 1324242.3 |
+| `E2` [*]Verification succeeded for[*] | 648486.5 |
+| `E4` [*]Got exception while serving[*]to[*] | 618408.2 |
+| `E27` [*]BLOCK* NameSystem[*]addStoredBlock: Redundant addStoredBlock request received for[*]on[*]size[*] | 215732.2 |
+| `E3` [*]Served block[*]to[*] | 201849.1 |
+| `E20` [*]Unexpected error trying to delete block[*]BlockInfo not found in volumeMap[*] | 191618.2 |
 
 ## How to read this
 
