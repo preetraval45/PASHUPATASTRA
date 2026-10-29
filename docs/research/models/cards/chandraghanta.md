@@ -57,7 +57,7 @@ appears only on the test days.
   known traffic, not detection of new attacks.
 - **It generalises to some families, not others.**
   - Generalises: web attacks (brute force 0.91, XSS 0.97, SQL injection 1.00
-    of 21 flows) and DDoS (0.64), which resemble the brute-force and DoS
+    of 21 flows) and DDoS (0.636), which resemble the brute-force and DoS
     traffic seen on the training days.
   - Misses almost entirely: port scans (0.01), bots (0.00) and infiltration
     (0 of 36). These look like nothing it trained on.

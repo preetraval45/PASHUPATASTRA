@@ -55,7 +55,7 @@ per run.
 | A system never seen (n = 645) | 88.4% | 57.0% |
 | A fault type never seen | 89.3% | 57.0% |
 | RE3, never trained on (n = 90) | 80.0% | 48.9% |
-| Never-seen system, without the series-count feature | 88.7% | — |
+| Never-seen system, without the series-count feature | 88.5% | — |
 
 Fault type, end to end: about 55–58% per held-out system.
 

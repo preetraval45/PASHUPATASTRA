@@ -34,9 +34,15 @@ def _metrics(card: str) -> str:
 CARDS = sorted((MODELS / "cards").glob("*.md"))
 
 
+#: A card's own tables (by file-name prefix). A number found only in another model's table is a stale
+#: number that happens to match; on 29 Oct that hid stale figures in Siddhidatri's Kaggle description.
+OWN = {"katyayani": ("sati-rca", "katyayani", "rcaeval-diagnosis"), "shailaputri-smd": ("shailaputri",)}
+
+
 @pytest.mark.parametrize("card", CARDS, ids=[c.stem for c in CARDS])
 def test_card_numbers_are_in_a_generated_table(card: Path):
-    tables = "\n".join(p.read_text(encoding="utf-8") for p in MODELS.glob("*.md"))
+    prefixes = OWN.get(card.stem, (card.stem,))
+    tables = "\n".join(p.read_text(encoding="utf-8") for p in MODELS.glob("*.md") if p.name.startswith(prefixes))
     cited = set(NUMBER.findall(_metrics(card.read_text(encoding="utf-8"))))
     # A percentage in prose may be a share in a table (54.3% ↔ 0.543).
     missing = [n for n in sorted(cited) if n not in tables and f"{float(n) / 100:.3f}" not in tables]
