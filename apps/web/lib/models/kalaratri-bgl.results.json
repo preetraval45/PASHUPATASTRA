@@ -25,6 +25,16 @@
       "fn": 594,
       "tn": 8402
     },
+    "kalaratri-bgl-v1 (+ novelty)": {
+      "precision": 0.7783,
+      "recall": 0.2196,
+      "f1": 0.3426,
+      "false_positive_rate": 0.00592,
+      "tp": 179,
+      "fp": 51,
+      "fn": 636,
+      "tn": 8561
+    },
     "pca (Xu et al. 2009)": {
       "precision": 0.0923,
       "recall": 0.8294,
@@ -48,6 +58,7 @@
   },
   "thresholds": {
     "kalaratri-bgl-v0": 0.6127507388944308,
+    "v1": 0.550689188480109,
     "pca": 7586.353679078977
   },
   "top_features": [
@@ -93,5 +104,5 @@
   ],
   "weights_published": true,
   "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. LogHub is research-use only.",
-  "seconds": 14.5
+  "seconds": 15.9
 }

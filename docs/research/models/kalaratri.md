@@ -7,6 +7,7 @@
 | Detector | Precision | Recall | F1 | False-positive rate |
 |---|---:|---:|---:|---:|
 | **Kalaratri v0** | 1.000 | 0.934 | 0.966 | 0.0000 |
+| **Kalaratri v1 (+ causal novelty features)** | 1.000 | 0.939 | 0.968 | 0.0000 |
 | pca (Xu et al. 2009) | 0.766 | 0.996 | 0.866 | 0.0045 |
 | unseen-template rule | 1.000 | 0.432 | 0.604 | 0.0000 |
 
