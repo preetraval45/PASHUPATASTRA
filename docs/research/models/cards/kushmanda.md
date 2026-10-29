@@ -100,6 +100,16 @@ comparable.
   0.604, still far below word overlap's 0.962. Behaviour → technique barely
   moves (0.423 to 0.432). The model's remaining errors are in choosing which
   identifier, so in serving the identifier comes from retrieval.
+- **Twice the size copies identifiers better and declines less** ([kushmanda-v3.md](../kushmanda-v3.md)).
+  v3 has 34.1M parameters and a corpus that adds GitHub Security Advisories.
+  On the same 1,200 held-out questions, it raises lookup exact match from
+  0.528 to 0.717 and behaviour → technique from 0.423 to 0.567. Definitions
+  rise from 0.785 to 0.827 ROUGE-L. But it declines on only 0.417 of
+  unanswerable questions, against 0.543, and loses a little on required
+  actions (0.896) and mitigations (0.946). It is still below word overlap on
+  identifiers (0.962 and 0.690). v2 stays served: declining when no passage
+  answers matters more in Sati than a better identifier, which comes from
+  retrieval anyway.
 
 ## Known limitations
 

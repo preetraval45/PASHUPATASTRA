@@ -1,0 +1,500 @@
+{
+  "model": "sati-kushmanda-v3",
+  "architecture": "decoder-only transformer: RMSNorm, RoPE, SwiGLU, fused causal attention, tied embeddings",
+  "parameters": 34087424,
+  "config": {
+    "vocab_size": 16384,
+    "context": 640,
+    "layers": 8,
+    "heads": 8,
+    "width": 512,
+    "dropout": 0.1,
+    "rope_base": 10000.0
+  },
+  "device": "cuda",
+  "corpus": {
+    "documents": 427826,
+    "by_source": {
+      "mitre-attack": 3652,
+      "mitre-attack-procedure": 14431,
+      "mitre-capec": 1207,
+      "mitre-cwe": 917,
+      "cisa-kev": 1690,
+      "repository": 361,
+      "nvd-cve": 372742,
+      "mitre-attack-mobile": 455,
+      "mitre-attack-ics": 490,
+      "github-advisory": 31881
+    },
+    "held_out_documents": 21482,
+    "train_tokens": 47912771,
+    "held_out_tokens": 2503577
+  },
+  "tokenizer": {
+    "vocab": 16384,
+    "tokens_per_line_held_out": 35.15,
+    "gpt2_tokens_per_line_held_out": 36.86
+  },
+  "held_out": {
+    "loss": 2.1941,
+    "perplexity": 8.97,
+    "bits_per_byte": 0.8027
+  },
+  "sft": {
+    "train_pairs": 22616,
+    "held_out_pairs": 1462,
+    "held_out_answer_loss": 0.2029,
+    "passages": 3,
+    "unanswerable_share": 0.1,
+    "evaluated_questions": 1200,
+    "grounded": {
+      "kushmanda": {
+        "classify": {
+          "cited_right_passage": 0.5766,
+          "false_abstention": 0.0362,
+          "exact_match": 0.5667,
+          "n": 607
+        },
+        "define": {
+          "cited_right_passage": 0.8694,
+          "false_abstention": 0.0041,
+          "rouge_l": 0.8267,
+          "copy_precision": 0.8134,
+          "n": 245
+        },
+        "lookup": {
+          "cited_right_passage": 0.8679,
+          "false_abstention": 0.0566,
+          "exact_match": 0.717,
+          "n": 53
+        },
+        "mitigate": {
+          "cited_right_passage": 0.9048,
+          "false_abstention": 0.0,
+          "rouge_l": 0.9458,
+          "copy_precision": 0.3978,
+          "n": 42
+        },
+        "remediate": {
+          "cited_right_passage": 0.9127,
+          "false_abstention": 0.0,
+          "rouge_l": 0.8964,
+          "copy_precision": 0.9926,
+          "n": 126
+        },
+        "unanswerable": {
+          "abstained": 0.4173,
+          "n": 127
+        }
+      },
+      "lexical baseline": {
+        "classify": {
+          "cited_right_passage": 0.6903,
+          "false_abstention": 0.0,
+          "exact_match": 0.6903,
+          "n": 607
+        },
+        "define": {
+          "cited_right_passage": 1.0,
+          "false_abstention": 0.0,
+          "rouge_l": 0.683,
+          "copy_precision": 1.0,
+          "n": 245
+        },
+        "lookup": {
+          "cited_right_passage": 0.9623,
+          "false_abstention": 0.0,
+          "exact_match": 0.9623,
+          "n": 53
+        },
+        "mitigate": {
+          "cited_right_passage": 1.0,
+          "false_abstention": 0.0,
+          "rouge_l": 0.6128,
+          "copy_precision": 1.0,
+          "n": 42
+        },
+        "remediate": {
+          "cited_right_passage": 0.9524,
+          "false_abstention": 0.0,
+          "rouge_l": 0.3609,
+          "copy_precision": 1.0,
+          "n": 126
+        },
+        "unanswerable": {
+          "abstained": 0.0,
+          "n": 127
+        }
+      },
+      "chance": {
+        "classify": {
+          "cited_right_passage": 0.3048,
+          "false_abstention": 0.0,
+          "exact_match": 0.3048,
+          "n": 607
+        },
+        "define": {
+          "cited_right_passage": 0.351,
+          "false_abstention": 0.0,
+          "rouge_l": 0.3208,
+          "copy_precision": 1.0,
+          "n": 245
+        },
+        "lookup": {
+          "cited_right_passage": 0.3962,
+          "false_abstention": 0.0,
+          "exact_match": 0.3962,
+          "n": 53
+        },
+        "mitigate": {
+          "cited_right_passage": 0.3571,
+          "false_abstention": 0.0,
+          "rouge_l": 0.2635,
+          "copy_precision": 1.0,
+          "n": 42
+        },
+        "remediate": {
+          "cited_right_passage": 0.3333,
+          "false_abstention": 0.0,
+          "rouge_l": 0.2575,
+          "copy_precision": 1.0,
+          "n": 126
+        },
+        "unanswerable": {
+          "abstained": 0.0,
+          "n": 127
+        }
+      }
+    },
+    "examples": [
+      {
+        "kind": "classify",
+        "question": "Which ATT&CK technique does this behaviour describe? [SUGARDUMP](https://attack.mitre.org/software/S1042) has collected browser bookmark and history information.",
+        "context": [
+          "T1217 Browser Information Discovery: Adversaries may enumerate information about browsers to learn more about compromised environments. Data saved by browsers (",
+          "T1619 Cloud Storage Object Discovery: Adversaries may enumerate objects in cloud storage infrastructure. Adversaries may use this information during automated d",
+          "T1556.007 Hybrid Identity: Adversaries may patch, modify, or otherwise backdoor cloud authentication processes that are tied to on-premises user identities in o"
+        ],
+        "expected": "T1217 \u2014 Browser Information Discovery [1]",
+        "answer": "T1217 \u2014 Browser Information Discovery [1]"
+      },
+      {
+        "kind": "remediate",
+        "question": "What should be done about CVE-2020-8196?",
+        "context": [
+          "CVE-2020-8599 Trend Micro Apex One and OfficeScan Authentication Bypass Vulnerability. Trend Micro Apex One and OfficeScan server contain a vulnerable EXE file ",
+          "CVE-2020-8196 Citrix ADC, Gateway, and SD-WAN WANOP Appliance Information Disclosure Vulnerability. Citrix ADC, Citrix Gateway, and multiple Citrix SD-WAN WANOP",
+          "CVE-2025-32709 Microsoft Windows Ancillary Function Driver for WinSock Use-After-Free Vulnerability. Microsoft Windows Ancillary Function Driver for WinSock con"
+        ],
+        "expected": "Apply updates per vendor instructions. [2]",
+        "answer": "Apply updates per vendor instructions. [2]"
+      },
+      {
+        "kind": "define",
+        "question": "What is MITRE ATT&CK technique T1055.014?",
+        "context": [
+          "T1555.002 Securityd Memory: An adversary with root access may gather credentials by reading `securityd`\u2019s memory. `securityd` is a service/daemon responsible fo",
+          "T1021.003 Distributed Component Object Model: Adversaries may use [Valid Accounts](https://attack.mitre.org/techniques/T1078) to interact with remote machines b",
+          "T1055.014 VDSO Hijacking: Adversaries may inject malicious code into processes via VDSO hijacking in order to evade process-based defenses as well as possibly e"
+        ],
+        "expected": "T1055.014 is VDSO Hijacking. Adversaries may inject malicious code into processes via VDSO hijacking in order to evade process-based defenses as well as possibly elevate privileges. [3]",
+        "answer": "T1055.014 is VDSO Hijacking. Adversaries may inject malicious code into processes via VDSO hijacking in order to evade process-based defenses as well as possibly elevate privileges. [3]"
+      },
+      {
+        "kind": "unanswerable",
+        "question": "Which ATT&CK technique does this behaviour describe? [Empire](https://attack.mitre.org/software/S0363) can utilize Invoke-DCOM to leverage remote COM execution for lateral movement.",
+        "context": [
+          "T1584.005 Botnet: Adversaries may compromise numerous third-party systems to form a botnet\u00a0that can be used during targeting. A botnet is a network of compromis",
+          "T1137.006 Add-ins: Adversaries may abuse Microsoft Office add-ins to obtain persistence on a compromised system. Office add-ins can be used to add functionality",
+          "T1610 Deploy Container: Adversaries may deploy a container into an environment to facilitate execution or evade defenses. In some cases, adversaries may deploy "
+        ],
+        "expected": "The context does not answer this.",
+        "answer": "T1137.006 \u2014 Add-ins [2]"
+      },
+      {
+        "kind": "lookup",
+        "question": "Which ATT&CK technique ID is 'Conditional Access Policies'?",
+        "context": [
+          "T1556.009 Conditional Access Policies: Adversaries may disable or modify conditional access policies to enable persistent access to compromised accounts. Condit",
+          "T1594 Search Victim-Owned Websites: Adversaries may search websites owned by the victim for information that can be used during targeting. Victim-owned websites",
+          "T1053.002 At: Adversaries may abuse the [at](https://attack.mitre.org/software/S0110) utility to perform task scheduling for initial or recurring execution of m"
+        ],
+        "expected": "T1556.009 [1]",
+        "answer": "T1556.009 [1]"
+      },
+      {
+        "kind": "mitigate",
+        "question": "How can T1078.001 (Default Accounts) be mitigated?",
+        "context": [
+          "T1078.001 Default Accounts is mitigated by: Multi-factor Authentication; Password Policies.",
+          "T1070.007 Clear Network Connection History and Configurations is mitigated by: Remote Data Storage; Restrict Registry Permissions.",
+          "T1561.002 Disk Structure Wipe is mitigated by: Data Backup."
+        ],
+        "expected": "Mitigations for T1078.001: Multi-factor Authentication; Password Policies. [1]",
+        "answer": "Mitigations for T1078.001: Multi-factor Authentication; Password Policies. [1]"
+      }
+    ]
+  },
+  "curve": [
+    {
+      "phase": "pretrain",
+      "step": 200,
+      "train_loss": 3.9632,
+      "val_loss": 5.0779
+    },
+    {
+      "phase": "pretrain",
+      "step": 400,
+      "train_loss": 3.178,
+      "val_loss": 4.1938
+    },
+    {
+      "phase": "pretrain",
+      "step": 600,
+      "train_loss": 2.9797,
+      "val_loss": 3.8179
+    },
+    {
+      "phase": "pretrain",
+      "step": 800,
+      "train_loss": 2.8535,
+      "val_loss": 3.5936
+    },
+    {
+      "phase": "pretrain",
+      "step": 1000,
+      "train_loss": 2.8745,
+      "val_loss": 3.3762
+    },
+    {
+      "phase": "pretrain",
+      "step": 1200,
+      "train_loss": 2.2617,
+      "val_loss": 3.2508
+    },
+    {
+      "phase": "pretrain",
+      "step": 1400,
+      "train_loss": 2.2257,
+      "val_loss": 3.1542
+    },
+    {
+      "phase": "pretrain",
+      "step": 1600,
+      "train_loss": 1.7779,
+      "val_loss": 3.0865
+    },
+    {
+      "phase": "pretrain",
+      "step": 1800,
+      "train_loss": 2.0625,
+      "val_loss": 3.0202
+    },
+    {
+      "phase": "pretrain",
+      "step": 2000,
+      "train_loss": 2.0829,
+      "val_loss": 2.9736
+    },
+    {
+      "phase": "pretrain",
+      "step": 2200,
+      "train_loss": 2.1319,
+      "val_loss": 2.9378
+    },
+    {
+      "phase": "pretrain",
+      "step": 2400,
+      "train_loss": 2.0018,
+      "val_loss": 2.8955
+    },
+    {
+      "phase": "pretrain",
+      "step": 2600,
+      "train_loss": 2.2659,
+      "val_loss": 2.8615
+    },
+    {
+      "phase": "pretrain",
+      "step": 2800,
+      "train_loss": 1.7831,
+      "val_loss": 2.8309
+    },
+    {
+      "phase": "pretrain",
+      "step": 3000,
+      "train_loss": 1.8045,
+      "val_loss": 2.8048
+    },
+    {
+      "phase": "pretrain",
+      "step": 3200,
+      "train_loss": 1.8939,
+      "val_loss": 2.7896
+    },
+    {
+      "phase": "pretrain",
+      "step": 3400,
+      "train_loss": 1.984,
+      "val_loss": 2.7736
+    },
+    {
+      "phase": "pretrain",
+      "step": 3600,
+      "train_loss": 1.9533,
+      "val_loss": 2.7646
+    },
+    {
+      "phase": "pretrain",
+      "step": 3800,
+      "train_loss": 1.6165,
+      "val_loss": 2.7516
+    },
+    {
+      "phase": "pretrain",
+      "step": 4000,
+      "train_loss": 1.9295,
+      "val_loss": 2.7473
+    },
+    {
+      "phase": "sft",
+      "step": 100,
+      "train_loss": 0.3689,
+      "val_loss": 0.3885
+    },
+    {
+      "phase": "sft",
+      "step": 200,
+      "train_loss": 0.3746,
+      "val_loss": 0.3672
+    },
+    {
+      "phase": "sft",
+      "step": 300,
+      "train_loss": 0.1678,
+      "val_loss": 0.3861
+    },
+    {
+      "phase": "sft",
+      "step": 400,
+      "train_loss": 0.4378,
+      "val_loss": 0.31
+    },
+    {
+      "phase": "sft",
+      "step": 500,
+      "train_loss": 0.1587,
+      "val_loss": 0.2992
+    },
+    {
+      "phase": "sft",
+      "step": 600,
+      "train_loss": 0.4291,
+      "val_loss": 0.2844
+    },
+    {
+      "phase": "sft",
+      "step": 700,
+      "train_loss": 0.0943,
+      "val_loss": 0.2886
+    },
+    {
+      "phase": "sft",
+      "step": 800,
+      "train_loss": 0.1279,
+      "val_loss": 0.2792
+    },
+    {
+      "phase": "sft",
+      "step": 900,
+      "train_loss": 0.038,
+      "val_loss": 0.2741
+    },
+    {
+      "phase": "sft",
+      "step": 1000,
+      "train_loss": 0.0737,
+      "val_loss": 0.2583
+    },
+    {
+      "phase": "sft",
+      "step": 1100,
+      "train_loss": 0.0715,
+      "val_loss": 0.2442
+    },
+    {
+      "phase": "sft",
+      "step": 1200,
+      "train_loss": 0.0427,
+      "val_loss": 0.2486
+    },
+    {
+      "phase": "sft",
+      "step": 1300,
+      "train_loss": 0.0569,
+      "val_loss": 0.2258
+    },
+    {
+      "phase": "sft",
+      "step": 1400,
+      "train_loss": 0.024,
+      "val_loss": 0.2369
+    },
+    {
+      "phase": "sft",
+      "step": 1500,
+      "train_loss": 0.0359,
+      "val_loss": 0.235
+    },
+    {
+      "phase": "sft",
+      "step": 1600,
+      "train_loss": 0.0697,
+      "val_loss": 0.227
+    },
+    {
+      "phase": "sft",
+      "step": 1700,
+      "train_loss": 0.0341,
+      "val_loss": 0.2069
+    },
+    {
+      "phase": "sft",
+      "step": 1800,
+      "train_loss": 0.0266,
+      "val_loss": 0.2118
+    },
+    {
+      "phase": "sft",
+      "step": 1900,
+      "train_loss": 0.0245,
+      "val_loss": 0.2029
+    },
+    {
+      "phase": "sft",
+      "step": 2000,
+      "train_loss": 0.3231,
+      "val_loss": 0.2029
+    }
+  ],
+  "samples": [
+    {
+      "prompt": "Credential stuffing is",
+      "completion": " also also also also also T16161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616"
+    },
+    {
+      "prompt": "To contain a host that is beaconing to a command-and-control server,",
+      "completion": " which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which all which which which which\" [1] The context does not answer this. The context does not answer this. "
+    },
+    {
+      "prompt": "T1566 Phishing",
+      "completion": " Bypass Bypass Bypass Bypass Bypass Bypass Bypass Bypass Bypass Bypass Bypass Bypass Bypass on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on on"
+    }
+  ],
+  "steps": {
+    "pretrain": 4000,
+    "sft": 2000
+  },
+  "epochs": 3.4,
+  "seconds": 24151.9
+}

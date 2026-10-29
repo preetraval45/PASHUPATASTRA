@@ -48,6 +48,7 @@ TABLES = [
             ("skandamata", "sati.respond.report"),
             ("siddhidatri", "sati.fuse.report"),
             ("kushmanda", "sati.lm.report"),
+            ("kushmanda-v3", "sati.lm.report"),
             ("kushmanda-constrained", "sati.lm.constrainedreport"),
         )
     ],

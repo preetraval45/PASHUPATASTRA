@@ -318,6 +318,13 @@ match to 0.604, still below word overlap. On behaviour → technique it moves
 It fixes the form of the answer, not the choice, so in serving the identifier
 comes from retrieval and the model writes around it.
 
+Doubling the model to 34.1M parameters, with a corpus that adds GitHub
+Security Advisories, trades one failure for another. On the same held-out
+questions, lookup exact match rises to 0.717 and behaviour → technique to
+0.567, but the model declines on only 0.417 of unanswerable questions,
+against 0.543 ([kushmanda-v3.md](models/kushmanda-v3.md)). The smaller model
+stays served, since declining is the property Sati depends on.
+
 **Two models did not earn their place, and the architecture reflects it.**
 
 - Mahagauri, the recovery verifier, declared 0.220 of incidents over while
