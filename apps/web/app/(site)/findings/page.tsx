@@ -3,14 +3,18 @@ import Link from "next/link";
 
 import { Filter, FilterRow } from "@/components/filter";
 import { Page, Panel } from "@/components/ui";
+import brahmacharini from "@/lib/models/brahmacharini.results.json";
+import transformer from "@/lib/models/brahmacharini-transformer.results.json";
 import chandraghanta from "@/lib/models/chandraghanta.results.json";
 import katyayani from "@/lib/models/katyayani.results.json";
 import live from "@/lib/models/katyayani-live.results.json";
 import simtoreal from "@/lib/models/katyayani-simtoreal.results.json";
 import kushmanda from "@/lib/models/kushmanda.results.json";
+import kushmandaLarge from "@/lib/models/kushmanda-v3.results.json";
 import mahagauri from "@/lib/models/mahagauri.results.json";
 import diagnosis from "@/lib/models/rcaeval-diagnosis.results.json";
 import siddhidatri from "@/lib/models/siddhidatri.results.json";
+import skandamata from "@/lib/models/skandamata.results.json";
 import smd from "@/lib/models/shailaputri-smd.results.json";
 
 export const metadata: Metadata = {
@@ -63,6 +67,11 @@ function findings(): Finding[] {
     "mahagauri-v2 + 3σ agreement"
   ] ?? mahagauri.pooled["mahagauri-v0"];
   const alone = siddhidatri.mean_across_groups.shailaputri;
+
+  const emb = brahmacharini.test as Record<string, { "recall@1": number }>;
+  const mit = skandamata.test as Record<string, { "hit@1": number }>;
+  const big = (transformer.test as Record<string, { "recall@1": number }>)["brahmacharini-v1 (transformer)"];
+  const gl = (kushmandaLarge.sft?.grounded ?? {}) as Record<string, Record<string, Record<string, number>>>;
 
   const d1 = diagnosis["rca@1"] as Record<string, number>;
   const llama = diagnosis.paired_vs_katyayani["llm:llama3"];
@@ -161,6 +170,38 @@ function findings(): Finding[] {
       body:
         "Tuned honestly, Mahagauri now stays inside its 5% safety budget on servers it never saw: it rarely calls an incident over too early. But it confirms few recoveries, so most incidents still go back to a person — the model needs sharper signals, not a different threshold. Fusing three detectors bought recall with far more false alarms. Both are published, with what would fix them.",
       href: "/models#mahagauri-results",
+      tone: "negative",
+    },
+    {
+      id: "baseline",
+      kicker: "Reported as found · ATT&CK, attackers never seen in training",
+      title: "A plain TF-IDF classifier beat two of our models",
+      headline: `${f3(emb["tf-idf logistic regression"]["recall@1"])} vs ${f3(emb["brahmacharini-v0"]["recall@1"])}`,
+      versus: [
+        { label: "behaviour → technique · TF-IDF + logistic regression", value: f3(emb["tf-idf logistic regression"]["recall@1"]) },
+        { label: "behaviour → technique · Brahmacharini", value: f3(emb["brahmacharini-v0"]["recall@1"]) },
+        { label: "the two fused, mix chosen on validation", value: f3(emb["brahmacharini-v0 + tf-idf (fused)"]?.["recall@1"] ?? 0) },
+        { label: "behaviour → mitigation · TF-IDF vs Skandamata", value: `${f3(mit["tf-idf logistic regression"]["hit@1"])} vs ${f3(mit["skandamata-v0"]["hit@1"])}` },
+      ],
+      body:
+        "The public Kaggle notebooks found it first, so the baseline was added to the training runs and the result reported. A model is only worth serving where it beats the strongest simple baseline. Brahmacharini still earns its place: it retrieves the passages behind every answer, which a classifier cannot, and fused with the classifier it beats both.",
+      href: "/models#brahmacharini-results",
+      tone: "negative",
+    },
+    {
+      id: "bigger",
+      kicker: "Reported as found · same data, same test",
+      title: "Bigger models were not simply better",
+      headline: `${f3(big["recall@1"])} vs ${f3(emb["brahmacharini-v0"]["recall@1"])}`,
+      versus: [
+        { label: "20M-parameter transformer encoder · Recall@1", value: f3(big["recall@1"]) },
+        { label: "the served bag-of-words encoder · Recall@1", value: f3(emb["brahmacharini-v0"]["recall@1"]) },
+        { label: "language model at 34M vs 17M · copies an ID right", value: `${f3(gl.kushmanda?.lookup?.exact_match ?? 0)} vs ${f3(g.kushmanda?.lookup?.exact_match ?? 0)}` },
+        { label: "… and declines when it should", value: `${pct(gl.kushmanda?.unanswerable?.abstained ?? 0)} vs ${pct(g.kushmanda?.unanswerable?.abstained ?? 0)}` },
+      ],
+      body:
+        "Both larger models were trained on Kaggle's GPUs with the epoch or step chosen on validation data. The larger encoder had too little data to learn from scratch. The larger language model copies identifiers better but declines less often when no passage holds the answer, and declining is what Sati depends on. The smaller models stay served.",
+      href: "/models#kushmanda-results",
       tone: "negative",
     },
     {

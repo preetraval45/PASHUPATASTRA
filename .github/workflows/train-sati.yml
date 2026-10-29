@@ -427,8 +427,9 @@ jobs:
         run: |
           mkdir -p docs/research/models
           cp results/katyayani-simtoreal/results.json docs/research/models/katyayani-simtoreal.results.json
+          cp results/katyayani-simtoreal/results.json apps/web/lib/models/katyayani-simtoreal.results.json
           (cd packages/sati && python -m sati.rca.simtoreport ../../results/katyayani-simtoreal/results.json) > docs/research/models/katyayani-simtoreal.md
-          bash scripts/pushresults.sh "docs(models): Katyayani sim-to-real results from run ${{ github.run_id }}" docs/research/models/katyayani-simtoreal.results.json docs/research/models/katyayani-simtoreal.md
+          bash scripts/pushresults.sh "docs(models): Katyayani sim-to-real results from run ${{ github.run_id }}" docs/research/models/katyayani-simtoreal.results.json docs/research/models/katyayani-simtoreal.md apps/web/lib/models/katyayani-simtoreal.results.json
 
   katyayani-pooled:
     # Katyayani v1: RCAEval plus the live stack (RP-19), each of the four
