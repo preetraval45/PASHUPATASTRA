@@ -20,6 +20,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 
 import { AnswerText, defendFollowUp } from "@/components/answertext";
 import { TurnView, type Turn as IncidentTurn } from "@/components/chat";
+import { examplesFor, runSpecialist, specialist, SPECIALISTS, type Example } from "@/components/specialists";
 import { Listbox } from "@/components/listbox";
 import { Icon } from "@/components/sidebar";
 import { Badge, Stated, statusForSeverity } from "@/components/ui";
@@ -27,7 +28,11 @@ import { askAgent, askGeneral, type GeneralAnswer, type Incident, type ModelChoi
 import { MODELS } from "@/lib/navadurga";
 import { servedName } from "@/lib/modelnames";
 
-type Turn = IncidentTurn | { role: "general"; answer: GeneralAnswer };
+type Turn =
+  | IncidentTurn
+  | { role: "general"; answer: GeneralAnswer }
+  /** A data-reading model run on a held-out example (components/specialists.tsx). */
+  | { role: "specialist"; form: string; text: string };
 
 type Conversation = {
   id: string;
@@ -41,6 +46,7 @@ type Conversation = {
 const GENERAL = "general";
 const STORE_KEY = "pashu.ask.conversations.v1";
 const MODEL_KEY = "pashu.ask.model";
+const SPECIALIST_KEY = "pashu.ask.specialist";
 const KEEP_CONVERSATIONS = 50;
 const KEEP_TURNS = 40;
 
@@ -117,6 +123,8 @@ export function ChatConsole({
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [facts, setFacts] = useState(true);
+  const [special, setSpecial] = useState("auto");
+  const [examples, setExamples] = useState<Example[] | null | undefined>(undefined);
 
   const log = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -134,6 +142,12 @@ export function ChatConsole({
       if (chosen && models.some((m) => m.id === chosen)) setModel(chosen);
     } catch {
       // Default model.
+    }
+    try {
+      const kept = localStorage.getItem(SPECIALIST_KEY);
+      if (kept && SPECIALISTS.some((s) => s.id === kept)) setSpecial(kept);
+    } catch {
+      // Sati, all-round.
     }
     // A link that names a model ("/ask?model=sati:skandamata") picks it for this visit.
     const linked = params.get("model");
@@ -195,6 +209,65 @@ export function ChatConsole({
       // Not remembered.
     }
   };
+
+  const chooseSpecialist = (id: string) => {
+    const s = specialist(id);
+    setSpecial(s.id);
+    try {
+      localStorage.setItem(SPECIALIST_KEY, s.id);
+    } catch {
+      // Not remembered.
+    }
+    if (s.kind === "ask" && s.model) chooseModel(s.model);
+    if (s.kind === "auto") chooseModel(models.find((m) => m.default)?.id ?? "default");
+  };
+
+  const chosen = specialist(special);
+  useEffect(() => {
+    if (!["tree", "cases", "servers"].includes(chosen.kind)) {
+      setExamples(undefined);
+      return;
+    }
+    let live = true;
+    setExamples(undefined);
+    examplesFor(chosen).then((list) => live && setExamples(list));
+    return () => {
+      live = false;
+    };
+  }, [chosen]);
+
+  /** Runs a data-reading specialist on one held-out example, as a turn in the conversation. */
+  const runExample = useCallback(
+    async (example: Example) => {
+      if (busy) return;
+      const s = chosen;
+      const text = `Run ${s.name} on ${example.label === example.id ? example.id : `${example.id} (${example.label})`}`;
+      let convo = active && active.scope === GENERAL ? active : null;
+      let list = conversations;
+      if (!convo) {
+        convo = { id: newId(), scope: GENERAL, title: text.slice(0, 80), turns: [], updated: Date.now() };
+        list = [convo, ...conversations];
+        setActiveId(convo.id);
+        setPendingScope(GENERAL);
+      }
+      const id = convo.id;
+      update(list.map((c) => (c.id === id ? { ...c, turns: [...c.turns, { role: "you", text } as Turn], updated: Date.now() } : c)));
+      setBusy(true);
+      const result = await runSpecialist(s, example.id);
+      const reply: Turn = result
+        ? { role: "specialist", form: s.id, text: result }
+        : { role: "error", text: `${s.name} is not reachable right now.`, retryable: true };
+      setConversations((current) => {
+        const next = current
+          .map((c) => (c.id === id ? { ...c, turns: [...c.turns, reply], updated: Date.now() } : c))
+          .sort((a, b) => b.updated - a.updated);
+        save(next);
+        return next;
+      });
+      setBusy(false);
+    },
+    [active, busy, chosen, conversations, update],
+  );
 
   const ask = useCallback(
     async (question: string) => {
@@ -397,7 +470,15 @@ export function ChatConsole({
         <div ref={log} aria-live="polite" className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
             {turns.length === 0 && !busy ? (
-              <Welcome incident={incident} onAsk={ask} busy={busy} />
+              <Welcome
+                incident={incident}
+                onAsk={ask}
+                busy={busy}
+                special={special}
+                onSpecialist={chooseSpecialist}
+                examples={examples}
+                onExample={runExample}
+              />
             ) : (
               <div className="space-y-6">
                 {turns.map((turn, index) =>
@@ -407,6 +488,8 @@ export function ChatConsole({
                       answer={turn.answer}
                       onAsk={index === turns.length - 1 && !busy ? ask : undefined}
                     />
+                  ) : turn.role === "specialist" ? (
+                    <SpecialistTurn key={index} form={turn.form} text={turn.text} />
                   ) : turn.role === "sati" && !incident ? null : (
                     <TurnView key={index} turn={turn} incident={(incident ?? incidents[0]) as Incident} />
                   ),
@@ -418,6 +501,45 @@ export function ChatConsole({
         </div>
 
         <div className="shrink-0 border-t border-[rgb(var(--edge))] bg-[rgb(var(--ground))] px-3 pb-4 pt-3 sm:px-6">
+          {!incident && (
+            <div className="mx-auto mb-2 max-w-3xl space-y-2">
+              <div role="tablist" aria-label="Specialist" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                {SPECIALISTS.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={special === s.id}
+                    onClick={() => chooseSpecialist(s.id)}
+                    title={s.job}
+                    className={`focusable shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition ${
+                      special === s.id
+                        ? "border-[rgb(var(--astra))] bg-[rgb(var(--astra))] text-[rgb(var(--ground))]"
+                        : "border-[rgb(var(--edge-strong))] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"
+                    }`}
+                  >
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+              {turns.length > 0 && examples && examples.length > 0 && (
+                <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                  <span className="shrink-0 self-center text-[11px] text-[rgb(var(--faint))]">Run on:</span>
+                  {examples.slice(0, 12).map((e) => (
+                    <button
+                      key={e.id}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => runExample(e)}
+                      className="focusable shrink-0 rounded-lg border border-[rgb(var(--edge))] px-2.5 py-1 text-xs text-[rgb(var(--muted))] transition hover:border-[rgb(var(--astra))]/60 hover:text-[rgb(var(--ink))] disabled:opacity-50"
+                    >
+                      {e.id}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -523,6 +645,26 @@ function GeneralTurn({ answer, onAsk }: { answer: GeneralAnswer; onAsk?: (questi
   );
 }
 
+/** A data-reading model's verdict on a held-out example. */
+function SpecialistTurn({ form, text }: { form: string; text: string }) {
+  const s = specialist(form);
+  return (
+    <div data-turn="specialist" className="max-w-[95%] space-y-2">
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+        <span aria-hidden="true" className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[rgb(var(--astra))]" />
+        <span className="font-medium text-[rgb(var(--astra))]">{s.name}</span>
+        <span className="text-[rgb(var(--muted))]">· {s.job.toLowerCase()}</span>
+      </p>
+      <div className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-4 py-3.5">
+        <AnswerText text={text} />
+        <p className="mt-3 border-t border-[rgb(var(--edge))] pt-2 text-[11px] text-[rgb(var(--faint))]">
+          Run live on an example it never trained on, with the truth beside the answer.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /** Copy the answer, or share it: Android's share sheet inside the app, the system one elsewhere. */
 function AnswerActions({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -576,46 +718,159 @@ function Welcome({
   incident,
   onAsk,
   busy,
+  special = "auto",
+  onSpecialist,
+  examples,
+  onExample,
 }: {
   incident: Incident | null;
   onAsk: (question: string) => void;
   busy: boolean;
+  special?: string;
+  onSpecialist?: (id: string) => void;
+  examples?: Example[] | null;
+  onExample?: (example: Example) => void;
 }) {
-  const starters = incident ? INCIDENT_STARTERS : GENERAL_STARTERS;
-  return (
-    <div className="flex min-h-[55vh] flex-col items-center justify-center py-6 text-center">
-      <span className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/10 text-[rgb(var(--astra))]">
-        <Icon name="chat" className="h-7 w-7" />
-      </span>
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Sati AI</h1>
-      {incident ? (
+  if (incident) {
+    return (
+      <div className="flex min-h-[55vh] flex-col items-center justify-center py-6 text-center">
+        <span className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/10 text-[rgb(var(--astra))]">
+          <Icon name="chat" className="h-7 w-7" />
+        </span>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Sati AI</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-[rgb(var(--muted))] sm:text-[0.9375rem]">
           Sati, the investigation agent, reads <span className="mono text-[rgb(var(--ink))]">{incident.id}</span>{" "}
           — the causal chain, the telemetry behind it and the plan — and answers from that, citing every
           claim. It cannot act: anything it proposes goes to a human.
         </p>
-      ) : (
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-[rgb(var(--muted))] sm:text-[0.9375rem]">
-          Ask Sati, the investigation agent, anything — cyber security or not. Each question is routed to
-          one of nine specialist areas, from network threats to recovery. Pick an incident above to get
-          answers from its evidence instead.
-        </p>
-      )}
-
-      <div className="mt-8 grid w-full max-w-2xl gap-3 sm:grid-cols-2">
-        {starters.map((s) => (
-          <button
-            key={s.q}
-            type="button"
-            disabled={busy}
-            onClick={() => onAsk(s.q)}
-            className="focusable lift rounded-xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-4 py-3.5 text-left transition hover:border-[rgb(var(--astra))]/50 disabled:opacity-50"
-          >
-            <span className="block text-sm font-medium text-[rgb(var(--ink))]">{s.q}</span>
-            <span className="mt-0.5 block text-xs text-[rgb(var(--faint))]">{s.hint}</span>
-          </button>
-        ))}
+        <Starters starters={INCIDENT_STARTERS} onAsk={onAsk} busy={busy} />
       </div>
+    );
+  }
+
+  const chosen = specialist(special);
+  return (
+    <div className="space-y-6 py-2">
+      <div className="relative isolate overflow-hidden rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-5 py-6 sm:px-7">
+        <div aria-hidden="true" className="hero-glow pointer-events-none absolute -inset-10 -z-10" />
+        <p className="label text-[rgb(var(--astra))]">Sati AI</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Nine specialists, one investigation agent</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+          Sati, the investigation agent, runs on nine models built and trained in this project. Ask a question, or pick a
+          specialist and run it on real data it never trained on — every answer shows the truth beside it, and none uses an
+          outside AI.
+        </p>
+      </div>
+
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        {SPECIALISTS.map((s) => {
+          const active = s.id === chosen.id;
+          const tag = s.kind === "auto" || s.kind === "ask" ? "answers questions" : s.kind === "private" ? "not public yet" : "runs on data";
+          return (
+            <li key={s.id}>
+              <button
+                type="button"
+                onClick={() => onSpecialist?.(s.id)}
+                aria-pressed={active}
+                className={`focusable lift flex h-full w-full flex-col rounded-xl border p-3 text-left transition ${
+                  active
+                    ? "border-[rgb(var(--astra))] bg-[rgb(var(--astra))]/10 shadow-sm"
+                    : "border-[rgb(var(--edge))] bg-[rgb(var(--panel))] hover:border-[rgb(var(--astra))]/50"
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden="true"
+                    className={`h-1.5 w-1.5 rounded-full ${s.kind === "private" ? "bg-[rgb(var(--faint))]" : "bg-[rgb(var(--ok))]"}`}
+                  />
+                  <span className="text-sm font-semibold">{s.name}</span>
+                </span>
+                <span className="mt-1 text-xs leading-snug text-[rgb(var(--muted))]">{s.job}</span>
+                <span className="mt-auto pt-2 text-[10.5px] uppercase tracking-wide text-[rgb(var(--faint))]">{tag}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="rise" key={chosen.id}>
+        {chosen.kind === "private" ? (
+          <p className="rounded-xl border border-dashed border-[rgb(var(--edge-strong))] p-4 text-sm leading-relaxed text-[rgb(var(--muted))]">
+            Kushmanda, Sati&apos;s own language model, writes answers in its own words from the passages the other models
+            find. Its weights are kept private for now, so it does not answer on this site yet. Its measured results are on{" "}
+            <Link href="/models#kushmanda-results" className="text-[rgb(var(--astra))] hover:underline">the models page</Link>.
+          </p>
+        ) : chosen.kind === "auto" || chosen.kind === "ask" ? (
+          <Starters
+            starters={
+              chosen.id === "skandamata"
+                ? GENERAL_STARTERS.filter((x) => /defend/i.test(x.q))
+                : chosen.id === "brahmacharini"
+                  ? GENERAL_STARTERS.filter((x) => /technique|what is/i.test(x.q))
+                  : GENERAL_STARTERS
+            }
+            onAsk={onAsk}
+            busy={busy}
+          />
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-[rgb(var(--muted))]">
+              Pick {chosen.pick}. {chosen.name} runs on it live, and the answer says whether it was right.
+            </p>
+            {examples === undefined ? (
+              <div className="grid gap-2 sm:grid-cols-3">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <div key={i} className="h-14 animate-pulse rounded-xl bg-[rgb(var(--raised))]" />
+                ))}
+              </div>
+            ) : examples === null || examples.length === 0 ? (
+              <p className="text-sm text-[rgb(var(--faint))]">The live model is not reachable right now.</p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-3">
+                {examples.slice(0, 12).map((e) => (
+                  <button
+                    key={e.id}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onExample?.(e)}
+                    className="focusable lift rounded-xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-3.5 py-2.5 text-left transition hover:border-[rgb(var(--astra))]/50 disabled:opacity-50"
+                  >
+                    <span className="mono block truncate text-sm text-[rgb(var(--ink))]">{e.id}</span>
+                    <span className="block truncate text-xs text-[rgb(var(--faint))]">{e.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Starters({
+  starters,
+  onAsk,
+  busy,
+}: {
+  starters: readonly { q: string; hint: string }[];
+  onAsk: (question: string) => void;
+  busy: boolean;
+}) {
+  return (
+    <div className="mx-auto mt-2 grid w-full max-w-3xl gap-3 sm:grid-cols-2">
+      {starters.map((s) => (
+        <button
+          key={s.q}
+          type="button"
+          disabled={busy}
+          onClick={() => onAsk(s.q)}
+          className="focusable lift rounded-xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-4 py-3.5 text-left transition hover:border-[rgb(var(--astra))]/50 disabled:opacity-50"
+        >
+          <span className="block text-sm font-medium text-[rgb(var(--ink))]">{s.q}</span>
+          <span className="mt-0.5 block text-xs text-[rgb(var(--faint))]">{s.hint}</span>
+        </button>
+      ))}
     </div>
   );
 }
