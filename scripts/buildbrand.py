@@ -213,10 +213,12 @@ def on_ground(spear: Image.Image, size: int, safe: float) -> Image.Image:
 ADAPTIVE = {"mdpi": 1.0, "hdpi": 1.5, "xhdpi": 2.0, "xxhdpi": 3.0, "xxxhdpi": 4.0}
 """Density multipliers of the 108dp adaptive-icon canvas."""
 
-SPEAR_SHARE = 0.43
+SPEAR_SHARE = 0.48
 """The spear runs corner to corner of its square, so its tips sit at 1.41x half its width from the
-centre. Android only promises the central 66dp circle of the 108dp canvas survives every mask, so the
-artwork may fill 0.611 / 1.41 = 0.43 of the canvas: tips just inside the circle on every launcher."""
+centre. Launchers show the central 72dp of the 108dp canvas, so on a circular mask the tips reach the
+edge at 0.667 / 1.41 = 0.47 of the canvas. 0.48 (owner, 29 Oct: "similar to the website icon", where the
+spear fills its square) keeps the spear as large as the masks allow: the tips meet a circle's rim, and
+squircle and rounded-square launchers (Samsung's among them) show all of it with room to spare."""
 
 
 def adaptive_background(size: int) -> Image.Image:
@@ -229,7 +231,7 @@ def adaptive_background(size: int) -> Image.Image:
     teal = (47, 163, 160)
     for i in range(48, 0, -1):
         r = size * 0.62 * i / 48
-        alpha = int(70 * (1 - i / 48) ** 1.6)
+        alpha = int(45 * (1 - i / 48) ** 1.6)
         cx, cy = size * 0.58, size * 0.40
         draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(*teal, alpha))
     base.alpha_composite(glow.filter(ImageFilter.GaussianBlur(size * 0.04)))
@@ -250,6 +252,13 @@ def adaptive_foreground(spear: Image.Image, size: int) -> Image.Image:
     silhouette.putalpha(art.split()[3].point(lambda a: a * 150 // 255))
     shadow.alpha_composite(silhouette, ((size - inner) // 2 + size // 90, (size - inner) // 2 + size // 60))
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(size / 90)))
+    # A warm glow in the spear's own red, so a long, thin spear still reads bold at icon size, as the
+    # website's tab icon does at full bleed.
+    halo = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ember = Image.new("RGBA", art.size, (214, 64, 48, 255))
+    ember.putalpha(art.split()[3].filter(ImageFilter.MaxFilter(9)).point(lambda a: a * 110 // 255))
+    halo.alpha_composite(ember, ((size - inner) // 2, (size - inner) // 2))
+    canvas.alpha_composite(halo.filter(ImageFilter.GaussianBlur(size / 55)))
     canvas.alpha_composite(art, ((size - inner) // 2, (size - inner) // 2))
     return canvas
 
