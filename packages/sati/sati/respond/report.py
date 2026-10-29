@@ -27,7 +27,10 @@ def main(path: str) -> int:
     for name, m in r["test"].items():
         label = f"**{name}**" if name.startswith("skandamata") else name
         out.append(f"| {label} | " + " | ".join(f"{m[k]:.3f}" for k in MEASURES) + " |")
-    out += ["", f"Epoch chosen on validation behaviours: {r['best_epoch_by_validation']}.\n",
+    fused = ""
+    if "fusion_weight_by_validation" in r:
+        fused = f" Fusion weight on Skandamata, chosen on validation behaviours: {r['fusion_weight_by_validation']:.2f}."
+    out += ["", f"Epoch chosen on validation behaviours: {r['best_epoch_by_validation']}.{fused}\n",
             "## Examples (test behaviours, unedited)\n"]
     for e in r["examples"]:
         out.append(f"- **Behaviour:** {e['behaviour']}\n  **ATT&CK says:** {', '.join(e['expected'])}\n"

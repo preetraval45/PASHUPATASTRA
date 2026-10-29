@@ -38,7 +38,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from sati.embed.metrics import bm25
+from sati.embed.metrics import bm25, fuse
 from sati.embed.model import BUCKETS, hashed
 from sati.respond import metrics
 from sati.respond.data import Data, build
@@ -80,6 +80,10 @@ def predict(model: Recommender, texts: list[str]) -> np.ndarray:
 
 
 def linear_baseline(data: Data, queries: list[str], size: int) -> np.ndarray:
+    return linear_scorer(data, size)(queries)
+
+
+def linear_scorer(data: Data, size: int):
     """TF-IDF uni- and bigrams with one logistic regression per mitigation.
     Added 27 Oct after the public Kaggle notebook found it beats Skandamata on
     this split; it is reported beside the model so the comparison is honest."""
@@ -90,13 +94,27 @@ def linear_baseline(data: Data, queries: list[str], size: int) -> np.ndarray:
     texts = [e.text for e in data.train]
     y = targets([e.gold for e in data.train], size).numpy().astype(int)
     keep = (y.sum(0) > 0) & (y.sum(0) < len(y))  # a label true for none or all rows cannot be fitted
-    scores = np.full((len(queries), size), -1.0)
     if keep.sum() == 0:
-        return scores
+        return lambda queries: np.full((len(queries), size), -1.0)
     vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2 if len(texts) > 100 else 1, sublinear_tf=True).fit(texts)
     clf = OneVsRestClassifier(LogisticRegression(max_iter=1000, C=4)).fit(vec.transform(texts), y[:, keep])
-    scores[:, keep] = clf.predict_proba(vec.transform(queries)).reshape(len(queries), -1)
-    return scores
+
+    def score(queries: list[str]) -> np.ndarray:
+        scores = np.full((len(queries), size), -1.0)
+        scores[:, keep] = clf.predict_proba(vec.transform(queries)).reshape(len(queries), -1)
+        return scores
+
+    return score
+
+
+def choose_weight(a: np.ndarray, b: np.ndarray, golds: list[frozenset[int]], grid: int = 11) -> float:
+    """The weight on `a` with the best nDCG@10 on these (validation) rows; ties keep the lower weight."""
+    best, best_score = 0.0, -1.0
+    for w in np.linspace(0, 1, grid):
+        v = metrics.evaluate(fuse(a, b, w), golds)["ndcg@10"]
+        if v > best_score:
+            best, best_score = float(w), v
+    return round(best, 2)
 
 
 def train(data: Data, epochs: int = EPOCHS) -> tuple[Recommender, list[dict]]:
@@ -147,8 +165,16 @@ def main() -> int:
         "bm25 direct": metrics.evaluate(bm25(queries, mit_text), golds),
         "bm25 two-hop": metrics.evaluate(
             metrics.two_hop(bm25(queries, tech_text), [g for _, g in data.techniques], size), golds),
-        "tf-idf logistic regression": metrics.evaluate(linear_baseline(data, queries, size), golds),
     }
+    # The classifier alone, and fused with Skandamata: each z-scored per behaviour, the weight
+    # chosen on the validation behaviours by nDCG@10. The test never chooses it.
+    linear = linear_scorer(data, size)
+    linear_test = linear(queries)
+    results_by["tf-idf logistic regression"] = metrics.evaluate(linear_test, golds)
+    val_queries, val_golds = [e.text for e in data.validation], [e.gold for e in data.validation]
+    weight = choose_weight(predict(model, val_queries), linear(val_queries), val_golds)
+    results_by["skandamata-v0 + tf-idf (fused)"] = metrics.evaluate(
+        fuse(predict(model, queries), linear_test, weight), golds)
     gold_sizes = [len(g) for g in golds]
 
     # What it recommends for a few test behaviours, unedited.
@@ -171,6 +197,7 @@ def main() -> int:
         "task": "rank every ATT&CK mitigation for an observed behaviour",
         "test": results_by,
         "best_epoch_by_validation": max(curve, key=lambda c: c["val_ndcg@10"])["epoch"],
+        "fusion_weight_by_validation": weight,
         "curve": curve,
         "examples": examples,
         "seconds": round(time.time() - started, 1),

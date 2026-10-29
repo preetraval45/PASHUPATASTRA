@@ -26,6 +26,7 @@ const SHOWN: Record<string, string> = {
   "kalaratri-v0": "Kalaratri",
   "Kalaratri v0": "Kalaratri",
   "skandamata-v0": "Skandamata",
+  "skandamata-v0 + tf-idf (fused)": "Skandamata + TF-IDF classifier, fused",
   "mahagauri-v2 + 3σ agreement": "Mahagauri",
   "siddhidatri-v0": "Siddhidatri",
   "katyayani-kaal-v0 (zero-shot)": "Katyayani, trained on synthetic incidents",
