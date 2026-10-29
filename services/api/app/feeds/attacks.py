@@ -49,7 +49,7 @@ from pashupatastra.events import (
 )
 
 from . import Verification
-from .sources import FeedUnavailable, USER_AGENT, _now
+from .sources import FeedUnavailable, USER_AGENT, _now, abusech_key, post_keyed
 
 TIMEOUT = 45.0
 
@@ -80,11 +80,13 @@ decision, and the feed says so rather than pretending.
 FEODO_URL = "https://feodotracker.abuse.ch/downloads/ipblocklist.json"
 THREATFOX_URL = "https://threatfox.abuse.ch/export/json/recent/"
 
+THREATFOX_API = "https://threatfox-api.abuse.ch/api/v1/"
+
 THREATFOX_WITHDRAWN = (
     "ThreatFox's unauthenticated bulk export is gone: /export/json/recent/ answers "
     "410 Gone (checked 26 October 2026), and abuse.ch now requires a free Auth-Key "
-    "for ThreatFox data. The feed comes back once a key is set and this fetch is "
-    "rewritten against the keyed API."
+    "for ThreatFox data. The feed comes back once the ABUSECH_AUTH_KEY secret is set "
+    "(a free key from auth.abuse.ch)."
 )
 """Why this feed fails, stated so a red feed on the Observatory reads as withdrawn, not as a blip."""
 HIBP_URL = "https://haveibeenpwned.com/api/v3/breaches"
@@ -325,21 +327,32 @@ def fetch_threatfox(limit: int = 25, since: str | None = None) -> list[Event]:
     full confidence earns `corroborated` and nothing earns `confirmed` — the
     publisher does not assert these individually.
     """
-    try:
-        payload = _get(THREATFOX_URL)
-    except FeedUnavailable as error:
-        if "410" in str(error):
-            raise FeedUnavailable(THREATFOX_WITHDRAWN) from error
-        raise
-    if not isinstance(payload, dict):
-        raise FeedUnavailable(f"{THREATFOX_URL}: expected an object")
-
     rows: list[dict] = []
-    for group in payload.values():
-        # Each id maps to a single-element list.
-        for row in group or []:
+    key = abusech_key()
+    if key:
+        # The keyed API (`get_iocs`, the last day), mapped onto the export's field names.
+        payload = post_keyed(THREATFOX_API, {"query": "get_iocs", "days": 1}, key)
+        if not isinstance(payload, dict) or payload.get("query_status") != "ok":
+            raise FeedUnavailable(f"{THREATFOX_API}: {(payload or {}).get('query_status', 'no answer')}")
+        for row in payload.get("data") or []:
             if isinstance(row, dict):
-                rows.append(row)
+                tags = row.get("tags")
+                rows.append({**row, "ioc_value": row.get("ioc"), "first_seen_utc": str(row.get("first_seen") or "").removesuffix(" UTC"),
+                             "tags": ", ".join(tags) if isinstance(tags, list) else tags})
+    else:
+        try:
+            payload = _get(THREATFOX_URL)
+        except FeedUnavailable as error:
+            if "410" in str(error):
+                raise FeedUnavailable(THREATFOX_WITHDRAWN) from error
+            raise
+        if not isinstance(payload, dict):
+            raise FeedUnavailable(f"{THREATFOX_URL}: expected an object")
+        for group in payload.values():
+            # Each id maps to a single-element list.
+            for row in group or []:
+                if isinstance(row, dict):
+                    rows.append(row)
     rows.sort(key=lambda row: str(row.get("first_seen_utc") or ""), reverse=True)
 
     events: list[Event] = []

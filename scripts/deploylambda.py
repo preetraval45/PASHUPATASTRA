@@ -92,6 +92,15 @@ def exists(function: str, region: str) -> bool:
 
 
 def environment(cors: list[str]) -> str:
+    """The function's environment, plus abuse.ch's Auth-Key when CI has the ABUSECH_AUTH_KEY secret,
+    which brings the URLhaus and ThreatFox feeds back (their anonymous exports are gone)."""
+    env = json.loads(_environment(cors))
+    if os.environ.get("ABUSECH_AUTH_KEY"):
+        env["Variables"]["ABUSECH_AUTH_KEY"] = os.environ["ABUSECH_AUTH_KEY"]
+    return json.dumps(env)
+
+
+def _environment(cors: list[str]) -> str:
     return json.dumps(
         {
             "Variables": {

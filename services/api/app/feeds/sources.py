@@ -18,6 +18,7 @@ a vendor name in a module whose whole job is to be replaceable.
 from __future__ import annotations
 
 import json
+import os
 import urllib.error
 import urllib.request
 from datetime import UTC, datetime, timedelta
@@ -40,6 +41,12 @@ TIMEOUT = 45.0
 
 KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 URLHAUS_URL = "https://urlhaus.abuse.ch/downloads/json_recent/"
+URLHAUS_API = "https://urlhaus-api.abuse.ch/v1/urls/recent/limit/{limit}/"
+URLHAUS_WITHDRAWN = (
+    "URLhaus's unauthenticated export is gone: /downloads/json_recent/ answers 410 Gone "
+    "(checked 29 October 2026). The feed comes back once the ABUSECH_AUTH_KEY secret is "
+    "set (a free key from auth.abuse.ch)."
+)
 NVD_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
 
@@ -54,6 +61,30 @@ def _get(url: str) -> Any:
         with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
             return json.loads(response.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as error:
+        raise FeedUnavailable(f"{url}: {error}") from error
+
+
+ABUSECH_KEY_ENV = "ABUSECH_AUTH_KEY"
+"""abuse.ch's free Auth-Key (auth.abuse.ch). URLhaus and ThreatFox retired their anonymous exports in
+2026 (410 Gone); their APIs answer 401 without it. Read from the environment, never stored here."""
+
+
+def abusech_key() -> str:
+    return os.environ.get(ABUSECH_KEY_ENV, "").strip()
+
+
+def post_keyed(url: str, body: dict | None, key: str) -> Any:
+    """One abuse.ch API call with the Auth-Key header; POST with a JSON body, or GET without one."""
+    data = json.dumps(body).encode("utf-8") if body is not None else None
+    headers = {"user-agent": USER_AGENT, "Auth-Key": key}
+    if data is not None:
+        headers["Content-Type"] = "application/json"
+    request = urllib.request.Request(url, data=data, headers=headers, method="POST" if data is not None else "GET")
+    try:
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as error:
+        # The key is in a header, never in the message.
         raise FeedUnavailable(f"{url}: {error}") from error
 
 
@@ -289,10 +320,25 @@ def fetch_urlhaus(limit: int = 25, since: str | None = None) -> list[Event]:
     that renders them as anchors is a page that eventually gets clicked. The
     `urlhaus_link` — the advisory *about* the URL — is what a reader follows.
     """
-    payload = _get(URLHAUS_URL)
     rows: list[dict] = []
-    for group in (payload or {}).values():
-        rows.extend(group or [])
+    key = abusech_key()
+    if key:
+        # The keyed API, mapped onto the old export's field names.
+        payload = post_keyed(URLHAUS_API.format(limit=max(limit, 25)), None, key)
+        if not isinstance(payload, dict) or payload.get("query_status") != "ok":
+            raise FeedUnavailable(f"URLhaus API: {(payload or {}).get('query_status', 'no answer')}")
+        for row in payload.get("urls") or []:
+            if isinstance(row, dict):
+                rows.append({**row, "dateadded": row.get("date_added", ""), "urlhaus_link": row.get("urlhaus_reference", "")})
+    else:
+        try:
+            payload = _get(URLHAUS_URL)
+        except FeedUnavailable as error:
+            if "410" in str(error):
+                raise FeedUnavailable(URLHAUS_WITHDRAWN) from error
+            raise
+        for group in (payload or {}).values():
+            rows.extend(group or [])
     rows.sort(key=lambda row: row.get("dateadded", ""), reverse=True)
 
     events: list[Event] = []
