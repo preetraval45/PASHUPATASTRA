@@ -326,6 +326,15 @@ against 0.543 ([kushmanda-v3.md](models/kushmanda-v3.md);
 [kushmanda.md](models/kushmanda.md)). The smaller model
 stays served, since declining is the property Sati depends on.
 
+**Telling a model what is new did not find new failures.** Kalaratri's
+features count log templates seen in training, so a failure type that first
+appears months later is invisible to it. Causal novelty features (lines whose
+template never appeared earlier in the log) were added as v1. On BGL they cut
+the false-positive rate from 0.0244 to 0.0059 and raised precision from 0.513
+to 0.778, but recall fell to 0.220 and F1 to 0.343 against 0.355
+([kalaratri-bgl.md](models/kalaratri-bgl.md)). The later failures are mostly
+not first-seen templates.
+
 **Two models did not earn their place, and the architecture reflects it.**
 
 - Mahagauri, the recovery verifier, declared 0.220 of incidents over while

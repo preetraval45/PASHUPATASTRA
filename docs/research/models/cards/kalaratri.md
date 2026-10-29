@@ -89,6 +89,14 @@ last 9,427 windows.
 - **Template masking is crude.** Messages that differ only in a word with no
   digit stay separate templates. A learned parser such as Drain is the
   obvious next step, and it should be measured before it is assumed better.
+- **Novelty features buy precision, not recall** (run 40797786556). The
+  "unseen in training" count is zero on every training window, so no model
+  can learn from it. v1 adds causal counts instead: lines whose template never
+  appeared earlier in the log, and lines whose template is still rare. On BGL,
+  precision rises from 0.513 to 0.778 and the false-positive rate falls from
+  0.0244 to 0.0059, but recall falls to 0.220 and F1 to 0.343. On HDFS, F1
+  moves from 0.966 to 0.968. New failure types in later months are not mostly
+  first-seen templates, so the recall gap remains. v0 stays served.
 
 ## Ethical considerations
 
