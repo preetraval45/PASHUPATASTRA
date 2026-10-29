@@ -205,6 +205,21 @@ function findings(): Finding[] {
       tone: "negative",
     },
     {
+      id: "served",
+      kicker: "Method · what the API actually runs",
+      title: "We measured the model we serve, not only the one we trained",
+      headline: `${f3(emb["served design (int8)"]?.["recall@1"] ?? 0)} → ${f3(emb["served design + pruned tf-idf (fused)"]?.["recall@1"] ?? 0)}`,
+      versus: [
+        { label: "the full model, as evaluated", value: f3(emb["brahmacharini-v0"]["recall@1"]) },
+        { label: "the smaller int8 model the API can carry", value: f3(emb["served design (int8)"]?.["recall@1"] ?? 0) },
+        { label: "the same, fused with a pruned TF-IDF classifier", value: f3(emb["served design + pruned tf-idf (fused)"]?.["recall@1"] ?? 0) },
+      ],
+      body:
+        "A model squeezed to fit a lean serverless function is not the model in the paper, so its design was trained and tested on the same held-out attackers. It was weaker; fused with a small classifier it beat the full model. Then it was tried on real questions before shipping: it misread a defence question about ransomware on file shares, so that answer still comes from retrieval, and a test pins it.",
+      href: "/models#brahmacharini-results",
+      tone: "method",
+    },
+    {
       id: "metric",
       kicker: "Method",
       title: "We found a bug in our own scoring — and re-decided on the corrected numbers",
