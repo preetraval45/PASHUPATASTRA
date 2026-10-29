@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from sati.loganomaly.run import best_threshold, featurise, metrics, pca_scores
+from sati.loganomaly.run import best_threshold, featurise, metrics, novelty, pca_scores
 
 
 def test_templates_outside_the_training_vocabulary_are_counted_as_unseen():
@@ -61,3 +61,11 @@ def test_bgl_windows_are_consecutive_and_anomalous_if_any_line_is(tmp_path, monk
     windows = loghub.bgl_windows(tmp_path, size=100)
     assert list(windows["anomaly"]) == [0, 1]  # the last 50 lines do not fill a window
     assert len(set(windows["events"][0])) == 1  # "normal event <*>" is one template
+
+
+def test_novelty_is_judged_only_against_the_log_before_each_window():
+    frame = novelty(pd.Series([["E1", "E1", "E2"], ["E1", "E3"], ["E3", "E3", "E4"]]), rare=2)
+    # window 1: all new; window 2: E3 is new; window 3: E4 is new, E3 seen once (still rare at 2)
+    assert frame["first_seen_lines"].tolist() == [3, 1, 1]
+    assert frame["first_seen_templates"].tolist() == [2, 1, 1]
+    assert frame["rare_lines"].tolist() == [3, 1, 3]

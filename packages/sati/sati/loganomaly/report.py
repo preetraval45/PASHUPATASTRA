@@ -25,7 +25,8 @@ def main(path: str) -> int:
         "|---|---:|---:|---:|---:|",
     ]
     for name, m in r["test"].items():
-        label = "**Kalaratri v0**" if name.startswith("kalaratri") else name
+        label = ("**Kalaratri v1 (+ causal novelty features)**" if "novelty" in name
+                 else "**Kalaratri v0**" if name.startswith("kalaratri") else name)
         out.append(f"| {label} | {m['precision']:.3f} | {m['recall']:.3f} | {m['f1']:.3f} | {m['false_positive_rate']:.4f} |")
     out += [
         "",

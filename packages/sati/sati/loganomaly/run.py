@@ -90,6 +90,25 @@ def featurise(events: pd.Series, vocab: list[str], dtype: type = float) -> pd.Da
     return pd.DataFrame(matrix, columns=[*vocab, "unseen", "length", "distinct_share"])
 
 
+def novelty(events: pd.Series, rare: int = 5) -> pd.DataFrame:
+    """How new each window's lines are, judged only against the log before it.
+
+    `featurise`'s "unseen" column counts templates missing from the training
+    vocabulary, which is always zero on the training rows, so a model can never
+    learn from it. These are causal instead: walking the log in order, a line
+    is new if its template has not appeared earlier in the log at all, and rare
+    if it has appeared fewer than `rare` times. Training, validation and test
+    windows are measured the same way, and none sees its own future.
+    """
+    seen: Counter = Counter()
+    rows = []
+    for seq in events:
+        rows.append((sum(seen[e] == 0 for e in seq), len({e for e in seq if seen[e] == 0}),
+                     sum(seen[e] < rare for e in seq)))
+        seen.update(seq)
+    return pd.DataFrame(rows, columns=["first_seen_lines", "first_seen_templates", "rare_lines"], index=events.index)
+
+
 def metrics(y: np.ndarray, flag: np.ndarray) -> dict[str, float]:
     tp = int(((flag == 1) & (y == 1)).sum())
     fp = int(((flag == 1) & (y == 0)).sum())
@@ -152,6 +171,15 @@ def main() -> int:
     t_model = best_threshold(yva, booster.predict(Xva))
     kalaratri = metrics(yte, (booster.predict(Xte) >= t_model).astype(int))
 
+    # v1: the same booster with the causal novelty features, over the log in order.
+    fresh = novelty(data["events"]).astype(spec["dtype"])
+    Ntr, Nva, Nte = (pd.concat([X, fresh.loc[part.index]], axis=1) for X, part in
+                     ((Xtr.set_axis(train.index), train), (Xva.set_axis(val.index), val), (Xte.set_axis(test.index), test)))
+    booster_v1 = lgb.train({**PARAMS, "scale_pos_weight": float((ytr == 0).sum() / max(1, (ytr == 1).sum()))},
+                           lgb.Dataset(Ntr, label=ytr), num_boost_round=ROUNDS)
+    t_v1 = best_threshold(yva, booster_v1.predict(Nva))
+    with_novelty = metrics(yte, (booster_v1.predict(Nte) >= t_v1).astype(int))
+
     normal = Xtr[ytr == 0].to_numpy()
     t_pca = best_threshold(yva, pca_scores(normal, Xva.to_numpy()))
     pca = metrics(yte, (pca_scores(normal, Xte.to_numpy()) >= t_pca).astype(int))
@@ -167,8 +195,10 @@ def main() -> int:
                     "anomaly_share": round(float(data["anomaly"].mean()), 4),
                     "split": {"train": len(train), "validation": len(val), "test": len(test), "order": "as logged"}},
         "vocabulary": len(vocab),
-        "test": {spec["model"].removeprefix("sati-"): kalaratri, "pca (Xu et al. 2009)": pca, "unseen-template rule": unseen},
-        "thresholds": {spec["model"].removeprefix("sati-"): t_model, "pca": t_pca},
+        "test": {spec["model"].removeprefix("sati-"): kalaratri,
+                 spec["model"].removeprefix("sati-").replace("-v0", "-v1") + " (+ novelty)": with_novelty,
+                 "pca (Xu et al. 2009)": pca, "unseen-template rule": unseen},
+        "thresholds": {spec["model"].removeprefix("sati-"): t_model, "v1": t_v1, "pca": t_pca},
         "top_features": [
             {"feature": f, "gain": round(float(g), 1),
              **({"template": data.attrs["templates"][f]} if f in data.attrs.get("templates", {}) else {})}
