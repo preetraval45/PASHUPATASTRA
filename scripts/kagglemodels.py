@@ -165,7 +165,7 @@ for form, title, subtitle, job, results in (
     ("siddhidatri", "Siddhidatri: Detector Fusion", "Fuses three anomaly detectors into one calibrated probability",
      "Combines Shailaputri with two statistical detectors (robust z, PCA) by logistic regression into one "
      "probability per minute.",
-     "F1 0.534 against Shailaputri's 0.530, with false alarms of 47.9 against 4.0 per 1000: published as an "
+     "F1 0.537 against Shailaputri's 0.539, with false alarms of 47.8 against 3.8 per 1000: published as an "
      "honest negative, and as the baseline for better fusion."),
 ):
     MODELS[form] = {
