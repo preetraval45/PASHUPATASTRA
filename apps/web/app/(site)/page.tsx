@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 
+import { AskStrip } from "@/components/askstrip";
+import { LoopExplorer } from "@/components/loopexplorer";
 import { Icon } from "@/components/sidebar";
 import { getFigures, getIncidents } from "@/lib/api";
 
@@ -48,8 +50,6 @@ const DESTINATIONS = [
 /** The newest Android test build, rebuilt by .github/workflows/android.yml on every change to apps/android. */
 const ANDROID_APK = "https://github.com/preetraval45/PASHUPATASTRA/releases/download/android/Pashupatastra.apk";
 
-const LOOP = ["Observe", "Understand", "Predict", "Decide", "Act", "Verify", "Learn"];
-
 /** The scattered signals of one real scenario, in the order they arrive. Taken
  *  from INC-2026-0903 — each is individually ignorable, which is the point. */
 const SCATTERED = [
@@ -84,7 +84,8 @@ export default async function LandingPage() {
   return (
     <div className="space-y-16 pb-8">
       {/* --- what it is ------------------------------------------------- */}
-      <section className="space-y-6">
+      <section className="relative isolate space-y-6">
+        <div aria-hidden="true" className="hero-glow pointer-events-none absolute -inset-x-6 -top-10 -z-10 h-[28rem]" />
         <p className="label text-[rgb(var(--astra))]">
           Observe. Reason. Act. Verify.
         </p>
@@ -141,23 +142,28 @@ export default async function LandingPage() {
           </p>
         </div>
 
-        <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 pt-4 text-xs text-[rgb(var(--faint))]">
-          {LOOP.map((stage, index) => (
-            <li key={stage} className="flex items-center gap-2">
-              {index > 0 && <span aria-hidden="true">→</span>}
-              <span
-                className={
-                  index < 6 ? "text-[rgb(var(--muted))]" : "text-[rgb(var(--faint))]"
-                }
-              >
-                {stage}
-              </span>
-            </li>
-          ))}
-          <li className="w-full pt-1 sm:w-auto sm:pl-3">
-            Most tools stop after the second one.
-          </li>
-        </ol>
+      </section>
+
+      {/* --- the loop, to explore ----------------------------------------- */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">One loop, seven stages</h2>
+          <p className="mt-1 max-w-2xl text-sm text-[rgb(var(--muted))]">
+            Most tools stop after the second. Pick a stage to see what happens there and which model does the work.
+          </p>
+        </div>
+        <LoopExplorer />
+      </section>
+
+      {/* --- ask, right here --------------------------------------------- */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Ask Sati, right here</h2>
+          <p className="mt-1 max-w-2xl text-sm text-[rgb(var(--muted))]">
+            Describe what an attacker did and the models name the technique, or the defences that stop it.
+          </p>
+        </div>
+        <AskStrip />
       </section>
 
       {/* --- jump in ----------------------------------------------------- */}

@@ -527,3 +527,20 @@ body::before {
     box-shadow: none;
   }
 }
+
+/* The home page's headline sits on a slow, soft glow in the accent colour. It drifts
+   over 18 seconds, so it reads as light rather than movement, and stands still under
+   reduced motion (the rule above). Decorative only: nothing is placed by it. */
+.hero-glow {
+  background:
+    radial-gradient(40rem 18rem at 15% 20%, rgb(var(--astra) / 0.16), transparent 70%),
+    radial-gradient(30rem 16rem at 85% 0%, rgb(var(--astra) / 0.09), transparent 70%);
+  filter: blur(8px);
+  animation: hero-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes hero-drift {
+  to {
+    transform: translate3d(2.5%, 3%, 0) scale(1.05);
+  }
+}
