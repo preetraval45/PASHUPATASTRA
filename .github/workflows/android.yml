@@ -31,7 +31,17 @@ jobs:
           gradle-version: "8.11.1"
       - name: build the release APK
         working-directory: apps/android
-        run: gradle --no-daemon assembleRelease -PversionCode=${{ github.run_number }} -PversionName=0.1.${{ github.run_number }}
+        run: |
+          set -o pipefail
+          gradle --no-daemon assembleRelease -PversionCode=${{ github.run_number }} -PversionName=0.1.${{ github.run_number }} 2>&1 | tee build.log
+      - name: say why the build failed
+        if: failure()
+        working-directory: apps/android
+        # Gradle's own summary, as one annotation readable without opening the log.
+        run: |
+          reason=$( (grep -E -A25 "What went wrong|^e: |error:" build.log || tail -40 build.log) | head -60 )
+          reason="${reason//'%'/'%25'}"; reason="${reason//$'\n'/'%0A'}"
+          echo "::error title=Android build::${reason}"
       - name: name it for a phone
         run: cp apps/android/app/build/outputs/apk/release/app-release.apk Pashupatastra.apk
       - uses: actions/upload-artifact@v4
