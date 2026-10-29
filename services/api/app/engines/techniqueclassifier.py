@@ -26,7 +26,9 @@ TOKEN = re.compile(r"(?u)\b\w\w+\b")  # scikit-learn's default token pattern
 class TechniqueClassifier:
     def __init__(self, path: Path) -> None:
         data = json.loads(path.read_text(encoding="utf-8"))
-        self.fusion_weight: float = data["fusion_weight"]
+        self.fusion_weight: float = data.get("fusion_weight", 1.0)
+        # softmax: one technique per behaviour; sigmoid: mitigations, several right at once.
+        self.sigmoid = data.get("activation", "softmax") == "sigmoid"
         self.column = {term: i for i, term in enumerate(data["terms"])}
         self.idf: list[float] = data["idf"]
         self.ids = [c["id"] for c in data["classes"]]
@@ -50,6 +52,8 @@ class TechniqueClassifier:
         for f, v in self.features(text).items():
             for k, w in self.postings.get(f, ()):
                 logits[k] += w * v
+        if self.sigmoid:
+            return {k: 1.0 / (1.0 + math.exp(-z)) for k, z in zip(self.ids, logits, strict=True)}
         top = max(logits)
         exp = [math.exp(z - top) for z in logits]
         total = sum(exp)
@@ -80,3 +84,20 @@ def available() -> bool:
 @lru_cache
 def served() -> TechniqueClassifier:
     return TechniqueClassifier(FOLDER / "technique_classifier.json")
+
+
+def mitigations_available() -> bool:
+    """Skandamata's TF-IDF classifier, when its run measured it at least as good as Skandamata's network
+    (the export sets `serve`; skandamata.md has the numbers)."""
+    path = FOLDER / "mitigation_classifier.json"
+    return path.exists() and bool(_serve_flag(path))
+
+
+@lru_cache
+def _serve_flag(path: Path) -> bool:
+    return json.loads(path.read_text(encoding="utf-8")).get("serve", False)
+
+
+@lru_cache
+def mitigations() -> TechniqueClassifier:
+    return TechniqueClassifier(FOLDER / "mitigation_classifier.json")

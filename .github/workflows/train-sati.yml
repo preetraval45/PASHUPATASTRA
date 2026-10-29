@@ -344,7 +344,7 @@ jobs:
           cp results/skandamata/results.json docs/research/models/skandamata.results.json
           cp results/skandamata/results.json apps/web/lib/models/skandamata.results.json
           (cd packages/sati && python -m sati.respond.report ../../results/skandamata/results.json) > docs/research/models/skandamata.md
-          bash scripts/pushresults.sh "docs(models): Skandamata v0 results from run ${{ github.run_id }}" docs/research/models/skandamata.results.json docs/research/models/skandamata.md apps/web/lib/models/skandamata.results.json services/api/app/sati_models/skandamata.json services/api/app/sati_models/skandamata.bag
+          bash scripts/pushresults.sh "docs(models): Skandamata v0 results from run ${{ github.run_id }}" docs/research/models/skandamata.results.json docs/research/models/skandamata.md apps/web/lib/models/skandamata.results.json services/api/app/sati_models/skandamata.json services/api/app/sati_models/skandamata.bag services/api/app/sati_models/mitigation_classifier.json
 
   siddhidatri:
     # Model 9 of the nine (adr/Navadurga): Shailaputri, max robust z and PCA
@@ -596,4 +596,4 @@ jobs:
           cp results/brahmacharini/results.json docs/research/models/brahmacharini.results.json
           cp results/brahmacharini/results.json apps/web/lib/models/brahmacharini.results.json
           (cd packages/sati && python -m sati.embed.report ../../results/brahmacharini/results.json) > docs/research/models/brahmacharini.md
-          bash scripts/pushresults.sh "docs(models): Brahmacharini v0 results and served model from run ${{ github.run_id }}" docs/research/models/brahmacharini.results.json docs/research/models/brahmacharini.md apps/web/lib/models/brahmacharini.results.json services/api/app/sati_models
+          bash scripts/pushresults.sh "docs(models): Brahmacharini v0 results and served model from run ${{ github.run_id }}" docs/research/models/brahmacharini.results.json docs/research/models/brahmacharini.md apps/web/lib/models/brahmacharini.results.json services/api/app/sati_models/brahmacharini.json services/api/app/sati_models/brahmacharini.bag services/api/app/sati_models/knowledge.json services/api/app/sati_models/knowledge.vec services/api/app/sati_models/technique_classifier.json

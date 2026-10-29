@@ -38,7 +38,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from sati.embed.metrics import bm25, fuse
+from sati.embed.metrics import bm25, fuse, prune
 from sati.embed.model import BUCKETS, hashed
 from sati.respond import metrics
 from sati.respond.data import Data, build
@@ -83,25 +83,48 @@ def linear_baseline(data: Data, queries: list[str], size: int) -> np.ndarray:
     return linear_scorer(data, size)(queries)
 
 
-def linear_scorer(data: Data, size: int):
-    """TF-IDF uni- and bigrams with one logistic regression per mitigation.
-    Added 27 Oct after the public Kaggle notebook found it beats Skandamata on
-    this split; it is reported beside the model so the comparison is honest."""
+def fit_linear(rows, size: int):
+    """TF-IDF uni- and bigrams with one logistic regression per mitigation; None when nothing can be fitted.
+    Returns (vectoriser, classifier, mask of the mitigations it scores). Shared with export.py."""
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.linear_model import LogisticRegression
     from sklearn.multiclass import OneVsRestClassifier
 
-    texts = [e.text for e in data.train]
-    y = targets([e.gold for e in data.train], size).numpy().astype(int)
+    texts = [e.text for e in rows]
+    y = targets([e.gold for e in rows], size).numpy().astype(int)
     keep = (y.sum(0) > 0) & (y.sum(0) < len(y))  # a label true for none or all rows cannot be fitted
     if keep.sum() == 0:
-        return lambda queries: np.full((len(queries), size), -1.0)
+        return None
     vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2 if len(texts) > 100 else 1, sublinear_tf=True).fit(texts)
-    clf = OneVsRestClassifier(LogisticRegression(max_iter=1000, C=4)).fit(vec.transform(texts), y[:, keep])
+    return vec, OneVsRestClassifier(LogisticRegression(max_iter=1000, C=4)).fit(vec.transform(texts), y[:, keep]), keep
 
-    def score(queries: list[str]) -> np.ndarray:
+
+def linear_weights(clf) -> tuple[np.ndarray, np.ndarray]:
+    """The one-vs-rest classifier as one weight matrix (mitigations × features) and one bias per mitigation."""
+    return np.vstack([e.coef_ for e in clf.estimators_]), np.concatenate([e.intercept_ for e in clf.estimators_])
+
+
+KEEP = 400  # weights kept per mitigation when the classifier is pruned for serving
+
+
+def linear_scorer(data: Data, size: int):
+    """TF-IDF uni- and bigrams with one logistic regression per mitigation.
+    Added 27 Oct after the public Kaggle notebook found it beats Skandamata on
+    this split; it is reported beside the model so the comparison is honest.
+    `keep` scores with each mitigation's `keep` largest weights at int8, the form the API carries."""
+    fitted = fit_linear(data.train, size)
+    if fitted is None:
+        return lambda queries, keep=None: np.full((len(queries), size), -1.0)
+    vec, clf, mask = fitted
+    coef, bias = linear_weights(clf)
+
+    def score(queries: list[str], keep: int | None = None) -> np.ndarray:
         scores = np.full((len(queries), size), -1.0)
-        scores[:, keep] = clf.predict_proba(vec.transform(queries)).reshape(len(queries), -1)
+        x = vec.transform(queries)
+        if keep is None:
+            scores[:, mask] = clf.predict_proba(x).reshape(len(queries), -1)
+        else:
+            scores[:, mask] = 1.0 / (1.0 + np.exp(-(np.asarray(x @ prune(coef, keep).T) + bias)))
         return scores
 
     return score
@@ -175,6 +198,8 @@ def main() -> int:
     weight = choose_weight(predict(model, val_queries), linear(val_queries), val_golds)
     results_by["skandamata-v0 + tf-idf (fused)"] = metrics.evaluate(
         fuse(predict(model, queries), linear_test, weight), golds)
+    # What the API can carry: the classifier with each mitigation's KEEP largest weights at int8.
+    results_by["tf-idf logistic regression (pruned, as served)"] = metrics.evaluate(linear(queries, KEEP), golds)
     gold_sizes = [len(g) for g in golds]
 
     # What it recommends for a few test behaviours, unedited.

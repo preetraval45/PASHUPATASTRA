@@ -58,3 +58,34 @@ def test_served_classifier_matches_what_numpy_computed_at_export():
         top = sorted(p.items(), key=lambda kv: -kv[1])[: len(sample["top"])]
         assert [k for k, _ in top] == [k for k, _ in sample["top"]]
         assert [v for _, v in top] == pytest.approx([v for _, v in sample["top"]], abs=1e-4)
+
+
+def test_a_sigmoid_classifier_scores_each_label_on_its_own(tmp_path):
+    path = tmp_path / "mitigation_classifier.json"
+    path.write_text(json.dumps({**FIXTURE, "activation": "sigmoid"}), encoding="utf-8")
+    m = tc.TechniqueClassifier(path)
+    x = m.features("attacker deleted logs")
+    p = m.probabilities("attacker deleted logs")
+    assert p["T1070"] == pytest.approx(1 / (1 + math.exp(-(0.1 + 1.27 * x[1] + 0.5 * x[3]))))
+    assert p["T1486"] == pytest.approx(1 / (1 + math.exp(-(-0.2 + 2.0 * x[0]))))
+
+
+@pytest.mark.skipif(not tc.mitigations_available(), reason="exported by the Skandamata training run")
+def test_served_mitigation_classifier_matches_what_numpy_computed_at_export():
+    served = tc.mitigations()
+    for sample in served.parity:
+        p = served.probabilities(sample["text"])
+        top = sorted(p.items(), key=lambda kv: -kv[1])[: len(sample["top"])]
+        assert [k for k, _ in top] == [k for k, _ in sample["top"]]
+        assert [v for _, v in top] == pytest.approx([v for _, v in sample["top"]], abs=1e-4)
+
+
+def test_a_mitigation_classifier_its_run_did_not_measure_better_is_not_served(tmp_path, monkeypatch):
+    monkeypatch.setattr(tc, "FOLDER", tmp_path)
+    tc._serve_flag.cache_clear()
+    (tmp_path / "mitigation_classifier.json").write_text(json.dumps({**FIXTURE, "serve": False}), encoding="utf-8")
+    assert tc.mitigations_available() is False
+    tc._serve_flag.cache_clear()
+    (tmp_path / "mitigation_classifier.json").write_text(json.dumps({**FIXTURE, "serve": True}), encoding="utf-8")
+    assert tc.mitigations_available() is True
+    tc._serve_flag.cache_clear()

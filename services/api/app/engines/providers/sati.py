@@ -297,6 +297,14 @@ def rank_techniques(text: str, query: list[float]) -> list[tuple[float, str]] | 
                                     model.fusion_weight)
 
 
+def mitigation_scores(text: str) -> dict[str, float]:
+    """Each ATT&CK mitigation's probability for this behaviour. Skandamata's TF-IDF classifier when it is
+    exported (the best mitigation ranker measured, skandamata.md), else Skandamata's own network."""
+    if techniqueclassifier.mitigations_available():
+        return techniqueclassifier.mitigations().probabilities(text)
+    return {m["id"]: p for p, m in mitigator().recommend(text, k=1000)}
+
+
 def cosine(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b, strict=True))
 
@@ -352,7 +360,7 @@ class SatiProvider:
         analysts' write-ups and misread plain questions ("ransomware encrypting
         our file shares" → one wrong mitigation), while retrieval reads them well.
         With no confident technique, Skandamata ranks alone, as before."""
-        ranked = {m["id"]: p for p, m in mitigator().recommend(text, k=1000)}
+        ranked = mitigation_scores(text)
         links = attack_links()
         # Retrieval, not the fused ranking, picks the technique here. The fusion was measured on behaviour
         # descriptions; asked "how do we defend against ransomware encrypting our file shares?" (28 Oct) it
@@ -369,7 +377,9 @@ class SatiProvider:
                 lines += [f"- {names[m]['name']} ({m})" for m in picks]
                 urls = [technique.get("url", "")] + [names[m]["url"] for m in picks]
                 return lines + ["", "Sources: " + " · ".join(u for u in urls if u)]
-        picks = [(p, m) for p, m in mitigator().recommend(text, k=5) if p >= RECOMMEND]
+        names = mitigator().by_id()
+        picks = [(p, names[m]) for m, p in sorted(ranked.items(), key=lambda kv: -kv[1])[:5]
+                 if p >= RECOMMEND and m in names]
         if not picks:
             return None
         lines = ["The ATT&CK mitigations Skandamata ranks highest for what you describe (its confidence in "

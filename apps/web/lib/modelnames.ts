@@ -59,6 +59,7 @@ const BASELINES: Record<string, string> = {
   "bm25 direct": "BM25, behaviour to mitigation text",
   "bm25 two-hop": "BM25, behaviour to technique to its mitigations",
   "tf-idf logistic regression": "TF-IDF + logistic regression",
+  "tf-idf logistic regression (pruned, as served)": "TF-IDF + logistic regression, pruned as served",
   "hashing-embedder (Smriti today)": "Hashing embedder (Smriti's previous retriever)",
   "lexical baseline": "Word overlap",
   loudest: "Loudest service",

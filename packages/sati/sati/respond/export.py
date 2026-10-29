@@ -88,10 +88,38 @@ def train(cache: Path) -> tuple[run.Recommender, list]:
     return model.eval(), data.mitigations
 
 
+def classifier(cache: Path) -> dict:
+    """The TF-IDF classifier, the best mitigation ranker measured ("tf-idf logistic regression" in
+    skandamata.md; its pruned form is the "as served" row). Trained on every behaviour, as the served
+    model is, pruned to run.KEEP int8 weights per mitigation, with the full vocabulary and idf so the
+    API's pure-Python TF-IDF matches scikit-learn's. `parity` pins numpy's scores for the API's test."""
+    from sati.embed.metrics import prune
+
+    data = build(cache)
+    vec, clf, mask = run.fit_linear([*data.train, *data.validation, *data.test], len(data.mitigations))
+    coef, bias = run.linear_weights(clf)
+    weights = prune(coef, run.KEEP)
+    ids = [m.attack_id for m, kept in zip(data.mitigations, mask, strict=True) if kept]
+    classes = []
+    for row, mitigation in enumerate(ids):
+        cols = np.flatnonzero(weights[row])
+        scale = float(np.abs(weights[row, cols]).max() / 127.0) if len(cols) else 1.0
+        classes.append({"id": mitigation, "bias": round(float(bias[row]), 6), "scale": round(scale, 9),
+                        "features": cols.tolist(), "weights": np.round(weights[row, cols] / scale).astype(int).tolist()})
+    probs = 1.0 / (1.0 + np.exp(-(np.asarray(vec.transform(list(SAMPLES)) @ weights.T) + bias)))
+    parity = [{"text": t, "top": [[ids[j], round(float(p[j]), 6)] for j in np.argsort(-p)[:5]]}
+              for t, p in zip(SAMPLES, probs, strict=True)]
+    terms = sorted(vec.vocabulary_, key=vec.vocabulary_.get)
+    return {"model": "sati-skandamata-classifier-v0", "keep": run.KEEP, "activation": "sigmoid",
+            "terms": terms, "idf": [round(float(x), 6) for x in vec.idf_], "classes": classes, "parity": parity}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--cache", type=Path, default=Path(".cache/corpus"))
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--results", type=Path, default=Path("../../results/skandamata/results.json"),
+                        help="this run's evaluation; the classifier is served only if it measured better")
     args = parser.parse_args()
 
     model, mitigations = train(args.cache)
@@ -123,6 +151,16 @@ def main() -> int:
     (args.out / "skandamata.bag").write_bytes(bag)
     (args.out / "skandamata.json").write_text(json.dumps(meta), encoding="utf-8")
     print(f"exported: {len(mitigations)} mitigations, bag {q_bag.nbytes / 1e6:.1f} MB")
+    # The classifier is served only where the same run measured its pruned form at least as good as
+    # Skandamata's network on the held-out behaviours. The file is always written, so the job's commit
+    # names it every time; `serve` false withdraws an earlier one.
+    measured = json.loads(args.results.read_text(encoding="utf-8"))["test"] if args.results.exists() else {}
+    pruned, own = measured.get("tf-idf logistic regression (pruned, as served)"), measured.get("skandamata-v0")
+    better = bool(pruned and own and pruned["ndcg@10"] >= own["ndcg@10"])
+    served = {**classifier(args.cache), "serve": better,
+              "measured": {"pruned_ndcg@10": (pruned or {}).get("ndcg@10"), "skandamata_ndcg@10": (own or {}).get("ndcg@10")}}
+    (args.out / "mitigation_classifier.json").write_text(json.dumps(served, ensure_ascii=False), encoding="utf-8")
+    print(f"exported: classifier over {len(served['classes'])} mitigations, serve={better} {served['measured']}")
     return 0
 
 
