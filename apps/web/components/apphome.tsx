@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { AppUpdate } from "@/components/appupdate";
 import { useCourse } from "@/components/course";
 import { DailyQuestion } from "@/components/dailyquestion";
 import { Icon } from "@/components/sidebar";
@@ -42,6 +43,8 @@ export function AppHome({ open, awaiting, critical }: Props) {
 
   return (
     <div className="space-y-5 pb-6">
+      <AppUpdate />
+
       <header className="pt-1">
         <p className="text-sm text-[rgb(var(--muted))]">{hello}</p>
         <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">What do you want to do?</h1>
