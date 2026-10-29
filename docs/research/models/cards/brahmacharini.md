@@ -59,13 +59,14 @@ The split is **by source**:
 
 At test time, every procedure ranks all 706 techniques.
 
-## Metrics (run 40393999333; test = 1,727 procedures)
+## Metrics (run 40592358374; test = 1,727 procedures)
 
 | Retriever | Recall@1 | Recall@5 | Recall@10 | MRR |
 |---|---:|---:|---:|---:|
 | Brahmacharini v0 | 0.614 | 0.802 | 0.854 | 0.699 |
 | BM25 | 0.268 | 0.478 | 0.580 | 0.372 |
 | TF-IDF + logistic regression | 0.646 | 0.832 | 0.869 | 0.730 |
+| Brahmacharini v0 + TF-IDF classifier, fused | 0.673 | 0.859 | 0.896 | 0.758 |
 | Hashing embedder (Smriti's previous retriever) | 0.120 | 0.226 | 0.283 | 0.177 |
 
 ### The strongest simple baseline wins
@@ -76,7 +77,7 @@ every column: Recall@1 0.646 against 0.614, MRR 0.730 against 0.699. It was
 added to the training run after the public Kaggle notebook found the same gap.
 Brahmacharini is still the served retriever because it embeds passages as well
 as techniques, and Sati AI's grounding needs that. The classifier only ranks
-techniques it saw in training. Fusing the two is an open task.
+techniques it saw in training. Fused, the two do better than either alone: each score is z-scored per query and the weight (0.90 on Brahmacharini) is chosen on the validation sources. The fused model reaches Recall@1 0.673 and MRR 0.758. Serving the fusion needs the classifier exported for the API without scikit-learn, which is an open task.
 
 ### A larger encoder did not help (v1, Kaggle run 2)
 

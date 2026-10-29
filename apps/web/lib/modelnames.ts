@@ -17,6 +17,7 @@ const SHOWN: Record<string, string> = {
   "shailaputri-v0": "Shailaputri",
   "shailaputri-v1 onset-weighted": "Shailaputri",
   "brahmacharini-v0": "Brahmacharini",
+  "brahmacharini-v0 + tf-idf (fused)": "Brahmacharini + TF-IDF classifier, fused",
   "chandraghanta-v2 (1% false-alarm budget)": "Chandraghanta",
   "chandraghanta-v0": "Chandraghanta, best-F1 threshold",
   "chandraghanta-v0 without TTL": "Chandraghanta, best-F1 threshold, without TTL fields",
@@ -42,6 +43,30 @@ const HIDDEN = new Set([
   "mahagauri-v2 (out-of-fold, hold chosen)",
   "siddhidatri-v1 (at Shailaputri's false-alarm budget)",
 ]);
+
+/** Baselines as a reader would write them. Keys absent here are shown as written. */
+const BASELINES: Record<string, string> = {
+  bm25: "BM25",
+  "bm25 direct": "BM25, behaviour to mitigation text",
+  "bm25 two-hop": "BM25, behaviour to technique to its mitigations",
+  "tf-idf logistic regression": "TF-IDF + logistic regression",
+  "hashing-embedder (Smriti today)": "Hashing embedder (Smriti's previous retriever)",
+  "lexical baseline": "Word overlap",
+  loudest: "Loudest service",
+  "loudest service": "Loudest service",
+  pca: "PCA",
+  "pca (Xu et al. 2009)": "PCA (Xu et al. 2009)",
+  "pca (benign-only)": "PCA, trained on benign flows",
+  "pca per machine": "PCA per machine",
+  "pca quantile": "PCA, quantile threshold",
+  popularity: "Popularity (the same list for everyone)",
+  "seasonal-naive": "Seasonal naive",
+  "seasonal-robust-z": "Seasonal robust z-score",
+};
+
+export function baselineName(key: string): string {
+  return BASELINES[key] ?? key;
+}
 
 export function shownName(key: string): string {
   return SHOWN[key] ?? key.replace(/[-\s]v\d+\b/gi, "");

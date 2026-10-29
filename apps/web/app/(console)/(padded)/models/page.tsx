@@ -1,7 +1,7 @@
 import { TryKatyayani } from "@/components/trykatyayani";
 import { TryServers } from "@/components/tryservers";
 import { TryTree } from "@/components/trytree";
-import { isOurs, isShown, shownEntries, shownName } from "@/lib/modelnames";
+import { baselineName, isOurs, isShown, shownEntries, shownName } from "@/lib/modelnames";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -195,7 +195,7 @@ export default function ModelsPage() {
                   <tbody className="divide-y divide-[rgb(var(--edge))]">
                     {shownEntries(s.mean_across_families).map(([name, m]) => (
                       <tr key={name}>
-                        <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
+                        <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : baselineName(name)}</td>
                         <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>
                         <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
                         <td className="tnum py-2 pr-3 text-right">{m.false_alarms_per_1000.toFixed(1)}</td>
@@ -240,7 +240,7 @@ export default function ModelsPage() {
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
                   {shownEntries(BRAHMACHARINI.test).map(([name, m]) => (
                     <tr key={name}>
-                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
+                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : baselineName(name)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m["recall@1"].toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m["recall@5"].toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m["recall@10"].toFixed(3)}</td>
@@ -250,6 +250,23 @@ export default function ModelsPage() {
                 </tbody>
               </table>
             </div>
+            {(() => {
+              const own = BRAHMACHARINI.test["brahmacharini-v0"];
+              const linear = BRAHMACHARINI.test["tf-idf logistic regression"];
+              const fused = BRAHMACHARINI.test["brahmacharini-v0 + tf-idf (fused)"];
+              if (!own || !linear) return null;
+              return (
+                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+                  {linear["recall@1"] > own["recall@1"]
+                    ? `A plain TF-IDF classifier beats Brahmacharini on its own (Recall@1 ${linear["recall@1"].toFixed(3)} against ${own["recall@1"].toFixed(3)}).`
+                    : `Brahmacharini beats a plain TF-IDF classifier (Recall@1 ${own["recall@1"].toFixed(3)} against ${linear["recall@1"].toFixed(3)}).`}
+                  {fused &&
+                    ` Combined, with the mix chosen on the validation sources and never on the test, the two reach ${fused["recall@1"].toFixed(3)}, better than either.`}{" "}
+                  The classifier can only name techniques it saw in training and cannot retrieve passages, so Sati AI
+                  still grounds its answers with Brahmacharini.
+                </p>
+              );
+            })()}
           </Panel>
         </section>
       )}
@@ -291,7 +308,7 @@ export default function ModelsPage() {
                     <tbody className="divide-y divide-[rgb(var(--edge))]">
                       {[...shownEntries(d.detectors), ...(ref ? [["random split (reference only)", ref["chandraghanta-v0"]] as const] : [])].map(([name, m]) => (
                         <tr key={name} className={name.startsWith("random") ? "text-[rgb(var(--faint))]" : undefined}>
-                          <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
+                          <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : baselineName(name)}</td>
                           <td className="tnum py-2 pr-3 text-right">{m.precision.toFixed(3)}</td>
                           <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
                           <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>
@@ -452,7 +469,7 @@ export default function ModelsPage() {
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
                   {shownEntries(SKANDAMATA.test).map(([name, m]) => (
                     <tr key={name}>
-                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
+                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : baselineName(name)}</td>
                       {[m["hit@1"], m["recall@5"], m["precision@5"], m.mrr, m["ndcg@10"]].map((v, i) => (
                         <td key={i} className="tnum py-2 pr-3 text-right">{v.toFixed(3)}</td>
                       ))}
@@ -461,6 +478,19 @@ export default function ModelsPage() {
                 </tbody>
               </table>
             </div>
+            {(() => {
+              const own = SKANDAMATA.test["skandamata-v0"];
+              const linear = SKANDAMATA.test["tf-idf logistic regression"];
+              if (!own || !linear || linear["hit@1"] <= own["hit@1"]) return null;
+              return (
+                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+                  A plain TF-IDF classifier beats Skandamata here (Hit@1 {linear["hit@1"].toFixed(3)} against{" "}
+                  {own["hit@1"].toFixed(3)}). When Brahmacharini finds the technique, Sati AI shows only the
+                  mitigations ATT&amp;CK links to it, in Skandamata&apos;s order, so its first pick is always one
+                  ATT&amp;CK recommends.
+                </p>
+              );
+            })()}
             <ul className="mt-4 space-y-3 text-sm">
               {SKANDAMATA.examples.slice(0, 3).map((e) => (
                 <li key={e.behaviour}>
@@ -512,7 +542,7 @@ export default function ModelsPage() {
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
                   {shownEntries(MAHAGAURI.pooled).map(([name, v]) => (
                     <tr key={name}>
-                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
+                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : baselineName(name)}</td>
                       <td className="tnum py-2 pr-3 text-right">{v.premature_rate.toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{v.confirmed_rate.toFixed(3)}</td>
                       <td className="tnum py-2 text-right">{v.unconfirmed_rate.toFixed(3)}</td>
@@ -558,7 +588,7 @@ export default function ModelsPage() {
                 <tbody className="divide-y divide-[rgb(var(--edge))]">
                   {shownEntries(run.test).map(([name, m]) => (
                     <tr key={name}>
-                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : name}</td>
+                      <td className="py-2 pr-3">{isOurs(name) ? <strong>{shownName(name)}</strong> : baselineName(name)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m.precision.toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
                       <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>

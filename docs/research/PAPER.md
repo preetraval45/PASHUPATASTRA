@@ -351,6 +351,9 @@ same queries, against Brahmacharini v0's 0.614 and 0.699
 ([brahmacharini.md](models/brahmacharini.md)). Brahmacharini stays in service
 because it also retrieves the passages behind each answer, which a classifier
 cannot do. Its value as a technique classifier alone is not established.
+The two are complementary. Fused, with each score z-scored per query and the
+weight chosen on the validation sources, they reach Recall@1 0.673 and MRR
+0.758, better than either alone ([brahmacharini.md](models/brahmacharini.md)).
 
 The same holds for Skandamata, the mitigation recommender. A one-vs-rest
 logistic regression on TF-IDF features reaches hit@1 0.827 and MRR 0.880,
