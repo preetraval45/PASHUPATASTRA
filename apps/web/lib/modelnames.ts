@@ -43,6 +43,7 @@ const HIDDEN = new Set([
   "shailaputri-v1",
   "brahmacharini-v1 (transformer)",
   "chandraghanta-v1 (either)",
+  "chandraghanta-v3 (fused, weight from held-out families)",
   "mahagauri-v0",
   "mahagauri-v1 (upper-bound threshold)",
   "mahagauri-v1 + 3σ agreement",

@@ -121,6 +121,56 @@ def pca_detect(xtr: pd.DataFrame, ytr: np.ndarray, xte: pd.DataFrame, salt: str)
     return (pca_scores(benign, b) >= t).astype(int)
 
 
+WEIGHTS = (0.0, 0.25, 0.5, 0.75, 0.9, 1.0)
+
+
+def benign_percentile(benign: np.ndarray, scores: np.ndarray) -> np.ndarray:
+    """Each score as the share of benign validation flows scoring below it: a common scale for two detectors."""
+    return np.searchsorted(np.sort(benign), scores, side="right") / max(1, len(benign))
+
+
+def fused_unseen(xtr: pd.DataFrame, ytr: np.ndarray, families: pd.Series, xte: pd.DataFrame, salt: str
+                 ) -> tuple[np.ndarray, dict]:
+    """v3: the classifier and the benign-only PCA, fused, with the weight chosen for families never trained on.
+
+    The validation slice holds only families seen in training, so tuning a fusion on it would favour the
+    classifier and say nothing about new attacks. Instead each attack family in the training days is held
+    out of the classifier's training in turn; at the 1% false-alarm budget on benign validation flows, the
+    weight kept is the one that catches the most of the held-out family, averaged over families. The test
+    days are never seen. Both scores are put on one scale as percentiles of the benign validation flows."""
+    val = validation_mask(len(xtr), salt)
+    medians = xtr.median()
+    a, b = (signed_log(f.fillna(medians).to_numpy(dtype=float)) for f in (xtr, xte))
+    benign_fit = a[~val & (ytr == 0)]
+    if len(benign_fit) > PCA_SAMPLE:
+        benign_fit = benign_fit[np.random.default_rng(7).choice(len(benign_fit), PCA_SAMPLE, replace=False)]
+    pca_val, pca_all = pca_scores(benign_fit, a[val & (ytr == 0)]), pca_scores(benign_fit, a)
+    pca_pct = benign_percentile(pca_val, pca_all)
+    fams = families.to_numpy()
+    attack_families = sorted({f for f, y in zip(fams, ytr, strict=True) if y == 1})
+    recall = {w: [] for w in WEIGHTS}
+    for fam in attack_families:
+        keep = ~val & (fams != fam)
+        booster = fit_lgb(xtr[keep], ytr[keep])
+        clf_val = booster.predict(xtr[val & (ytr == 0)])
+        clf_pct = benign_percentile(clf_val, booster.predict(xtr))
+        target = fams == fam
+        for w in WEIGHTS:
+            fused = w * clf_pct + (1 - w) * pca_pct
+            t = float(np.quantile(fused[val & (ytr == 0)], 1 - FPR_BUDGET))
+            recall[w].append(float((fused[target] >= t).mean()))
+    mean_recall = {w: float(np.mean(r)) if r else 0.0 for w, r in recall.items()}
+    weight = max(WEIGHTS, key=lambda w: (mean_recall[w], w))
+    booster = fit_lgb(xtr[~val], ytr[~val])
+    clf_val = booster.predict(xtr[val & (ytr == 0)])
+    fused_val = weight * benign_percentile(clf_val, clf_val) + (1 - weight) * pca_pct[val & (ytr == 0)]
+    t = float(np.quantile(fused_val, 1 - FPR_BUDGET))
+    fused_test = (weight * benign_percentile(clf_val, booster.predict(xte))
+                  + (1 - weight) * benign_percentile(pca_val, pca_scores(benign_fit, b)))
+    return (fused_test >= t).astype(int), {"weight": weight, "held_out_families": attack_families,
+                                            "mean_held_out_recall": {str(w): round(r, 4) for w, r in mean_recall.items()}}
+
+
 KEPT: dict = {}
 """The CIC day-split Chandraghanta, kept for export."""
 
@@ -198,6 +248,9 @@ def run_cic(folder: Path) -> dict:
     # classifier misses infiltration and PCA catches it), so the union is measured,
     # with its false-positive cost shown beside it.
     flags["chandraghanta-v1 (either)"] = flags["chandraghanta-v0"] | flags["pca (benign-only)"]
+    # v3: a weighted fusion instead of the union, its weight chosen on families held out of training.
+    flags["chandraghanta-v3 (fused, weight from held-out families)"], fusion = fused_unseen(
+        train[features], ytr, train["family"], test[features], "cic")
 
     # The setting most published results use: a random split of all days.
     held = validation_mask(len(data), "cic-random")
@@ -213,6 +266,7 @@ def run_cic(folder: Path) -> dict:
         "detectors": {name: metrics(yte, flag) for name, flag in flags.items()},
         "per_family": per_family(test["family"], flags, set(train["family"])),
         "reference_random_split": {"rows_test": int(held.sum()), "chandraghanta-v0": metrics(y_all[held], random_flags)},
+        "v3_fusion": fusion,
     }
 
 

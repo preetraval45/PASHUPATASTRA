@@ -97,3 +97,24 @@ def test_both_pipelines_and_the_report_run_end_to_end(tmp_path, capsys):
     path.write_text(json.dumps(results), encoding="utf-8")
     assert report.main(str(path)) == 0
     assert "random split (reference)" in capsys.readouterr().out
+
+
+def test_v3_fusion_weight_is_chosen_on_families_held_out_of_training(monkeypatch):
+    import numpy as np
+    import pandas as pd
+
+    from sati.netdetect import run
+
+    monkeypatch.setattr(run, "ROUNDS", 20)
+    rng = np.random.default_rng(0)
+    x = pd.DataFrame(rng.normal(size=(2000, 4)), columns=list("abcd"))
+    fam = np.array(["BENIGN"] * 2000, dtype=object)
+    y = np.zeros(2000, int)
+    fam[:200], y[:200] = "A", 1
+    x.loc[:199, "a"] += 4
+    fam[200:400], y[200:400] = "B", 1
+    x.loc[200:399, "b"] += 4
+    flags, info = run.fused_unseen(x, y, pd.Series(fam), x.iloc[:50], "t")
+    assert info["held_out_families"] == ["A", "B"]
+    assert info["weight"] in run.WEIGHTS and set(info["mean_held_out_recall"]) == {str(w) for w in run.WEIGHTS}
+    assert flags.shape == (50,) and set(np.unique(flags)) <= {0, 1}
