@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { Evaluation, ModuleStatus } from "@/components/course";
 import { DailyQuestion } from "@/components/dailyquestion";
+import { Labs } from "@/components/labs";
 import { TrainingBoard } from "@/components/training";
 import { Page, Panel } from "@/components/ui";
 import { getScenarios } from "@/lib/api";
@@ -35,6 +36,17 @@ export default async function TrainingPage() {
       description="A cyber defence course you can use at work tomorrow. Each module teaches one skill, shows how to apply it in real life, and tests you on it — then the drills let you practise on a full investigation."
     >
       <DailyQuestion />
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Hands-on labs</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
+            Do the analyst&apos;s work yourself: inspect an email, read a log, name the technique. Every tap explains
+            itself.
+          </p>
+        </div>
+        <Labs />
+      </section>
 
       <Panel title="Your evaluation" aside="kept in this browser only">
         <Evaluation />
