@@ -29,7 +29,7 @@ import numpy as np
 import torch
 
 from sati.embed import data as d
-from sati.embed.metrics import bm25, choose_weight, fuse, ranks, summarise
+from sati.embed.metrics import bm25, choose_weight, fuse, prune, ranks, softmax, summarise
 from sati.embed.model import Encoder, TransformerEncoder, info_nce
 
 EPOCHS = 12
@@ -72,17 +72,50 @@ def linear_scorer(train, tech_text: list[str], index: dict):
     labels = [index[p.technique] for p in train]
     if len(set(labels)) < 2:
         # a fixture too small to fit; never the real data
-        return lambda queries: np.full((len(queries), len(tech_text)), -np.inf)
+        def nothing(queries: list[str], keep: int | None = None) -> np.ndarray:
+            return np.full((len(queries), len(tech_text)), -np.inf)
+
+        return nothing
     vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2 if len(texts) > 100 else 1, sublinear_tf=True)
     vec.fit(texts + tech_text)
     clf = LogisticRegression(max_iter=2000, C=5).fit(vec.transform(texts), labels)
+    pruned: dict[int, np.ndarray] = {}
 
-    def score(queries: list[str]) -> np.ndarray:
+    def score(queries: list[str], keep: int | None = None) -> np.ndarray:
+        """`keep` scores with each technique's `keep` largest weights at int8, the form the API can carry."""
         scores = np.full((len(queries), len(tech_text)), -np.inf)
-        scores[:, clf.classes_] = clf.predict_proba(vec.transform(queries))
+        x = vec.transform(queries)
+        if keep is None:
+            scores[:, clf.classes_] = clf.predict_proba(x)
+        else:
+            if keep not in pruned:
+                pruned[keep] = prune(clf.coef_, keep)
+            scores[:, clf.classes_] = softmax(np.asarray(x @ pruned[keep].T) + clf.intercept_)
         return scores
 
+    score.vocabulary = lambda keep: int((pruned[keep] != 0).any(axis=0).sum())  # type: ignore[attr-defined]
     return score
+
+
+KEEP = 400  # weights kept per technique when the classifier is pruned for serving
+
+
+def served_design(train, val, techniques, index, tech_text) -> Encoder:
+    """The configuration the API serves (export.py: smaller, int8 bag rows), trained on the training sources
+    only, so the test split can measure what is served. The epoch is chosen on validation, as v0's is; the
+    export itself trains a fixed number of epochs on every source."""
+    from sati.embed.export import DIM, SERVE_BUCKETS, WIDTH, quantise
+    from sati.embed.export import EPOCHS as SERVE_EPOCHS
+
+    torch.manual_seed(7)
+    random.seed(7)
+    model = Encoder(dim=DIM, width=WIDTH, buckets=SERVE_BUCKETS)
+    fit(model, torch.optim.Adam(model.parameters(), lr=2e-3), SERVE_EPOCHS, train, val, techniques, index,
+        tech_text, "served")
+    q, scale = quantise(model.bag.weight.detach().numpy())
+    with torch.no_grad():
+        model.bag.weight.copy_(torch.from_numpy(q.astype(np.float32) * scale[:, None]))
+    return model
 
 
 def fit(model, opt, epochs: int, train, val, techniques, index, tech_text, name: str):
@@ -172,6 +205,19 @@ def main() -> int:
     if hashed is not None:
         results_by["hashing-embedder (Smriti today)"] = summarise(ranks(hashed, gold))
 
+    # What the API can serve: the served design, alone and fused with the
+    # classifier pruned to KEEP weights per technique. Trained last, so the
+    # rows above keep their numbers.
+    served = served_design(train, val, techniques, index, tech_text)
+    served_test = encode(served, queries) @ encode(served, tech_text).T
+    results_by["served design (int8)"] = summarise(ranks(served_test, gold))
+    served_val = encode(served, val_queries) @ encode(served, tech_text).T
+    val_gold = [index[p.technique] for p in val]
+    served_weight = choose_weight(served_val, linear(val_queries, KEEP), val_gold)
+    results_by["served design + pruned tf-idf (fused)"] = summarise(
+        ranks(fuse(served_test, linear(queries, KEEP), served_weight), gold))
+    vocabulary = getattr(linear, "vocabulary", None)  # absent only on a fixture too small to fit
+
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), args.out / "brahmacharini-v0.pt")
     if v1 is not None:
@@ -187,6 +233,8 @@ def main() -> int:
         "test": results_by,
         "best_epoch_by_validation": max(curve, key=lambda c: c["val_mrr"])["epoch"],
         "fusion_weight_by_validation": weight,
+        "served": {"fusion_weight_by_validation": served_weight, "weights_kept_per_technique": KEEP,
+                   "vocabulary_kept": vocabulary(KEEP) if vocabulary else 0},
         "curve": curve,
         "seconds": round(time.time() - started, 1),
     }

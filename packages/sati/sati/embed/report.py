@@ -7,7 +7,10 @@ import sys
 
 LABELS = {"brahmacharini-v0": "**Brahmacharini v0**",
           "brahmacharini-v1 (transformer)": "**Brahmacharini v1 (transformer)**",
-          "brahmacharini-v0 + tf-idf (fused)": "**Brahmacharini v0 + TF-IDF classifier (fused)**"}
+          "brahmacharini-v0 + tf-idf (fused)": "**Brahmacharini v0 + TF-IDF classifier (fused)**",
+          "served design (int8)": "**Served design (int8, training sources only)**",
+          "served design + pruned tf-idf (fused)": "**Served design + pruned TF-IDF classifier (fused)**"}
+
 
 def main(path: str) -> int:
     with open(path, encoding="utf-8") as handle:
@@ -34,6 +37,11 @@ def main(path: str) -> int:
     if "fusion_weight_by_validation" in r:
         epochs += (". Fusion weight on Brahmacharini, chosen on validation sources: "
                    f"{r['fusion_weight_by_validation']:.2f}")
+    if r.get("served"):
+        sv = r["served"]
+        epochs += (f". Served rows: the classifier keeps {sv['weights_kept_per_technique']} int8 weights per "
+                   f"technique ({sv['vocabulary_kept']:,} features in all); fusion weight "
+                   f"{sv['fusion_weight_by_validation']:.2f}, chosen on validation sources")
     out += [
         "",
         epochs + ".\n",

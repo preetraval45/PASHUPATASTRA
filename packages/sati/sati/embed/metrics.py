@@ -68,3 +68,21 @@ def choose_weight(a: np.ndarray, b: np.ndarray, gold: list[int], grid: int = 11)
         if m > best_mrr:
             best, best_mrr = float(w), m
     return round(best, 2)
+
+
+def prune(coef: np.ndarray, keep: int) -> np.ndarray:
+    """Keep each row's `keep` largest-magnitude weights, zero the rest, and
+    round the survivors to int8 with one scale per row, as the API would hold
+    them. Returns the dequantised matrix, so it scores exactly as served."""
+    out = np.zeros_like(coef, dtype=np.float64)
+    for r, row in enumerate(coef):
+        top = np.argpartition(-np.abs(row), keep - 1)[:keep] if keep < len(row) else np.arange(len(row))
+        scale = (np.abs(row[top]).max() / 127.0) or 1.0
+        out[r, top] = np.round(row[top] / scale) * scale
+    return out
+
+
+def softmax(logits: np.ndarray) -> np.ndarray:
+    z = logits - logits.max(axis=1, keepdims=True)
+    e = np.exp(z)
+    return e / e.sum(axis=1, keepdims=True)

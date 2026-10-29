@@ -18,6 +18,8 @@ const SHOWN: Record<string, string> = {
   "shailaputri-v1 onset-weighted": "Shailaputri",
   "brahmacharini-v0": "Brahmacharini",
   "brahmacharini-v0 + tf-idf (fused)": "Brahmacharini + TF-IDF classifier, fused",
+  "served design (int8)": "Brahmacharini, as served",
+  "served design + pruned tf-idf (fused)": "Brahmacharini as served + TF-IDF classifier, fused",
   "chandraghanta-v2 (1% false-alarm budget)": "Chandraghanta",
   "chandraghanta-v0": "Chandraghanta, best-F1 threshold",
   "chandraghanta-v0 without TTL": "Chandraghanta, best-F1 threshold, without TTL fields",

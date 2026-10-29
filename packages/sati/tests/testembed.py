@@ -63,3 +63,14 @@ def test_fusion_weight_is_chosen_on_the_rows_given_and_unrankable_columns_go_las
     w = choose_weight(a, b, gold)
     assert summarise(ranks(fuse(a, b, w), gold))["mrr"] >= max(summarise(ranks(a, gold))["mrr"],
                                                                summarise(ranks(b, gold))["mrr"])
+
+
+def test_pruning_keeps_the_largest_weights_per_row_at_int8():
+    from sati.embed.metrics import prune, softmax
+
+    coef = np.array([[0.1, -2.0, 0.5, 0.01], [3.0, 0.0, -0.2, 0.4]])
+    p = prune(coef, 2)
+    assert (p != 0).sum(axis=1).tolist() == [2, 2]
+    assert p[0, 1] == pytest.approx(-2.0) and p[1, 0] == pytest.approx(3.0)
+    assert abs(p[0, 2] - 0.5) < 2.0 / 127 and p[0, 0] == 0
+    assert softmax(np.array([[1.0, 1.0]])).tolist() == [[0.5, 0.5]]
