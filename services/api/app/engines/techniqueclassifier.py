@@ -1,7 +1,7 @@
 """Brahmacharini's TF-IDF classifier, served beside its encoder and fused with it.
 
 On the held-out ATT&CK split the served encoder alone ranks the right technique
-first for 0.557 of behaviours, and fused with this classifier for 0.650
+first for 0.556 of behaviours, and fused with this classifier for 0.650
 (docs/research/models/brahmacharini.md, "served design" rows). The classifier
 is exported by `sati.embed.export` as plain JSON: the full vocabulary with its
 idf, and for each technique its 400 largest weights at int8. This module scores

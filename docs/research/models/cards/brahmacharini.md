@@ -67,6 +67,8 @@ At test time, every procedure ranks all 706 techniques.
 | BM25 | 0.268 | 0.478 | 0.580 | 0.372 |
 | TF-IDF + logistic regression | 0.646 | 0.832 | 0.869 | 0.730 |
 | Brahmacharini v0 + TF-IDF classifier, fused | 0.673 | 0.859 | 0.896 | 0.758 |
+| Served design (int8, training sources only) | 0.556 | 0.735 | 0.797 | 0.638 |
+| Served design + TF-IDF classifier pruned to 400 int8 weights per technique, fused | 0.650 | 0.847 | 0.887 | 0.738 |
 | Hashing embedder (Smriti's previous retriever) | 0.120 | 0.226 | 0.283 | 0.177 |
 
 ### The strongest simple baseline wins
@@ -95,9 +97,16 @@ captures. v0 stays the served model, and v1 is kept as a negative result.
 
 - **Bag of words and bigrams.** Word order beyond adjacent pairs is lost, and
   negation is invisible: "did not use PowerShell" looks like "used PowerShell".
-- **Vocabulary is hashed, not learned.** Collisions are rare at 2¹⁸ buckets but
-  more frequent in the 2¹⁵-bucket served model. That model has not been
-  separately evaluated on the test split. Doing so is an open task.
+- **The served model is smaller, and weaker alone.** The served design (2¹⁵
+  buckets, 96 dimensions, int8), trained on the training sources only and
+  tested on the same split, reaches Recall@1 0.556 against v0's 0.614. Fused
+  with the pruned TF-IDF classifier it reaches 0.650, so the API answers
+  "which technique is this?" from the fusion. Choosing the technique whose
+  mitigations to list stays with retrieval: asked "how do we defend against
+  ransomware encrypting our file shares?", the fusion put Network Share
+  Discovery first, where retrieval names Data Encrypted for Impact. The fusion
+  was measured on behaviour descriptions, not on defence questions. The served file is trained on every source, so its own test number
+  is the design's, not the file's.
 - **Procedure text is MITRE's own prose.** Real alerts and analyst notes are
   terser and noisier, so recall on them will be lower than the table shows.
 - **Similar techniques get confused.** Neighbouring sub-techniques (for

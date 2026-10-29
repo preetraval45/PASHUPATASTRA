@@ -446,6 +446,18 @@ own mitigations and Skandamata orders them, so every recommendation traces to
 a cited technique. A held-out test set drawn from the same kind of text as
 training does not measure performance on a different register of input.
 
+The served retriever is smaller than the evaluated one, so it was measured
+too. The served design (int8, a quarter of the hash buckets), trained on the
+training sources and tested on the same held-out attackers, ranks the right
+technique first for 0.556 of behaviours, against 0.614 for the full model.
+Fused with the TF-IDF classifier pruned to 400 int8 weights per technique, it
+reaches 0.650 ([brahmacharini.md](models/brahmacharini.md)), and the API
+answers "which technique is this?" from it. It does not choose the technique
+whose defences are listed. Asked how to defend against ransomware encrypting
+file shares, it put Network Share Discovery first, where retrieval names Data
+Encrypted for Impact. A ranking measured on behaviour descriptions is not
+automatically right for questions phrased another way.
+
 ## 8. Failure analysis
 
 > *Draft written by Claude for the author to revise (RP-35). The categories are

@@ -238,6 +238,8 @@ def content() -> dict[str, list[str]]:
         "Is it over (Mahagauri) reads a server's metrics after an incident and says, minute by minute, whether "
         "recovery has held. An early all-clear is the error that counts.",
     ]
+    served_alone = brt.get("served design (int8)")
+    served_fused = brt.get("served design + pruned tf-idf (fused)")
     kal_ok, kal_n = live_examples("kalaratri")
     ch_ok, ch_n = live_examples("chandraghanta")
 
@@ -334,6 +336,15 @@ def content() -> dict[str, list[str]]:
                  "to defend against ransomware encrypting file shares, the mitigation model recommended one wrong "
                  "defence, while the retrieval model read the question correctly as Data Encrypted for Impact "
                  "(T1486). The deployed system now chains them, so every recommendation traces to a cited technique."),
+            *([body(f"The served retriever is smaller than the evaluated one, so its design was measured too: "
+                    f"trained on the training sources and quantised as served, it ranks the right technique first "
+                    f"for {f3(served_alone['recall@1'])} of held-out behaviours, against "
+                    f"{f3(brt['brahmacharini-v0']['recall@1'])} for the full model. Fused with the TF-IDF "
+                    f"classifier pruned to {j('brahmacharini.results.json')['served']['weights_kept_per_technique']} "
+                    f"int8 weights per technique, it reaches {f3(served_fused['recall@1'])}, and the API answers "
+                    "\"which technique is this?\" from it. It does not pick the technique whose defences are listed: "
+                    "asked how to defend against ransomware encrypting file shares, it put Network Share Discovery "
+                    "first, where retrieval names Data Encrypted for Impact.")] if served_alone and served_fused else []),
             body(f"Kalaratri and Chandraghanta run live on held-out test examples, with the truth shown beside "
                  f"each answer. Kalaratri is right on {kal_ok} of {kal_n} log sessions. Chandraghanta is right on "
                  f"{ch_ok} of {ch_n} flows from the unseen days, two per family; the families it misses on the "

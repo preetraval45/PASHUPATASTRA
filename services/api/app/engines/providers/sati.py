@@ -284,7 +284,7 @@ def knowledge() -> Knowledge:
 
 def rank_techniques(text: str, query: list[float]) -> list[tuple[float, str]] | None:
     """Techniques ranked by Brahmacharini fused with its TF-IDF classifier, with the weight the
-    validation sources chose. Served alone the encoder ranks the right technique first for 0.557
+    validation sources chose. Served alone the encoder ranks the right technique first for 0.556
     of held-out behaviours; fused, 0.650 (brahmacharini.md). None when the classifier is not
     exported, so the caller falls back to retrieval alone."""
     if not techniqueclassifier.available():
@@ -351,16 +351,12 @@ class SatiProvider:
         With no confident technique, Skandamata ranks alone, as before."""
         ranked = {m["id"]: p for p, m in mitigator().recommend(text, k=1000)}
         links = attack_links()
-        query = embedder().embed(text)
-        hits = knowledge().search(query, k=3, question=text) if links else []
+        # Retrieval, not the fused ranking, picks the technique here. The fusion was measured on behaviour
+        # descriptions; asked "how do we defend against ransomware encrypting our file shares?" (28 Oct) it
+        # put Network Share Discovery first, where retrieval names Data Encrypted for Impact.
+        hits = knowledge().search(embedder().embed(text), k=3, question=text) if links else []
         technique = next((p for s, p in hits if s >= ANSWERABLE and p.get("kind") == "technique"
                           and p["id"] in links), None)
-        # Retrieval decides whether the question is about an ATT&CK technique at all; when it is,
-        # the fused ranking, measured better on held-out attackers, decides which one.
-        fused = rank_techniques(text, query) if technique is not None else None
-        if fused:
-            best = next((t for _, t in fused if t in links), None)
-            technique = knowledge().technique(best) or technique if best else technique
         if technique is not None:
             names = mitigator().by_id()
             picks = sorted((m for m in links[technique["id"]] if m in names), key=lambda m: -ranked.get(m, 0.0))[:5]

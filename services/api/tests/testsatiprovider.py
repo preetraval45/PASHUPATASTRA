@@ -236,3 +236,14 @@ def test_without_the_classifier_retrieval_alone_answers(provider, monkeypatch):
     assert sati_module.rank_techniques("phishing", [1.0, 0.0, 0.0]) is None
     out = ask(provider, "general_answer_v1", "which technique is phishing")
     assert "Phishing" in out["answer"] and "most resembles" not in out["answer"]
+
+
+@pytest.mark.skipif(not (sati_module.MODELS / "technique_classifier.json").exists(), reason="needs the exported models")
+def test_served_models_name_the_right_technique_for_a_defence_question_and_a_behaviour():
+    for cached in (sati_module.embedder, sati_module.knowledge, sati_module.mitigator, sati_module.attack_links):
+        cached.cache_clear()  # other tests build these from fixtures
+    provider = sati_module.SatiProvider()
+    defend = ask(provider, "general_answer_v1", "how do we defend against ransomware encrypting our file shares?")
+    assert "Data Encrypted for Impact (T1486)" in defend["answer"]
+    which = ask(provider, "general_answer_v1", "Which ATT&CK technique is it when the attacker dumps LSASS memory?")
+    assert which["answer"].splitlines()[2].endswith("(T1003.001)")
