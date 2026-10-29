@@ -6,6 +6,7 @@
  * numbers come from the JSON the training workflow generated, never typed.
  */
 
+import siddhidatri from "./models/siddhidatri.results.json";
 import katyayani from "./models/katyayani.results.json";
 import brahmacharini from "./models/brahmacharini.results.json";
 import kalaratri from "./models/kalaratri.results.json";
@@ -180,5 +181,6 @@ export function statusOf(model: SatiModel): ModelStatus {
   if (model.id === "sati-skandamata") return SKANDAMATA.pending ? "training" : "trained";
   if (model.id === "sati-mahagauri") return MAHAGAURI.pending ? "training" : "trained";
   if (model.id === "sati-kushmanda") return KUSHMANDA.sft?.grounded ? "trained" : "training";
+  if (model.id === "sati-siddhidatri") return siddhidatri.mean_across_groups ? "trained" : "training";
   return model.status;
 }
