@@ -14,10 +14,10 @@
   "task": "rank all techniques for an observed behaviour",
   "test": {
     "brahmacharini-v0": {
-      "recall@1": 0.6138,
+      "recall@1": 0.6144,
       "recall@5": 0.802,
       "recall@10": 0.8535,
-      "mrr": 0.6985,
+      "mrr": 0.6988,
       "n": 1727
     },
     "bm25": {
@@ -49,17 +49,17 @@
       "n": 1727
     },
     "served design (int8)": {
-      "recall@1": 0.557,
+      "recall@1": 0.5565,
       "recall@5": 0.7354,
       "recall@10": 0.7973,
-      "mrr": 0.6379,
+      "mrr": 0.6376,
       "n": 1727
     },
     "served design + pruned tf-idf (fused)": {
       "recall@1": 0.6497,
       "recall@5": 0.8471,
       "recall@10": 0.8871,
-      "mrr": 0.738,
+      "mrr": 0.7379,
       "n": 1727
     }
   },
@@ -89,12 +89,12 @@
     {
       "epoch": 4,
       "loss": 0.0509,
-      "val_mrr": 0.6868
+      "val_mrr": 0.6869
     },
     {
       "epoch": 5,
       "loss": 0.0181,
-      "val_mrr": 0.6938
+      "val_mrr": 0.6941
     },
     {
       "epoch": 6,
@@ -104,7 +104,7 @@
     {
       "epoch": 7,
       "loss": 0.006,
-      "val_mrr": 0.7008
+      "val_mrr": 0.7011
     },
     {
       "epoch": 8,
@@ -132,5 +132,5 @@
       "val_mrr": 0.6958
     }
   ],
-  "seconds": 930.3
+  "seconds": 929.9
 }
