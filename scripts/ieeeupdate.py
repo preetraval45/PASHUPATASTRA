@@ -350,6 +350,12 @@ def content() -> dict[str, list[str]]:
                     "\"which technique is this?\" from it. It does not pick the technique whose defences are listed: "
                     "asked how to defend against ransomware encrypting file shares, it put Network Share Discovery "
                     "first, where retrieval names Data Encrypted for Impact.")] if served_alone and served_fused else []),
+            body("Two rules keep what is served honest. A model is served only where its own training run "
+                 "measured it better: the export of Skandamata's TF-IDF classifier carries a flag set from that "
+                 "run's held-out comparison, and the API orders mitigations by it only when the flag is set. And "
+                 "every live verdict says why: for the tree models, each present feature is set to missing in turn "
+                 "and the change in log-odds is reported, which needs no internal model state. Features that "
+                 "matter only together can each look small, and the interface says so."),
             body(f"Kalaratri and Chandraghanta run live on held-out test examples, with the truth shown beside "
                  f"each answer. Kalaratri is right on {kal_ok} of {kal_n} log sessions. Chandraghanta is right on "
                  f"{ch_ok} of {ch_n} flows from the unseen days, two per family; the families it misses on the "

@@ -296,7 +296,7 @@ and the share of attacks caught from 0.294 to 0.448.
 servers from a held-out machine group, Shailaputri scores F1 0.556 with 4.6
 false alarms per 1000 minutes, against 0.419 and 86.6 for per-machine PCA
 ([shailaputri-smd.md](models/shailaputri-smd.md)). On NAB, the five-seed
-spread is F1 0.430 [0.394, 0.474] with 24.3 false alarms per 1000 against 74.7
+spread is F1 0.435 [0.382, 0.475] with 25.6 false alarms per 1000 against 74.7
 for `SeasonalRobustZ`. It still flags later (lead 180.4 against 241.3), so the
 architecture keeps the statistical detector as default
 ([shailaputri.md](models/shailaputri.md); adr/SatiDetect).
@@ -477,6 +477,22 @@ whose defences are listed. Asked how to defend against ransomware encrypting
 file shares, it put Network Share Discovery first, where retrieval names Data
 Encrypted for Impact. A ranking measured on behaviour descriptions is not
 automatically right for questions phrased another way.
+
+**A model is served only where its own run measured it better.** The export
+of Skandamata's TF-IDF classifier carries a flag set from the same training
+run's held-out comparison. The API orders mitigations by the classifier only
+when that run found its pruned, int8 form at least as good as Skandamata's
+network. An unmeasured model cannot reach a user, and a retrain that reverses
+the comparison withdraws it.
+
+**Every live verdict says why.** For the tree models a visitor runs live,
+the answer lists the features that moved its score most, found by ablation:
+each present feature is set to missing in turn, as the model treats missing
+values, and the change in log-odds is recorded. No internal model state is
+needed, so it works on every exported booster. For Kalaratri the feature is a
+log line, named by its template. Ablation measures one feature at a time:
+features that matter only together can each look small, and the interface
+says so.
 
 ## 8. Failure analysis
 
