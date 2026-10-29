@@ -26,7 +26,7 @@ subprocess.run(["git", "-C", f"{WORK}/repo", "checkout", "--quiet", COMMIT], che
 subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "-e", f"{WORK}/repo/packages/core"], check=True)
 subprocess.run(
     [sys.executable, "-m", "sati.netdetect.run", "--out", f"{WORK}/out",
-     "--unsw", "/kaggle/input", "--cic", "/kaggle/input"],
+     "--unsw", "/kaggle/input", "--cic", "/kaggle/input", "--nslkdd", "/kaggle/input"],
     check=True,
     cwd=f"{WORK}/repo/packages/sati",
 )

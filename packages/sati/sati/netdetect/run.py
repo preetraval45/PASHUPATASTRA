@@ -190,7 +190,7 @@ def per_family(families: pd.Series, flags: dict[str, np.ndarray], seen: set[str]
     out = {}
     for family in sorted(families.unique()):
         rows = (families == family).to_numpy()
-        attack = family not in ("Normal", "BENIGN")
+        attack = family not in ("Normal", "BENIGN", "normal")  # UNSW-NB15, CIC-IDS2017, NSL-KDD
         entry: dict[str, object] = {"n": int(rows.sum()), "attack": attack, "seen_in_training": family in seen}
         for name, flag in flags.items():
             # Recall for an attack family; for benign, the share wrongly flagged.
@@ -220,6 +220,34 @@ def run_unsw(folder: Path) -> dict:
         "attack_share_test": round(float(yte.mean()), 4),
         "detectors": {name: metrics(yte, flag) for name, flag in flags.items()},
         "per_family": per_family(test["family"], flags, set(train["family"])),
+    }
+
+
+def run_nslkdd(folder: Path) -> dict:
+    """NSL-KDD, a third benchmark of attacks never seen in training: KDDTest+ holds 17 attack types
+    absent from KDDTrain+. The same detectors and operating points as the other two datasets."""
+    data = netflow.nslkdd(folder)
+    train, test = data["train"], data["test"]
+    ytr, yte = train["label"].to_numpy(), test["label"].to_numpy()
+    xtr, xte = netflow.nslkdd_features(train, test)
+    flags = {
+        "chandraghanta-v0": detect(xtr, ytr, xte, "nslkdd")[0],
+        "chandraghanta-v2 (1% false-alarm budget)": detect(xtr, ytr, xte, "nslkdd", FPR_BUDGET)[0],
+        "pca (benign-only)": pca_detect(xtr, ytr, xte, "nslkdd"),
+    }
+    flags["chandraghanta-v1 (either)"] = flags["chandraghanta-v0"] | flags["pca (benign-only)"]
+    seen = set(train["family"])
+    unseen = ~test["family"].isin(seen).to_numpy() & (yte == 1)
+    return {
+        "name": "NSL-KDD",
+        "split": "official files: KDDTrain+ to train, KDDTest+ to test",
+        "files": data["files"],
+        "rows": {"train": len(train), "test": len(test)},
+        "attack_share_test": round(float(yte.mean()), 4),
+        "unseen_attack_types": int(len(set(test.loc[yte == 1, "family"]) - seen)),
+        "unseen_attack_share_test": round(float(unseen.sum() / max(1, (yte == 1).sum())), 4),
+        "detectors": {name: metrics(yte, flag) for name, flag in flags.items()},
+        "per_family": per_family(test["family"], flags, seen),
     }
 
 
@@ -274,15 +302,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--unsw", type=Path, required=True, help="folder holding the UNSW-NB15 CSVs")
     parser.add_argument("--cic", type=Path, required=True, help="folder holding the CIC-IDS2017 CSVs")
+    parser.add_argument("--nslkdd", type=Path, default=None, help="folder holding KDDTrain+.txt and KDDTest+.txt")
     parser.add_argument("--out", type=Path, default=Path("results/chandraghanta"))
     args = parser.parse_args()
 
     started = time.time()
     results = {
         "model": "sati-chandraghanta-v0",
-        "datasets": {"unsw": run_unsw(args.unsw), "cic": run_cic(args.cic)},
+        "datasets": {"unsw": run_unsw(args.unsw), "cic": run_cic(args.cic),
+                     **({"nslkdd": run_nslkdd(args.nslkdd)} if args.nslkdd else {})},
         "weights_published": True,
-        "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. UNSW-NB15 and CIC-IDS2017 are research-use only.",
+        "weights_note": "Research use only, not for commercial use (CC BY-NC-SA 4.0): trained on research-use-only data; owner decision, 27 Oct 2026. UNSW-NB15, CIC-IDS2017 and NSL-KDD are research-use only.",
         "seconds": round(time.time() - started, 1),
     }
     args.out.mkdir(parents=True, exist_ok=True)

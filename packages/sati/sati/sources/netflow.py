@@ -1,4 +1,4 @@
-"""Labelled network flows: UNSW-NB15 and CIC-IDS2017.
+"""Labelled network flows: UNSW-NB15, CIC-IDS2017 and NSL-KDD.
 
 Both datasets are read from local folders. On Kaggle these are the attached
 datasets `mrwellsdavid/unsw-nb15` and `chethuhn/network-intrusion-dataset`
@@ -69,6 +69,45 @@ def unsw_features(train: pd.DataFrame, test: pd.DataFrame, drop_ttl: bool = Fals
             codes = {v: i for i, v in enumerate(sorted(a[col].astype(str).unique()))}
             a[col] = a[col].astype(str).map(codes).astype(float)
             b[col] = b[col].astype(str).map(codes).fillna(-1).astype(float)
+    return a.astype(float), b.astype(float)
+
+
+# NSL-KDD (Tavallaee et al., 2009): 41 connection features, the label and a difficulty score, no header.
+NSLKDD_COLUMNS = (
+    "duration", "protocol_type", "service", "flag", "src_bytes", "dst_bytes", "land", "wrong_fragment", "urgent",
+    "hot", "num_failed_logins", "logged_in", "num_compromised", "root_shell", "su_attempted", "num_root",
+    "num_file_creations", "num_shells", "num_access_files", "num_outbound_cmds", "is_host_login", "is_guest_login",
+    "count", "srv_count", "serror_rate", "srv_serror_rate", "rerror_rate", "srv_rerror_rate", "same_srv_rate",
+    "diff_srv_rate", "srv_diff_host_rate", "dst_host_count", "dst_host_srv_count", "dst_host_same_srv_rate",
+    "dst_host_diff_srv_rate", "dst_host_same_src_port_rate", "dst_host_srv_diff_host_rate", "dst_host_serror_rate",
+    "dst_host_srv_serror_rate", "dst_host_rerror_rate", "dst_host_srv_rerror_rate", "attack", "difficulty",
+)
+NSLKDD_CATEGORICAL = ("protocol_type", "service", "flag")
+
+
+def nslkdd(folder: Path) -> dict:
+    """NSL-KDD's official split: KDDTrain+ to train, KDDTest+ to test. Its test set holds 17 attack
+    types that never appear in training, by design, so it measures new attacks the way CIC-IDS2017's
+    later days do. `family` is the attack name ("normal" for benign), `label` 0/1."""
+    def read(pattern: str) -> pd.DataFrame:
+        path = _find(folder, pattern)[0]
+        frame = pd.read_csv(path, header=None, names=list(NSLKDD_COLUMNS))
+        frame["family"] = frame["attack"].astype(str).str.strip()
+        frame["label"] = (frame["family"] != "normal").astype(int)
+        return frame
+
+    return {"train": read("KDDTrain+.txt"), "test": read("KDDTest+.txt"),
+            "files": {"train": "KDDTrain+.txt", "test": "KDDTest+.txt"}}
+
+
+def nslkdd_features(train: pd.DataFrame, test: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """The 41 features; categorical ones coded from the training set only (unseen values become -1)."""
+    columns = [c for c in NSLKDD_COLUMNS if c not in ("attack", "difficulty")]
+    a, b = train[columns].copy(), test[columns].copy()
+    for col in NSLKDD_CATEGORICAL:
+        codes = {v: i for i, v in enumerate(sorted(a[col].astype(str).unique()))}
+        a[col] = a[col].astype(str).map(codes).astype(float)
+        b[col] = b[col].astype(str).map(codes).fillna(-1).astype(float)
     return a.astype(float), b.astype(float)
 
 

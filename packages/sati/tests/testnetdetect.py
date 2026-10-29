@@ -118,3 +118,19 @@ def test_v3_fusion_weight_is_chosen_on_families_held_out_of_training(monkeypatch
     assert info["held_out_families"] == ["A", "B"]
     assert info["weight"] in run.WEIGHTS and set(info["mean_held_out_recall"]) == {str(w) for w in run.WEIGHTS}
     assert flags.shape == (50,) and set(np.unique(flags)) <= {0, 1}
+
+
+def test_nslkdd_reads_the_official_files_and_codes_categories_from_training_only(tmp_path):
+    from sati.sources import netflow
+
+    def row(service: str, attack: str) -> str:
+        values = ["0", "tcp", service, "SF"] + ["1"] * 37 + [attack, "20"]
+        return ",".join(values)
+
+    (tmp_path / "KDDTrain+.txt").write_text("\n".join([row("http", "normal"), row("ftp", "neptune")]) + "\n")
+    (tmp_path / "KDDTest+.txt").write_text("\n".join([row("http", "normal"), row("smtp", "mailbomb")]) + "\n")
+    data = netflow.nslkdd(tmp_path)
+    assert data["train"]["label"].tolist() == [0, 1] and data["test"]["family"].tolist() == ["normal", "mailbomb"]
+    a, b = netflow.nslkdd_features(data["train"], data["test"])
+    assert list(a.columns) == [c for c in netflow.NSLKDD_COLUMNS if c not in ("attack", "difficulty")]
+    assert b["service"].tolist()[1] == -1  # 'smtp' never seen in training
