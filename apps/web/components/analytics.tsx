@@ -247,10 +247,13 @@ export function DayColumns({
   days,
   unit,
   height = 140,
+  bucket = "day",
 }: {
   days: { day: string; value: number; detail?: string }[];
   unit: string;
   height?: number;
+  /** What one column is, for the hover hint ("Hover a month…"). */
+  bucket?: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const max = Math.max(1, ...days.map((d) => d.value));
@@ -274,6 +277,12 @@ export function DayColumns({
           </div>
         ))}
       </div>
+      {/* First, middle and last labels, so the axis is readable without hovering. */}
+      <div aria-hidden="true" className="tnum mt-1.5 flex justify-between text-[10.5px] text-[rgb(var(--faint))]">
+        <span>{days[0]?.day}</span>
+        {days.length > 4 && <span>{days[Math.floor(days.length / 2)]?.day}</span>}
+        <span>{days[days.length - 1]?.day}</span>
+      </div>
       <p className="tnum mt-2 h-4 text-xs text-[rgb(var(--muted))]">
         {active ? (
           <>
@@ -281,7 +290,7 @@ export function DayColumns({
             {active.detail && ` · ${active.detail}`}
           </>
         ) : (
-          <span className="text-[rgb(var(--faint))]">Hover a day for its value</span>
+          <span className="text-[rgb(var(--faint))]">Hover or tap a {bucket} for its value</span>
         )}
       </p>
     </div>

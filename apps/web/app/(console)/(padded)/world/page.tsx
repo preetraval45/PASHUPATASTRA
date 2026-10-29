@@ -67,13 +67,13 @@ export default function WorldPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="New exploited vulnerabilities per month" aside="CISA KEV · last 12 months">
-          {kev.ok ? <DayColumns days={kev.by_month.map((b) => ({ day: b.label, value: b.value }))} unit="added to KEV" /> : <Missing absent={kev.absent} />}
+          {kev.ok ? <DayColumns days={kev.by_month.map((b) => ({ day: b.label, value: b.value }))} unit="added to KEV" bucket="month" height={300} /> : <Missing absent={kev.absent} />}
         </Panel>
         <Panel title="Most-exploited vendors" aside="all of KEV">
           {kev.ok ? <Breakdown slices={slices(kev.top_vendors)} /> : <Missing absent={kev.absent} />}
         </Panel>
         <Panel title="Ransomware posts per day" aside="ransomware.live">
-          {ransomware.ok ? <DayColumns days={ransomware.by_day.map((b) => ({ day: b.label, value: b.value }))} unit="victims posted" /> : <Missing absent={ransomware.absent} />}
+          {ransomware.ok ? <DayColumns days={ransomware.by_day.map((b) => ({ day: b.label, value: b.value }))} unit="victims posted" height={260} /> : <Missing absent={ransomware.absent} />}
         </Panel>
         <Panel title="Most active ransomware groups" aside="recent posts">
           {ransomware.ok ? <Breakdown slices={slices(ransomware.by_group)} /> : <Missing absent={ransomware.absent} />}
