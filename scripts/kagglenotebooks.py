@@ -247,7 +247,7 @@ popular = Y[train].sum(0).argmax()
 print(f"popularity hit@1 {Y[test][:, popular].mean():.3f}  (always recommend the most common mitigation)")"""),
             ("markdown", "**Reading it:** a few mitigations (audit, user training) apply to most techniques, so "
              "popularity is a real baseline (0.232). This TF-IDF + logistic regression model (about 0.83 hit@1) "
-             "**beats Skandamata** (0.792), the project's own model, on the same split; the project now reports it "
+             "**beats Skandamata** (0.787), the project's own model, on the same split; the project now reports it "
              "beside Skandamata. In Sati, recommendations follow the technique Brahmacharini identifies, and a "
              "person or the policy engine decides."),
         ],
@@ -355,7 +355,7 @@ for held in sorted(d["group"].unique()):
 pd.DataFrame(rows).fillna(0)"""),
             ("markdown", "**Reading it:** a lenient rule confirms more recoveries but declares many too early; a "
              "strict one is safe and rarely says anything. Mahagauri, tuned on out-of-fold scores, keeps premature "
-             "all-clears at 0.021 on unseen groups but confirms only 0.092: making a verifier both safe and useful "
+             "all-clears at 0.021 on unseen groups but confirms only 0.095: making a verifier both safe and useful "
              "is open."),
         ],
     },
@@ -385,8 +385,8 @@ for held in sorted(d["group"].unique()):
     rows.append(row)
 pd.DataFrame(rows).round(3)"""),
             ("markdown", "**Reading it:** if fused AUC barely beats the learned detector alone, fusion buys little. "
-             "Siddhidatri matched Shailaputri's F1 (0.534 against 0.530) with far more false alarms (47.9 against "
-             "4.0 per 1000). A fusion that catches more at the same false-alarm rate would be a new result."),
+             "Siddhidatri matched Shailaputri's F1 (0.537 against 0.539) with far more false alarms (47.8 against "
+             "3.8 per 1000). A fusion that catches more at the same false-alarm rate would be a new result."),
         ],
     },
 }

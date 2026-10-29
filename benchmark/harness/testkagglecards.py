@@ -36,3 +36,19 @@ def test_kaggle_description_numbers_are_in_a_generated_table(name: str):
     cited = set(NUMBER.findall(kagglemodels.MODELS[name]["description"]))
     missing = [n for n in sorted(cited) if n not in tables and f"{float(n) / 100:.3f}" not in tables]
     assert not missing, f"the {name} Kaggle description cites numbers no generated table contains: {missing}"
+
+
+notebooks_spec = importlib.util.spec_from_file_location("kagglenotebooks", ROOT / "scripts" / "kagglenotebooks.py")
+kagglenotebooks = importlib.util.module_from_spec(notebooks_spec)
+notebooks_spec.loader.exec_module(kagglenotebooks)  # type: ignore[union-attr]
+EXACT = re.compile(r"(?<![\w.\-])\d+\.\d{3}(?![\w.])")  # a figure quoted to three places is a claim, not an "about"
+
+
+@pytest.mark.parametrize("name", sorted(kagglenotebooks.NOTEBOOKS))
+def test_kaggle_notebook_prose_cites_only_numbers_in_its_models_tables(name: str):
+    prefixes = OWN.get(name, (name,))
+    tables = "\n".join(p.read_text(encoding="utf-8") for p in MODELS.glob("*.md") if p.name.startswith(prefixes))
+    prose = " ".join(text for kind, text in kagglenotebooks.NOTEBOOKS[name]["cells"] if kind == "markdown")
+    prose = re.sub(r"\babout \d+\.\d+", "", prose)  # the notebook's own run, stated as approximate
+    missing = [n for n in sorted(set(EXACT.findall(prose))) if n not in tables]
+    assert not missing, f"the {name} notebook's text cites numbers its model's tables do not hold: {missing}"
