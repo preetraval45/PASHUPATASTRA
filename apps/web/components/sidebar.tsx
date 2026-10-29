@@ -96,6 +96,9 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  // Inside the Android app (html[data-app], set before first paint), "More" is an app sheet, not a drawer.
+  const [inApp, setInApp] = useState(false);
+  useEffect(() => setInApp(document.documentElement.hasAttribute("data-app")), []);
 
   useEffect(() => {
     try {
@@ -152,8 +155,11 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
         <Rail pathname={pathname} collapsed={collapsed} onToggle={toggle} />
       </aside>
 
+      {/* In the app: every section as an icon grid in a bottom sheet. */}
+      {drawer && inApp && <AppMenu pathname={pathname} onClose={() => setDrawer(false)} />}
+
       {/* The drawer, below `lg`. */}
-      {drawer && (
+      {drawer && !inApp && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
           <button
             type="button"
@@ -197,6 +203,51 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
         {children}
 
         <TabBar pathname={pathname} onMore={() => setDrawer(true)} />
+      </div>
+    </div>
+  );
+}
+
+/** The app's "More": every section, grouped as the rail is, as a grid of tiles a thumb can hit. */
+function AppMenu({ pathname, onClose }: { pathname: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="All sections">
+      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/55" />
+      <div className="rise absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto rounded-t-3xl border-t border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2.5 shadow-2xl">
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[rgb(var(--edge-strong))]" aria-hidden="true" />
+        {[...SECTIONS, { title: "More", items: FOOTER }].map((section) => (
+          <div key={section.title} className="mb-4">
+            <p className="label mb-2 px-1">{section.title}</p>
+            <ul className="grid grid-cols-3 gap-2">
+              {section.items.map((item) => {
+                const current = isCurrent(item, pathname);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      aria-current={current ? "page" : undefined}
+                      className={`focusable flex h-full min-h-[5.25rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 text-center text-xs font-medium transition active:scale-95 ${
+                        current
+                          ? "border-[rgb(var(--astra))]/60 bg-[rgb(var(--astra))]/10 text-[rgb(var(--ink))]"
+                          : "border-[rgb(var(--edge))] bg-[rgb(var(--ground))] text-[rgb(var(--muted))]"
+                      }`}
+                    >
+                      <span className={current ? "text-[rgb(var(--astra))]" : "text-[rgb(var(--faint))]"}>
+                        <Icon name={item.icon} />
+                      </span>
+                      <span className="leading-tight">{item.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+        <div className="flex items-center justify-between border-t border-[rgb(var(--edge))] px-1 pt-3 text-xs text-[rgb(var(--faint))]">
+          <span>Theme</span>
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );
