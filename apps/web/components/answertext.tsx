@@ -41,6 +41,9 @@ function linkify(text: string): ReactNode[] {
 export function AnswerText({ text, muted = false }: { text: string; muted?: boolean }) {
   const lines = text.split("\n");
   const lead = lines.findIndex((l) => l.trim());
+  // Each line rises in just after the one before, so an answer arrives as it would be read.
+  // Capped, so a long answer is never held back; the reduced-motion rule in globals.css stills it.
+  const reveal = (i: number) => ({ animationDelay: `${Math.min(i, 12) * 45}ms` });
   return (
     <div className="space-y-2 text-[0.9375rem] leading-relaxed">
       {lines.map((line, i) => {
@@ -48,7 +51,7 @@ export function AnswerText({ text, muted = false }: { text: string; muted?: bool
         if (line.startsWith("Sources: ")) {
           const urls = line.slice(9).split(" · ").filter((u) => u.startsWith("http"));
           return (
-            <p key={i} className="flex flex-wrap gap-1.5 pt-1">
+            <p key={i} className="rise flex flex-wrap gap-1.5 pt-1" style={reveal(i)}>
               {urls.map((u) => (
                 <a
                   key={u}
@@ -66,7 +69,7 @@ export function AnswerText({ text, muted = false }: { text: string; muted?: bool
         const item = line.match(/^(?:- |(\d+)\. )(.*)$/);
         if (item) {
           return (
-            <p key={i} className="flex gap-2.5">
+            <p key={i} className="rise flex gap-2.5" style={reveal(i)}>
               <span aria-hidden="true" className="tnum w-4 shrink-0 text-right text-[rgb(var(--astra))]">
                 {item[1] ?? "›"}
               </span>
@@ -77,8 +80,9 @@ export function AnswerText({ text, muted = false }: { text: string; muted?: bool
         return (
           <p
             key={i}
+            style={reveal(i)}
             className={
-              i === lead && !muted ? "font-medium text-[rgb(var(--ink))]" : "text-[rgb(var(--muted))]"
+              i === lead && !muted ? "rise font-medium text-[rgb(var(--ink))]" : "rise text-[rgb(var(--muted))]"
             }
           >
             {linkify(line)}
