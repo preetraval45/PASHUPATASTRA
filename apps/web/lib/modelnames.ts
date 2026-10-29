@@ -47,6 +47,8 @@ const HIDDEN = new Set([
   "mahagauri-v1 (upper-bound threshold)",
   "mahagauri-v1 + 3σ agreement",
   "mahagauri-v2 (out-of-fold, hold chosen)",
+  "mahagauri-v3 (trajectory features)",
+  "mahagauri-v3 + 3σ agreement",
   "siddhidatri-v1 (at Shailaputri's false-alarm budget)",
 ]);
 

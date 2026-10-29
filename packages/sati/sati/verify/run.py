@@ -110,6 +110,24 @@ def frame(ep: dict) -> pd.DataFrame:
     return f
 
 
+def trajectory(f: pd.DataFrame) -> pd.DataFrame:
+    """v3: where the incident is heading, not only where it is. Each minute's
+    distance from baseline is set against the incident's own peak so far, with
+    the minutes since that peak, since any metric was last beyond 3, and the
+    five-minute trend of the mean distance. All causal: minute t uses minutes
+    up to t only."""
+    out = f.copy()
+    minutes = np.arange(len(f), dtype=float)
+    peak = f["pre_max"].cummax()
+    out["share_of_peak"] = f["pre_max"] / (peak + 1e-9)
+    at_peak = np.where(f["pre_max"].to_numpy() >= peak.to_numpy(), minutes, np.nan)
+    out["minutes_since_peak"] = minutes - pd.Series(at_peak).ffill().fillna(0).to_numpy()
+    beyond = np.where(f["pre_beyond_3"].to_numpy() > 0, minutes, np.nan)
+    out["minutes_since_beyond_3"] = minutes - pd.Series(beyond).ffill().fillna(-1).to_numpy()
+    out["trend_5"] = f["pre_mean"] - f["pre_mean"].shift(5).fillna(f["pre_mean"].iloc[0] if len(f) else 0.0)
+    return out
+
+
 def labels(ep: dict) -> np.ndarray:
     return (np.arange(ep["stop"] - ep["start"]) >= ep["end"] - ep["start"]).astype(int)
 
@@ -179,26 +197,26 @@ def choose(train: list[dict], probs: list[np.ndarray], upper: bool = False,
     return THRESHOLDS[-1]
 
 
-def fit(eps: list[dict]) -> lgb.Booster:
-    return lgb.train(detect_model.PARAMS, lgb.Dataset(pd.concat([ep["frame"] for ep in eps], ignore_index=True),
+def fit(eps: list[dict], key: str = "frame") -> lgb.Booster:
+    return lgb.train(detect_model.PARAMS, lgb.Dataset(pd.concat([ep[key] for ep in eps], ignore_index=True),
                                                     label=np.concatenate([ep["y"] for ep in eps])),
                      num_boost_round=detect_model.ROUNDS)
 
 
-def out_of_fold(train: list[dict]) -> list[np.ndarray]:
+def out_of_fold(train: list[dict], key: str = "frame") -> list[np.ndarray]:
     """Each training incident scored by a model fitted without its machine group.
 
     With a single training group there is nothing to hold out, so the scores are
     in-sample (v0's behaviour); the full SMD run always has two."""
     if len({ep["group"] for ep in train}) < 2:
-        model = fit(train)
-        return [model.predict(ep["frame"]) for ep in train]
+        model = fit(train, key)
+        return [model.predict(ep[key]) for ep in train]
     probs: list[np.ndarray | None] = [None] * len(train)
     for g in sorted({ep["group"] for ep in train}):
-        inner = fit([ep for ep in train if ep["group"] != g])
+        inner = fit([ep for ep in train if ep["group"] != g], key)
         for i, ep in enumerate(train):
             if ep["group"] == g:
-                probs[i] = inner.predict(ep["frame"])
+                probs[i] = inner.predict(ep[key])
     return probs  # type: ignore[return-value]
 
 
@@ -238,6 +256,7 @@ def main() -> int:
         eps.extend(episodes(m))
     for ep in eps:
         ep["frame"], ep["y"] = frame(ep), labels(ep)
+        ep["frame3"] = trajectory(ep["frame"])
     groups = sorted({ep["group"] for ep in eps})
     print(f"SMD: {len(eps)} incidents with an hour of clean history, across {len(groups)} machine groups")
 
@@ -258,11 +277,15 @@ def main() -> int:
         oof = out_of_fold(train)
         t2, hold2 = choose_v2(train, oof)
         t2a, hold2a = choose_v2(train, oof, agree=within)
+        booster3, oof3 = fit(train, "frame3"), out_of_fold(train, "frame3")
+        t3, hold3 = choose_v2(train, oof3)
+        t3a, hold3a = choose_v2(train, oof3, agree=within)
         timer = int(np.median([ep["end"] - ep["start"] for ep in train]))
         fold = {
             "held_out": held, "incidents": len(test), "train_incidents": len(train),
             "threshold": t, "threshold_upper": t_upper, "threshold_agree": t_agree, "timer_minutes": timer,
             "v2": {"threshold": t2, "hold": hold2, "agree_threshold": t2a, "agree_hold": hold2a},
+            "v3": {"threshold": t3, "hold": hold3, "agree_threshold": t3a, "agree_hold": hold3a},
             "verifiers": {
                 "mahagauri-v0": summary([outcome(ep, booster.predict(ep["frame"]) >= t) for ep in test]),
                 "mahagauri-v1 (upper-bound threshold)": summary(
@@ -275,6 +298,11 @@ def main() -> int:
                 "mahagauri-v2 + 3σ agreement": summary(
                     [outcome(ep, (booster.predict(ep["frame"]) >= t2a) & (ep["frame"]["pre_beyond_3"].to_numpy() == 0),
                              hold2a) for ep in test]),
+                "mahagauri-v3 (trajectory features)": summary(
+                    [outcome(ep, booster3.predict(ep["frame3"]) >= t3, hold3) for ep in test]),
+                "mahagauri-v3 + 3σ agreement": summary(
+                    [outcome(ep, (booster3.predict(ep["frame3"]) >= t3a) & (ep["frame"]["pre_beyond_3"].to_numpy() == 0),
+                             hold3a) for ep in test]),
                 "back within 3σ": summary([outcome(ep, ep["frame"]["pre_beyond_3"].to_numpy() == 0) for ep in test]),
                 "fixed timer": summary([outcome(ep, np.arange(len(ep["y"])) >= timer) for ep in test]),
             },

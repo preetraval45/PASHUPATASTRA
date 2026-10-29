@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 import json
 import sys
 
@@ -60,7 +62,8 @@ def test_the_whole_run_and_report(tmp_path, monkeypatch, capsys):
     results = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
     assert set(results["pooled"]) == {"mahagauri-v0", "mahagauri-v1 (upper-bound threshold)",
                                       "mahagauri-v1 + 3σ agreement", "mahagauri-v2 (out-of-fold, hold chosen)",
-                                      "mahagauri-v2 + 3σ agreement", "back within 3σ", "fixed timer"}
+                                      "mahagauri-v2 + 3σ agreement", "mahagauri-v3 (trajectory features)",
+                                      "mahagauri-v3 + 3σ agreement", "back within 3σ", "fixed timer"}
     assert results["dataset"]["incidents"] == 12
     assert results["pooled"]["mahagauri-v0"]["confirmed_rate"] > 0.5  # clean recoveries are confirmable
     assert report.main(str(tmp_path / "results.json")) == 0
@@ -89,3 +92,21 @@ def test_v2_picks_the_setting_that_confirms_most_within_budget():
     probs = [np.r_[np.zeros(8), np.ones(22)] for _ in eps]
     t, hold = verify.choose_v2(eps, probs)
     assert hold == 3 and t == verify.THRESHOLDS[0]
+
+
+def test_trajectory_features_use_only_the_past():
+    import pandas as pd
+
+    from sati.verify.run import trajectory
+
+    f = pd.DataFrame({"pre_max": [1.0, 3.0, 2.0, 0.5, 0.5, 0.5, 0.5],
+                      "pre_mean": [1.0, 2.0, 1.5, 0.4, 0.3, 0.2, 0.2],
+                      "pre_beyond_3": [0, 2, 1, 0, 0, 0, 0]})
+    t = trajectory(f)
+    assert t["minutes_since_peak"].tolist() == [0, 0, 1, 2, 3, 4, 5]
+    assert t["minutes_since_beyond_3"].tolist() == [1, 0, 0, 1, 2, 3, 4]
+    assert t["share_of_peak"].iloc[3] == pytest.approx(0.5 / 3.0)
+    # changing the future does not change the past
+    g = f.copy()
+    g.loc[6, "pre_max"] = 9.0
+    assert trajectory(g).iloc[:6].equals(t.iloc[:6])
