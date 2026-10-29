@@ -7,7 +7,7 @@ The API's incidents hold events (a metric's deviation in σ, its onset, deploys)
 | Held out | Cases | Trained on | Real-trained | Kaal-trained | Loudest service |
 |---|---:|---|---:|---:|---:|
 | Live stack (RP-19) | 200 | Online Boutique, Sock Shop | 0.900 [0.851, 0.934] | 0.265 [0.209, 0.330] | 0.870 [0.816, 0.910] |
-| Online Boutique | 245 | Live stack (RP-19), Sock Shop | 0.849 [0.799, 0.888] | 0.490 [0.428, 0.552] | 0.608 [0.546, 0.667] |
+| Online Boutique | 245 | Live stack (RP-19), Sock Shop | 0.845 [0.794, 0.885] | 0.490 [0.428, 0.552] | 0.608 [0.546, 0.667] |
 | Sock Shop | 245 | Live stack (RP-19), Online Boutique | 0.894 [0.849, 0.926] | 0.265 [0.214, 0.324] | 0.747 [0.689, 0.797] |
 
-Features (17): onset_min, onset_rank, peak, n_anomalous, own_metric, deploy_before, error_log, in_degree, out_degree, anomalous_callees, anomalous_callers, callee_share, caller_share, layer_edge, layer_api, layer_backend, layer_store. Run time 80.8 s.
+Features (17): onset_min, onset_rank, peak, n_anomalous, own_metric, deploy_before, error_log, in_degree, out_degree, anomalous_callees, anomalous_callers, callee_share, caller_share, layer_edge, layer_api, layer_backend, layer_store. Run time 62.6 s.
