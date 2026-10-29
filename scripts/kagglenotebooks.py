@@ -247,7 +247,7 @@ popular = Y[train].sum(0).argmax()
 print(f"popularity hit@1 {Y[test][:, popular].mean():.3f}  (always recommend the most common mitigation)")"""),
             ("markdown", "**Reading it:** a few mitigations (audit, user training) apply to most techniques, so "
              "popularity is a real baseline (0.232). This TF-IDF + logistic regression model (about 0.83 hit@1) "
-             "**beats Skandamata** (0.787), the project's own model, on the same split; the project now reports it "
+             "**beats Skandamata** (0.790), the project's own model, on the same split; the project now reports it "
              "beside Skandamata. In Sati, recommendations follow the technique Brahmacharini identifies, and a "
              "person or the policy engine decides."),
         ],

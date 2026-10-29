@@ -105,10 +105,10 @@ MODELS = {
             "Hashed n-grams → mean of int8 embedding rows → one ReLU layer → a probability per mitigation. "
             "Multi-label, trained with binary cross-entropy. The export checks it ranks as PyTorch did.",
             "ATT&CK procedure examples with every mitigation linked to their technique, split by source.",
-            "First recommendation right 0.787 of the time on unseen attackers, against 0.537 for BM25 over "
+            "First recommendation right 0.790 of the time on unseen attackers, against 0.537 for BM25 over "
             "techniques and 0.232 for recommending the most common mitigations. A TF-IDF classifier does better "
             "(0.827); pruned to int8 as served (mitigation_classifier.json) it ranks the list better (nDCG@10 "
-            "0.850 against 0.839), so the API orders mitigations by it.",
+            "0.850 against 0.840), so the API orders mitigations by it.",
             "Apache-2.0. ATT&CK content is © MITRE, used under its terms with attribution."),
         "usage": "# Model Format\nInt8 bag rows plus two float layers in `skandamata.json`; "
                  "`attack_mitigations.json` holds ATT&CK's technique → mitigation links.\n\n# Model Usage\nHash, "

@@ -105,3 +105,4 @@ Protocol: before every push, write a topic-named file from
 - [ServeWhatWins.md](ServeWhatWins.md) — fused/classifier serving gated on same-run measurement; jobs commit only their own files
 - [AndroidApp.md](AndroidApp.md) — Android shell in apps/android, CI-built APK release, public test key (never for store), atTop bridge
 - [ModelColours.md](ModelColours.md) — one hue per Sati model (lib/hues.ts, .sp-*); /ask phone overflow was a missing min-w-0; iPhone via Add to Home Screen
+- [DrawnVerdicts.md](DrawnVerdicts.md) — Sati AI specialist runs draw gauge/ranking/timeline; CORS-off headless Edge for local live tests; 0.2.0 Skandamata/Shailaputri numbers

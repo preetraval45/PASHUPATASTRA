@@ -20,7 +20,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 
 import { AnswerText, defendFollowUp } from "@/components/answertext";
 import { TurnView, type Turn as IncidentTurn } from "@/components/chat";
-import { examplesFor, runSpecialist, specialist, SPECIALISTS, type Example, type Specialist } from "@/components/specialists";
+import { examplesFor, runSpecialist, specialist, SPECIALISTS, type Example, type Specialist, type Verdict } from "@/components/specialists";
 import { Listbox } from "@/components/listbox";
 import { Icon } from "@/components/sidebar";
 import { Badge, Stated, statusForSeverity } from "@/components/ui";
@@ -33,7 +33,7 @@ type Turn =
   | IncidentTurn
   | { role: "general"; answer: GeneralAnswer }
   /** A data-reading model run on a held-out example (components/specialists.tsx). */
-  | { role: "specialist"; form: string; text: string };
+  | { role: "specialist"; form: string; text: string; verdict?: Verdict };
 
 type Conversation = {
   id: string;
@@ -257,7 +257,7 @@ export function ChatConsole({
       setBusy(true);
       const result = await runSpecialist(s, example.id);
       const reply: Turn = result
-        ? { role: "specialist", form: s.id, text: result }
+        ? { role: "specialist", form: s.id, text: result.text, verdict: result.verdict }
         : { role: "error", text: `${s.name} is not reachable right now.`, retryable: true };
       setConversations((current) => {
         const next = current
@@ -556,7 +556,7 @@ export function ChatConsole({
                       onAsk={index === turns.length - 1 && !busy ? ask : undefined}
                     />
                   ) : turn.role === "specialist" ? (
-                    <SpecialistTurn key={index} form={turn.form} text={turn.text} />
+                    <SpecialistTurn key={index} form={turn.form} text={turn.text} verdict={turn.verdict} />
                   ) : turn.role === "sati" && !incident ? null : (
                     <TurnView key={index} turn={turn} incident={(incident ?? incidents[0]) as Incident} />
                   ),
@@ -736,7 +736,7 @@ function Monogram({ s, size }: { s: Specialist; size: keyof typeof MONO }) {
   );
 }
 
-function SpecialistTurn({ form, text }: { form: string; text: string }) {
+function SpecialistTurn({ form, text, verdict }: { form: string; text: string; verdict?: Verdict }) {
   const s = specialist(form);
   return (
     <div data-turn="specialist" style={hueOf(s)} className="max-w-[95%] space-y-2">
@@ -746,10 +746,115 @@ function SpecialistTurn({ form, text }: { form: string; text: string }) {
         <span className="text-[rgb(var(--muted))]">· {s.job.toLowerCase()}</span>
       </p>
       <div className="rounded-2xl border border-[rgb(var(--edge))] border-l-[3px] border-l-[rgb(var(--sp))] bg-[rgb(var(--panel))] px-4 py-3.5">
+        {verdict && <VerdictView v={verdict} />}
         <AnswerText text={text} />
         <p className="mt-3 border-t border-[rgb(var(--edge))] pt-2 text-[11px] text-[rgb(var(--faint))]">
           Run live on an example it never trained on, with the truth beside the answer.
         </p>
+      </div>
+    </div>
+  );
+}
+
+/** A specialist's run as a picture: right or wrong, then its score, ranking or timeline. */
+function VerdictView({ v }: { v: Verdict }) {
+  const tone = v.correct === null ? "--muted" : v.correct ? "--ok" : "--crit";
+  return (
+    <div className="rise mb-3.5 space-y-3">
+      <span
+        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
+        style={{ background: `rgb(var(${tone}) / 0.14)`, color: `rgb(var(${tone}))` }}
+      >
+        <span aria-hidden="true">{v.correct === null ? "?" : v.correct ? "✓" : "✗"}</span>
+        {v.correct === null ? "Left to a person" : v.correct ? "Right" : "Wrong"}
+      </span>
+      {v.gauge && <Gauge {...v.gauge} />}
+      {v.ranking && <Ranking rows={v.ranking} />}
+      {v.timeline && <Timeline {...v.timeline} />}
+    </div>
+  );
+}
+
+/** Score against threshold on one line. Past the threshold is the flagged side, shaded. */
+function Gauge({ score, threshold, flagged, high, low }: NonNullable<Verdict["gauge"]>) {
+  // Probabilities crowd at the ends (a score of 1.000 against 0.9997), so they are drawn on log-odds,
+  // where that gap is visible. Other scores are drawn around the threshold.
+  const unit = score >= 0 && score <= 1 && threshold >= 0 && threshold <= 1;
+  const odds = (x: number) => {
+    const p = Math.min(Math.max(x, 1e-6), 1 - 1e-6);
+    return Math.log(p / (1 - p));
+  };
+  const span = Math.max(Math.abs(score - threshold) * 1.6, 1e-6);
+  const place = (x: number) => (unit ? (odds(x) + 14) / 28 : (x - threshold + span) / (2 * span));
+  const at = (x: number) => `${Math.min(100, Math.max(0, place(x) * 100))}%`;
+  return (
+    <div>
+      <div className="relative h-3 overflow-hidden rounded-full bg-[rgb(var(--raised))]">
+        <div className="absolute inset-y-0 right-0 bg-[rgb(var(--crit))]/20" style={{ left: at(threshold) }} />
+        <div className="absolute inset-y-0 w-0.5 bg-[rgb(var(--ink))]/60" style={{ left: at(threshold) }} />
+        <div
+          className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[rgb(var(--panel))] shadow"
+          style={{ left: at(score), background: flagged ? "rgb(var(--crit))" : "rgb(var(--ok))" }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[11px] text-[rgb(var(--faint))]">
+        <span>{low}</span>
+        <span className="tnum">
+          score {score.toFixed(4)} · threshold {threshold.toFixed(4)}
+        </span>
+        <span>{high}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Katyayani's top five, longest bar first; the true root cause is marked. */
+function Ranking({ rows }: { rows: NonNullable<Verdict["ranking"]> }) {
+  const top = Math.max(...rows.map((r) => Math.abs(r.value)), 1e-6);
+  return (
+    <ol className="space-y-1.5 text-xs">
+      {rows.map((r, i) => (
+        <li key={r.label} className="grid grid-cols-[1.25rem_minmax(0,9rem)_1fr_auto] items-center gap-2">
+          <span className="tnum text-[rgb(var(--faint))]">{i + 1}</span>
+          <span className={`mono truncate ${r.truth ? "font-semibold text-[rgb(var(--ok))]" : ""}`}>{r.label}</span>
+          <span className="h-2 overflow-hidden rounded-full bg-[rgb(var(--raised))]">
+            <span
+              className="block h-full rounded-full"
+              style={{ width: `${(Math.abs(r.value) / top) * 100}%`, background: r.truth ? "rgb(var(--ok))" : "rgb(var(--sp) / 0.6)" }}
+            />
+          </span>
+          <span className="tnum text-[rgb(var(--muted))]">
+            {r.value.toFixed(1)}σ{r.truth ? " · root" : ""}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** The incident minute by minute: its window shaded, Siddhidatri's flags as ticks, and where Shailaputri caught it and Mahagauri called it over. */
+function Timeline({ minutes, start, end, flags, caught, declared }: NonNullable<Verdict["timeline"]>) {
+  const at = (m: number) => `${(m / Math.max(minutes, 1)) * 100}%`;
+  return (
+    <div>
+      <div className="relative h-8 overflow-hidden rounded-lg bg-[rgb(var(--raised))]">
+        <div className="absolute inset-y-0 bg-[rgb(var(--warn))]/20" style={{ left: at(start), width: at(end - start) }} />
+        {flags.map((f, i) =>
+          f ? <span key={i} className="absolute bottom-0 h-2.5 w-px bg-[rgb(var(--sp))]" style={{ left: at(i) }} /> : null,
+        )}
+        {caught !== null && (
+          <span className="absolute inset-y-0 w-0.5 bg-[rgb(var(--ok))]" style={{ left: at(caught) }} title={`Shailaputri caught it at minute ${caught}`} />
+        )}
+        {declared !== null && (
+          <span className="absolute inset-y-0 w-0.5 bg-[rgb(var(--ink))]" style={{ left: at(declared) }} title={`Mahagauri called it over at minute ${declared}`} />
+        )}
+      </div>
+      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[rgb(var(--faint))]">
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-[rgb(var(--warn))]/40" />incident</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2.5 w-px bg-[rgb(var(--sp))]" />Siddhidatri flag</span>
+        {caught !== null && <span className="inline-flex items-center gap-1"><span className="h-2.5 w-0.5 bg-[rgb(var(--ok))]" />Shailaputri caught it</span>}
+        {declared !== null && <span className="inline-flex items-center gap-1"><span className="h-2.5 w-0.5 bg-[rgb(var(--ink))]" />Mahagauri: over</span>}
+        <span className="tnum ml-auto">{minutes} min</span>
       </div>
     </div>
   );

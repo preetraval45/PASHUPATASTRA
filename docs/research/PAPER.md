@@ -296,7 +296,7 @@ and the share of attacks caught from 0.294 to 0.448.
 servers from a held-out machine group, Shailaputri scores F1 0.556 with 4.6
 false alarms per 1000 minutes, against 0.419 and 86.6 for per-machine PCA
 ([shailaputri-smd.md](models/shailaputri-smd.md)). On NAB, the five-seed
-spread is F1 0.435 [0.382, 0.475] with 25.6 false alarms per 1000 against 74.7
+spread is F1 0.430 [0.394, 0.474] with 24.3 false alarms per 1000 against 74.7
 for `SeasonalRobustZ`. It still flags later (lead 180.4 against 241.3), so the
 architecture keeps the statistical detector as default
 ([shailaputri.md](models/shailaputri.md); adr/SatiDetect).
@@ -384,7 +384,7 @@ weight chosen on the validation sources, they reach Recall@1 0.673 and MRR
 
 The same holds for Skandamata, the mitigation recommender. A one-vs-rest
 logistic regression on TF-IDF features reaches hit@1 0.827 and MRR 0.880,
-against Skandamata's 0.787 and 0.849. Fusing the two does not help (0.822)
+against Skandamata's 0.790 and 0.851. Fusing the two does not help (0.824)
 ([skandamata.md](models/skandamata.md)): there, the simple model is the best one measured.
 
 ### 7.3 Against general LLMs, on a benchmark this project did not write

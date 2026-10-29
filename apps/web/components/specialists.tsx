@@ -53,6 +53,21 @@ export function specialist(id: string): Specialist {
 
 export type Example = { id: string; label: string };
 
+/**
+ * What a specialist's run shows as a picture above its words: right or wrong,
+ * and the one view that explains it. A tree model's score against its
+ * threshold, Katyayani's ranking, or the incident minute by minute for the
+ * server models. Every value is the live response's, never recomputed here.
+ */
+export type Verdict = {
+  correct: boolean | null;
+  gauge?: { score: number; threshold: number; flagged: boolean; high: string; low: string };
+  ranking?: { label: string; value: number; truth: boolean }[];
+  timeline?: { minutes: number; start: number; end: number; flags: boolean[]; caught: number | null; declared: number | null };
+};
+
+export type Run = { text: string; verdict: Verdict };
+
 /** The held-out examples a data-reading specialist can be run on. */
 export async function examplesFor(s: Specialist): Promise<Example[] | null> {
   if (s.kind === "tree") {
@@ -75,8 +90,8 @@ function ordinal(n: number): string {
   return `${n}${teen ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th"}`;
 }
 
-/** Runs the specialist on one example and writes its reply as plain text for the answer formatter. */
-export async function runSpecialist(s: Specialist, exampleId: string): Promise<string | null> {
+/** Runs the specialist on one example: its reply as plain text for the answer formatter, and the verdict to draw. */
+export async function runSpecialist(s: Specialist, exampleId: string): Promise<Run | null> {
   if (s.kind === "tree") {
     const r = await runTreeExample(s.id as "kalaratri" | "chandraghanta", exampleId);
     if (!r) return null;
@@ -91,7 +106,13 @@ export async function runSpecialist(s: Specialist, exampleId: string): Promise<s
       for (const w of r.why) lines.push(`- ${w.feature}: ${w.effect >= 0 ? "raised" : "lowered"} it by ${Math.abs(w.effect).toFixed(2)}`);
     }
     if (r.licence) lines.push("", r.licence);
-    return lines.join("\n");
+    return {
+      text: lines.join("\n"),
+      verdict: {
+        correct: r.correct,
+        gauge: { score: r.score, threshold: r.threshold, flagged: r.flagged, high: what[0], low: what[1] },
+      },
+    };
   }
   if (s.kind === "cases") {
     const r = await rankKatyayani(exampleId);
@@ -106,7 +127,13 @@ export async function runSpecialist(s: Specialist, exampleId: string): Promise<s
     r.ranking.slice(0, 5).forEach((x, i) =>
       lines.push(`${i + 1}. ${x.service}${x.service === r.root ? " (the true root)" : ""}: peak shift ${x.evidence.peak ?? "—"}σ, anomalous #${x.evidence.onset_rank ?? "—"}`),
     );
-    return lines.join("\n");
+    return {
+      text: lines.join("\n"),
+      verdict: {
+        correct: r.correct,
+        ranking: r.ranking.slice(0, 5).map((x) => ({ label: x.service, value: Number(x.evidence.peak ?? 0), truth: x.service === r.root })),
+      },
+    };
   }
   if (s.kind === "servers") {
     const r = await runServerIncident(exampleId);
@@ -124,11 +151,29 @@ export async function runSpecialist(s: Specialist, exampleId: string): Promise<s
       mahagauri: `Mahagauri ${verdict}.`,
     };
     const order = [s.id, ...Object.keys(rows).filter((k) => k !== s.id)] as (keyof typeof rows)[];
-    return [
-      `${r.machine}, a server none of them trained on: the incident ran from minute ${start} to ${end}.`,
-      "",
-      ...order.map((k) => `- ${rows[k]}`),
-    ].join("\n");
+    const right = {
+      shailaputri: r.shailaputri.caught,
+      siddhidatri: flagged > 0,
+      mahagauri: r.mahagauri.verdict === "confirmed" ? true : r.mahagauri.verdict === "premature" ? false : null,
+    }[s.id as keyof typeof rows];
+    return {
+      text: [
+        `${r.machine}, a server none of them trained on: the incident ran from minute ${start} to ${end}.`,
+        "",
+        ...order.map((k) => `- ${rows[k]}`),
+      ].join("\n"),
+      verdict: {
+        correct: right ?? null,
+        timeline: {
+          minutes: r.minutes,
+          start,
+          end,
+          flags: r.siddhidatri.flags.map(Boolean),
+          caught: r.shailaputri.caught ? r.shailaputri.first_flag : null,
+          declared: r.mahagauri.declared_over ?? null,
+        },
+      },
+    };
   }
   return null;
 }
