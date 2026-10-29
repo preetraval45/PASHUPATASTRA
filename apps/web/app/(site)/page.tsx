@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 
 import { Icon } from "@/components/sidebar";
@@ -44,6 +45,9 @@ const DESTINATIONS = [
   { href: "/models", icon: "cube", title: "Sati models", body: "Nine models built and trained here on public data. Run eight of them live on examples they never trained on, with the truth beside each answer." },
 ] as const;
 
+/** The newest Android test build, rebuilt by .github/workflows/android.yml on every change to apps/android. */
+const ANDROID_APK = "https://github.com/preetraval45/PASHUPATASTRA/releases/download/android/Pashupatastra.apk";
+
 const LOOP = ["Observe", "Understand", "Predict", "Decide", "Act", "Verify", "Learn"];
 
 /** The scattered signals of one real scenario, in the order they arrive. Taken
@@ -57,6 +61,8 @@ const SCATTERED = [
 
 export default async function LandingPage() {
   const [incidents, figures] = await Promise.all([getIncidents(), getFigures()]);
+  // The Android app adds "PashupatastraApp" to its user agent; inside it, the download card is noise.
+  const inApp = ((await headers()).get("user-agent") ?? "").includes("PashupatastraApp");
 
   // The incident this page describes, not merely the first one.
   //
@@ -158,6 +164,27 @@ export default async function LandingPage() {
       {/* The landing page sits inside the app frame now (RP-51), so after the
           one-paragraph pitch it does what an app's home does: shows the places
           to go, each with what you will find there. */}
+      {!inApp && (
+        <section
+          aria-label="The Android app"
+          className="flex flex-wrap items-center gap-4 rounded-xl border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/5 p-4 sm:p-5"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Pashupatastra for Android</p>
+            <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+              The same site as an app on your phone, with pull to refresh and its own icon. A free test build: download
+              it on an Android phone, open it, and allow the install when Android asks.
+            </p>
+          </div>
+          <a
+            href={ANDROID_APK}
+            className="focusable inline-flex min-h-[44px] items-center rounded-lg bg-[rgb(var(--astra))] px-4 text-sm font-semibold text-white transition hover:opacity-90"
+          >
+            Download the app
+          </a>
+        </section>
+      )}
+
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Jump in</h2>
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
