@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { Evaluation, ModuleStatus } from "@/components/course";
 import { DailyQuestion } from "@/components/dailyquestion";
 import { Labs } from "@/components/labs";
 import { TrainingBoard } from "@/components/training";
+import { TrainingHero } from "@/components/traininghero";
 import { Page, Panel } from "@/components/ui";
 import { getScenarios } from "@/lib/api";
+import { hue } from "@/lib/hues";
 import { MODULES } from "@/lib/training";
 
 export const metadata: Metadata = {
@@ -35,9 +38,11 @@ export default async function TrainingPage() {
       title="Training"
       description="A cyber defence course you can use at work tomorrow. Each module teaches one skill, shows how to apply it in real life, and tests you on it — then the drills let you practise on a full investigation."
     >
+      <TrainingHero minutes={minutes} questions={questions} />
+
       <DailyQuestion />
 
-      <section className="space-y-4">
+      <section id="labs" className="scroll-mt-24 space-y-4">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Hands-on labs</h2>
           <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
@@ -48,30 +53,7 @@ export default async function TrainingPage() {
         <Labs />
       </section>
 
-      <Panel title="Your evaluation" aside="kept in this browser only">
-        <Evaluation />
-      </Panel>
-
-      <section className="grid gap-4 md:grid-cols-4">
-        {[
-          { n: "1", t: "Learn", b: `${MODULES.length} levels, about ${minutes} minutes in all` },
-          { n: "2", t: "Apply", b: "a real-life checklist with every module" },
-          { n: "3", t: "Test", b: `${questions} questions, each answer explained` },
-          { n: "4", t: "Practise", b: "scored drills on full incidents" },
-        ].map((step) => (
-          <div key={step.t} className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-4">
-            <p className="flex items-center gap-2">
-              <span className="tnum inline-flex h-7 w-7 items-center justify-center rounded-full bg-[rgb(var(--astra))]/15 text-sm font-semibold text-[rgb(var(--astra))]">
-                {step.n}
-              </span>
-              <span className="font-semibold">{step.t}</span>
-            </p>
-            <p className="mt-2 text-sm text-[rgb(var(--muted))]">{step.b}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="space-y-4">
+      <section id="levels" className="scroll-mt-24 space-y-4">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Nine levels of cyber awareness</h2>
           <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
@@ -86,14 +68,21 @@ export default async function TrainingPage() {
               <Link
                 href={`/training/${m.slug}`}
                 data-module={m.slug}
-                className="focusable lift group flex h-full flex-col rounded-xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] p-5 transition hover:border-[rgb(var(--astra))]/50"
+                style={hue(m.form) as CSSProperties}
+                className="focusable lift sp-hover group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-5 transition"
               >
-                <span className="flex items-center gap-2">
-                  <span className="label">Level {m.level} · {m.form}</span>
-                  <span className="text-xs text-[rgb(var(--faint))]">· {m.minutes} min</span>
+                <span aria-hidden="true" className="sp-dot absolute inset-x-0 top-0 h-1 opacity-70" />
+                <span className="flex items-center gap-3">
+                  <span className="sp-solid tnum inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-semibold">
+                    {m.level}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="sp-text block text-xs font-semibold uppercase tracking-wide">{m.form}</span>
+                    <span className="block text-xs text-[rgb(var(--faint))]">{m.minutes} min · {m.quiz.length} questions</span>
+                  </span>
                   <span className="ml-auto"><ModuleStatus slug={m.slug} /></span>
                 </span>
-                <span className="mt-3 text-base font-semibold group-hover:text-[rgb(var(--astra))]">{m.title}</span>
+                <span className="mt-4 text-base font-semibold">{m.title}</span>
                 <span className="mt-1.5 flex-1 text-sm leading-relaxed text-[rgb(var(--muted))]">{m.summary}</span>
                 {m.attack && (
                   <span className="mt-3 flex flex-wrap gap-1.5">
@@ -104,7 +93,7 @@ export default async function TrainingPage() {
                     ))}
                   </span>
                 )}
-                <span className="mt-3 text-xs text-[rgb(var(--faint))]">{m.quiz.length}-question test</span>
+                <span className="sp-text mt-4 text-sm font-medium transition group-hover:translate-x-0.5">Open level {m.level} →</span>
               </Link>
             </li>
           ))}
@@ -127,6 +116,12 @@ export default async function TrainingPage() {
         ) : (
           <TrainingBoard scenarios={scenarios} />
         )}
+      </section>
+
+      <section id="evaluation" className="scroll-mt-24">
+        <Panel title="Your record" aside="kept in this browser only">
+          <Evaluation />
+        </Panel>
       </section>
     </Page>
   );

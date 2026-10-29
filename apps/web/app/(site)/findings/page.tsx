@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
-import { Filter, FilterRow } from "@/components/filter";
-import { Page, Panel } from "@/components/ui";
+import { Page } from "@/components/ui";
 import brahmacharini from "@/lib/models/brahmacharini.results.json";
 import transformer from "@/lib/models/brahmacharini-transformer.results.json";
 import chandraghanta from "@/lib/models/chandraghanta.results.json";
@@ -256,16 +256,11 @@ function findings(): Finding[] {
   ];
 }
 
-const TONE: Record<Finding["tone"], string> = {
-  positive: "text-emerald-600 dark:text-emerald-400",
-  negative: "text-amber-600 dark:text-amber-400",
-  method: "text-sky-600 dark:text-sky-400",
-};
-
-const BAR: Record<Finding["tone"], string> = {
-  positive: "bg-emerald-500/70",
-  negative: "bg-amber-500/70",
-  method: "bg-sky-500/70",
+/** Each kind's accent, read by the .sp-* classes (globals.css) through --sp. */
+const ACCENT: Record<Finding["tone"], CSSProperties> = {
+  positive: { "--sp": "16 185 129" } as CSSProperties,
+  negative: { "--sp": "245 158 11" } as CSSProperties,
+  method: { "--sp": "14 165 233" } as CSSProperties,
 };
 
 /** Said in words and a glyph, so the kind never rests on colour alone. */
@@ -301,58 +296,89 @@ export default async function FindingsPage({
         </Link>
       }
     >
-      <p className="mb-4 text-sm text-[rgb(var(--muted))]">
-        {all.length} findings: {counts.map(([t, n], i) => (
-          <span key={t}>
-            {i > 0 && (i === counts.length - 1 ? " and " : ", ")}
-            <span className={`font-medium ${TONE[t]}`}>{n}</span> {KIND[t].plural}
-          </span>
-        ))}
-        .
-      </p>
-      <FilterRow label="Show">
-        <Filter href="/findings" label="All" active={!kind} />
+      <nav aria-label="Show findings" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Link
+          href="/findings"
+          aria-current={!kind ? "page" : undefined}
+          className={`focusable lift rounded-2xl border p-4 transition ${
+            !kind ? "border-[rgb(var(--astra))]/60 bg-[rgb(var(--astra))]/10" : "border-[rgb(var(--edge))] bg-[rgb(var(--panel))] hover:border-[rgb(var(--astra))]/40"
+          }`}
+        >
+          <span className="tnum block text-3xl font-semibold">{all.length}</span>
+          <span className="mt-1 block text-sm text-[rgb(var(--muted))]">findings in all</span>
+        </Link>
         {counts.map(([t, n]) => (
-          <Filter key={t} href={`/findings?kind=${t}`} label={`${KIND[t].glyph} ${KIND[t].label} (${n})`} active={kind === t} />
-        ))}
-      </FilterRow>
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        {shown.map((f) => (
-          <Panel
-            key={f.id}
-            title={f.kicker}
-            aside={
-              <span className={`text-xs font-medium ${TONE[f.tone]}`}>
-                <span aria-hidden="true">{KIND[f.tone].glyph}</span> {KIND[f.tone].label}
-              </span>
-            }
+          <Link
+            key={t}
+            href={`/findings?kind=${t}`}
+            aria-current={kind === t ? "page" : undefined}
+            style={ACCENT[t]}
+            className={`focusable lift rounded-2xl border p-4 transition ${kind === t ? "sp-card" : "sp-hover border-[rgb(var(--edge))] bg-[rgb(var(--panel))]"}`}
           >
-            <h2 className="text-lg font-semibold leading-snug tracking-tight">{f.title}</h2>
-            <p className={`tnum mt-3 text-3xl font-semibold ${TONE[f.tone]}`}>{f.headline}</p>
-            <dl className="mt-4 space-y-2.5 text-sm">
-              {f.versus.map((v) => {
-                const bar = share(v.value);
-                return (
-                  <div key={v.label}>
-                    <div className="flex items-baseline justify-between gap-4">
-                      <dt className="text-[rgb(var(--muted))]">{v.label}</dt>
-                      <dd className="tnum shrink-0 font-medium">{v.value}</dd>
-                    </div>
-                    {bar !== null && (
-                      <div className="mt-1 h-1.5 rounded-full bg-[rgb(var(--raised))]" aria-hidden="true">
-                        <div className={`h-1.5 rounded-full ${BAR[f.tone]}`} style={{ width: `${Math.max(2, bar * 100)}%` }} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </dl>
-            <p className="mt-3 text-sm leading-relaxed text-[rgb(var(--muted))]">{f.body}</p>
-            <Link href={f.href} className="mt-3 inline-block text-sm underline-offset-4 hover:underline">
-              The evidence →
-            </Link>
-          </Panel>
+            <span className="sp-text tnum flex items-baseline gap-2 text-3xl font-semibold">
+              {n}
+              <span aria-hidden="true" className="text-base">{KIND[t].glyph}</span>
+            </span>
+            <span className="mt-1 block text-sm text-[rgb(var(--muted))]">{KIND[t].plural}</span>
+          </Link>
         ))}
+      </nav>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        {shown.map((f, i) => {
+          const lead = i === 0 && !kind;
+          return (
+            <article
+              key={f.id}
+              id={f.id}
+              style={ACCENT[f.tone]}
+              className={`relative flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] ${lead ? "lg:col-span-2" : ""}`}
+            >
+              <div className="px-5 pb-4 pt-5 sm:px-6" style={{ background: "linear-gradient(170deg, rgb(var(--sp) / 0.14), transparent 75%)" }}>
+                <span aria-hidden="true" className="sp-dot absolute inset-x-0 top-0 h-1" />
+                <p className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="sp-tint rounded-full px-2.5 py-0.5 font-semibold">
+                    <span aria-hidden="true">{KIND[f.tone].glyph}</span> {KIND[f.tone].label}
+                  </span>
+                  <span className="text-[rgb(var(--faint))]">{f.kicker}</span>
+                </p>
+                <div className={lead ? "mt-3 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end" : "mt-3"}>
+                  <h2 className={`font-semibold leading-snug tracking-tight ${lead ? "text-xl sm:text-2xl" : "text-lg"}`}>{f.title}</h2>
+                  <p className={`sp-text tnum font-semibold tracking-tight ${lead ? "text-5xl" : "mt-3 text-3xl sm:text-4xl"}`}>{f.headline}</p>
+                </div>
+              </div>
+              <div className={`flex flex-1 flex-col px-5 pb-5 sm:px-6 ${lead ? "lg:grid lg:grid-cols-2 lg:gap-8" : ""}`}>
+                <dl className="space-y-3 text-sm">
+                  {f.versus.map((v) => {
+                    const bar = share(v.value);
+                    return (
+                      <div key={v.label}>
+                        <div className="flex items-baseline justify-between gap-4">
+                          <dt className="text-[rgb(var(--muted))]">{v.label}</dt>
+                          <dd className="tnum shrink-0 font-semibold">{v.value}</dd>
+                        </div>
+                        {bar !== null && (
+                          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[rgb(var(--raised))]" aria-hidden="true">
+                            <div className="sp-dot h-full rounded-full opacity-80" style={{ width: `${Math.max(2, bar * 100)}%` }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </dl>
+                <div className={`mt-4 flex flex-1 flex-col ${lead ? "lg:mt-0" : ""}`}>
+                  <p className="text-sm leading-relaxed text-[rgb(var(--muted))]">{f.body}</p>
+                  <Link
+                    href={f.href}
+                    className="focusable sp-text mt-4 inline-flex items-center gap-1 self-start text-sm font-semibold transition hover:gap-2"
+                  >
+                    See the evidence <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
       <p className="mt-6 text-xs text-[rgb(var(--faint))]">
         Every number on this page is read from a results file committed by a training workflow and rebuilt by{" "}

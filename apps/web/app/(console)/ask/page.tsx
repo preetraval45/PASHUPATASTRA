@@ -29,7 +29,7 @@ export default async function AskPage() {
   }
 
   return (
-    <main id="main" className="flex min-h-0 flex-1">
+    <main id="main" className="flex min-h-0 min-w-0 flex-1">
       {/* `useSearchParams` in the console needs a boundary. */}
       <Suspense
         fallback={

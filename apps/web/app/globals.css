@@ -609,3 +609,34 @@ html[data-app] .rounded-xl {
 html[data-app] .rounded-2xl {
   border-radius: 1.5rem;
 }
+
+/* Scrollbars in the site's own colours. Windows' default bars (grey, with arrow
+   buttons) sat in the rail, the chat and every chip row and made the pages look
+   unfinished (owner, 29 Oct). Thin and rounded, visible where they help. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--edge-strong)) transparent;
+}
+
+/* Rows that are swiped, not read (chips, tabs): no bar at all, and their ends fade
+   so the row still says it continues. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.fade-x {
+  mask-image: linear-gradient(to right, transparent 0, black 1.25rem, black calc(100% - 1.25rem), transparent 100%);
+}
+
+/* A specialist's accent (Sati AI): set --sp to an "r g b" triplet on the element. The text colour
+   leans toward ink so amber and lime stay readable on the light theme. */
+.sp-tint { background: rgb(var(--sp) / 0.16); color: color-mix(in srgb, rgb(var(--sp)) 62%, rgb(var(--ink))); }
+.sp-text { color: color-mix(in srgb, rgb(var(--sp)) 62%, rgb(var(--ink))); }
+.sp-solid { background: linear-gradient(135deg, rgb(var(--sp)), color-mix(in srgb, rgb(var(--sp)) 70%, black)); color: white; }
+.sp-card { border-color: rgb(var(--sp) / 0.7); background: linear-gradient(160deg, rgb(var(--sp) / 0.16), rgb(var(--panel)) 70%); box-shadow: 0 8px 24px -12px rgb(var(--sp) / 0.6); }
+.sp-hover:hover { border-color: rgb(var(--sp) / 0.55); }
+.sp-dot { background: rgb(var(--sp)); }

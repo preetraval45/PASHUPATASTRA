@@ -104,3 +104,4 @@ Protocol: before every push, write a topic-named file from
 - [VercelSchema.md](VercelSchema.md) — a "//" key in vercel.json failed every deploy for a day; how to read Vercel's real error
 - [ServeWhatWins.md](ServeWhatWins.md) — fused/classifier serving gated on same-run measurement; jobs commit only their own files
 - [AndroidApp.md](AndroidApp.md) — Android shell in apps/android, CI-built APK release, public test key (never for store), atTop bridge
+- [ModelColours.md](ModelColours.md) — one hue per Sati model (lib/hues.ts, .sp-*); /ask phone overflow was a missing min-w-0; iPhone via Add to Home Screen

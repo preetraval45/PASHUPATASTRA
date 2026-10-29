@@ -183,23 +183,33 @@ export default async function LandingPage() {
           one-paragraph pitch it does what an app's home does: shows the places
           to go, each with what you will find there. */}
       {!inApp && (
-        <section
-          aria-label="The Android app"
-          className="flex flex-wrap items-center gap-4 rounded-xl border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/5 p-4 sm:p-5"
-        >
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold">Pashupatastra for Android</p>
-            <p className="mt-1 text-sm text-[rgb(var(--muted))]">
-              The same site as an app on your phone, with pull to refresh and its own icon. A free test build: download
-              it on an Android phone, open it, and allow the install when Android asks.
-            </p>
+        <section aria-label="The app" className="grid gap-3 md:grid-cols-2">
+          <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/5 p-4 sm:p-5">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Android</p>
+              <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+                The app, with pull to refresh and its own icon. A free test build: download it on the phone, open it, and
+                allow the install when Android asks.
+              </p>
+            </div>
+            <a
+              href={ANDROID_APK}
+              className="focusable inline-flex min-h-[44px] items-center rounded-lg bg-[rgb(var(--astra))] px-4 text-sm font-semibold text-white transition hover:opacity-90"
+            >
+              Download the app
+            </a>
           </div>
-          <a
-            href={ANDROID_APK}
-            className="focusable inline-flex min-h-[44px] items-center rounded-lg bg-[rgb(var(--astra))] px-4 text-sm font-semibold text-white transition hover:opacity-90"
-          >
-            Download the app
-          </a>
+          {/* An APK cannot run on iOS; Safari's home-screen install is the free way on, and it opens with the app's look. */}
+          <div className="rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-4 sm:p-5">
+            <p className="font-semibold">iPhone and iPad</p>
+            <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-sm text-[rgb(var(--muted))]">
+              <li>Open this site in Safari.</li>
+              <li>
+                Tap Share, then <strong className="text-[rgb(var(--ink))]">Add to Home Screen</strong>.
+              </li>
+              <li>Open it from its icon: full screen, with the app&apos;s tab bar.</li>
+            </ol>
+          </div>
         </section>
       )}
 

@@ -55,6 +55,9 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   applicationName: "Pashupatastra",
+  /* Added to an iPhone's home screen from Safari, the site opens full screen as an app: the
+     only way onto iOS without the App Store, and the APK cannot run there. */
+  appleWebApp: { capable: true, title: "Pashupatastra", statusBarStyle: "black-translucent" },
   openGraph: {
     type: "website",
     siteName: "Pashupatastra",
@@ -113,11 +116,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Before first paint: a flash of the wrong theme on every navigation
             makes a tool feel unreliable. */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* Inside the Android app (its user agent says PashupatastraApp), before first paint: the
+        {/* Inside the Android app (its user agent says PashupatastraApp), or the site installed to a
+            home screen (iPhone or Android, display-mode standalone), before first paint: the
             app has its own look (globals.css, html[data-app]), not the website squeezed onto a phone. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `if(/PashupatastraApp/.test(navigator.userAgent))document.documentElement.setAttribute("data-app","")`,
+            __html: `if(/PashupatastraApp/.test(navigator.userAgent)||navigator.standalone||matchMedia("(display-mode: standalone)").matches)document.documentElement.setAttribute("data-app","")`,
           }}
         />
       </head>

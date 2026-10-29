@@ -84,7 +84,7 @@ export function LoopExplorer() {
 
   return (
     <div className="rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-4 sm:p-6">
-      <div role="tablist" aria-label="The loop" className="-mx-1 flex gap-1 overflow-x-auto pb-1">
+      <div role="tablist" aria-label="The loop" className="no-scrollbar fade-x -mx-1 flex gap-1 overflow-x-auto px-3 pb-1">
         {STAGES.map((s, index) => {
           const active = index === current;
           return (

@@ -16,17 +16,18 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { AnswerText, defendFollowUp } from "@/components/answertext";
 import { TurnView, type Turn as IncidentTurn } from "@/components/chat";
-import { examplesFor, runSpecialist, specialist, SPECIALISTS, type Example } from "@/components/specialists";
+import { examplesFor, runSpecialist, specialist, SPECIALISTS, type Example, type Specialist } from "@/components/specialists";
 import { Listbox } from "@/components/listbox";
 import { Icon } from "@/components/sidebar";
 import { Badge, Stated, statusForSeverity } from "@/components/ui";
 import { askAgent, askGeneral, type GeneralAnswer, type Incident, type ModelChoice } from "@/lib/api";
 import { MODELS } from "@/lib/navadurga";
 import { servedName } from "@/lib/modelnames";
+import { hue } from "@/lib/hues";
 
 type Turn =
   | IncidentTurn
@@ -353,7 +354,7 @@ export function ChatConsole({
   );
 
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 min-w-0 flex-1">
       {/* History — every conversation this browser has had with Sati. */}
       <aside className="hidden w-72 shrink-0 flex-col border-r border-[rgb(var(--edge))] bg-[rgb(var(--panel))]/60 lg:flex">
         <div className="shrink-0 border-b border-[rgb(var(--edge))] p-3">
@@ -569,7 +570,7 @@ export function ChatConsole({
         <div className="shrink-0 border-t border-[rgb(var(--edge))] bg-[rgb(var(--ground))] px-3 pb-4 pt-3 sm:px-6">
           {!incident && (
             <div className="mx-auto mb-2 max-w-3xl space-y-2">
-              <div role="tablist" aria-label="Specialist" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+              <div role="tablist" aria-label="Specialist" className="no-scrollbar fade-x -mx-1 flex gap-1.5 overflow-x-auto px-3 pb-1">
                 {SPECIALISTS.map((s) => (
                   <button
                     key={s.id}
@@ -578,18 +579,20 @@ export function ChatConsole({
                     aria-selected={special === s.id}
                     onClick={() => chooseSpecialist(s.id)}
                     title={s.job}
-                    className={`focusable shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition ${
+                    style={hueOf(s)}
+                    className={`focusable inline-flex shrink-0 items-center gap-1.5 rounded-full border py-1 pl-1 pr-3 text-xs font-medium transition ${
                       special === s.id
-                        ? "border-[rgb(var(--astra))] bg-[rgb(var(--astra))] text-[rgb(var(--ground))]"
-                        : "border-[rgb(var(--edge-strong))] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"
+                        ? "sp-card text-[rgb(var(--ink))]"
+                        : "sp-hover border-[rgb(var(--edge))] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"
                     }`}
                   >
+                    <Monogram s={s} size="xs" />
                     {s.name}
                   </button>
                 ))}
               </div>
               {turns.length > 0 && examples && examples.length > 0 && (
-                <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                <div className="no-scrollbar fade-x -mx-1 flex gap-1.5 overflow-x-auto px-3 pb-1">
                   <span className="shrink-0 self-center text-[11px] text-[rgb(var(--faint))]">Run on:</span>
                   {examples.slice(0, 12).map((e) => (
                     <button
@@ -712,16 +715,37 @@ function GeneralTurn({ answer, onAsk }: { answer: GeneralAnswer; onAsk?: (questi
 }
 
 /** A data-reading model's verdict on a held-out example. */
+/** Sets the specialist's accent for the .sp-* classes. */
+function hueOf(s: Specialist): CSSProperties {
+  return hue(s.id === "auto" ? "sati" : s.id) as CSSProperties;
+}
+
+const MONO = {
+  xs: "h-5 w-5 rounded-full text-[10px]",
+  sm: "h-6 w-6 rounded-full text-[11px]",
+  md: "h-9 w-9 rounded-xl text-sm",
+  lg: "h-9 w-9 rounded-xl text-sm ring-4 ring-[rgb(var(--sp)/0.25)]",
+};
+
+/** A specialist's monogram in its own colour, so nine names read apart at a glance. */
+function Monogram({ s, size }: { s: Specialist; size: keyof typeof MONO }) {
+  return (
+    <span aria-hidden="true" style={hueOf(s)} className={`sp-solid inline-flex shrink-0 items-center justify-center font-semibold ${MONO[size]}`}>
+      {s.name[0]}
+    </span>
+  );
+}
+
 function SpecialistTurn({ form, text }: { form: string; text: string }) {
   const s = specialist(form);
   return (
-    <div data-turn="specialist" className="max-w-[95%] space-y-2">
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
-        <span aria-hidden="true" className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[rgb(var(--astra))]" />
-        <span className="font-medium text-[rgb(var(--astra))]">{s.name}</span>
+    <div data-turn="specialist" style={hueOf(s)} className="max-w-[95%] space-y-2">
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+        <Monogram s={s} size="sm" />
+        <span className="sp-text font-semibold">{s.name}</span>
         <span className="text-[rgb(var(--muted))]">· {s.job.toLowerCase()}</span>
       </p>
-      <div className="rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-4 py-3.5">
+      <div className="rounded-2xl border border-[rgb(var(--edge))] border-l-[3px] border-l-[rgb(var(--sp))] bg-[rgb(var(--panel))] px-4 py-3.5">
         <AnswerText text={text} />
         <p className="mt-3 border-t border-[rgb(var(--edge))] pt-2 text-[11px] text-[rgb(var(--faint))]">
           Run live on an example it never trained on, with the truth beside the answer.
@@ -817,8 +841,15 @@ function Welcome({
   const chosen = specialist(special);
   return (
     <div className="space-y-6 py-2">
-      <div className="relative isolate overflow-hidden rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-5 py-6 sm:px-7">
+      <div className="relative isolate overflow-hidden rounded-3xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-5 py-7 sm:px-8">
         <div aria-hidden="true" className="hero-glow pointer-events-none absolute -inset-10 -z-10" />
+        <div aria-hidden="true" className="mb-4 flex -space-x-1.5">
+          {SPECIALISTS.slice(1).map((s) => (
+            <span key={s.id} className="rounded-full ring-2 ring-[rgb(var(--panel))]">
+              <Monogram s={s} size="sm" />
+            </span>
+          ))}
+        </div>
         <p className="label text-[rgb(var(--astra))]">Sati AI</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Nine specialists, one investigation agent</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[rgb(var(--muted))]">
@@ -828,31 +859,32 @@ function Welcome({
         </p>
       </div>
 
-      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
         {SPECIALISTS.map((s) => {
           const active = s.id === chosen.id;
-          const tag = s.kind === "auto" || s.kind === "ask" ? "answers questions" : s.kind === "private" ? "not public yet" : "runs on data";
+          const tag = s.kind === "auto" || s.kind === "ask" ? "Q&A" : s.kind === "private" ? "private" : "live data";
           return (
             <li key={s.id}>
               <button
                 type="button"
                 onClick={() => onSpecialist?.(s.id)}
                 aria-pressed={active}
-                className={`focusable lift flex h-full w-full flex-col rounded-xl border p-3 text-left transition ${
-                  active
-                    ? "border-[rgb(var(--astra))] bg-[rgb(var(--astra))]/10 shadow-sm"
-                    : "border-[rgb(var(--edge))] bg-[rgb(var(--panel))] hover:border-[rgb(var(--astra))]/50"
+                style={hueOf(s)}
+                className={`focusable lift flex h-full w-full flex-col rounded-2xl border p-3.5 text-left transition ${
+                  active ? "sp-card" : "sp-hover border-[rgb(var(--edge))] bg-[rgb(var(--panel))]"
                 }`}
               >
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center justify-between gap-2">
+                  <Monogram s={s} size={active ? "lg" : "md"} />
                   <span
-                    aria-hidden="true"
-                    className={`h-1.5 w-1.5 rounded-full ${s.kind === "private" ? "bg-[rgb(var(--faint))]" : "bg-[rgb(var(--ok))]"}`}
+                    title={s.kind === "private" ? "Not served publicly" : "Live"}
+                    className={`h-2 w-2 rounded-full ${s.kind === "private" ? "bg-[rgb(var(--faint))]" : "bg-[rgb(var(--ok))] shadow-[0_0_0_3px_rgb(var(--ok)/0.2)]"}`}
                   />
-                  <span className="text-sm font-semibold">{s.name}</span>
                 </span>
-                <span className="mt-1 text-xs leading-snug text-[rgb(var(--muted))]">{s.job}</span>
-                <span className="mt-auto pt-2 text-[10.5px] uppercase tracking-wide text-[rgb(var(--faint))]">{tag}</span>
+                <span className="mt-2.5 text-sm font-semibold">{s.name}</span>
+                <span className="mt-0.5 text-xs leading-snug text-[rgb(var(--muted))]">{s.job}</span>
+                <span className="flex-1" />
+                <span className="sp-tint mt-2.5 self-start whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">{tag}</span>
               </button>
             </li>
           );
@@ -899,10 +931,16 @@ function Welcome({
                     type="button"
                     disabled={busy}
                     onClick={() => onExample?.(e)}
-                    className="focusable lift rounded-xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-3.5 py-2.5 text-left transition hover:border-[rgb(var(--astra))]/50 disabled:opacity-50"
+                    style={hueOf(chosen)}
+                    className="focusable lift sp-hover group flex items-center gap-3 rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-3 py-2.5 text-left transition disabled:opacity-50"
                   >
-                    <span className="mono block truncate text-sm text-[rgb(var(--ink))]">{e.id}</span>
-                    <span className="block truncate text-xs text-[rgb(var(--faint))]">{e.label}</span>
+                    <span aria-hidden="true" className="sp-tint inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[10px] transition group-hover:scale-110">
+                      ▶
+                    </span>
+                    <span className="min-w-0">
+                      <span className="mono block truncate text-sm text-[rgb(var(--ink))]">{e.id}</span>
+                      <span className="block truncate text-xs text-[rgb(var(--faint))]">{e.label}</span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -931,10 +969,15 @@ function Starters({
           type="button"
           disabled={busy}
           onClick={() => onAsk(s.q)}
-          className="focusable lift rounded-xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] px-4 py-3.5 text-left transition hover:border-[rgb(var(--astra))]/50 disabled:opacity-50"
+          className="focusable lift group flex items-start gap-3 rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-4 py-3.5 text-left transition hover:border-[rgb(var(--astra))]/50 disabled:opacity-50"
         >
-          <span className="block text-sm font-medium text-[rgb(var(--ink))]">{s.q}</span>
-          <span className="mt-0.5 block text-xs text-[rgb(var(--faint))]">{s.hint}</span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium text-[rgb(var(--ink))]">{s.q}</span>
+            <span className="mt-0.5 block text-xs text-[rgb(var(--faint))]">{s.hint}</span>
+          </span>
+          <span aria-hidden="true" className="mt-0.5 text-[rgb(var(--faint))] transition group-hover:translate-x-0.5 group-hover:text-[rgb(var(--astra))]">
+            →
+          </span>
         </button>
       ))}
     </div>
