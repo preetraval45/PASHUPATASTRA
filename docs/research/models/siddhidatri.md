@@ -8,9 +8,9 @@
 
 | Verdict from | F1 | Episode recall | False alarms / 1000 | ECE ↓ | Brier ↓ |
 |---|---:|---:|---:|---:|---:|
-| **siddhidatri-v0** | 0.534 | 0.768 | 47.9 | 0.0419 | 0.0571 |
-| **siddhidatri-v1 (at Shailaputri's false-alarm budget)** | 0.503 | 0.562 | 37.6 | 0.0419 | 0.0571 |
-| shailaputri | 0.530 | 0.590 | 4.0 | 0.0183 | 0.0415 |
+| **siddhidatri-v0** | 0.537 | 0.774 | 47.8 | 0.0419 | 0.0571 |
+| **siddhidatri-v1 (at Shailaputri's false-alarm budget)** | 0.505 | 0.559 | 37.5 | 0.0419 | 0.0571 |
+| shailaputri | 0.539 | 0.597 | 3.8 | 0.0182 | 0.0415 |
 | max robust z | 0.253 | 0.778 | 20.4 | 0.0183 | 0.0420 |
 | pca | 0.416 | 0.724 | 84.5 | 0.0422 | 0.0582 |
 
@@ -18,9 +18,9 @@
 
 | Held out | shailaputri | max robust z | pca | bias |
 |---|---:|---:|---:|---:|
-| `machine-1` | +2.172 | +0.353 | +0.284 | -4.760 |
-| `machine-2` | +1.940 | +0.346 | +0.312 | -4.528 |
-| `machine-3` | +1.376 | +0.477 | +1.139 | -4.375 |
+| `machine-1` | +2.219 | +0.327 | +0.283 | -4.752 |
+| `machine-2` | +1.933 | +0.344 | +0.312 | -4.523 |
+| `machine-3` | +1.384 | +0.474 | +1.140 | -4.376 |
 
 ## How to read this
 
