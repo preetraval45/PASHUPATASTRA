@@ -30,6 +30,21 @@ const FOLD_NAMES: Record<string, string> = {
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
 
+/** Each model's public dataset, reproducing notebook and model files on Kaggle. Kushmanda's are private
+ *  by the owner's decision (27 Oct 2026), so none is linked. */
+const KAGGLE = "https://www.kaggle.com";
+const KAGGLE_OWNER = "preetraval4518071604";
+const ON_KAGGLE: Record<string, { dataset: string; notebook: string }> = {
+  "sati-shailaputri": { dataset: "sati-shailaputri-smd-server-anomalies", notebook: "shailaputri-server-anomalies-on-unseen-machines" },
+  "sati-brahmacharini": { dataset: "sati-brahmacharini-attack-behaviour-to-technique", notebook: "brahmacharini-which-att-ck-technique-is-this" },
+  "sati-chandraghanta": { dataset: "sati-chandraghanta-ids-split-benchmark", notebook: "chandraghanta-intrusion-detection-on-unseen-days" },
+  "sati-skandamata": { dataset: "sati-skandamata-attack-behaviour-to-mitigations", notebook: "skandamata-which-mitigations-stop-this-attack" },
+  "sati-katyayani": { dataset: "sati-katyayani-live-fault-injections", notebook: "katyayani-root-cause-on-live-fault-injections" },
+  "sati-kalaratri": { dataset: "sati-kalaratri-log-anomaly-time-split", notebook: "kalaratri-log-anomalies-split-by-time" },
+  "sati-mahagauri": { dataset: "sati-mahagauri-server-recovery", notebook: "mahagauri-is-the-incident-really-over" },
+  "sati-siddhidatri": { dataset: "sati-siddhidatri-detector-scores", notebook: "siddhidatri-fusing-detectors-and-calibration" },
+};
+
 /** Where each model's measured results are on this page, and where a visitor can run it live. */
 const LINKS: Record<string, { results: string; live?: { href: string; label: string } }> = {
   "sati-shailaputri": { results: "#shailaputri-results", live: { href: "#try-servers", label: "Try it on a held-out server" } },
@@ -185,6 +200,22 @@ export default function ModelsPage() {
                 ) : (
                   <span className="text-[rgb(var(--faint))]">Not served publicly yet</span>
                 )}
+              </p>
+            )}
+            {ON_KAGGLE[m.id] && (
+              <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[rgb(var(--faint))]">
+                <span>On Kaggle:</span>
+                {(
+                  [
+                    ["dataset", `${KAGGLE}/datasets/${KAGGLE_OWNER}/${ON_KAGGLE[m.id].dataset}`],
+                    ["notebook", `${KAGGLE}/code/${KAGGLE_OWNER}/${ON_KAGGLE[m.id].notebook}`],
+                    ["model", `${KAGGLE}/models/${KAGGLE_OWNER}/${m.id}`],
+                  ] as const
+                ).map(([label, href]) => (
+                  <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="focusable rounded hover:text-[rgb(var(--astra))] hover:underline">
+                    {label} ↗
+                  </a>
+                ))}
               </p>
             )}
           </li>
