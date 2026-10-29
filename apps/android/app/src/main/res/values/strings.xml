@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pashupatastra</string>
+    <string name="shortcut_ask_short">Sati AI</string>
+    <string name="shortcut_ask_long">Ask Sati AI</string>
+    <string name="shortcut_training_short">Training</string>
+    <string name="shortcut_training_long">Cyber defence training</string>
+    <string name="shortcut_incidents_short">Incidents</string>
+    <string name="shortcut_incidents_long">Open incidents</string>
 </resources>

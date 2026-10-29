@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the app icon: straight to the three places people go most. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="ask"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_ask"
+        android:shortcutShortLabel="@string/shortcut_ask_short"
+        android:shortcutLongLabel="@string/shortcut_ask_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://pashupatastra.vercel.app/ask"
+            android:targetPackage="app.pashupatastra"
+            android:targetClass="app.pashupatastra.MainActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="training"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_training"
+        android:shortcutShortLabel="@string/shortcut_training_short"
+        android:shortcutLongLabel="@string/shortcut_training_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://pashupatastra.vercel.app/training"
+            android:targetPackage="app.pashupatastra"
+            android:targetClass="app.pashupatastra.MainActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="incidents"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_incidents"
+        android:shortcutShortLabel="@string/shortcut_incidents_short"
+        android:shortcutLongLabel="@string/shortcut_incidents_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://pashupatastra.vercel.app/incidents"
+            android:targetPackage="app.pashupatastra"
+            android:targetClass="app.pashupatastra.MainActivity" />
+    </shortcut>
+</shortcuts>
