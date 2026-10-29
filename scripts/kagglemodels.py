@@ -160,7 +160,7 @@ for form, title, subtitle, job, results in (
     ("mahagauri", "Mahagauri: Recovery Verifier", "Says when a server incident is really over",
      "Answers once a minute whether the server has recovered, and declares the incident over once recovery has "
      "held long enough. The dangerous error is declaring it over too early.",
-     "On unseen machine groups, 0.021 of incidents declared over too early (budget 0.05), but only 0.092 of "
+     "On unseen machine groups, 0.021 of incidents declared over too early (budget 0.05), but only 0.095 of "
      "recoveries confirmed: safe, rarely decisive."),
     ("siddhidatri", "Siddhidatri: Detector Fusion", "Fuses three anomaly detectors into one calibrated probability",
      "Combines Shailaputri with two statistical detectors (robust z, PCA) by logistic regression into one "
