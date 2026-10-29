@@ -6,9 +6,9 @@ Four systems with real fault injections: RCAEval (revision `afeacb1`, suites RE1
 
 | Held out | Cases | v0: other RCAEval systems | v1: + live stack | Only v1 right | Only v0 right | p | Loudest service |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Live stack (RP-19) | 200 | 0.895 [0.845, 0.930] | — | — | — | — | 0.870 [0.816, 0.910] |
+| Live stack (RP-19) | 200 | 0.890 [0.839, 0.926] | — | — | — | — | 0.870 [0.816, 0.910] |
 | Online Boutique | 215 | 0.879 [0.829, 0.916] | 0.893 [0.845, 0.928] | 4 | 1 | 0.38 | 0.572 [0.505, 0.636] |
-| Sock Shop | 215 | 0.949 [0.911, 0.971] | 0.954 [0.916, 0.975] | 2 | 1 | 1 | 0.767 [0.707, 0.819] |
-| Train Ticket | 215 | 0.823 [0.767, 0.868] | 0.814 [0.757, 0.860] | 2 | 4 | 0.69 | 0.372 [0.310, 0.438] |
+| Sock Shop | 215 | 0.954 [0.916, 0.975] | 0.949 [0.911, 0.971] | 2 | 3 | 1 | 0.767 [0.707, 0.819] |
+| Train Ticket | 215 | 0.819 [0.762, 0.864] | 0.814 [0.757, 0.860] | 2 | 3 | 1 | 0.372 [0.310, 0.438] |
 
-Held out, the live stack has no v1 row: its v0 *is* the zero-shot transfer from RCAEval ([katyayani-live.md](katyayani-live.md)). 32 features, the same for every system. Run time 34.2 s.
+Held out, the live stack has no v1 row: its v0 *is* the zero-shot transfer from RCAEval ([katyayani-live.md](katyayani-live.md)). 32 features, the same for every system. Run time 42.5 s.
