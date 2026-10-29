@@ -34,6 +34,8 @@ def test_scores_a_held_out_example_with_its_truth_and_licence(served):
     assert body["flagged"] is True and body["truth"] is True and body["correct"] is True
     assert body["licence"] == "Research use only"
     assert client.get("/api/v1/models/kalaratri/examples/session-2").json()["flagged"] is False
+    why = client.get("/api/v1/models/kalaratri/examples/session-1").json()["why"]
+    assert why == [{"feature": "E5", "value": 4.0, "effect": 6.0}]  # the one split, -3 -> +3
 
 
 def test_lists_examples_and_refuses_other_forms_and_unknown_ids(served):

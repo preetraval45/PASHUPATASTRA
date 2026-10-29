@@ -58,6 +58,10 @@ def blocks(cache: Path) -> pd.DataFrame:
     with zipfile.ZipFile(archive(cache)) as zf:
         traces = _read(zf, "Event_traces.csv")
         labels = _read(zf, "anomaly_label.csv")
+        try:  # the template text, so a served model can say which log line it means by `E5`
+            known = _read(zf, "log_templates.csv")
+        except FileNotFoundError:
+            known = None
 
     block_col = next(c for c in traces.columns if "block" in c.lower())
     seq_col = next(c for c in traces.columns if traces[c].astype(str).str.contains(r"\[?E\d+").any() and c != block_col)
@@ -71,6 +75,8 @@ def blocks(cache: Path) -> pd.DataFrame:
         "events": traces[seq_col].astype(str).map(pattern.findall),
     })
     out["anomaly"] = out["block"].isin(anomalous).astype(int)
+    if known is not None and {"EventId", "EventTemplate"} <= set(known.columns):
+        out.attrs["templates"] = dict(zip(known["EventId"].astype(str), known["EventTemplate"].astype(str), strict=True))
     return out
 
 

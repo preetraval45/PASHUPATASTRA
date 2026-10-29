@@ -38,15 +38,32 @@ def summary(form: str) -> dict:
     }
 
 
+#: Kalaratri's non-template features, in words.
+NAMED = {
+    "length": "lines in the session",
+    "distinct_share": "share of distinct log lines",
+    "unseen": "log lines never seen in training",
+}
+
+
+def _name(m: dict, feature: str) -> str:
+    template = m.get("templates", {}).get(feature)
+    return f"log line {feature}: {template}" if template else NAMED.get(feature, feature)
+
+
 def run(form: str, example_id: str) -> dict:
     m = served(form)
     e = next((x for x in m.get("examples", []) if x["id"] == example_id), None)
     if e is None:
         raise KeyError(example_id)
-    score = trees.predict(m, trees.row_from(m, e["features"]))
+    row = trees.row_from(m, e["features"])
+    score = trees.predict(m, row)
     flagged = score >= m["threshold"]
     return {
         "model": form, "example": e["id"], "label": e["label"], "score": round(score, 4),
         "threshold": round(float(m["threshold"]), 4), "flagged": flagged, "truth": bool(e["truth"]),
         "correct": flagged == bool(e["truth"]), "licence": m.get("licence"),
+        # Why, by ablation (pashupatastra.trees.explain): the features that moved this score most.
+        "why": [{"feature": _name(m, f), "value": row[m["features"].index(f)], "effect": round(effect, 3)}
+                for f, effect in trees.explain(m, row, top=3)],
     }

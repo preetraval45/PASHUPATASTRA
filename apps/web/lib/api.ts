@@ -1242,6 +1242,8 @@ export type TreeRun = {
   truth: boolean;
   correct: boolean;
   licence: string | null;
+  /** The features that moved the score most, by ablation; effect is in log-odds, positive raises it. */
+  why?: { feature: string; value: number | null; effect: number }[];
 };
 
 export const getTreeExamples = (form: TreeForm) => get<TreeExamples>(`/models/${form}/examples`);

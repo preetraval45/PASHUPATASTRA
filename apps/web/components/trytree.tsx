@@ -96,6 +96,29 @@ export function TryTree({ form }: { form: TreeForm }) {
           <p className="tnum text-xs text-[rgb(var(--faint))]">
             Score {result.score.toFixed(4)} against threshold {result.threshold.toFixed(4)}
           </p>
+          {result.why && result.why.length > 0 && (
+            <div className="rounded-lg border border-[rgb(var(--edge))] p-3">
+              <p className="text-xs font-medium text-[rgb(var(--muted))]">What moved the score most</p>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                {result.why.map((w) => (
+                  <li key={w.feature} className="flex flex-wrap items-baseline gap-x-2">
+                    <span aria-hidden="true" className={w.effect >= 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}>
+                      {w.effect >= 0 ? "▲" : "▼"}
+                    </span>
+                    <span className="min-w-0 flex-1 break-words">{w.feature}</span>
+                    <span className="tnum text-xs text-[rgb(var(--faint))]">
+                      value {w.value === null ? "—" : Number(w.value.toFixed(3))} · {w.effect >= 0 ? "raised" : "lowered"} it by{" "}
+                      {Math.abs(w.effect).toFixed(2)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-[rgb(var(--faint))]">
+                Each line is the change in the model&apos;s log-odds when that one feature is treated as unknown (for
+                a log line: absent). Features that only matter together can each look small.
+              </p>
+            </div>
+          )}
         </div>
       )}
       {data.licence && <p className="text-xs text-[rgb(var(--faint))]">{data.licence}</p>}

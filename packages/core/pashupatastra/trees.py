@@ -73,3 +73,25 @@ def predict(model: dict, row: Sequence[float | None]) -> float:
 def row_from(model: dict, values: dict[str, float | None]) -> list[float | None]:
     """A feature dict → the row in the model's feature order; absent features are missing."""
     return [values.get(f) for f in model["features"]]
+
+
+def explain(model: dict, row: Sequence[float | None], top: int = 3) -> list[tuple[str, float]]:
+    """The features that moved this row's score most, by ablation.
+
+    Each feature the row has (present and non-zero) is set to missing in turn,
+    as LightGBM treats missing, and the change in raw score (log-odds for a
+    binary model) is recorded: positive means the feature pushed the score up.
+    No internal node values are needed, so it works on any exported model. It
+    answers "what would the model say without this?", one feature at a time;
+    features that only matter together can each look small.
+    """
+    base = raw_score(model, row)
+    effects = []
+    for i, x in enumerate(row):
+        if _missing(x) or x == 0.0:
+            continue
+        ablated = list(row)
+        ablated[i] = None
+        effects.append((model["features"][i], base - raw_score(model, ablated)))
+    effects.sort(key=lambda e: -abs(e[1]))
+    return effects[:top]

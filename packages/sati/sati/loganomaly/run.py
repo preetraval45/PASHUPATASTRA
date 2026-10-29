@@ -214,6 +214,8 @@ def main() -> int:
     (args.out / "model.json").write_text(json.dumps({
         **trees.compact(booster.dump_model(), list(Xtr.columns)), "threshold": float(t_model),
         "vocabulary": vocab, "dataset": spec["name"],
+        # What each event id says, so the live demo can name the log lines behind a verdict.
+        "templates": {e: t for e, t in data.attrs.get("templates", {}).items() if e in set(vocab)},
         # Held-out sessions from the later part of the log, for the live demo.
         "examples": [{"id": f"session-{i}", "label": "failing" if yte[i] else "normal", "truth": int(yte[i]),
                       "features": {c: float(Xte.iloc[i][c]) for c in Xtr.columns}}
