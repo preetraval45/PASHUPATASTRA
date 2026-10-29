@@ -25,7 +25,7 @@ jobs:
     name: answer keys predate the fixtures
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - run: |
@@ -62,8 +62,8 @@ jobs:
       PASHU_BASELINE_MODEL: ${{ matrix.model }}
       PASHU_BASELINE_TEMPERATURE: "0.2"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core
@@ -77,7 +77,7 @@ jobs:
       - name: name the artifact
         id: slug
         run: echo "slug=$(echo '${{ matrix.model }}' | tr -c 'a-zA-Z0-9' '_')" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: diagnosis-${{ steps.slug.outputs.slug }}
           path: benchmark/results/diagnosis/
@@ -90,11 +90,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: diagnosis-*
           path: benchmark/results/diagnosis
