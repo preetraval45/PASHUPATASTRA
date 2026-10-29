@@ -132,6 +132,9 @@ export function ChatConsole({
     } catch {
       // Default model.
     }
+    // A link that names a model ("/ask?model=sati:skandamata") picks it for this visit.
+    const linked = params.get("model");
+    if (linked && models.some((m) => m.id === linked)) setModel(linked);
     // Only on arrival; later URL changes are made by this component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

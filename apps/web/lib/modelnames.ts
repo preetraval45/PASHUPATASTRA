@@ -62,6 +62,7 @@ const BASELINES: Record<string, string> = {
   "pca per machine": "PCA per machine",
   "pca quantile": "PCA, quantile threshold",
   popularity: "Popularity (the same list for everyone)",
+  "max robust z": "Robust z-score, largest across metrics",
   "seasonal-naive": "Seasonal naive",
   "seasonal-robust-z": "Seasonal robust z-score",
 };

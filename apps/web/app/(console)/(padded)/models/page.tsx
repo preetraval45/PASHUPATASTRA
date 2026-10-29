@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import { CompareBars, type CompareRow } from "@/components/modelcharts";
 import { Badge, Page, Panel } from "@/components/ui";
+import siddhidatri from "@/lib/models/siddhidatri.results.json";
 import { BRAHMACHARINI, CHANDRAGHANTA, KALARATRI, KALARATRI_BGL, KATYAYANI, KUSHMANDA, MAHAGAURI, SIM_TO_REAL, SKANDAMATA, MODELS, SHAILAPUTRI, STAGES, statusOf, type ModelStatus } from "@/lib/navadurga";
 
 export const metadata: Metadata = {
@@ -28,6 +29,19 @@ const FOLD_NAMES: Record<string, string> = {
 };
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
+
+/** Where each model's measured results are on this page, and where a visitor can run it live. */
+const LINKS: Record<string, { results: string; live?: { href: string; label: string } }> = {
+  "sati-shailaputri": { results: "#shailaputri-results", live: { href: "#try-servers", label: "Try it on a held-out server" } },
+  "sati-brahmacharini": { results: "#brahmacharini-results", live: { href: "/ask?model=sati:brahmacharini", label: "Ask it in Sati AI" } },
+  "sati-chandraghanta": { results: "#chandraghanta-results", live: { href: "#chandraghanta-results", label: "Try it on a held-out flow" } },
+  "sati-kushmanda": { results: "#kushmanda-results" },
+  "sati-skandamata": { results: "#skandamata-results", live: { href: "/ask?model=sati:skandamata", label: "Ask it in Sati AI" } },
+  "sati-katyayani": { results: "#katyayani-results", live: { href: "#katyayani-results", label: "Try it on a held-out incident" } },
+  "sati-kalaratri": { results: "#kalaratri-results", live: { href: "#kalaratri-results", label: "Try it on a held-out session" } },
+  "sati-mahagauri": { results: "#mahagauri-results", live: { href: "#try-servers", label: "Try it on a held-out server" } },
+  "sati-siddhidatri": { results: "#siddhidatri-results", live: { href: "#try-servers", label: "Try it on a held-out server" } },
+};
 
 /**
  * The Sati model family (adr/Navadurga): nine models, named for the nine forms
@@ -96,7 +110,7 @@ export default function ModelsPage() {
     >
       <section className="grid gap-3 sm:grid-cols-4">
         <Tile label="Models" value="9" hint="one per stage of the loop" />
-        <Tile label="Trained" value={`${trained} of 9`} hint="the rest are planned in Block H" />
+        <Tile label="Trained" value={`${trained} of 9`} hint={trained === 9 ? "each on real public data" : "the rest are planned in Block H"} />
         <Tile label="Katyayani, unseen systems" value={pct(loso.sati["ac@1"])} hint={`top-1 root cause · baseline ${pct(loso.baseline["ac@1"])}`} />
         <Tile label="Real incidents tested" value={String(r.dataset.cases)} hint={`${r.dataset.name} · pinned ${r.dataset.revision.slice(0, 8)}`} />
       </section>
@@ -158,8 +172,19 @@ export default function ModelsPage() {
               <p className="mt-3 border-t border-[rgb(var(--edge))] pt-3 text-xs text-[rgb(var(--muted))]">
                 Top-1 root cause on systems never seen in training:{" "}
                 <strong className="text-[rgb(var(--ink))]">{pct(loso.sati["ac@1"])}</strong> vs{" "}
-                {pct(loso.baseline["ac@1"])} without learning.{" "}
-                <a href="#katyayani-results" className="focusable rounded text-[rgb(var(--astra))] hover:underline">Results ↓</a>
+                {pct(loso.baseline["ac@1"])} without learning.
+              </p>
+            )}
+            {LINKS[m.id] && (
+              <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-[rgb(var(--edge))] pt-3 text-xs">
+                <a href={LINKS[m.id].results} className="focusable rounded text-[rgb(var(--astra))] hover:underline">Results ↓</a>
+                {LINKS[m.id].live ? (
+                  <a href={LINKS[m.id].live!.href} className="focusable rounded text-[rgb(var(--astra))] hover:underline">
+                    {LINKS[m.id].live!.label} →
+                  </a>
+                ) : (
+                  <span className="text-[rgb(var(--faint))]">Not served publicly yet</span>
+                )}
               </p>
             )}
           </li>
@@ -554,6 +579,47 @@ export default function ModelsPage() {
           </Panel>
         </section>
       )}
+
+      <section id="siddhidatri-results" className="scroll-mt-24 space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Siddhidatri — one verdict from several detectors</h2>
+          <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[rgb(var(--muted))]">
+            {siddhidatri.dataset.machines} real servers ({siddhidatri.dataset.name}). Siddhidatri stacks Shailaputri and two
+            statistical detectors, trained out of fold, and each machine group is held out in turn. It matches
+            Shailaputri alone on F1 but raises far more false alarms, so Shailaputri&apos;s alarm stays the one Sati acts
+            on and the fusion is advisory.
+          </p>
+        </div>
+        <Panel title="Mean over held-out machine groups" aside="false alarms per 1000 minutes: lower is quieter">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-[rgb(var(--faint))]">
+                  <th className="py-2 pr-3 font-normal">Detector</th>
+                  {["Precision", "Episode recall", "F1", "False alarms / 1000", "Lead (min)"].map((h) => (
+                    <th key={h} className="py-2 pr-3 text-right font-normal">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[rgb(var(--edge))]">
+                {shownEntries(siddhidatri.mean_across_groups as Record<string, { precision: number; recall: number; f1: number; false_alarms_per_1000: number; mean_lead: number }>).map(([name, m]) => (
+                  <tr key={name}>
+                    <td className="py-2 pr-3">{name === "shailaputri" ? <strong>Shailaputri alone</strong> : isOurs(name) ? <strong>{shownName(name)}</strong> : baselineName(name)}</td>
+                    <td className="tnum py-2 pr-3 text-right">{m.precision.toFixed(3)}</td>
+                    <td className="tnum py-2 pr-3 text-right">{m.recall.toFixed(3)}</td>
+                    <td className="tnum py-2 pr-3 text-right">{m.f1.toFixed(3)}</td>
+                    <td className="tnum py-2 pr-3 text-right">{m.false_alarms_per_1000.toFixed(1)}</td>
+                    <td className="tnum py-2 pr-3 text-right">{m.mean_lead.toFixed(0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-xs text-[rgb(var(--faint))]">
+            Lead is how many minutes before an anomaly&apos;s end the first flag came: higher is earlier.
+          </p>
+        </Panel>
+      </section>
 
       {!KALARATRI.pending && (
         <section id="kalaratri-results" className="scroll-mt-24 space-y-4">
