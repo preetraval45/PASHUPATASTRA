@@ -238,6 +238,7 @@ def content() -> dict[str, list[str]]:
         "Is it over (Mahagauri) reads a server's metrics after an incident and says, minute by minute, whether "
         "recovery has held. An early all-clear is the error that counts.",
     ]
+    novel = kal_bgl.get("kalaratri-bgl-v1 (+ novelty)")
     served_alone = brt.get("served design (int8)")
     served_fused = brt.get("served design + pruned tf-idf (fused)")
     kal_ok, kal_n = live_examples("kalaratri")
@@ -319,7 +320,11 @@ def content() -> dict[str, list[str]]:
                  f"a 1% false-alarm rate on validation flows, unseen-day F1 rises to {f3(ch2['f1'])} and recall from "
                  f"{f3(ch0['recall'])} to {f3(ch2['recall'])}. On log sessions, Kalaratri reaches F1 "
                  f"{f3(kal['kalaratri-v0']['f1'])} on HDFS but {f3(kal_bgl['kalaratri-bgl-v0']['f1'])} on BGL, where "
-                 "failures are rarer: one log dataset alone flatters the task."),
+                 "failures are rarer: one log dataset alone flatters the task." + (
+                     f" Telling it which log lines are new, counted causally against the log before each window, cut "
+                     f"BGL's false-positive rate from {kal_bgl['kalaratri-bgl-v0']['false_positive_rate']:.4f} to "
+                     f"{novel['false_positive_rate']:.4f} but moved F1 to {f3(novel['f1'])}: the later failures are "
+                     "mostly not first-seen lines." if novel else "")),
             body("Kushmanda, a 17M-parameter language model trained from scratch, answers from retrieved passages "
                  f"well (ROUGE-L {f3(ku['kushmanda']['remediate']['rouge_l'])} on required actions) and declines on "
                  f"{f3(ku['kushmanda']['unanswerable']['abstained'])} of questions no passage answers, but copies an "
