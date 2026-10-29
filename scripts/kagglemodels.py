@@ -57,7 +57,7 @@ MODELS = {
             "(Online Boutique, Sock Shop) and the project's live Kubernetes stack, with one incident in ten kept "
             "aside; the file ships those incidents so the model can be tried on cases it never saw.",
             "RCAEval (MIT) and the project's own live fault injections (CC-BY-4.0).",
-            "Each system held out in turn: RCA@1 0.900 on the live stack, 0.845 on Online Boutique, 0.894 on Sock "
+            "Each system held out in turn: RCA@1 0.900 on the live stack, 0.849 on Online Boutique, 0.894 on Sock "
             "Shop, against 0.265, 0.490 and 0.265 for the same design trained on synthetic incidents. On a "
             "pre-declared RCAEval sample the series-feature design names the root first in 0.940 of cases, against "
             "0.550 for llama3 and 0.510 for qwen2.5:7b given the same evidence.",
@@ -70,7 +70,8 @@ MODELS = {
         "title": "Brahmacharini: Behaviour to ATT&CK Technique",
         "subtitle": "Finds the ATT&CK technique an observed attacker behaviour belongs to",
         "files": {"brahmacharini.json": "brahmacharini.json", "brahmacharini.bag": "brahmacharini.bag",
-                  "knowledge.json": "knowledge.json", "knowledge.vec": "knowledge.vec"},
+                  "knowledge.json": "knowledge.json", "knowledge.vec": "knowledge.vec",
+                  "technique_classifier.json": "technique_classifier.json"},
         "dataset": "sati-brahmacharini-attack-behaviour-to-technique",
         "licence": "Apache 2.0",
         "description": card(
@@ -81,7 +82,8 @@ MODELS = {
             "MITRE ATT&CK enterprise procedure examples, split by source; the served knowledge base holds ATT&CK, "
             "CAPEC and CISA KEV passages.",
             "On attackers never seen in training: Recall@1 0.614, Recall@10 0.854, against 0.268 and 0.580 for "
-            "BM25.", "Apache-2.0. ATT&CK content is © MITRE, used under its terms with attribution."),
+            "BM25. The served design (int8, smaller) reaches 0.556 alone and 0.650 fused with the TF-IDF "
+            "classifier in technique_classifier.json, which is what answers 'which technique is this?'.", "Apache-2.0. ATT&CK content is © MITRE, used under its terms with attribution."),
         "usage": "# Model Format\nInt8 bag rows (`brahmacharini.bag`) with per-row scales and the projection "
                  "(`brahmacharini.json`); the knowledge base and its int8 vectors.\n\n# Model Usage\nHash the "
                  "text's words and bigrams with CRC32 into `buckets`, average those rows times their scales, "
@@ -92,7 +94,8 @@ MODELS = {
         "title": "Skandamata: Mitigation Recommender",
         "subtitle": "Recommends the ATT&CK mitigations that defend against an attacker behaviour",
         "files": {"skandamata.json": "skandamata.json", "skandamata.bag": "skandamata.bag",
-                  "attack_mitigations.json": "attack_mitigations.json"},
+                  "attack_mitigations.json": "attack_mitigations.json",
+                  "mitigation_classifier.json": "mitigation_classifier.json"},
         "dataset": "sati-skandamata-attack-behaviour-to-mitigations",
         "licence": "Apache 2.0",
         "description": card(
@@ -102,8 +105,10 @@ MODELS = {
             "Hashed n-grams → mean of int8 embedding rows → one ReLU layer → a probability per mitigation. "
             "Multi-label, trained with binary cross-entropy. The export checks it ranks as PyTorch did.",
             "ATT&CK procedure examples with every mitigation linked to their technique, split by source.",
-            "First recommendation right 0.792 of the time on unseen attackers, against 0.537 for BM25 over "
-            "techniques and 0.232 for recommending the most common mitigations.",
+            "First recommendation right 0.787 of the time on unseen attackers, against 0.537 for BM25 over "
+            "techniques and 0.232 for recommending the most common mitigations. A TF-IDF classifier does better "
+            "(0.827); pruned to int8 as served (mitigation_classifier.json) it ranks the list better (nDCG@10 "
+            "0.850 against 0.839), so the API orders mitigations by it.",
             "Apache-2.0. ATT&CK content is © MITRE, used under its terms with attribution."),
         "usage": "# Model Format\nInt8 bag rows plus two float layers in `skandamata.json`; "
                  "`attack_mitigations.json` holds ATT&CK's technique → mitigation links.\n\n# Model Usage\nHash, "
