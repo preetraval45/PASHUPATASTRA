@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-10-29T13:05:32+00:00",
+  "as_of": "2026-10-30T12:58:59+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.10.28",
-    "total": 1762,
-    "added_last_30_days": 34,
+    "catalog_version": "2026.10.29",
+    "total": 1764,
+    "added_last_30_days": 35,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-10",
-        "value": 32
+        "value": 34
       }
     ],
     "top_vendors": [
@@ -68,7 +68,7 @@
       },
       {
         "label": "Cisco",
-        "value": 101
+        "value": 102
       },
       {
         "label": "Apple",
@@ -104,6 +104,22 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-97229",
+        "vendor": "GitLab",
+        "product": "Community Edition and Enterprise Edition",
+        "name": "GitLab Community Edition and Enterprise Edition Integer Overflow or Wraparound Vulnerability",
+        "added": "2026-10-29",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-76418",
+        "vendor": "Cisco",
+        "product": "Secure Firewall ASA Software and Cisco Secure FTD Software",
+        "name": "Cisco Secure Firewall ASA Software and Cisco Secure FTD Software Unchecked Return Value to NULL Pointer Dereference Vulnerability",
+        "added": "2026-10-29",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-41709",
         "vendor": "Broadcom",
@@ -183,22 +199,6 @@
         "name": "Plex Media Server External Control of File Name or Path Vulnerability",
         "added": "2026-10-20",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-96655",
-        "vendor": "Plex",
-        "product": "Media Server",
-        "name": "Plex Media Server Server-Side Request Forgery (SSRF) Vulnerability",
-        "added": "2026-10-20",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-96654",
-        "vendor": "Plex",
-        "product": "Media Server",
-        "name": "Plex Media Server Improper Neutralization of Encoded URI Schemes in a Web Page Vulnerability",
-        "added": "2026-10-20",
-        "ransomware": false
       }
     ]
   },
@@ -208,146 +208,146 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-25",
-        "value": 3
-      },
-      {
         "label": "2026-10-26",
-        "value": 32
+        "value": 8
       },
       {
         "label": "2026-10-27",
-        "value": 40
+        "value": 39
       },
       {
         "label": "2026-10-28",
-        "value": 23
+        "value": 22
       },
       {
         "label": "2026-10-29",
-        "value": 2
+        "value": 28
+      },
+      {
+        "label": "2026-10-30",
+        "value": 3
       }
     ],
     "by_group": [
       {
-        "label": "qilin",
-        "value": 19
+        "label": "Booba Project",
+        "value": 16
       },
       {
         "label": "Whitearmor",
-        "value": 10
-      },
-      {
-        "label": "Booba Project",
-        "value": 10
+        "value": 8
       },
       {
         "label": "everest",
         "value": 8
       },
       {
+        "label": "SilentRansomGroup",
+        "value": 7
+      },
+      {
+        "label": "qilin",
+        "value": 7
+      },
+      {
         "label": "play",
         "value": 7
       },
       {
-        "label": "SilentRansomGroup",
-        "value": 6
-      },
-      {
-        "label": "payload",
+        "label": "rhysida",
         "value": 5
       },
       {
-        "label": "aurora",
+        "label": "N0n",
         "value": 4
       },
       {
-        "label": "N0n",
-        "value": 3
+        "label": "Shiba",
+        "value": 4
       },
       {
-        "label": "akira",
-        "value": 3
+        "label": "everstake",
+        "value": 4
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 39
+        "value": 31
       },
       {
-        "label": "DE",
-        "value": 8
+        "label": "GB",
+        "value": 5
       },
       {
         "label": "IT",
         "value": 4
       },
       {
-        "label": "GB",
-        "value": 4
-      },
-      {
-        "label": "MX",
-        "value": 3
-      },
-      {
         "label": "MY",
         "value": 3
       },
       {
-        "label": "SG",
+        "label": "CA",
+        "value": 3
+      },
+      {
+        "label": "DE",
+        "value": 3
+      },
+      {
+        "label": "AE",
+        "value": 2
+      },
+      {
+        "label": "MX",
         "value": 2
       },
       {
         "label": "FR",
-        "value": 2
-      },
-      {
-        "label": "CA",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Professional Services",
-        "value": 15
+        "value": 14
       },
       {
         "label": "Healthcare",
-        "value": 12
+        "value": 13
       },
       {
         "label": "Not Found",
-        "value": 11
-      },
-      {
-        "label": "Manufacturing",
-        "value": 11
+        "value": 12
       },
       {
         "label": "Technology",
         "value": 10
       },
       {
-        "label": "Retail & E-Commerce",
+        "label": "Education",
+        "value": 9
+      },
+      {
+        "label": "Financial Services",
+        "value": 9
+      },
+      {
+        "label": "Manufacturing",
         "value": 8
       },
       {
         "label": "Energy & Utilities",
-        "value": 7
-      },
-      {
-        "label": "Financial Services",
         "value": 6
       },
       {
-        "label": "Education",
-        "value": 6
+        "label": "Retail & E-Commerce",
+        "value": 5
       },
       {
-        "label": "Other",
-        "value": 6
+        "label": "Government & Defense",
+        "value": 5
       }
     ]
   },
