@@ -1,17 +1,13 @@
 {
-  "as_of": "2026-10-30T12:58:59+00:00",
+  "as_of": "2026-10-31T12:36:07+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.10.29",
-    "total": 1764,
-    "added_last_30_days": 35,
+    "catalog_version": "2026.10.30",
+    "total": 1766,
+    "added_last_30_days": 36,
     "known_ransomware_use": 361,
     "by_month": [
-      {
-        "label": "2025-10",
-        "value": 2
-      },
       {
         "label": "2025-11",
         "value": 11
@@ -58,7 +54,7 @@
       },
       {
         "label": "2026-10",
-        "value": 34
+        "value": 36
       }
     ],
     "top_vendors": [
@@ -92,7 +88,7 @@
       },
       {
         "label": "Ivanti",
-        "value": 36
+        "value": 38
       },
       {
         "label": "Linux",
@@ -104,6 +100,22 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-118527",
+        "vendor": "Ivanti",
+        "product": "Connect Secure",
+        "name": "Ivanti Connect Secure Generation of Predictable Numbers or Identifiers Vulnerability",
+        "added": "2026-10-30",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-111357",
+        "vendor": "Ivanti",
+        "product": "Connect Secure",
+        "name": "Ivanti Connect Secure Missing Authentication for Critical Function Vulnerability",
+        "added": "2026-10-30",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-97229",
         "vendor": "GitLab",
@@ -183,22 +195,6 @@
         "name": "Collabora Online – Built-in CODE Server OS Command Injection Vulnerability",
         "added": "2026-10-23",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-106931",
-        "vendor": "EG Secure Solutions",
-        "product": "SiteGuard Server Edition",
-        "name": "EG Secure Solutions SiteGuard Server Edition OS Command Injection Vulnerability",
-        "added": "2026-10-20",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-96656",
-        "vendor": "Plex",
-        "product": "Media Server",
-        "name": "Plex Media Server External Control of File Name or Path Vulnerability",
-        "added": "2026-10-20",
-        "ransomware": false
       }
     ]
   },
@@ -208,87 +204,79 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-26",
-        "value": 8
-      },
-      {
-        "label": "2026-10-27",
-        "value": 39
-      },
-      {
         "label": "2026-10-28",
-        "value": 22
+        "value": 13
       },
       {
         "label": "2026-10-29",
-        "value": 28
+        "value": 26
       },
       {
         "label": "2026-10-30",
-        "value": 3
+        "value": 40
+      },
+      {
+        "label": "2026-10-31",
+        "value": 21
       }
     ],
     "by_group": [
       {
-        "label": "Booba Project",
-        "value": 16
-      },
-      {
-        "label": "Whitearmor",
-        "value": 8
-      },
-      {
-        "label": "everest",
-        "value": 8
+        "label": "qilin",
+        "value": 12
       },
       {
         "label": "SilentRansomGroup",
-        "value": 7
+        "value": 11
       },
       {
-        "label": "qilin",
-        "value": 7
+        "label": "safepay",
+        "value": 9
       },
       {
-        "label": "play",
-        "value": 7
+        "label": "thegentlemen",
+        "value": 9
+      },
+      {
+        "label": "genesis",
+        "value": 9
+      },
+      {
+        "label": "Booba Project",
+        "value": 6
+      },
+      {
+        "label": "everstake",
+        "value": 5
       },
       {
         "label": "rhysida",
         "value": 5
       },
       {
-        "label": "N0n",
-        "value": 4
-      },
-      {
         "label": "Shiba",
         "value": 4
       },
       {
-        "label": "everstake",
-        "value": 4
+        "label": "N0n",
+        "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 31
+        "value": 34
       },
       {
-        "label": "GB",
-        "value": 5
+        "label": "MX",
+        "value": 8
       },
       {
-        "label": "IT",
-        "value": 4
-      },
-      {
-        "label": "MY",
+        "label": "TW",
         "value": 3
       },
       {
-        "label": "CA",
+        "label": "MY",
         "value": 3
       },
       {
@@ -296,58 +284,62 @@
         "value": 3
       },
       {
-        "label": "AE",
+        "label": "JP",
         "value": 2
       },
       {
-        "label": "MX",
+        "label": "AR",
         "value": 2
       },
       {
-        "label": "FR",
+        "label": "IL",
+        "value": 2
+      },
+      {
+        "label": "SG",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Professional Services",
-        "value": 14
-      },
-      {
-        "label": "Healthcare",
-        "value": 13
+        "value": 17
       },
       {
         "label": "Not Found",
-        "value": 12
+        "value": 16
+      },
+      {
+        "label": "Manufacturing",
+        "value": 14
       },
       {
         "label": "Technology",
         "value": 10
       },
       {
-        "label": "Education",
-        "value": 9
+        "label": "Healthcare",
+        "value": 10
       },
       {
         "label": "Financial Services",
-        "value": 9
+        "value": 7
       },
       {
-        "label": "Manufacturing",
-        "value": 8
-      },
-      {
-        "label": "Energy & Utilities",
+        "label": "Transportation",
         "value": 6
       },
       {
-        "label": "Retail & E-Commerce",
-        "value": 5
+        "label": "Education",
+        "value": 6
+      },
+      {
+        "label": "Other",
+        "value": 4
       },
       {
         "label": "Government & Defense",
-        "value": 5
+        "value": 3
       }
     ]
   },
