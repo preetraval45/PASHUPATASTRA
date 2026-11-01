@@ -2,7 +2,7 @@
 
 - **Date:** 2026-11-01
 - **Phase:** Product (RP-96)
-- **Commit(s):** pending
+- **Commit(s):** d1aec2a (CI run 41321573749 green)
 
 ## What changed
 
