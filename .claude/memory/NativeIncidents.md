@@ -2,7 +2,7 @@
 
 - **Date:** 2026-11-01
 - **Phase:** Product (RP-96)
-- **Commit(s):** pending
+- **Commit(s):** see git log; green in CI run 41324018593
 
 ## What changed
 
