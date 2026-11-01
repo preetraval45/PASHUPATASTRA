@@ -560,7 +560,7 @@ export function ChatConsole({
           </div>
         </div>
 
-        <div className="shrink-0 border-t border-[rgb(var(--edge))] bg-[rgb(var(--ground))] px-3 pb-4 pt-3 sm:px-6">
+        <div className="shrink-0 border-t border-[rgb(var(--edge))] bg-[rgb(var(--ground))] px-3 pb-2.5 pt-2.5 sm:px-6">
           {!incident && (
             <div className="mx-auto mb-2 max-w-3xl space-y-2">
               <div role="tablist" aria-label="Specialist" className="no-scrollbar fade-x -mx-1 flex gap-1.5 overflow-x-auto px-3 pb-1">
@@ -640,18 +640,28 @@ export function ChatConsole({
               </svg>
             </button>
           </form>
-          <p className="mx-auto mt-2 flex max-w-3xl flex-wrap justify-between gap-x-4 gap-y-1 px-1 text-[11px] text-[rgb(var(--faint))]">
-            <span>
+          {/* One quiet line. The privacy notice stays visible because it is a disclosure: questions are
+              kept in the public audit trail (services/api routes._asked) with no name attached, and
+              /privacy says so too. The rest of the fine print is one tap away. */}
+          <details className="group mx-auto mt-1.5 max-w-3xl px-1 text-[11px] text-[rgb(var(--faint))]">
+            <summary className="flex cursor-pointer list-none items-center gap-1.5 [&::-webkit-details-marker]:hidden">
+              <span className="min-w-0 truncate">
+                Questions are public in the <a href="/audit" className="underline">audit trail</a>, so leave out personal details
+              </span>
+              <span
+                aria-label="More about Sati AI"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-[rgb(var(--edge-strong))] text-[9px] group-open:bg-[rgb(var(--raised))]"
+              >
+                i
+              </span>
+            </summary>
+            <p className="mt-1">
               {incident
                 ? "Answers come from this incident's stored evidence, with citations. Sati cannot act."
-                : "General knowledge, not your systems. Sati cannot act, and won't help attack anyone."}{" "}
-              {/* Questions are kept in the public audit trail (services/api routes._asked), with no
-                  name or address attached; /privacy says so too. Said here, where it is typed. */}
-              Questions are kept in the public <a href="/audit" className="underline">audit trail</a>, so leave out
-              personal details.
-            </span>
-            <span className="hidden sm:inline">Enter to send · Shift+Enter for a new line</span>
-          </p>
+                : "General knowledge, not your systems. Sati cannot act, and won't help attack anyone."}
+              <span className="hidden sm:inline"> Enter to send · Shift+Enter for a new line.</span>
+            </p>
+          </details>
         </div>
       </section>
 
