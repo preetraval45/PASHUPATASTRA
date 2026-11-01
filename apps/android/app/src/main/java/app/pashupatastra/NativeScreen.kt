@@ -120,6 +120,31 @@ abstract class NativeScreen(protected val activity: MainActivity) {
         }
     }
 
+    /**
+     * Placeholder cards while the API answers: grey blocks in the shape of the cards
+     * to come, pulsing gently, so the screen has its layout before it has its data.
+     */
+    protected fun skeleton(cards: Int): View = LinearLayout(activity).apply {
+        orientation = LinearLayout.VERTICAL
+        repeat(cards) { i ->
+            addView(LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(16), dp(16), dp(16), dp(16))
+                background = rounded(p.panel, 18, p.edge)
+                addView(View(activity).apply { background = rounded(p.raised, 6) }, LinearLayout.LayoutParams(dp(110), dp(12)))
+                addView(View(activity).apply { background = rounded(p.raised, 6) }, LinearLayout.LayoutParams(MATCH_PARENT, dp(14)).apply { topMargin = dp(14) })
+                addView(View(activity).apply { background = rounded(p.raised, 6) }, LinearLayout.LayoutParams(dp(200), dp(14)).apply { topMargin = dp(8) })
+            }, lp(top = if (i == 0) 0 else 10))
+        }
+        alpha = 0.5f
+        animate().alpha(1f).setDuration(700).withEndAction(object : Runnable {
+            override fun run() {
+                if (!isAttachedToWindow) return
+                animate().alpha(if (alpha > 0.75f) 0.5f else 1f).setDuration(700).withEndAction(this).start()
+            }
+        }).start()
+    }
+
     protected fun lp(top: Int = 0) = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(top) }
 
     protected fun weighted(start: Int) = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(start) }

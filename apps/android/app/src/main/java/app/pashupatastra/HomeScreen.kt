@@ -72,6 +72,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
                 refresh.isRefreshing = false
                 if (activity.isDestroyed) return@runOnUiThread
                 snapshot = Snapshot(incidents, health)
+                if (incidents != null) activity.setNeedYou(incidents.count { it.state == "awaiting_approval" })
                 loadedAt = System.currentTimeMillis()
                 render()
             }
@@ -111,7 +112,9 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
                 }, lp(top = 24))
                 shown.forEach { column.addView(incidentCard(it), lp(top = 10)) }
             }
-        } else if (snapshot != null) {
+        } else if (snapshot == null) {
+            column.addView(skeleton(2), lp(top = 24))
+        } else {
             column.addView(notice("The API could not be reached. Pull down to try again."), lp(top = 18))
         }
 

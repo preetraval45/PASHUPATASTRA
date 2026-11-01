@@ -112,3 +112,4 @@ Protocol: before every push, write a topic-named file from
 - [NativeIncidents.md](NativeIncidents.md) — native Incidents list (IncidentsScreen.kt), NativeScreen/Api split, web detail page slides over the list
 - [IncidentAlerts.md](IncidentAlerts.md) — WorkManager polls /incidents for alerts (no FCM); stray brace broke run 41323853703
 - [IncidentsWidget.md](IncidentsWidget.md) — home-screen widget; IncidentWatch always runs, switch gates notifications only
+- [NativeFeed.md](NativeFeed.md) — native Live attacks from /intel via synthetic 'feed' tab id; skeleton placeholders; need-you badge

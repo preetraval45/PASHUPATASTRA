@@ -87,6 +87,7 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
                 failed = result == null
                 if (result != null) {
                     incidents = result
+                    activity.setNeedYou(result.count { it.state == "awaiting_approval" })
                     loadedAt = System.currentTimeMillis()
                 }
                 render()
@@ -112,7 +113,7 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
         if (all == null) {
             list.addView(
                 if (failed) notice("The incidents could not be loaded. Pull down to try again.")
-                else text("Loading incidents…", 14f, p.faint).apply { gravity = Gravity.CENTER; setPadding(0, dp(48), 0, 0) },
+                else skeleton(4),
                 lp(top = 10),
             )
             return

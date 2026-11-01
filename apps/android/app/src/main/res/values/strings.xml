@@ -23,6 +23,7 @@
     <string name="sheet_dark">Dark theme</string>
     <string name="sheet_alerts">Alert me when an incident needs me</string>
     <string name="sheet_build">Pashupatastra for Android · build %1$s</string>
+    <string name="feed_title">Live attacks</string>
     <string name="widget_title">Incidents</string>
     <string name="widget_open">Open</string>
     <string name="widget_need">Need you</string>

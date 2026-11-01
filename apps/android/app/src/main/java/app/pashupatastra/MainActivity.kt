@@ -70,6 +70,9 @@ class MainActivity : AppCompatActivity() {
     private var current: WebTab? = null
     /** Tabs whose first screen is native, drawn from the API; their pages open above them. */
     private val natives = HashMap<Int, NativeScreen>()
+
+    /** Live attacks (FeedScreen): a native screen reached from More, so the tab bar marks More. */
+    private val feed = View.generateViewId()
     private var shown: View? = null
     private var currentId = 0
 
@@ -233,6 +236,7 @@ class MainActivity : AppCompatActivity() {
     // --- tabs ---------------------------------------------------------------
 
     private fun rootPath(id: Int): String = when (id) {
+        feed -> "/observatory"
         R.id.tab_incidents -> "/incidents"
         R.id.tab_ask -> "/ask"
         R.id.tab_learn -> "/training"
@@ -241,6 +245,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Which tab a path belongs to; anything not under the four tabs opens in More's own stack. */
     private fun tabFor(path: String): Int = when {
+        path == "/observatory" -> feed
         path == "" || path == "/" -> R.id.tab_home
         path.startsWith("/incidents") -> R.id.tab_incidents
         path.startsWith("/ask") -> R.id.tab_ask
@@ -260,16 +265,20 @@ class MainActivity : AppCompatActivity() {
     /** Selects a tab from code, which moves the tab bar's highlight too. */
     private fun select(id: Int, url: String? = null) {
         show(id, url)
-        nav.menu.findItem(id)?.isChecked = true
+        nav.menu.findItem(if (id == feed) R.id.tab_more else id)?.isChecked = true
     }
 
-    private fun hasNative(id: Int) = id == R.id.tab_home || id == R.id.tab_incidents
+    private fun hasNative(id: Int) = id == R.id.tab_home || id == R.id.tab_incidents || id == feed
 
     /** The tab's native first screen, made on first use. */
     private fun native(id: Int): NativeScreen? {
         if (!hasNative(id)) return null
         return natives.getOrPut(id) {
-            val screen = if (id == R.id.tab_home) HomeScreen(this) else IncidentsScreen(this)
+            val screen = when (id) {
+                R.id.tab_home -> HomeScreen(this)
+                feed -> FeedScreen(this)
+                else -> IncidentsScreen(this)
+            }
             screen.view.visibility = View.GONE
             content.addView(screen.view, 0, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
             screen
@@ -386,6 +395,19 @@ class MainActivity : AppCompatActivity() {
         if (atRoot && id != R.id.tab_more) select(id) else select(id, link.toString())
     }
 
+    /** The Incidents tab's badge: how many incidents await the owner's approval; hidden at zero. */
+    fun setNeedYou(count: Int) {
+        if (count > 0) {
+            nav.getOrCreateBadge(R.id.tab_incidents).apply {
+                number = count
+                backgroundColor = palette.warn
+                badgeTextColor = palette.ground
+            }
+        } else {
+            nav.removeBadge(R.id.tab_incidents)
+        }
+    }
+
     fun onTabChanged(tab: WebTab) {
         if (tab === current) updateChrome()
     }
@@ -393,7 +415,11 @@ class MainActivity : AppCompatActivity() {
     private fun updateChrome() {
         val tab = current
         if (tab == null) {
-            toolbar.title = if (currentId == R.id.tab_home) getString(R.string.app_name) else nav.menu.findItem(currentId)?.title
+            toolbar.title = when (currentId) {
+                R.id.tab_home -> getString(R.string.app_name)
+                feed -> getString(R.string.feed_title)
+                else -> nav.menu.findItem(currentId)?.title
+            }
             toolbar.navigationIcon = null
             progress.visibility = View.INVISIBLE
             return
@@ -438,7 +464,7 @@ class MainActivity : AppCompatActivity() {
     private fun showMore() {
         val p = palette
         val dialog = BottomSheetDialog(this)
-        val here = Uri.parse(current?.web?.url ?: "").path.orEmpty()
+        val here = current?.web?.url?.let { Uri.parse(it).path.orEmpty() } ?: rootPath(currentId)
 
         val list = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
