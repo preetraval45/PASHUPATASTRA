@@ -1,0 +1,27 @@
+# AWS operations, asked for by committing .github/aws-ops.json (scripts/awsops.py says which exist).
+# The AWS keys live only as repository secrets, so this is where work on the account happens.
+name: AWS ops
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/aws-ops.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ops:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install --quiet boto3
+      - run: python scripts/awsops.py .github/aws-ops.json
