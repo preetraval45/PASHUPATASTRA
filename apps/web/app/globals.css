@@ -32,6 +32,18 @@
 
   /* Status. Reserved: these four never carry a non-status meaning, and they
      always ship with a glyph or a word so state is never colour-alone. */
+  /* Chart series, in fixed order (the dataviz reference palette, dark steps). Validated against the dark
+     panel (#11141a): lightness band, chroma floor, CVD ΔE ≥ 8.4 adjacent, normal-vision ΔE ≥ 19.3, all
+     ≥ 3:1. Never reused for status; status keeps --ok … --crit below. */
+  --series-1: 57 135 229;
+  --series-2: 217 89 38;
+  --series-3: 25 158 112;
+  --series-4: 201 133 0;
+  --series-5: 213 81 129;
+  --series-6: 0 131 0;
+  --series-7: 144 133 233;
+  --series-8: 230 103 103;
+  --series-other: 126 136 149;
   --ok: 52 211 153;
   --warn: 251 191 36;
   --high: 251 146 60;
@@ -75,6 +87,17 @@ option {
   --astra: 17 116 114;
   --gold: 146 113 12;
 
+  /* Light steps of the same eight hues, validated against white: all checks pass; slots 3–5 sit below
+     3:1, so every chart that uses them carries labels or a table view. */
+  --series-1: 42 120 214;
+  --series-2: 235 104 52;
+  --series-3: 27 175 122;
+  --series-4: 237 161 0;
+  --series-5: 232 123 164;
+  --series-6: 0 131 0;
+  --series-7: 98 80 214;
+  --series-8: 227 73 72;
+  --series-other: 100 108 120;
   --ok: 4 120 87;
   --warn: 145 86 5;
   --high: 154 52 18;

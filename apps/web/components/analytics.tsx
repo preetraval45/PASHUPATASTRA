@@ -15,18 +15,28 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-/** Distinct, colour-blind-safe series colours. Status colours (--ok, --warn,
- *  --high, --crit) are reserved for status and are never used for a series. */
-const SERIES = [
-  "47 163 160", // astra teal
-  "129 140 248", // indigo
-  "201 162 39", // gold
-  "236 72 153", // pink
-  "56 189 248", // sky
-  "163 230 53", // lime
-  "168 85 247", // violet
-  "148 163 184", // slate
-];
+/** The validated categorical palette (globals.css --series-1 … 8), stepped per theme. Status colours
+ *  (--ok, --warn, --high, --crit) are reserved for status and are never used for a series. */
+const SERIES = Array.from({ length: 8 }, (_, i) => `var(--series-${i + 1})`);
+const OTHER = "var(--series-other)";
+
+/** Each audit kind keeps one colour whatever the counts, so a colour means the same thing on every
+ *  visit (colour follows the entity, never its rank). A kind beyond the eight slots is "other". */
+const KIND_SLOT: Record<string, number> = {
+  agent_turn: 0,
+  observation: 1,
+  hypothesis: 2,
+  policy_evaluation: 3,
+  approval: 4,
+  execution_attempt: 5,
+  execution_result: 6,
+  verification: 7,
+};
+
+function seriesColor(group: string): string {
+  const slot = KIND_SLOT[group];
+  return slot === undefined ? OTHER : SERIES[slot];
+}
 
 export type TimedEvent = { at: string; group: string };
 
@@ -41,6 +51,7 @@ export function TimeBars({ events, height = 220 }: { events: TimedEvent[]; heigh
   const [range, setRange] = useState<Range>("all");
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [hover, setHover] = useState<number | null>(null);
+  const [table, setTable] = useState(false);
 
   const groups = useMemo(() => {
     const counts = new Map<string, number>();
@@ -79,7 +90,7 @@ export function TimeBars({ events, height = 220 }: { events: TimedEvent[]; heigh
   const visible = groups.filter((g) => !hidden.has(g));
   const totals = buckets.map((b) => visible.reduce((sum, g) => sum + (b.counts[g] ?? 0), 0));
   const max = Math.max(1, ...totals);
-  const color = (group: string) => SERIES[groups.indexOf(group) % SERIES.length];
+  const color = seriesColor;
 
   const toggle = (group: string) =>
     setHidden((prior) => {
@@ -119,6 +130,14 @@ export function TimeBars({ events, height = 220 }: { events: TimedEvent[]; heigh
           ))}
         </div>
         <span className="text-[11px] text-[rgb(var(--faint))]">{label}</span>
+        <button
+          type="button"
+          onClick={() => setTable((t) => !t)}
+          aria-pressed={table}
+          className="focusable rounded-md border border-[rgb(var(--edge))] px-2 py-0.5 text-[11px] text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"
+        >
+          {table ? "Chart" : "Table"}
+        </button>
         <ul className="ml-auto flex flex-wrap gap-1.5">
           {groups.map((group) => (
             <li key={group}>
@@ -138,13 +157,39 @@ export function TimeBars({ events, height = 220 }: { events: TimedEvent[]; heigh
         </ul>
       </div>
 
+      {table ? (
+        <div className="max-h-72 overflow-auto rounded-lg border border-[rgb(var(--edge))]">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-[rgb(var(--panel))] text-left text-[rgb(var(--muted))]">
+              <tr>
+                <th className="px-2.5 py-1.5 font-medium">When</th>
+                {visible.map((g) => (
+                  <th key={g} className="px-2.5 py-1.5 text-right font-medium">{g.replaceAll("_", " ")}</th>
+                ))}
+                <th className="px-2.5 py-1.5 text-right font-medium">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {buckets.map((b, i) => totals[i] > 0 && (
+                <tr key={b.start} className="border-t border-[rgb(var(--edge))]">
+                  <td className="tnum px-2.5 py-1">{fmt(b.start)}</td>
+                  {visible.map((g) => (
+                    <td key={g} className="tnum px-2.5 py-1 text-right">{b.counts[g] ?? 0}</td>
+                  ))}
+                  <td className="tnum px-2.5 py-1 text-right font-medium">{totals[i]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
       <div className="relative" onPointerLeave={() => setHover(null)}>
         <div className="flex items-end gap-[2px]" style={{ height }} role="img" aria-label={`Records over time, ${label}`}>
           {buckets.map((bucket, index) => (
             <div
               key={bucket.start}
               onPointerEnter={() => setHover(index)}
-              className={`flex h-full min-w-[3px] flex-1 cursor-default flex-col-reverse rounded-sm ${hover === index ? "bg-[rgb(var(--raised))]" : ""}`}
+              className={`flex h-full min-w-[3px] flex-1 cursor-default flex-col-reverse gap-[2px] rounded-sm ${hover === index ? "bg-[rgb(var(--raised))]" : ""}`}
             >
               {visible.map((group) => {
                 const n = bucket.counts[group] ?? 0;
@@ -153,7 +198,7 @@ export function TimeBars({ events, height = 220 }: { events: TimedEvent[]; heigh
                   <div
                     key={group}
                     style={{ height: `${(n / max) * 100}%`, background: `rgb(${color(group)})` }}
-                    className="w-full first:rounded-b-sm last:rounded-t-sm"
+                    className="w-full shrink-0 last:rounded-t-[4px]"
                   />
                 );
               })}
@@ -179,9 +224,15 @@ export function TimeBars({ events, height = 220 }: { events: TimedEvent[]; heigh
               </p>
             ))}
             {totals[hover ?? 0] === 0 && <p className="text-[rgb(var(--faint))]">nothing recorded</p>}
+            {totals[hover ?? 0] > 0 && (
+              <p className="mt-1.5 flex border-t border-[rgb(var(--edge))] pt-1.5 font-medium">
+                Total <span className="tnum ml-auto">{totals[hover ?? 0]}</span>
+              </p>
+            )}
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
@@ -201,8 +252,10 @@ export function Breakdown({ slices, unit = "" }: { slices: Slice[]; unit?: strin
   }
   return (
     <ul className="space-y-2.5">
-      {slices.map((slice, index) => {
-        const tone = slice.tone ?? SERIES[index % SERIES.length];
+      {slices.map((slice) => {
+        // One measure, one hue: length already ranks the rows. A row's own tone is kept only where it
+        // carries meaning (a severity or risk band), and its word is always beside it.
+        const tone = slice.tone ?? "var(--astra)";
         const share = Math.round((slice.value / total) * 100);
         const row = (
           <>
@@ -267,10 +320,10 @@ export function DayColumns({
         {days.map((d, i) => (
           <div key={d.day} onPointerEnter={() => setHover(i)} className="flex h-full flex-1 items-end">
             <div
-              className="w-full rounded-t-sm transition-opacity"
+              className="w-full rounded-t-[4px] transition-opacity"
               style={{
                 height: `${Math.max(d.value > 0 ? 2 : 0, (d.value / max) * 100)}%`,
-                background: "rgb(47 163 160)",
+                background: "rgb(var(--astra))",
                 opacity: hover === null || hover === i ? 1 : 0.4,
               }}
             />

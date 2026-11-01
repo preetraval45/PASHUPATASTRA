@@ -25,17 +25,17 @@ export const dynamic = "force-dynamic";
 /** Risk bands, the same cut-points as `riskBand` and the autonomy tiers. These
  *  colours are functional (BRAND.md) and every row also carries its word. */
 const BANDS = [
-  { label: "low · 0–30", max: 30, tone: "52 211 153", hint: "can run unattended" },
-  { label: "medium · 31–60", max: 60, tone: "251 191 36", hint: "one approver" },
-  { label: "high · 61–80", max: 80, tone: "251 146 60", hint: "senior approver" },
-  { label: "prohibited · 81+", max: 100, tone: "251 113 133", hint: "never autonomous" },
+  { label: "low · 0–30", max: 30, tone: "var(--ok)", hint: "can run unattended" },
+  { label: "medium · 31–60", max: 60, tone: "var(--warn)", hint: "one approver" },
+  { label: "high · 61–80", max: 80, tone: "var(--high)", hint: "senior approver" },
+  { label: "prohibited · 81+", max: 100, tone: "var(--crit)", hint: "never autonomous" },
 ];
 
 const SEVERITY_TONE: Record<string, string> = {
-  critical: "251 113 133",
-  high: "251 146 60",
-  medium: "251 191 36",
-  low: "52 211 153",
+  critical: "var(--crit)",
+  high: "var(--high)",
+  medium: "var(--warn)",
+  low: "var(--ok)",
 };
 
 /**
@@ -88,9 +88,9 @@ export default async function AnalyticsPage() {
   }));
 
   const reversibility: Slice[] = [
-    { label: "read-only", value: (actions ?? []).filter((a) => a.read_only).length, tone: "47 163 160", hint: "observes, changes nothing" },
-    { label: "reversible", value: (actions ?? []).filter((a) => !a.read_only && !a.irreversible).length, tone: "129 140 248", hint: "has a rollback" },
-    { label: "irreversible", value: (actions ?? []).filter((a) => a.irreversible).length, tone: "251 113 133", hint: "cannot be undone" },
+    { label: "read-only", value: (actions ?? []).filter((a) => a.read_only).length, tone: "var(--series-3)", hint: "observes, changes nothing" },
+    { label: "reversible", value: (actions ?? []).filter((a) => !a.read_only && !a.irreversible).length, tone: "var(--series-1)", hint: "has a rollback" },
+    { label: "irreversible", value: (actions ?? []).filter((a) => a.irreversible).length, tone: "var(--crit)", hint: "cannot be undone" },
   ];
 
   const estate: Slice[] = count(topology?.nodes ?? [], (n) => n.kind).map(([label, value]) => ({

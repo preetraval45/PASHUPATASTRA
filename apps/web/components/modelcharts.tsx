@@ -19,8 +19,8 @@ export type CompareRow = {
   n: number;
 };
 
-const MODEL = "47 163 160";
-const BASE = "148 163 184";
+const MODEL = "var(--series-1)";
+const BASE = "var(--series-other)";
 
 export function CompareBars({ rows, metric }: { rows: CompareRow[]; metric: string }) {
   const [hover, setHover] = useState<string | null>(null);
