@@ -38,8 +38,20 @@ adb logcat -d -b crash > crash.log || true
 # The whole log, for diagnosis: a WebView renderer that dies takes the app with it without
 # a Java crash, and only the main buffer says so.
 adb logcat -d > logcat.txt || true
-cat summary.txt
 ls -la shot-*.png
 
-# The verdict: running at the end, and every screen reached with the app alive.
-alive && ! grep -q "NOT RUNNING" summary.txt
+# Why the app was stopped, if the system stopped it. Our own force-stop above is expected.
+# "depends on provider ... in dying proc" is the emulator's Play services dying and taking
+# every app bound to it along (run 41328701921: its font provider), not a fault in this app.
+grep -E "Killing [0-9]+:app\.pashupatastra" logcat.txt | grep -v "stop app.pashupatastra due to" >> summary.txt || true
+external=$(grep -cE "Killing [0-9]+:app\.pashupatastra.*in dying proc" logcat.txt || true)
+# A Java crash in this app (other apps' crashes name their own process). A renderer death is
+# not counted: WebTab recovers from it.
+ours=$(grep -A3 "FATAL EXCEPTION" logcat.txt | grep -c "Process: app.pashupatastra" || true)
+cat summary.txt
+
+# The verdict: running at the end; any screen where it was not running is explained by the
+# emulator, and nothing of ours crashed.
+alive || exit 1
+[ "$ours" = "0" ] || exit 1
+if grep -q "NOT RUNNING" summary.txt && [ "$external" = "0" ]; then exit 1; fi
