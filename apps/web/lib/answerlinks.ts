@@ -20,7 +20,7 @@ export function defendFollowUp(text: string): string | null {
 export function answerSubject(text: string): { title: string; id: string } | null {
   const found = [
     /\*\*([^*\n]+)\*\* \(([A-Z][\w.-]+)\)/.exec(text),
-    /defend against ([^\n(]+?) \((T\d{4}(?:\.\d{3})?|CAPEC-\d+)\)/.exec(text),
+    /defend against ([^\n(]+?) \((T\d{4}(?:\.\d{3})?|TA\d{4}|CAPEC-\d+)\)/.exec(text),
     /(?:^|\n)1\. ([^\n(]+?) \((T\d{4}(?:\.\d{3})?)\)/.exec(text),
   ].filter((m): m is RegExpExecArray => m !== null);
   if (!found.length) return null;

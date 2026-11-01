@@ -32,6 +32,7 @@ from typing import Any
 from pashupatastra.gateway import ModelRequest, SchemaViolation, Usage
 
 from .. import techniqueclassifier
+from . import concepts
 from .echo import EchoProvider
 from .schemas import schema_for
 
@@ -82,7 +83,7 @@ FRAMING = re.compile(
     r"\b(how|what|which|do|does|can|could|should|would|we|i|you|our|my|us|me|the|a|an|is|are|to|from|for|"
     r"against|best|ways?|way|good|steps?|it|this|that|be|of|in|on|with|about|tell|explain|please|"
     r"mitigat\w*|defend\w*|defen[cs]es?|prevent\w*|protect\w*|stop|harden\w*|block\w*|remediat\w*|"
-    r"counter\w*|fix|respond|guard|secure|safe)\b|[?!.,]",
+    r"counter\w*|fix|respond|guard|secure|safe|work|works|happen|happens|mean|means)\b|[?!.,]",
     re.IGNORECASE,
 )
 
@@ -372,7 +373,7 @@ CONTINUES = re.compile(r"^\s*(and|also|what about|how about|then)\b\s*", re.IGNO
 #: technique. The earliest match wins, which is the answer's own first line.
 ANSWERED = re.compile(
     r"\*\*(?P<a>[^*\n]+)\*\* \((?P<ai>[A-Z][\w.-]+)\)"
-    r"|defend against (?P<b>[^\n(]+?) \((?P<bi>T\d{4}(?:\.\d{3})?|CAPEC-\d+)\)"
+    r"|defend against (?P<b>[^\n(]+?) \((?P<bi>T\d{4}(?:\.\d{3})?|TA\d{4}|CAPEC-\d+)\)"
     r"|^1\. (?P<c>[^\n(]+?) \((?P<ci>T\d{4}(?:\.\d{3})?)\)",
     re.MULTILINE,
 )
@@ -464,7 +465,13 @@ class SatiProvider:
         ranked = mitigation_scores(text)
         links = attack_links()
         about = subject(expand(text))
+        goal = concepts.tactic(about)
+        if goal is not None:
+            return self._tactic_defences(goal, ranked, links)
         hits = knowledge().search(embedder().embed(about), k=5, question=about)
+        known = concepts.concept(text)
+        if known and (meant := knowledge().passage(known)) is not None:
+            hits = [(1.0, meant)] + [h for h in hits if h[1]["id"] != known]
         # Retrieval, not the fused ranking, picks the technique here. The fusion was measured on behaviour
         # descriptions; asked "how do we defend against ransomware encrypting our file shares?" (28 Oct) it
         # put Network Share Discovery first, where retrieval names Data Encrypted for Impact.
@@ -494,6 +501,35 @@ class SatiProvider:
         lines = ["The defences that fit what you describe, most relevant first:", ""]
         lines += [self._defence(m["id"], m["name"]) for _, m in picks]
         return lines + ["", "Sources: " + " · ".join(m["url"] for _, m in picks)]
+
+    def _tactic_defences(self, goal: tuple, ranked: dict[str, float], links: dict[str, list[str]]) -> list[str] | None:
+        """Defences against a tactic: the mitigations ATT&CK links to its well-known techniques, ordered by
+        Skandamata for "how do we defend against <tactic>?"."""
+        name, tid, description, techniques = goal
+        names = mitigator().by_id()
+        ranked = mitigation_scores(f"How do we defend against {name.lower()}?") or ranked
+        pool = {m for t in techniques for m in links.get(t, []) if m in names}
+        picks = sorted(pool, key=lambda m: -ranked.get(m, 0.0))[:5]
+        if not picks:
+            return None
+        lines = [f"To defend against {name} ({tid}), most relevant first:", ""]
+        lines += [self._defence(m, names[m]["name"]) for m in picks]
+        lines += ["", f"What it is: {description} It is the attacker's goal, reached through techniques such as "
+                  + ", ".join(f"{p['title']} ({p['id']})" for p in (knowledge().passage(t) for t in techniques) if p) + "."]
+        urls = [f"https://attack.mitre.org/tactics/{tid}/"] + [names[m]["url"] for m in picks]
+        return lines + ["", "Sources: " + " · ".join(urls)]
+
+    def _tactic(self, goal: tuple) -> dict[str, Any]:
+        """A tactic explained: MITRE's description, then the well-known techniques that reach it."""
+        name, tid, description, techniques = goal
+        found = [p for p in (knowledge().passage(t) for t in techniques) if p]
+        lines = [f"**{name}** ({tid})", "",
+                 f"{description} In MITRE ATT&CK a tactic is the attacker's goal; techniques are the ways they reach it.",
+                 "", "Common techniques:", ""]
+        lines += [f"- **{p['title']}** ({p['id']}): {first_sentences(p['text'], 170)}" for p in found]
+        urls = [f"https://attack.mitre.org/tactics/{tid}/"] + [p["url"] for p in found if p.get("url")]
+        return {"answer": "\n".join([*lines, "", "Sources: " + " · ".join(urls)]), "topic": "security",
+                "area": "brahmacharini", "declined": False}
 
     @staticmethod
     def _defence(mid: str, name: str) -> str:
@@ -537,6 +573,9 @@ class SatiProvider:
                 "area": "brahmacharini",
                 "declined": False,
             }
+        goal = concepts.tactic(subject(question))
+        if goal is not None and not self._wants_mitigations(question) and self.mode != "skandamata":
+            return self._tactic(goal)
         if self._wants_mitigations(question):
             lines = self._mitigation_lines(question)
             if lines:
@@ -562,6 +601,10 @@ class SatiProvider:
         # work?", one led the answer (1 Nov). It answers only when nothing else does.
         whole = [h for h in hits if " mitigation " not in h[1]["id"]]
         hits = (whole or hits)[:3]
+        # A common name goes to the entry it means ("ransomware" is Data Encrypted for Impact).
+        known = concepts.concept(question)
+        if known and (meant := knowledge().passage(known)) is not None:
+            hits = [(1.0, meant)] + [h for h in hits if h[1]["id"] != known][:2]
         if self.mode != "skandamata" and WHICH_TECHNIQUE.search(question):
             named = self._which_technique(question, query, hits)
             if named:

@@ -39,3 +39,10 @@ test("follow-ups come from what the answer said", () => {
   ]);
   assert.deepEqual(followUps("I answer cyber security questions, and I couldn't find one in that."), []);
 });
+
+test("a tactic answer is followed up like a technique", () => {
+  const tactic = "**Lateral Movement** (TA0008)\n\nThe adversary is trying to move through your environment.";
+  assert.deepEqual(followUps(tactic), ["How do we defend against Lateral Movement?"]);
+  const defended = "To defend against Lateral Movement (TA0008), most relevant first:\n\n- **User Account Management** (M1018): x";
+  assert.deepEqual(followUps(defended), ["How does Lateral Movement work?"]);
+});
