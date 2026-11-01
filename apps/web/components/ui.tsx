@@ -95,7 +95,9 @@ export function Page({
               a heading and a label and read as neither — a page whose title is
               barely larger than its body text looks like a fragment of some
               other page. */}
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+          {/* data-page-title: the Android app's native top bar already shows this name,
+              so inside it (html[data-native]) the heading steps aside (globals.css). */}
+          <h1 data-page-title className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
           {description && (
             <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[rgb(var(--muted))] sm:text-[0.9375rem]">
               {description}

@@ -19,6 +19,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.button.MaterialButton
 
@@ -34,7 +35,8 @@ import com.google.android.material.button.MaterialButton
 class WebTab(private val activity: MainActivity) {
 
     val view = FrameLayout(activity)
-    val web = WebView(activity)
+    var web = WebView(activity)
+        private set
     private val refresh = SwipeRefreshLayout(activity)
     private val loading = ProgressBar(activity)
     private val offline = LinearLayout(activity)
@@ -59,6 +61,21 @@ class WebTab(private val activity: MainActivity) {
     private var failed = false
 
     init {
+        configure(web)
+        refresh.apply {
+            addView(web, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            setOnRefreshListener { web.reload() }
+            // Only pull-to-refresh at the very top of a page, so scrolling inside panels still works.
+            setOnChildScrollUpCallback { _, _ -> !pageAtTop || web.scrollY > 0 }
+        }
+        view.addView(refresh, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        view.addView(loading, FrameLayout.LayoutParams(activity.dp(40), activity.dp(40), Gravity.CENTER))
+        buildOffline()
+        view.addView(offline, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        applyPalette(activity.palette)
+    }
+
+    private fun configure(web: WebView) {
         web.apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
@@ -77,18 +94,25 @@ class WebTab(private val activity: MainActivity) {
             addJavascriptInterface(AppBridge(activity, this@WebTab), "PashupatastraApp")
             webViewClient = Client()
             webChromeClient = Chrome()
+            setBackgroundColor(activity.palette.ground)
         }
-        refresh.apply {
-            addView(web, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-            setOnRefreshListener { web.reload() }
-            // Only pull-to-refresh at the very top of a page, so scrolling inside panels still works.
-            setOnChildScrollUpCallback { _, _ -> !pageAtTop || web.scrollY > 0 }
-        }
-        view.addView(refresh, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        view.addView(loading, FrameLayout.LayoutParams(activity.dp(40), activity.dp(40), Gravity.CENTER))
-        buildOffline()
-        view.addView(offline, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        applyPalette(activity.palette)
+    }
+
+    /**
+     * The page's renderer died (out of memory, or a GPU fault on a heavy page). Left
+     * unhandled, Android ends the whole app with it; instead this tab gets a new
+     * WebView and reloads the page it was on.
+     */
+    private fun rebuild(lastUrl: String?) {
+        val old = web
+        refresh.removeView(old)
+        old.destroy()
+        web = WebView(activity)
+        configure(web)
+        refresh.addView(web, 0, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        loading.visibility = View.VISIBLE
+        if (lastUrl != null) web.loadUrl(lastUrl)
+        activity.onTabChanged(this)
     }
 
     private fun buildOffline() {
@@ -164,6 +188,10 @@ class WebTab(private val activity: MainActivity) {
     private inner class Client : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val uri = request.url
+            // A frame inside the page, or an address that is not a web page or a known app link
+            // (about:, blob:, data:), stays in the page; only the page itself leaves for elsewhere.
+            if (!request.isForMainFrame) return false
+            if (uri.scheme !in setOf("https", "http", "mailto", "tel")) return false
             if (activity.isSite(uri)) return false
             // Everything else (other sites, mailto:, tel:) goes to the app that handles it.
             activity.openOutside(uri)
@@ -186,6 +214,14 @@ class WebTab(private val activity: MainActivity) {
         override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
             // Fires on the site's client-side navigations too, which onPageStarted does not.
             activity.onTabChanged(this@WebTab)
+        }
+
+        @RequiresApi(26)
+        override fun onRenderProcessGone(view: WebView, detail: android.webkit.RenderProcessGoneDetail): Boolean {
+            if (view !== web) return true
+            val lastUrl = view.url
+            this@WebTab.view.post { rebuild(lastUrl) }
+            return true
         }
 
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {

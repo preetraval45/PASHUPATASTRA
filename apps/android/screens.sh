@@ -22,8 +22,12 @@ open /incidents/INC-2026-0904; shot 4-incident 15
 open /ask;                     shot 5-sati-ai 15
 open /observatory;             shot 6-live-attacks 10
 open /training;                shot 7-training 15
+adb shell input tap 970 2230;  shot 8-more 3      # the More tab, on a 1080x2400 pixel_6
 
 # Still running, and nothing in the crash buffer.
 adb shell pidof app.pashupatastra
 adb logcat -d -b crash > crash.log || true
+# The whole log, for diagnosis: a WebView renderer that dies takes the app with it without
+# a Java crash, and only the main buffer says so.
+adb logcat -d > logcat.txt || true
 ls -la shot-*.png

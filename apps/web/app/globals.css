@@ -614,6 +614,11 @@ html[data-native] body {
   overscroll-behavior: none;
 }
 
+/* The page's own title repeats the native top bar's; keep the description, drop the name. */
+html[data-native] [data-page-title] {
+  display: none;
+}
+
 html[data-native] a,
 html[data-native] button {
   -webkit-user-select: none;
