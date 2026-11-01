@@ -11,7 +11,14 @@ import { API_BASE } from "@/lib/api";
 const KEY = "pashu.session";
 
 export type Account = { id: string; name: string; provider: "guest" | "email" | "google"; email: string | null };
-export type Membership = { id: string; name: string; role: "owner" | "admin" | "employee"; invite?: string };
+export type OrgSettings = {
+  accent: "default" | "series-1" | "series-2" | "series-5" | "series-6" | "series-7";
+  logo: string | null;
+  welcome: string;
+  required: string[];
+  due: string | null;
+};
+export type Membership = { id: string; name: string; role: "owner" | "admin" | "employee"; invite?: string; settings: OrgSettings };
 export type ModuleRecord = { best: number; last: number; attempts: number; passed: boolean; at: number };
 export type Me = { user: Account; orgs: Membership[]; training: Record<string, ModuleRecord> };
 export type Member = Account & {
@@ -22,6 +29,7 @@ export type Member = Account & {
   last_active: number | null;
   average: number | null;
   policies_acknowledged: number;
+  required_passed: number;
 };
 
 type State = { token: string | null; me: Me | null; ready: boolean };
@@ -153,7 +161,9 @@ export async function joinCompany(code: string): Promise<Me> {
 }
 
 export const companyMembers = (org: string) =>
-  call<{ org: { id: string; name: string; invite: string }; members: Member[] }>(`/orgs/${encodeURIComponent(org)}/members`);
+  call<{ org: { id: string; name: string; invite: string; settings: OrgSettings }; members: Member[] }>(
+    `/orgs/${encodeURIComponent(org)}/members`,
+  );
 export const newInvite = (org: string) =>
   call<{ invite: string }>(`/orgs/${encodeURIComponent(org)}/invite`, { method: "POST" });
 export const setRole = (org: string, member: string, role: "admin" | "employee") =>
@@ -209,10 +219,20 @@ export const adminResetLink = (org: string, member: string) =>
 export type Policy = { id: string; title: string; body: string; created: number; acknowledged: number | null; acks?: number };
 
 export const companyPolicies = (org: string) =>
-  call<{ org: { id: string; name: string }; role: Membership["role"]; policies: Policy[] }>(`/orgs/${encodeURIComponent(org)}/policies`);
+  call<{ org: { id: string; name: string; settings: OrgSettings }; role: Membership["role"]; policies: Policy[] }>(
+    `/orgs/${encodeURIComponent(org)}/policies`,
+  );
 export const addPolicy = (org: string, title: string, body: string) =>
   call<Policy>(`/orgs/${encodeURIComponent(org)}/policies`, { method: "POST", body: JSON.stringify({ title, body }) });
 export const removePolicy = (org: string, policy: string) =>
   call(`/orgs/${encodeURIComponent(org)}/policies/${encodeURIComponent(policy)}`, { method: "DELETE" });
 export const acknowledgePolicy = (org: string, policy: string) =>
   call(`/orgs/${encodeURIComponent(org)}/policies/${encodeURIComponent(policy)}/ack`, { method: "POST" });
+
+/** Saves a company's customization; only the fields given change. Refreshes the account so the new
+ *  accent and name show everywhere at once. */
+export async function saveCompanySettings(org: string, changes: Partial<OrgSettings> & { name?: string }): Promise<void> {
+  await call(`/orgs/${encodeURIComponent(org)}/settings`, { method: "PUT", body: JSON.stringify(changes) });
+  await refresh();
+}
+

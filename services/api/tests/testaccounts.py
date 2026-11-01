@@ -216,3 +216,40 @@ def test_admins_publish_policies_members_acknowledge_them_and_the_dashboard_coun
     assert client.get(f"/api/v1/orgs/{org['id']}/policies", headers=auth(outsider)).status_code == 404
     client.delete(f"/api/v1/orgs/{org['id']}/policies/{pid}", headers=auth(owner))
     assert client.get(f"/api/v1/orgs/{org['id']}/policies", headers=auth(bo)).json()["policies"] == []
+
+
+def test_a_company_customises_itself_and_admins_see_required_training():
+    owner = register()
+    org = client.post("/api/v1/orgs", json={"name": "Northwind"}, headers=auth(owner)).json()["orgs"][0]
+    bo = register("bo@northwind.example", name="Bo")
+    client.post("/api/v1/orgs/join", json={"code": org["invite"]}, headers=auth(bo))
+    saved = client.put(f"/api/v1/orgs/{org['id']}/settings", headers=auth(owner), json={
+        "name": "Northwind Traders", "accent": "series-7", "logo": "https://northwind.example/logo.png",
+        "welcome": "Finish levels 1 and 3 this month.", "required": ["incident-response", "phishing"],
+        "due": "2026-12-01"})
+    assert saved.status_code == 200
+    assert saved.json()["accent"] == "series-7" and saved.json()["name"] == "Northwind Traders"
+    # Every member sees the company's settings; only admins change them.
+    mine = client.get("/api/v1/me", headers=auth(bo)).json()["orgs"][0]
+    assert mine["settings"]["welcome"].startswith("Finish") and mine["name"] == "Northwind Traders"
+    denied = client.put(f"/api/v1/orgs/{org['id']}/settings", headers=auth(bo), json={"accent": "series-1"})
+    assert denied.status_code == 403
+    client.put("/api/v1/me/training/phishing", json={"score": 0.9, "passed": True}, headers=auth(bo))
+    team = client.get(f"/api/v1/orgs/{org['id']}/members", headers=auth(owner)).json()
+    assert next(m for m in team["members"] if m["name"] == "Bo")["required_passed"] == 1
+    assert team["org"]["settings"]["due"] == "2026-12-01"
+
+
+def test_customisation_refuses_unsafe_or_unknown_values():
+    owner = register()
+    org = client.post("/api/v1/orgs", json={"name": "Northwind"}, headers=auth(owner)).json()["orgs"][0]
+
+    def put(body: dict) -> int:
+        return client.put(f"/api/v1/orgs/{org['id']}/settings", headers=auth(owner), json=body).status_code
+
+    assert put({"accent": "series-4"}) == 400  # yellow: white text is unreadable on it
+    assert put({"logo": "http://insecure.example/logo.png"}) == 400
+    assert put({"logo": "https://x.example/a.png\" onerror=\"alert(1)"}) == 400
+    assert put({"required": ["../etc"]}) == 400
+    assert put({"due": "next week"}) == 400
+    assert put({"due": None, "logo": ""}) == 200

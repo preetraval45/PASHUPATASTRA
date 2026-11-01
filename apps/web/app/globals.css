@@ -28,6 +28,7 @@
   /* Brand: teal is perception, gold is action. Nothing is gold until it can
      act — which is also the product's argument. */
   --astra: 47 163 160;
+  --brand-teal: 47 163 160; /* --astra's own value, kept when a company accent replaces --astra */
   --gold: 201 162 39;
 
   /* Status. Reserved: these four never carry a non-status meaning, and they
@@ -85,6 +86,7 @@ option {
   --faint: 100 108 120;
 
   --astra: 17 116 114;
+  --brand-teal: 17 116 114;
   --gold: 146 113 12;
 
   /* Light steps of the same eight hues, validated against white: all checks pass; slots 3–5 sit below

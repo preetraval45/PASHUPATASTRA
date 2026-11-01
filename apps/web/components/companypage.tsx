@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { useAccount } from "@/components/account";
+import { OrgLogo } from "@/components/orgbrand";
+import { daysUntil } from "@/lib/duedate";
 import {
   AccountFailure,
   acknowledgePolicy,
@@ -74,9 +76,12 @@ export function CompanyPage({ orgId }: { orgId: string }) {
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="label text-[rgb(var(--astra))]">Your company</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{data.org.name}</h1>
+        <div className="flex items-center gap-4">
+          <OrgLogo name={data.org.name} settings={data.org.settings} size={52} />
+          <div>
+            <p className="label text-[rgb(var(--astra))]">Your company</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{data.org.name}</h1>
+          </div>
         </div>
         {admin && (
           <Link href={`/team/${orgId}`} className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm hover:bg-[rgb(var(--raised))]">
@@ -84,6 +89,60 @@ export function CompanyPage({ orgId }: { orgId: string }) {
           </Link>
         )}
       </header>
+
+      {data.org.settings.welcome && (
+        <p className="rise whitespace-pre-wrap rounded-2xl border border-[rgb(var(--astra))]/30 bg-[rgb(var(--astra))]/5 p-4 text-[0.9375rem] leading-relaxed">
+          {data.org.settings.welcome}
+        </p>
+      )}
+
+      {data.org.settings.required.length > 0 && (
+        <section className="rounded-3xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold">Required training</h2>
+            {data.org.settings.due && (
+              <span
+                className={`text-sm font-medium ${
+                  daysUntil(data.org.settings.due) < 0 ? "text-[rgb(var(--crit))]" : "text-[rgb(var(--muted))]"
+                }`}
+              >
+                {daysUntil(data.org.settings.due) < 0
+                  ? `Was due ${new Date(data.org.settings.due + "T00:00").toLocaleDateString()}`
+                  : daysUntil(data.org.settings.due) === 0
+                    ? "Due today"
+                    : `Due in ${daysUntil(data.org.settings.due)} days`}
+              </span>
+            )}
+          </div>
+          <ul className="mt-3 space-y-2">
+            {MODULES.filter((m) => data.org.settings.required.includes(m.slug)).map((m) => {
+              const done = Boolean(me.training[m.slug]?.passed);
+              return (
+                <li key={m.slug}>
+                  <Link
+                    href={`/training/${m.slug}`}
+                    className="focusable flex items-center gap-3 rounded-xl border border-[rgb(var(--edge))] px-3.5 py-2.5 transition hover:bg-[rgb(var(--raised))]"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                        done ? "bg-[rgb(var(--ok))] text-white" : "bg-[rgb(var(--raised))] text-[rgb(var(--muted))]"
+                      }`}
+                    >
+                      {done ? "✓" : m.level}
+                    </span>
+                    <span className="min-w-0 flex-1 text-sm">
+                      <span className="block font-medium">{m.title}</span>
+                      <span className="block text-xs text-[rgb(var(--muted))]">{done ? "Passed" : `${m.minutes} min · not passed yet`}</span>
+                    </span>
+                    {!done && <span className="text-sm text-[rgb(var(--astra))]">Start →</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Link href="/training" className="focusable lift rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] p-4">

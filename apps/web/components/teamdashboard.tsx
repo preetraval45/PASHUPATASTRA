@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { initials, useAccount } from "@/components/account";
+import { CustomizePanel } from "@/components/companysettings";
+import { OrgLogo } from "@/components/orgbrand";
+import { daysUntil } from "@/lib/duedate";
 import { AccountFailure, adminResetLink, companyMembers, newInvite, removeMember, setRole, type Member } from "@/lib/account";
 import { MODULES } from "@/lib/training";
 
@@ -63,8 +66,12 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
     const done = members.filter((m) => m.passed.length === MODULES.length).length;
     const quiet = members.filter((m) => !m.last_active || Date.now() / 1000 - m.last_active > 14 * DAY).length;
     const levels = members.length ? members.reduce((s, m) => s + m.passed.length, 0) / members.length : 0;
-    return { done, quiet, levels };
-  }, [members]);
+    const required = data?.org.settings.required ?? [];
+    const due = data?.org.settings.due ?? null;
+    const requiredDone = required.length ? members.filter((m) => m.required_passed >= required.length).length : 0;
+    const overdue = required.length && due && daysUntil(due) < 0 ? members.length - requiredDone : 0;
+    return { done, quiet, levels, required, due, requiredDone, overdue };
+  }, [members, data]);
   const shown = members.filter((m) =>
     filter === "done" ? m.passed.length === MODULES.length : filter === "behind" ? m.passed.length < MODULES.length : true,
   );
@@ -102,9 +109,12 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="label text-[rgb(var(--astra))]">Team dashboard</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{data.org.name}</h1>
+        <div className="flex items-center gap-4">
+          <OrgLogo name={data.org.name} settings={data.org.settings} size={52} />
+          <div>
+            <p className="label text-[rgb(var(--astra))]">Team dashboard</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{data.org.name}</h1>
+          </div>
         </div>
         <span className="flex gap-2">
           <Link href={`/company/${orgId}`} className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]">
@@ -121,10 +131,27 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
           <p className="tnum text-3xl font-semibold">{members.length}</p>
           <p className="text-sm text-[rgb(var(--muted))]">people in the workspace</p>
         </div>
-        <div className={tile}>
-          <p className="tnum text-3xl font-semibold text-[rgb(var(--ok))]">{stats.done}</p>
-          <p className="text-sm text-[rgb(var(--muted))]">finished all nine levels</p>
-        </div>
+        {stats.required.length > 0 ? (
+          <div className={tile}>
+            <p className="tnum text-3xl font-semibold text-[rgb(var(--ok))]">
+              {stats.requiredDone}
+              <span className="text-lg text-[rgb(var(--faint))]">/{members.length}</span>
+            </p>
+            <p className="text-sm text-[rgb(var(--muted))]">
+              finished required training
+              {stats.due && (
+                <span className={stats.overdue ? " text-[rgb(var(--crit))]" : ""}>
+                  {" "}· {daysUntil(stats.due) < 0 ? `${stats.overdue} overdue` : `due in ${daysUntil(stats.due)} days`}
+                </span>
+              )}
+            </p>
+          </div>
+        ) : (
+          <div className={tile}>
+            <p className="tnum text-3xl font-semibold text-[rgb(var(--ok))]">{stats.done}</p>
+            <p className="text-sm text-[rgb(var(--muted))]">finished all nine levels</p>
+          </div>
+        )}
         <div className={tile}>
           <p className="tnum text-3xl font-semibold">{stats.levels.toFixed(1)}</p>
           <p className="text-sm text-[rgb(var(--muted))]">levels passed on average</p>
@@ -161,6 +188,8 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
         </div>
       </section>
 
+      <CustomizePanel orgId={orgId} name={data.org.name} settings={data.org.settings} onSaved={reload} />
+
       <section className="overflow-hidden rounded-3xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))]">
         <div className="flex flex-wrap items-center gap-2 border-b border-[rgb(var(--edge))] px-4 py-3">
           <h2 className="mr-auto font-semibold">People</h2>
@@ -192,6 +221,20 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
                 <span className="block text-xs text-[rgb(var(--muted))]">
                   {m.email ?? "guest"} · {m.role} · active {since(m.last_active)}
                 </span>
+                {stats.required.length > 0 && (
+                  <span
+                    className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                      m.required_passed >= stats.required.length
+                        ? "bg-[rgb(var(--ok))]/15 text-[rgb(var(--ok))]"
+                        : stats.due && daysUntil(stats.due) < 0
+                          ? "bg-[rgb(var(--crit))]/15 text-[rgb(var(--crit))]"
+                          : "bg-[rgb(var(--raised))] text-[rgb(var(--muted))]"
+                    }`}
+                  >
+                    required {m.required_passed}/{stats.required.length}
+                    {m.required_passed < stats.required.length && stats.due && daysUntil(stats.due) < 0 ? " · overdue" : ""}
+                  </span>
+                )}
               </span>
               <span className="flex gap-1" aria-label={`${m.passed.length} of ${MODULES.length} levels passed`}>
                 {MODULES.map((x) => (

@@ -21,6 +21,7 @@ import { Attribution } from "@/components/attribution";
 import { Mark, Sigil } from "@/components/chrome";
 import { Search } from "@/components/search";
 import { AccountButton } from "@/components/account";
+import { OrgTheme } from "@/components/orgbrand";
 import { ThemeToggle } from "@/components/theme";
 
 type Item = { href: string; label: string; icon: keyof typeof ICONS; hint?: string; exact?: boolean };
@@ -200,6 +201,7 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
             {status}
             <ThemeToggle />
             <AccountButton />
+            <OrgTheme />
           </div>
         </header>
 

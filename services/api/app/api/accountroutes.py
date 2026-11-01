@@ -52,7 +52,7 @@ def _me(user: accounts.User) -> dict:
     for org_id, role in accounts.memberships(user.id):
         org = accounts.get_org(org_id)
         if org:
-            orgs.append({"id": org["id"], "name": org["name"], "role": role,
+            orgs.append({"id": org["id"], "name": org["name"], "role": role, "settings": accounts.settings(org),
                          **({"invite": org["invite"]} if role in ("owner", "admin") else {})})
     return {"user": user.public(), "orgs": orgs, "training": accounts.training(user.id)}
 
@@ -101,6 +101,15 @@ class NewPassword(BaseModel):
 class Policy(BaseModel):
     title: str = Field(max_length=200)
     body: str = Field(max_length=25_000)
+
+
+class Settings(BaseModel):
+    name: str | None = Field(default=None, max_length=80)
+    accent: str | None = Field(default=None, max_length=20)
+    logo: str | None = Field(default=None, max_length=400)
+    welcome: str | None = Field(default=None, max_length=600)
+    required: list[str] | None = None
+    due: str | None = Field(default=None, max_length=10)
 
 
 class Result(BaseModel):
@@ -240,7 +249,8 @@ def org_members(org_id: str, authorization: str | None = Header(default=None)) -
     user = _user(authorization)
     try:
         org = accounts.require(org_id, user, "owner", "admin")
-        return {"org": {"id": org["id"], "name": org["name"], "invite": org["invite"]},
+        return {"org": {"id": org["id"], "name": org["name"], "invite": org["invite"],
+                        "settings": accounts.settings(org)},
                 "members": accounts.members(org_id, user)}
     except accounts.AccountError as error:
         raise _fail(error) from error
@@ -287,7 +297,8 @@ def org_policies(org_id: str, authorization: str | None = Header(default=None)) 
     user = _user(authorization)
     try:
         org = accounts.require(org_id, user)
-        return {"org": {"id": org["id"], "name": org["name"]}, "role": accounts.role_in(org_id, user.id),
+        return {"org": {"id": org["id"], "name": org["name"], "settings": accounts.settings(org)},
+                "role": accounts.role_in(org_id, user.id),
                 "policies": accounts.policies(org_id, user)}
     except accounts.AccountError as error:
         raise _fail(error) from error
@@ -317,3 +328,12 @@ def org_policy_ack(org_id: str, policy_id: str, authorization: str | None = Head
     except accounts.AccountError as error:
         raise _fail(error) from error
     return {"ok": True}
+
+
+@router.put("/orgs/{org_id}/settings")
+def org_settings(org_id: str, body: Settings, authorization: str | None = Header(default=None)) -> dict:
+    """What a company sets for its own people. Only the fields sent change; `due: null` clears the date."""
+    try:
+        return accounts.update_settings(org_id, _user(authorization), body.model_dump(exclude_unset=True))
+    except accounts.AccountError as error:
+        raise _fail(error) from error

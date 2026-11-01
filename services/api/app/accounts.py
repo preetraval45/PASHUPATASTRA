@@ -420,7 +420,8 @@ def record_training(user_id: str, slug: str, score: float, passed: bool) -> dict
 
 def members(org_id: str, actor: User) -> list[dict]:
     """Everyone in the company with their training, for its admins."""
-    require(org_id, actor, "owner", "admin")
+    org = require(org_id, actor, "owner", "admin")
+    required = settings(org)["required"]
     out = []
     for _, doc in store().docs("MEMBER", f"{org_id}#"):
         user = get_user(doc["user"])
@@ -436,6 +437,7 @@ def members(org_id: str, actor: User) -> list[dict]:
             "last_active": max((int(m.get("at", 0)) for m in modules.values()), default=None),
             "average": round(sum(float(m.get("best", 0)) for m in modules.values()) / len(modules), 3) if modules else None,
             "policies_acknowledged": acknowledged(org_id, user.id),
+            "required_passed": sum(1 for slug in required if modules.get(slug, {}).get("passed")),
         })
     return sorted(out, key=lambda m: (ROLES.index(m["role"]), m["name"].lower()))
 
@@ -570,3 +572,54 @@ def acknowledged(org_id: str, user_id: str) -> int:
     s = store()
     current = {p["id"] for _, p in s.docs("POLICY", f"{org_id}#")}
     return sum(1 for key, _ in s.docs("ACK", f"{org_id}#") if key.endswith(f"#{user_id}") and key.split("#")[1] in current)
+
+
+# --- company customization -------------------------------------------------------------------
+#
+# What a company sets for its own people: its accent colour across the app, its logo, a welcome message,
+# and which training levels are required by when. Only owners and admins change them.
+
+ACCENTS = ("default", "series-1", "series-2", "series-5", "series-6", "series-7")
+"""Accents a company may choose: the site's teal or one of the validated chart hues whose steps keep
+white button text readable in both themes (globals.css --series-*). Yellow, aqua and red are left out."""
+
+DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+UNSAFE_URL = set(' "<>\'`')
+
+
+def settings(org: dict) -> dict:
+    return {"accent": "default", "logo": None, "welcome": "", "required": [], "due": None, **org.get("settings", {})}
+
+
+def update_settings(org_id: str, actor: User, changes: dict) -> dict:
+    org = require(org_id, actor, "owner", "admin")
+    current = settings(org)
+    if "name" in changes and changes["name"] is not None:
+        name = str(changes["name"]).strip()[:80]
+        if len(name) < 2:
+            raise AccountError("Give the company a name.")
+        org["name"] = name
+    if "accent" in changes:
+        if changes["accent"] not in ACCENTS:
+            raise AccountError("Pick one of the offered colours.")
+        current["accent"] = changes["accent"]
+    if "logo" in changes:
+        logo = (changes["logo"] or "").strip()
+        if logo and (not logo.startswith("https://") or len(logo) > 400 or UNSAFE_URL & set(logo)):
+            raise AccountError("The logo must be an https:// image address.")
+        current["logo"] = logo or None
+    if "welcome" in changes:
+        current["welcome"] = str(changes["welcome"] or "").strip()[:600]
+    if "required" in changes:
+        required = [str(s) for s in (changes["required"] or [])]
+        if any(not SLUG.match(s) for s in required) or len(required) > 20:
+            raise AccountError("Unknown training level.")
+        current["required"] = sorted(set(required))
+    if "due" in changes:
+        due = changes["due"] or None
+        if due is not None and not DATE.match(str(due)):
+            raise AccountError("Give the due date as a date.")
+        current["due"] = due
+    org["settings"] = current
+    store().put_doc("ORG", org_id, org)
+    return {**settings(org), "name": org["name"]}
