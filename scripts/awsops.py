@@ -50,9 +50,8 @@ def status() -> None:
         for page in pages:
             for event in page.get("events", []):
                 errors += 1
-                text = event["message"].replace("", "")
-                lines = [line.strip() for line in text.split("
-") if line.strip()]
+                text = event["message"].replace("\r", "")
+                lines = [line.strip() for line in text.split("\n") if line.strip()]
                 # The exception is the traceback's last line; the frame above it says where.
                 last = next((line for line in reversed(lines) if ("Error" in line or "Exception" in line)
                              and not line.startswith("File ")), lines[-1] if lines else "?")
