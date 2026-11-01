@@ -1,3 +1,5 @@
+import { ApprovalActions } from "@/components/approvalactions";
+import type { PolicyQuestion } from "@/lib/account";
 import { Badge, Ident, Panel, STATUS, statusForRisk, type Status } from "@/components/ui";
 import {
   FACTOR_LABEL,
@@ -156,6 +158,7 @@ export function VerdictPanel({
   affectedUsers,
   expectedPostState,
   rollback,
+  question,
 }: {
   verdict: Verdict;
   tiers?: PolicyModel["tiers"] | null;
@@ -163,6 +166,8 @@ export function VerdictPanel({
   affectedUsers?: number;
   expectedPostState?: Record<string, string>;
   rollback?: string | null;
+  /** The question that produced this verdict; given, an administrator can approve or deny it here. */
+  question?: PolicyQuestion;
 }) {
   const tier = TIER[verdict.tier] ?? TIER.denied;
   const denied = verdict.tier === "denied";
@@ -298,6 +303,7 @@ export function VerdictPanel({
           </span>
         )}
       </div>
+      {question && <ApprovalActions question={question} tier={verdict.tier} />}
     </Panel>
   );
 }

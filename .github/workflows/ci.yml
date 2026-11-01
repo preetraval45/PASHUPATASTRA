@@ -302,6 +302,7 @@ jobs:
       ABUSECH_AUTH_KEY: ${{ secrets.ABUSECH_AUTH_KEY }}
       GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
       EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+      PLATFORM_ADMINS: ${{ vars.PLATFORM_ADMINS }}
       AWS_REGION: us-east-1
       AWS_DEFAULT_REGION: us-east-1
       API: https://265d0hsmwa.execute-api.us-east-1.amazonaws.com/api/v1

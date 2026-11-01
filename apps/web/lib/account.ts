@@ -20,7 +20,7 @@ export type OrgSettings = {
 };
 export type Membership = { id: string; name: string; role: "owner" | "admin" | "employee"; invite?: string; settings: OrgSettings };
 export type ModuleRecord = { best: number; last: number; attempts: number; passed: boolean; at: number };
-export type Me = { user: Account; orgs: Membership[]; training: Record<string, ModuleRecord> };
+export type Me = { user: Account; orgs: Membership[]; training: Record<string, ModuleRecord>; platform_admin: boolean };
 export type Member = Account & {
   role: Membership["role"];
   joined: number | null;
@@ -236,3 +236,38 @@ export async function saveCompanySettings(org: string, changes: Partial<OrgSetti
   await refresh();
 }
 
+
+export type AdminOverview = {
+  users: { id: string; name: string; email: string | null; provider: Account["provider"]; created: number | null; admin: boolean }[];
+  companies: { id: string; name: string; members: number; created: number | null; accent: OrgSettings["accent"] }[];
+};
+
+/** Every account and company: platform administrators only. */
+export const adminOverview = () => call<AdminOverview>("/admin/overview");
+
+export type PolicyQuestion = {
+  action_id: string;
+  incident_ref?: string;
+  blast_radius_entities?: number;
+  blast_radius_users?: number;
+  diagnostic_confidence?: number;
+};
+
+/** Approve as the signed-in administrator: Dharma first records a real verdict (the page only showed a
+ *  preview), then that verdict is approved. `presented` is when the panel reached the screen, so the
+ *  approval-fatigue measure times the decision, not the page load. */
+export async function approveAction(question: PolicyQuestion, presented: Date): Promise<{ granted_by: string | null }> {
+  const verdict = await call<Record<string, unknown>>("/policy/evaluate", { method: "POST", body: JSON.stringify(question) });
+  return call("/policy/approve", {
+    method: "POST",
+    body: JSON.stringify({ verdict, approver: state.me?.user.name ?? "administrator", presented_at: presented.toISOString() }),
+  });
+}
+
+export async function denyAction(question: PolicyQuestion, reason: string, presented: Date): Promise<void> {
+  const verdict = await call<Record<string, unknown>>("/policy/evaluate", { method: "POST", body: JSON.stringify(question) });
+  await call("/policy/deny", {
+    method: "POST",
+    body: JSON.stringify({ verdict, approver: state.me?.user.name ?? "administrator", reason, presented_at: presented.toISOString() }),
+  });
+}

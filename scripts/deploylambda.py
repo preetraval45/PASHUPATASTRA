@@ -101,6 +101,12 @@ def environment(cors: list[str]) -> str:
     # "Sign in with Google" (app/accounts.py). A public client id, kept as a GitHub variable, not a secret.
     if os.environ.get("GOOGLE_CLIENT_ID"):
         env["Variables"]["PASHU_GOOGLE_CLIENT_ID"] = os.environ["GOOGLE_CLIENT_ID"]
+    # Approvals need a platform administrator's session (app/accounts.py); the administrators' account
+    # ids come from the PLATFORM_ADMINS variable, comma-separated. With none listed, nobody can approve,
+    # which fails closed.
+    env["Variables"]["PASHU_APPROVALS_REQUIRE_ADMIN"] = "true"
+    admins = [a.strip() for a in os.environ.get("PLATFORM_ADMINS", "").split(",") if a.strip()]
+    env["Variables"]["PASHU_PLATFORM_ADMINS"] = json.dumps(admins)
     # Password-reset emails through Amazon SES (app/mail.py): an SES-verified sender, as a GitHub variable.
     if os.environ.get("EMAIL_FROM"):
         env["Variables"]["PASHU_EMAIL_FROM"] = os.environ["EMAIL_FROM"]

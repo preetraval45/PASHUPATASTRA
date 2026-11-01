@@ -253,3 +253,25 @@ def test_customisation_refuses_unsafe_or_unknown_values():
     assert put({"required": ["../etc"]}) == 400
     assert put({"due": "next week"}) == 400
     assert put({"due": None, "logo": ""}) == 200
+
+
+def test_only_a_platform_admin_sees_everything_and_approves_when_required(monkeypatch):
+    from app.config import get_settings
+
+    owner = register()
+    owner_id = client.get("/api/v1/me", headers=auth(owner)).json()["user"]["id"]
+    other = register("bo@northwind.example", name="Bo")
+    assert client.get("/api/v1/admin/overview", headers=auth(owner)).status_code == 403
+    monkeypatch.setattr(get_settings(), "platform_admins", [owner_id])
+    assert client.get("/api/v1/me", headers=auth(owner)).json()["platform_admin"] is True
+    seen = client.get("/api/v1/admin/overview", headers=auth(owner)).json()
+    assert {u["name"] for u in seen["users"]} == {"Ana", "Bo"}
+
+    monkeypatch.setattr(get_settings(), "approvals_require_admin", True)
+    verdict = client.post("/api/v1/policy/evaluate", json={"action_id": "block_ip"}).json()
+    body = {"verdict": verdict, "approver": "anyone"}
+    assert client.post("/api/v1/policy/approve", json=body).status_code == 403
+    assert client.post("/api/v1/policy/approve", json=body, headers=auth(other)).status_code == 403
+    done = client.post("/api/v1/policy/approve", json=body, headers=auth(owner))
+    if verdict["tier"] not in ("denied",):
+        assert done.status_code == 200 and done.json()["granted_by"] == f"human:Ana ({owner_id})"

@@ -623,3 +623,34 @@ def update_settings(org_id: str, actor: User, changes: dict) -> dict:
     org["settings"] = current
     store().put_doc("ORG", org_id, org)
     return {**settings(org), "name": org["name"]}
+
+
+# --- platform administration ---------------------------------------------------------------
+
+
+def is_platform_admin(user: User | None) -> bool:
+    return bool(user) and user.provider != "guest" and user.id in get_settings().platform_admins
+
+
+def overview(actor: User) -> dict:
+    """Every account and company, for the platform's administrators."""
+    if not is_platform_admin(actor):
+        raise AccountError("Only a platform administrator can see this.", 403)
+    s = store()
+    users = [doc for _, doc in s.docs("USER")]
+    orgs = [doc for _, doc in s.docs("ORG")]
+    counts: dict[str, int] = {}
+    for _, member in s.docs("MEMBER"):
+        counts[member["org"]] = counts.get(member["org"], 0) + 1
+    return {
+        "users": sorted(
+            ({"id": u["id"], "name": u["name"], "email": u.get("email"), "provider": u["provider"],
+              "created": u.get("created"), "admin": u["id"] in get_settings().platform_admins} for u in users),
+            key=lambda u: -(u["created"] or 0),
+        ),
+        "companies": sorted(
+            ({"id": o["id"], "name": o["name"], "members": counts.get(o["id"], 0), "created": o.get("created"),
+              "accent": settings(o)["accent"]} for o in orgs),
+            key=lambda o: -(o["created"] or 0),
+        ),
+    }

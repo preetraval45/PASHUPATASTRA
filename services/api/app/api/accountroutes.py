@@ -54,7 +54,8 @@ def _me(user: accounts.User) -> dict:
         if org:
             orgs.append({"id": org["id"], "name": org["name"], "role": role, "settings": accounts.settings(org),
                          **({"invite": org["invite"]} if role in ("owner", "admin") else {})})
-    return {"user": user.public(), "orgs": orgs, "training": accounts.training(user.id)}
+    return {"user": user.public(), "orgs": orgs, "training": accounts.training(user.id),
+            "platform_admin": accounts.is_platform_admin(user)}
 
 
 class Register(BaseModel):
@@ -337,3 +338,25 @@ def org_settings(org_id: str, body: Settings, authorization: str | None = Header
         return accounts.update_settings(org_id, _user(authorization), body.model_dump(exclude_unset=True))
     except accounts.AccountError as error:
         raise _fail(error) from error
+
+
+@router.get("/admin/overview")
+def admin_overview(authorization: str | None = Header(default=None)) -> dict:
+    """Every account and company, for platform administrators only."""
+    try:
+        return accounts.overview(_user(authorization))
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+
+
+def approver(authorization: str | None, claimed: str) -> str:
+    """Who is approving. With `approvals_require_admin`, a platform administrator's session, recorded by
+    account; otherwise the name the request gives, as before (development and tests)."""
+    if not get_settings().approvals_require_admin:
+        return claimed
+    token = (authorization or "").removeprefix("Bearer ").strip()
+    user_id = accounts.verify(token)
+    user = accounts.get_user(user_id) if user_id else None
+    if not accounts.is_platform_admin(user):
+        raise HTTPException(status_code=403, detail="Only a platform administrator can approve or deny actions.")
+    return f"{user.name} ({user.id})"

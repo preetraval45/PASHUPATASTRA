@@ -39,6 +39,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     title: "Start",
     items: [
       { href: "/", label: "Home", icon: "home", exact: true },
+      { href: "/apps", label: "All apps", icon: "apps" },
       { href: "/how-it-works", label: "How it works", icon: "book" },
     ],
   },
@@ -453,12 +454,18 @@ function titleFor(pathname: string): string {
   if (pathname.startsWith("/account")) return "Account";
   if (pathname.startsWith("/team")) return "Team";
   if (pathname.startsWith("/company")) return "Company";
+  if (pathname.startsWith("/apps")) return "Apps";
+  if (pathname.startsWith("/admin")) return "Settings";
   return "Console";
 }
 
 /** Line icons, 20px, drawn on a 24 grid with the current colour. Inline so the
  *  console pulls no icon font or library. */
 const ICONS = {
+  user: "M12 12a4 4 0 1 0 0-8a4 4 0 0 0 0 8zM4 21c0-4 3.6-6 8-6s8 2 8 6",
+  users: "M9 11a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7zM2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14.5c2 .6 3.5 2.4 3.5 5.5",
+  gear: "M12 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1",
+  apps: "M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4zM16 16h4v4h-4z",
   grid: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
   alert: "M12 3 2.5 20h19L12 3zM12 10v4M12 17.5v.01",
   chat: "M4 5h16v11H9l-5 4V5zM8 9.5h8M8 12.5h5",

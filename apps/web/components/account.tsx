@@ -86,7 +86,11 @@ function AccountMenu() {
             <p className="truncate text-xs text-[rgb(var(--muted))]">{me.user.email ?? "Guest session"}</p>
           </div>
           <div className="py-1">
+            <Link href="/apps" role="menuitem" onClick={() => setOpen(false)} className={item}>All apps</Link>
             <Link href="/account" role="menuitem" onClick={() => setOpen(false)} className={item}>Account settings</Link>
+            {me.platform_admin && (
+              <Link href="/admin" role="menuitem" onClick={() => setOpen(false)} className={item}>Settings · users &amp; companies</Link>
+            )}
             {me.orgs.map((o) => (
               <Link
                 key={o.id}

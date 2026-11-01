@@ -6,7 +6,7 @@ import logging
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 from pashupatastra import (
     ActionSpec,
@@ -698,7 +698,10 @@ class DenyRequest(BaseModel):
 
 
 @router.post("/policy/approve", response_model=Verdict)
-def approve(request: ApproveRequest) -> Verdict:
+def approve(request: ApproveRequest, authorization: str | None = Header(default=None)) -> Verdict:
+    from .accountroutes import approver
+
+    request.approver = approver(authorization, request.approver)
     verdict = request.verdict
     if PREVIEW_CONSTRAINT in verdict.constraints:
         raise HTTPException(
@@ -733,13 +736,16 @@ def approve(request: ApproveRequest) -> Verdict:
 
 
 @router.post("/policy/deny", response_model=Verdict)
-def deny(request: DenyRequest) -> Verdict:
+def deny(request: DenyRequest, authorization: str | None = Header(default=None)) -> Verdict:
     """Refuse an action. A first-class outcome, not an error path.
 
     Returns the verdict with the refusal recorded rather than raising: a denial
     is the approval step working, and expressing it as an HTTP error would make
     the client's success path the one where a human said yes.
     """
+    from .accountroutes import approver
+
+    request.approver = approver(authorization, request.approver)
     verdict = request.verdict
     now = datetime.now().astimezone()
     verdict.denial_reason = request.reason

@@ -107,6 +107,10 @@ export function AccountPage() {
               {" · "}
               {me.user.provider === "google" ? "Google" : me.user.provider === "email" ? "Email and password" : "Guest"}
             </p>
+            <p className="mt-1 text-xs text-[rgb(var(--faint))]">
+              Account id <code className="mono select-all rounded bg-[rgb(var(--raised))] px-1.5 py-0.5">{me.user.id}</code>
+              {me.platform_admin && <span className="ml-2 font-semibold text-[rgb(var(--astra))]">platform administrator</span>}
+            </p>
           </div>
           <button
             type="button"

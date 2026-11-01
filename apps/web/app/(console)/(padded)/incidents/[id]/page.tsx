@@ -225,6 +225,17 @@ export default async function IncidentDetailPage({
           affectedUsers={incident.impact.estimated_users_affected}
           expectedPostState={riskiest?.expected_post_state}
           rollback={riskiest?.rollback_action_id ?? spec?.rollback_action_id ?? null}
+          question={
+            riskiest
+              ? {
+                  action_id: riskiest.action_id,
+                  incident_ref: incident.id,
+                  blast_radius_entities: incident.impact.blast_radius_entities,
+                  blast_radius_users: incident.impact.estimated_users_affected,
+                  diagnostic_confidence: incident.hypotheses[0]?.confidence ?? 1,
+                }
+              : undefined
+          }
         />
       )}
 

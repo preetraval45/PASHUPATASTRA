@@ -54,6 +54,15 @@ class Settings(BaseSettings):
     """Signs session tokens (accounts.py). Unset, a key is made once and kept in the store, so a fresh
     deployment works without configuration; set it to rotate every session at once."""
 
+    platform_admins: list[str] = []
+    """Account ids (u_…) of the platform's administrators, as an ERP's "Settings › Users" would hold them:
+    the people who may approve actions and see every account and company. Ids rather than emails, because
+    email addresses are not verified yet and whoever registered an address first would inherit its rights."""
+
+    approvals_require_admin: bool = False
+    """When true, /policy/approve and /policy/deny need a platform administrator's session, and the
+    approver recorded is that account. Off in development and tests; on in the deployed API."""
+
     email_from: str | None = None
     """Sender for account emails (password resets) through Amazon SES (mail.py). Must be an identity SES
     has verified. Unset, no email is sent and resets go through a company admin."""

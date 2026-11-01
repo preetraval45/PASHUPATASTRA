@@ -1930,6 +1930,55 @@
         "summary": "Remediate Action"
       }
     },
+    "/api/v1/admin/overview": {
+      "get": {
+        "description": "Every account and company, for platform administrators only.",
+        "operationId": "admin_overview_api_v1_admin_overview_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Overview Api V1 Admin Overview Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Overview"
+      }
+    },
     "/api/v1/agent/ask": {
       "post": {
         "description": "Ask Sati AI anything \u2014 cyber security or general (owner request).\n\nUnlike `/agent/chat`, this is not scoped to an incident, and so it is given\nnothing from the estate: no evidence, no tools, no action path. That is what\nmakes an open question box on a public site safe \u2014 there is nothing behind\nit to enumerate or to act on. Answers are labelled general knowledge, and\nthe question and history are fenced as untrusted text (`agent/general.py`).",
@@ -4773,6 +4822,24 @@
     "/api/v1/policy/approve": {
       "post": {
         "operationId": "approve_api_v1_policy_approve_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4812,6 +4879,24 @@
       "post": {
         "description": "Refuse an action. A first-class outcome, not an error path.\n\nReturns the verdict with the refusal recorded rather than raising: a denial\nis the approval step working, and expressing it as an HTTP error would make\nthe client's success path the one where a human said yes.",
         "operationId": "deny_api_v1_policy_deny_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
