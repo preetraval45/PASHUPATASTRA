@@ -702,7 +702,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 
 **Phase 3 — Astra + Dharma · Action · Weeks 11–14 · Oct 19 – Nov 15 › 3.7 Policy as data *(added 4 October 2026)***
 
-- [ ] Dharma's tier thresholds and escalation rules loaded from a versioned,
+- [x] Dharma's tier thresholds and escalation rules loaded from a versioned, — *done 1 Nov: `packages/core/pashupatastra/policy.json` (version `2026-11-01.1`) holds the tier ceilings, who may approve each tier and the blast-radius escalation limits; `load_policy` validates it at import and refuses a malformed file rather than half-applying it (thresholds must rise strictly to 100, tiers in order, positive limits); every verdict records `policy_version` in its constraints and `/policy/model` reports it. Evidence: `tests/testpolicyfile.py` (9 cases); Dharma's existing tests unchanged and passing.*
 
 **Phase 4 — Verification · Weeks 15–17 · Nov 16 – Dec 6 › 4.4 Timeline UI**
 

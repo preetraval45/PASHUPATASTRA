@@ -1,0 +1,11 @@
+{
+  "version": "2026-11-01.1",
+  "source": "docs/specs/Policy Model.md",
+  "tiers": [
+    { "tier": "autonomous", "max_risk": 30, "approvers": [] },
+    { "tier": "approval", "max_risk": 60, "approvers": ["operator"] },
+    { "tier": "senior", "max_risk": 80, "approvers": ["senior_operator"] },
+    { "tier": "denied", "max_risk": 100, "approvers": [] }
+  ],
+  "escalation": { "blast_radius_entities": 5, "blast_radius_users": 1000 }
+}

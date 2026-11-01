@@ -10,8 +10,10 @@ design — no model call participates in authorization (the Grounding ADR).
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta
 from enum import StrEnum
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -188,29 +190,67 @@ class Verdict(BaseModel):
         return True
 
 
-# Thresholds from docs/specs/Policy Model.md. Adjustments only ever raise risk —
-# an action cannot argue its way into a lower tier.
-_TIERS: list[tuple[int, Tier]] = [
-    (30, Tier.AUTONOMOUS),
-    (60, Tier.APPROVAL),
-    (80, Tier.SENIOR),
-    (100, Tier.DENIED),
-]
+# Policy as data (RESEARCH PLAN 3.7). The tier thresholds, who may approve each
+# tier and the blast-radius escalation limits live in a versioned file,
+# `policy.json` beside this module, rather than in code: a change to who may say
+# yes is then a reviewed change to one file with its own version, and every
+# verdict records the version it was decided under. Adjustments still only ever
+# raise risk; an action cannot argue its way into a lower tier.
 
-BLAST_RADIUS_ESCALATION_ENTITIES = 5
-BLAST_RADIUS_ESCALATION_USERS = 1000
+POLICY_FILE = Path(__file__).with_name("policy.json")
 
 
-APPROVERS: dict[Tier, list[str]] = {
-    Tier.AUTONOMOUS: [],
-    Tier.APPROVAL: ["operator"],
-    Tier.SENIOR: ["senior_operator"],
-    Tier.DENIED: [],
-}
-"""Who may authorise each tier. Lifted out of `evaluate` so that anything
-describing the policy reads the same table the engine decides with — a page
-restating these from memory is a second answer to "who may approve this", and
-the day they disagree the wrong one is on the marketing site."""
+class PolicyFileError(ValueError):
+    """The policy file is malformed. Raised at load, never half-applied."""
+
+
+def load_policy(path: Path = POLICY_FILE) -> dict[str, object]:
+    """Reads and validates a policy file. Refuses rather than guesses: thresholds must rise strictly,
+    end at 100, name each tier once in order, and the escalation limits must be positive."""
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PolicyFileError(f"cannot read policy file {path}: {exc}") from exc
+    version = raw.get("version")
+    tiers = raw.get("tiers")
+    escalation = raw.get("escalation") or {}
+    if not isinstance(version, str) or not version:
+        raise PolicyFileError("policy file has no version")
+    expected = [Tier.AUTONOMOUS, Tier.APPROVAL, Tier.SENIOR, Tier.DENIED]
+    if not isinstance(tiers, list) or [t.get("tier") for t in tiers] != [str(t) for t in expected]:
+        raise PolicyFileError("tiers must be autonomous, approval, senior, denied, in that order")
+    ceilings = [t.get("max_risk") for t in tiers]
+    if not all(isinstance(c, int) for c in ceilings) or ceilings != sorted(set(ceilings)) or ceilings[-1] != 100:
+        raise PolicyFileError("max_risk must rise strictly and end at 100")
+    if ceilings[0] < 0:
+        raise PolicyFileError("max_risk cannot be negative")
+    for t in tiers:
+        if not isinstance(t.get("approvers"), list) or not all(isinstance(a, str) for a in t["approvers"]):
+            raise PolicyFileError(f"approvers for {t['tier']} must be a list of names")
+    entities = escalation.get("blast_radius_entities")
+    users = escalation.get("blast_radius_users")
+    if not (isinstance(entities, int) and entities > 0 and isinstance(users, int) and users > 0):
+        raise PolicyFileError("escalation limits must be positive integers")
+    return {
+        "version": version,
+        "tiers": [(t["max_risk"], Tier(t["tier"])) for t in tiers],
+        "approvers": {Tier(t["tier"]): list(t["approvers"]) for t in tiers},
+        "entities": entities,
+        "users": users,
+    }
+
+
+_POLICY = load_policy()
+POLICY_VERSION: str = _POLICY["version"]  # type: ignore[assignment]
+_TIERS: list[tuple[int, Tier]] = _POLICY["tiers"]  # type: ignore[assignment]
+BLAST_RADIUS_ESCALATION_ENTITIES: int = _POLICY["entities"]  # type: ignore[assignment]
+BLAST_RADIUS_ESCALATION_USERS: int = _POLICY["users"]  # type: ignore[assignment]
+
+APPROVERS: dict[Tier, list[str]] = _POLICY["approvers"]  # type: ignore[assignment]
+"""Who may authorise each tier, from the policy file. Anything describing the
+policy reads the same table the engine decides with — a page restating these
+from memory is a second answer to "who may approve this", and the day they
+disagree the wrong one is on the marketing site."""
 
 
 def policy_model() -> dict[str, object]:
@@ -222,6 +262,7 @@ def policy_model() -> dict[str, object]:
     engine without the drift being a code change in one place.
     """
     return {
+        "version": POLICY_VERSION,
         "tiers": [
             {
                 "tier": str(tier),
@@ -422,7 +463,7 @@ def evaluate(
         granted_by="dharma" if tier is Tier.AUTONOMOUS else None,
         granted_at=now if tier is Tier.AUTONOMOUS else None,
         expires_at=now + VERDICT_TTL,
-        constraints={"dry_run": str(context.dry_run).lower()},
+        constraints={"dry_run": str(context.dry_run).lower(), "policy_version": POLICY_VERSION},
         denial_reason=denial,
     )
 
