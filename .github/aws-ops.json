@@ -1,1 +1,1 @@
-{"ops": ["status"], "hours": 0.5}
+{"ops": ["role-policies", "status"], "hours": 0.1}

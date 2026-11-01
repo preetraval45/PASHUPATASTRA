@@ -113,9 +113,26 @@ def ses_permission() -> None:
     note("SES permission", f"role {name} may now call ses:SendEmail")
 
 
+def role_policies() -> None:
+    """Read-only: the API's Lambda role, and the actions its policies allow."""
+    iam = boto3.client("iam")
+    arn = boto3.client("lambda", region_name=REGION).get_function_configuration(FunctionName=FUNCTION)["Role"]
+    name = arn.rsplit("/", 1)[-1]
+    attached = [p["PolicyName"] for p in iam.list_attached_role_policies(RoleName=name)["AttachedPolicies"]]
+    note("Lambda role", f"{name}: attached {attached}")
+    for policy in iam.list_role_policies(RoleName=name)["PolicyNames"]:
+        doc = iam.get_role_policy(RoleName=name, PolicyName=policy)["PolicyDocument"]
+        statements = doc.get("Statement", [])
+        statements = statements if isinstance(statements, list) else [statements]
+        for st in statements:
+            actions = st.get("Action", [])
+            actions = actions if isinstance(actions, list) else [actions]
+            note("Lambda role inline", f"{policy}: {st.get('Effect')} {sorted(actions)} on {st.get('Resource')}")
+
+
 def main() -> int:
     request = json.loads(open(sys.argv[1], encoding="utf-8").read())
-    ops = {"status": lambda: status(float(request.get("hours", 24))), "ses-status": ses_status, "ses-permission": ses_permission,
+    ops = {"status": lambda: status(float(request.get("hours", 24))), "role-policies": role_policies, "ses-status": ses_status, "ses-permission": ses_permission,
            "ses-verify": lambda: ses_verify(request.get("email", ""))}
     failed = False
     for name in request.get("ops", []):
