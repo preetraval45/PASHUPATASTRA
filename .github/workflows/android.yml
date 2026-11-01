@@ -121,4 +121,6 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload android shot-*.png logcat.txt --clobber --repo "${{ github.repository }}"
+        # Whatever exists, so a failed run still leaves its evidence (summary.txt names the
+        # screen where the app stopped running).
+        run: gh release upload android $(ls shot-*.png logcat.txt summary.txt crash.log 2>/dev/null) --clobber --repo "${{ github.repository }}"
