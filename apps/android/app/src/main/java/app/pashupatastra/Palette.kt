@@ -19,6 +19,9 @@ class Palette(
     val faint: Int,
     val astra: Int,
     val crit: Int,
+    val high: Int,
+    val warn: Int,
+    val ok: Int,
 ) {
     companion object {
         val DARK = Palette(
@@ -32,6 +35,9 @@ class Palette(
             faint = Color.rgb(126, 136, 149),
             astra = Color.rgb(47, 163, 160),
             crit = Color.rgb(251, 113, 133),
+            high = Color.rgb(251, 146, 60),
+            warn = Color.rgb(251, 191, 36),
+            ok = Color.rgb(52, 211, 153),
         )
         val LIGHT = Palette(
             dark = false,
@@ -44,6 +50,9 @@ class Palette(
             faint = Color.rgb(100, 108, 120),
             astra = Color.rgb(17, 116, 114),
             crit = Color.rgb(190, 18, 60),
+            high = Color.rgb(154, 52, 18),
+            warn = Color.rgb(145, 86, 5),
+            ok = Color.rgb(4, 120, 87),
         )
     }
 }

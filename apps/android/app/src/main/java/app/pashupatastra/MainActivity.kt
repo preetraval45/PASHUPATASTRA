@@ -65,6 +65,8 @@ class MainActivity : AppCompatActivity() {
 
     private val tabs = LinkedHashMap<Int, WebTab>()
     private var current: WebTab? = null
+    private var home: HomeScreen? = null
+    private var shown: View? = null
     private var currentId = 0
 
     var palette: Palette = Palette.DARK
@@ -133,7 +135,12 @@ class MainActivity : AppCompatActivity() {
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_search -> { open("/search"); true }
-                R.id.action_share -> { current?.let { share(titleOf(it), it.web.url ?: site.toString()) }; true }
+                R.id.action_share -> {
+                    val tab = current
+                    if (tab != null) share(titleOf(tab), tab.web.url ?: site.toString())
+                    else share(getString(R.string.app_name), site.toString())
+                    true
+                }
                 else -> false
             }
         }
@@ -150,7 +157,11 @@ class MainActivity : AppCompatActivity() {
         }
         nav.setOnItemReselectedListener { item ->
             nav.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-            if (item.itemId == R.id.tab_more) showMore() else tabs[item.itemId]?.toRoot()
+            when (item.itemId) {
+                R.id.tab_more -> showMore()
+                R.id.tab_home -> home?.toTop()
+                else -> tabs[item.itemId]?.toRoot()
+            }
         }
 
         // Edge to edge: the bars sit under the status and navigation bars, padded clear of them.
@@ -186,6 +197,11 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         route(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (currentId == R.id.tab_home) home?.refreshIfStale()
     }
 
     override fun onDestroy() {
@@ -226,29 +242,49 @@ class MainActivity : AppCompatActivity() {
         nav.menu.findItem(id)?.isChecked = true
     }
 
-    /** Shows a tab, loading `url` in it if given, or its first page if it has none yet. */
+    /**
+     * Shows a tab, loading `url` in it if given, or its first page if it has none yet.
+     * Home is native (HomeScreen, drawn from the API); the other tabs are pages.
+     */
     private fun show(id: Int, url: String? = null) {
-        val tab = tab(id)
-        when {
-            url != null -> tab.load(url)
-            tab.isEmpty -> tab.load(url(rootPath(id)))
-        }
-        if (current !== tab) {
-            current?.view?.visibility = View.GONE
-            tab.view.alpha = 0f
-            tab.view.translationY = dp(8).toFloat()
-            tab.view.visibility = View.VISIBLE
-            tab.view.animate().alpha(1f).translationY(0f).setDuration(180).start()
+        val next: View
+        if (id == R.id.tab_home) {
+            val screen = home ?: HomeScreen(this).also {
+                home = it
+                it.view.visibility = View.GONE
+                content.addView(it.view, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            }
+            if (shown !== screen.view) screen.refreshIfStale()
+            current = null
+            next = screen.view
+        } else {
+            val tab = tab(id)
+            when {
+                url != null -> tab.load(url)
+                tab.isEmpty -> tab.load(url(rootPath(id)))
+            }
             current = tab
-            currentId = id
+            next = tab.view
         }
+        if (shown !== next) {
+            shown?.visibility = View.GONE
+            next.alpha = 0f
+            next.translationY = dp(8).toFloat()
+            next.visibility = View.VISIBLE
+            next.animate().alpha(1f).translationY(0f).setDuration(180).start()
+            shown = next
+        }
+        currentId = id
         updateChrome()
     }
 
-    /** A place in the site, opened where it belongs: its tab if it has one, More's stack if not. */
-    private fun open(path: String) {
+    /**
+     * A place in the site, opened where it belongs: its tab if it has one, More's stack if not.
+     * A tab's own first page just selects the tab, so it keeps where the user was in it.
+     */
+    fun open(path: String) {
         val id = tabFor(path)
-        if (id == R.id.tab_more) select(id, url(path)) else select(id)
+        if (id == R.id.tab_more || (id != R.id.tab_home && path != rootPath(id))) select(id, url(path)) else select(id)
     }
 
     /** A link to the site opens that page in its tab; a launch with no link resumes where the app was. */
@@ -269,7 +305,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateChrome() {
-        val tab = current ?: return
+        val tab = current
+        if (tab == null) {
+            toolbar.title = getString(R.string.app_name)
+            toolbar.navigationIcon = null
+            progress.visibility = View.INVISIBLE
+            return
+        }
         toolbar.title = titleOf(tab)
         toolbar.navigationIcon = if (tab.web.canGoBack()) tinted(R.drawable.ic_back, palette.ink) else null
         if (tab.progress in 1..99) {
@@ -487,6 +529,7 @@ class MainActivity : AppCompatActivity() {
             isAppearanceLightNavigationBars = !p.dark
         }
         tabs.values.forEach { it.applyPalette(p) }
+        home?.applyPalette()
         updateChrome()
     }
 

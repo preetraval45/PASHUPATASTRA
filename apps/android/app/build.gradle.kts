@@ -5,6 +5,8 @@ plugins {
 
 // The address the app opens. CI can point a build at another deployment with -PsiteUrl=...
 val siteUrl: String = (project.findProperty("siteUrl") as String?) ?: "https://pashupatastra.vercel.app"
+// The public API the native screens read (the same one the site reads, NEXT_PUBLIC_API_URL).
+val apiUrl: String = (project.findProperty("apiUrl") as String?) ?: "https://265d0hsmwa.execute-api.us-east-1.amazonaws.com/api/v1"
 
 android {
     namespace = "app.pashupatastra"
@@ -18,6 +20,7 @@ android {
         versionCode = ((project.findProperty("versionCode") as String?) ?: "1").toInt()
         versionName = (project.findProperty("versionName") as String?) ?: "0.1"
         buildConfigField("String", "SITE_URL", "\"$siteUrl\"")
+        buildConfigField("String", "API_URL", "\"$apiUrl\"")
     }
 
     signingConfigs {

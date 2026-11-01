@@ -108,3 +108,4 @@ Protocol: before every push, write a topic-named file from
 - [DrawnVerdicts.md](DrawnVerdicts.md) — Sati AI specialist runs draw gauge/ranking/timeline; CORS-off headless Edge for local live tests; 0.2.0 Skandamata/Shailaputri numbers
 - [NativeShell.md](NativeShell.md) — Android app's native Material frame (RP-96): per-tab WebViews, PashupatastraNative UA hides web bars, theme from site localStorage
 - [WebsiteChatLiveTraining.md](WebsiteChatLiveTraining.md) — direct multi-model answers, no chat dropdowns, live feed + replay on incidents (RP-98), training games/flashcards/paths; autostash around android WIP
+- [NativeHome.md](NativeHome.md) — Android Home tab native from API (HomeScreen.kt); frontier-model Sati AI needs owner's cost decision
