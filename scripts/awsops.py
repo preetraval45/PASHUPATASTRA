@@ -56,7 +56,7 @@ def status(hours: float = 24) -> None:
                 last = next((line for line in reversed(lines) if ("Error" in line or "Exception" in line)
                              and not line.startswith("File ")), lines[-1] if lines else "?")
                 frames = [line for line in lines if line.startswith("File ")]
-                key = last[:160]
+                key = last[:600]
                 kinds[key] = kinds.get(key, 0) + 1
                 where.setdefault(key, frames[-1][:200] if frames else "")
         note(f"Lambda errors ({hours:g}h)", f"{errors} error lines", "warning" if errors else "notice")
