@@ -19,3 +19,7 @@
 ## Next session should
 
 - Read `summary.txt` and the shots after every Android change; they are the only eyes on the app.
+
+## Open questions
+
+- Twice (runs 41328701921 and 41329886458), on the Sati AI screen, the emulator's `com.google.android.gms.persistent` died, and Android killed this app because it "depends on provider ...FontsProvider". Something in the app or its WebView binds to Play services' font provider. Same screen both times, so memory pressure from the `/ask` page may be what kills Play services on the small emulator. If a real phone ever reports the app closing on Sati AI, start here.
