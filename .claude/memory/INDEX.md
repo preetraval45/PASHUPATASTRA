@@ -115,5 +115,5 @@ Protocol: before every push, write a topic-named file from
 - [NativeFeed.md](NativeFeed.md) — native Live attacks from /intel via synthetic 'feed' tab id; skeleton placeholders; need-you badge
 - [Onboarding.md](Onboarding.md) — first-run welcome overlay; alerts offered with reason; pre-API-30 insets fallback
 - [PlayReadiness.md](PlayReadiness.md) — /privacy, -Pplay AAB from secrets, emulator screenshots on the android release, store/listing.md
-- [Accounts.md](Accounts.md) — accounts/companies/team dashboard (adr/Accounts); stdlib auth; gateway CORS step in CI; stage own paths only
+- [Accounts.md](Accounts.md) — accounts/companies/team dashboard (adr/Accounts); /login /signup /forgot-password /reset-password; session versions; admin reset links; SES via vars.EMAIL_FROM; stage own paths only
 - [EmulatorFindings.md](EmulatorFindings.md) — renderer crash on incident page fixed; Api.fetch offline copies; CI evidence on the release (summary.txt/shots)

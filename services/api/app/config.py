@@ -54,6 +54,13 @@ class Settings(BaseSettings):
     """Signs session tokens (accounts.py). Unset, a key is made once and kept in the store, so a fresh
     deployment works without configuration; set it to rotate every session at once."""
 
+    email_from: str | None = None
+    """Sender for account emails (password resets) through Amazon SES (mail.py). Must be an identity SES
+    has verified. Unset, no email is sent and resets go through a company admin."""
+
+    site_url: str = "https://pashupatastra.vercel.app"
+    """Where links in account emails point."""
+
     google_client_id: str | None = None
     """Google Identity Services client id, for "Sign in with Google". Public, not a secret: it is the
     audience every Google ID token must name. Unset, the site offers email and guest sign-in only."""

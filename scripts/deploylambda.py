@@ -101,6 +101,9 @@ def environment(cors: list[str]) -> str:
     # "Sign in with Google" (app/accounts.py). A public client id, kept as a GitHub variable, not a secret.
     if os.environ.get("GOOGLE_CLIENT_ID"):
         env["Variables"]["PASHU_GOOGLE_CLIENT_ID"] = os.environ["GOOGLE_CLIENT_ID"]
+    # Password-reset emails through Amazon SES (app/mail.py): an SES-verified sender, as a GitHub variable.
+    if os.environ.get("EMAIL_FROM"):
+        env["Variables"]["PASHU_EMAIL_FROM"] = os.environ["EMAIL_FROM"]
     return json.dumps(env)
 
 

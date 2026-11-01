@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { initials, useAccount } from "@/components/account";
-import { AccountFailure, companyMembers, newInvite, removeMember, setRole, type Member } from "@/lib/account";
+import { AccountFailure, adminResetLink, companyMembers, newInvite, removeMember, setRole, type Member } from "@/lib/account";
 import { MODULES } from "@/lib/training";
 
 /**
@@ -45,6 +45,7 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "behind" | "done">("all");
+  const [resetFor, setResetFor] = useState<{ id: string; link: string } | null>(null);
 
   const reload = useCallback(() => {
     companyMembers(orgId)
@@ -71,14 +72,14 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
   if (ready && !me) {
     return (
       <p className="text-sm">
-        <Link href={`/signin?next=/team/${orgId}`} className="text-[rgb(var(--astra))] underline">Sign in</Link> to see your team.
+        <Link href={`/login?next=/team/${orgId}`} className="text-[rgb(var(--astra))] underline">Sign in</Link> to see your team.
       </p>
     );
   }
   if (error) return <p className="rounded-2xl border border-[rgb(var(--crit))]/40 bg-[rgb(var(--crit))]/10 p-4 text-sm">{error}</p>;
   if (!data) return <div className="h-72 animate-pulse rounded-3xl bg-[rgb(var(--raised))]" />;
 
-  const link = typeof window === "undefined" ? "" : `${window.location.origin}/signin?invite=${data.org.invite}`;
+  const link = typeof window === "undefined" ? "" : `${window.location.origin}/signup?invite=${data.org.invite}`;
   const copy = async (text: string, what: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -197,6 +198,24 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
                 ))}
               </span>
               <span className="tnum w-14 text-right text-sm">{m.average === null ? "—" : `${Math.round(m.average * 100)}%`}</span>
+              {m.provider === "email" && m.id !== me?.user.id && m.role !== "owner" && (
+                <button
+                  type="button"
+                  onClick={() => adminResetLink(orgId, m.id).then((r) => setResetFor({ id: m.id, link: r.link })).catch((e) => setError(e instanceof AccountFailure ? e.message : "Couldn't make a reset link."))}
+                  className="focusable rounded-lg border border-[rgb(var(--edge))] px-2 py-1 text-xs"
+                >
+                  Reset password
+                </button>
+              )}
+              {resetFor?.id === m.id && (
+                <span className="rise flex w-full flex-wrap items-center gap-2 rounded-xl border border-[rgb(var(--astra))]/30 bg-[rgb(var(--astra))]/5 p-2.5 text-xs">
+                  <span className="text-[rgb(var(--muted))]">Give {m.name} this link. It works once, for one hour:</span>
+                  <code className="mono min-w-0 flex-1 truncate">{resetFor.link}</code>
+                  <button type="button" onClick={() => copy(resetFor.link, `reset-${m.id}`)} className="focusable rounded-lg bg-[rgb(var(--astra))] px-2.5 py-1 font-semibold text-white">
+                    {copied === `reset-${m.id}` ? "Copied ✓" : "Copy"}
+                  </button>
+                </span>
+              )}
               {isOwner && m.role !== "owner" && (
                 <span className="flex gap-1">
                   <button

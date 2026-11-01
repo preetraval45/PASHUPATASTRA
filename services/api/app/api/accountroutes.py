@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
-from .. import accounts
+from .. import accounts, mail
 from ..config import get_settings
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
 
@@ -84,6 +84,20 @@ class Role(BaseModel):
     role: str = Field(max_length=16)
 
 
+class Forgot(BaseModel):
+    email: str = Field(max_length=256)
+
+
+class Reset(BaseModel):
+    token: str = Field(max_length=200)
+    password: str = Field(max_length=256)
+
+
+class NewPassword(BaseModel):
+    current: str = Field(max_length=256)
+    password: str = Field(max_length=256)
+
+
 class Result(BaseModel):
     score: float = Field(ge=0, le=1)
     passed: bool
@@ -92,7 +106,8 @@ class Result(BaseModel):
 @router.get("/auth/config")
 def auth_config() -> dict:
     """Which sign-ins this deployment offers. The Google client id is public by design."""
-    return {"google_client_id": get_settings().google_client_id, "guest": True, "email": True}
+    return {"google_client_id": get_settings().google_client_id, "guest": True, "email": True,
+            "email_reset": mail.enabled()}
 
 
 @router.post("/auth/guest")
@@ -127,6 +142,45 @@ def auth_google(body: Google) -> dict:
     except accounts.AccountError as error:
         raise _fail(error) from error
     return _session(user)
+
+
+@router.post("/auth/forgot")
+def auth_forgot(body: Forgot) -> dict:
+    """Emails a one-hour reset link when the address has an account. The answer is the same either way,
+    so this form cannot tell anyone which addresses have accounts."""
+    token = accounts.request_reset(body.email)
+    if token and mail.enabled():
+        link = f"{get_settings().site_url}/reset-password?token={token}"
+        mail.send(body.email.strip().lower(), "Reset your Pashupatastra password",
+                  f"Someone asked to reset the password for this account.\n\nReset it here within an hour:\n{link}\n\n"
+                  "If it wasn't you, ignore this email: your password stays as it is.")
+    return {"email_reset": mail.enabled()}
+
+
+@router.post("/auth/reset")
+def auth_reset(body: Reset) -> dict:
+    try:
+        user = accounts.reset_password(body.token, body.password)
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    _audit("a password was reset")
+    return _session(user)
+
+
+@router.put("/me/password")
+def me_password(body: NewPassword, authorization: str | None = Header(default=None)) -> dict:
+    user = _user(authorization)
+    try:
+        accounts.change_password(user, body.current, body.password)
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    return _session(user)
+
+
+@router.post("/me/signout-all")
+def me_signout_all(authorization: str | None = Header(default=None)) -> dict:
+    accounts.sign_out_everywhere(_user(authorization))
+    return {"ok": True}
 
 
 @router.get("/me")
@@ -202,6 +256,16 @@ def org_role(org_id: str, member_id: str, body: Role, authorization: str | None 
     except accounts.AccountError as error:
         raise _fail(error) from error
     return {"ok": True}
+
+
+@router.post("/orgs/{org_id}/members/{member_id}/reset")
+def org_reset(org_id: str, member_id: str, authorization: str | None = Header(default=None)) -> dict:
+    """A one-time, one-hour reset link for a member, for the admin to hand over."""
+    try:
+        token = accounts.admin_reset(org_id, _user(authorization), member_id)
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    return {"link": f"{get_settings().site_url}/reset-password?token={token}", "expires_in": accounts.RESET_SECONDS}
 
 
 @router.delete("/orgs/{org_id}/members/{member_id}")

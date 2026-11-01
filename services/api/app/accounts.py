@@ -127,8 +127,15 @@ def _unb64(text: str) -> bytes:
     return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
 
 
+def _version(user_id: str) -> int:
+    """The account's session version: raised by a password change or "sign out everywhere", which
+    ends every token issued before it."""
+    return int((store().get_doc("USER", user_id) or {}).get("v", 0))
+
+
 def issue(user_id: str, now: float | None = None) -> str:
-    payload = _b64(json.dumps({"u": user_id, "exp": int((now or time.time()) + SESSION_DAYS * 86400)}).encode())
+    claims = {"u": user_id, "exp": int((now or time.time()) + SESSION_DAYS * 86400), "v": _version(user_id)}
+    payload = _b64(json.dumps(claims).encode())
     signature = _b64(hmac.new(_signing_key(), payload.encode(), hashlib.sha256).digest())
     return f"{payload}.{signature}"
 
@@ -147,7 +154,10 @@ def verify(token: str | None, now: float | None = None) -> str | None:
         return None
     if int(claims.get("exp", 0)) < (now or time.time()):
         return None
-    return str(claims.get("u")) or None
+    user_id = str(claims.get("u") or "")
+    if not user_id or int(claims.get("v", 0)) != _version(user_id):
+        return None
+    return user_id
 
 
 # --- passwords -------------------------------------------------------------------------------
@@ -243,9 +253,9 @@ def _google_claims(credential: str) -> dict:
     """Google's own check of an ID token (signature, expiry), via its tokeninfo endpoint."""
     url = "https://oauth2.googleapis.com/tokeninfo?" + urllib.parse.urlencode({"id_token": credential})
     try:
-        with urllib.request.urlopen(url, timeout=8) as response:  # noqa: S310 - fixed https URL
+        with urllib.request.urlopen(url, timeout=8) as response:  # a fixed https URL
             return json.loads(response.read())
-    except Exception as exc:  # noqa: BLE001 - any failure is a refused sign-in
+    except Exception as exc:  # any failure is a refused sign-in
         raise AccountError("Google could not confirm that sign-in. Try again.", 401) from exc
 
 
@@ -427,3 +437,79 @@ def members(org_id: str, actor: User) -> list[dict]:
             "average": round(sum(float(m.get("best", 0)) for m in modules.values()) / len(modules), 3) if modules else None,
         })
     return sorted(out, key=lambda m: (ROLES.index(m["role"]), m["name"].lower()))
+
+
+# --- passwords and sessions, managed ----------------------------------------------------------
+
+RESET_SECONDS = 60 * 60
+
+
+def _bump(user_id: str) -> None:
+    doc = store().get_doc("USER", user_id) or {}
+    doc["v"] = int(doc.get("v", 0)) + 1
+    store().put_doc("USER", user_id, doc)
+
+
+def sign_out_everywhere(user: User) -> None:
+    """Ends every session this account has, on every device, this one included."""
+    _bump(user.id)
+
+
+def _set_password(user_id: str, password: str) -> None:
+    _check_password(password)
+    doc = store().get_doc("USER", user_id) or {}
+    salt = secrets.token_bytes(16)
+    doc.update({"salt": salt.hex(), "hash": _hash(password, salt), "v": int(doc.get("v", 0)) + 1})
+    store().put_doc("USER", user_id, doc)
+    if doc.get("email"):
+        store().delete_doc("LOCK", doc["email"])
+
+
+def change_password(user: User, current: str, new: str) -> None:
+    """A new password, given the current one. Every other session ends."""
+    doc = store().get_doc("USER", user.id) or {}
+    if "salt" not in doc:
+        raise AccountError("This account has no password to change.")
+    if not hmac.compare_digest(_hash(current, bytes.fromhex(doc["salt"])), doc["hash"]):
+        raise AccountError("Your current password isn't right.", 401)
+    _set_password(user.id, new)
+
+
+def _reset_token(user_id: str, now: float | None = None) -> str:
+    """A one-time reset token. Only its SHA-256 is stored, so a copy of the table cannot reset anyone."""
+    token = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    store().put_doc("RESET", digest, {"user": user_id, "exp": int((now or time.time()) + RESET_SECONDS)})
+    return token
+
+
+def request_reset(email: str, now: float | None = None) -> str | None:
+    """A reset token for an email account, or None when there is no such account. The route answers the
+    same either way, so the form cannot be used to find out who has an account."""
+    link = store().get_doc("LOGIN", f"email#{email.strip().lower()}")
+    return _reset_token(link["user"], now) if link else None
+
+
+def reset_password(token: str, password: str, now: float | None = None) -> User:
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    found = store().get_doc("RESET", digest)
+    if not found or int(found["exp"]) < (now or time.time()):
+        raise AccountError("That reset link has expired or was already used. Ask for a new one.", 400)
+    _set_password(found["user"], password)
+    store().delete_doc("RESET", digest)
+    user = get_user(found["user"])
+    if user is None:
+        raise AccountError("That account no longer exists.", 404)
+    return user
+
+
+def admin_reset(org_id: str, actor: User, member_id: str) -> str:
+    """A one-time reset token an owner or admin hands to a member who cannot sign in. Works with no email
+    service at all, which is the point: a company can manage its people before email is set up."""
+    require(org_id, actor, "owner", "admin")
+    if not role_in(org_id, member_id):
+        raise AccountError("That person isn't in this company.", 404)
+    member = get_user(member_id)
+    if member is None or member.provider != "email":
+        raise AccountError("Only email accounts have a password to reset.")
+    return _reset_token(member_id)

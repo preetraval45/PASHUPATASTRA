@@ -445,6 +445,11 @@ function titleFor(pathname: string): string {
   if (pathname.startsWith("/entity")) return "Entity";
   if (pathname.startsWith("/evidence")) return "Evidence";
   if (pathname.startsWith("/search")) return "Search";
+  if (pathname === "/login" || pathname === "/signin") return "Sign in";
+  if (pathname === "/signup") return "Create account";
+  if (pathname === "/forgot-password" || pathname === "/reset-password") return "Password";
+  if (pathname.startsWith("/account")) return "Account";
+  if (pathname.startsWith("/team")) return "Team";
   return "Console";
 }
 

@@ -147,3 +147,48 @@ def test_ten_wrong_passwords_lock_the_email_for_fifteen_minutes():
         accounts.login("ana@northwind.example", "orbit pencil velvet", now=1_001)
     assert locked.value.status == 429
     assert accounts.login("ana@northwind.example", "orbit pencil velvet", now=1_000 + accounts.LOCK_SECONDS + 1).name == "Ana"
+
+
+def test_changing_the_password_ends_every_other_session():
+    old = register()
+    renewed = client.put("/api/v1/me/password", json={"current": "orbit pencil velvet", "password": "brand new passphrase"}, headers=auth(old))
+    assert renewed.status_code == 200
+    assert client.get("/api/v1/me", headers=auth(old)).status_code == 401
+    assert client.get("/api/v1/me", headers=auth(renewed.json()["token"])).status_code == 200
+    wrong = client.put("/api/v1/me/password", json={"current": "nope nope nope", "password": "another passphrase"}, headers=auth(renewed.json()["token"]))
+    assert wrong.status_code == 401
+
+
+def test_sign_out_everywhere_ends_every_session():
+    token = register()
+    assert client.post("/api/v1/me/signout-all", headers=auth(token)).json() == {"ok": True}
+    assert client.get("/api/v1/me", headers=auth(token)).status_code == 401
+
+
+def test_a_reset_token_works_once_within_the_hour_and_forgot_reveals_nothing():
+    register()
+    assert client.post("/api/v1/auth/forgot", json={"email": "nobody@northwind.example"}).json() == \
+        client.post("/api/v1/auth/forgot", json={"email": "ana@northwind.example"}).json()
+    token = accounts.request_reset("ana@northwind.example", now=1_000)
+    with pytest.raises(accounts.AccountError):
+        accounts.reset_password(token, "a fresh passphrase", now=1_000 + accounts.RESET_SECONDS + 1)
+    token = accounts.request_reset("ana@northwind.example")
+    done = client.post("/api/v1/auth/reset", json={"token": token, "password": "a fresh passphrase"})
+    assert done.status_code == 200
+    assert client.post("/api/v1/auth/reset", json={"token": token, "password": "again again again"}).status_code == 400
+    assert client.post("/api/v1/auth/login", json={"email": "ana@northwind.example", "password": "a fresh passphrase"}).status_code == 200
+    # Only the token's hash is stored.
+    assert token not in str(accounts.store().docs("RESET"))
+
+
+def test_an_admin_can_hand_a_member_a_reset_link_and_an_employee_cannot():
+    owner = register()
+    org = client.post("/api/v1/orgs", json={"name": "Northwind"}, headers=auth(owner)).json()["orgs"][0]
+    bo = register("bo@northwind.example", name="Bo")
+    bo_id = client.post("/api/v1/orgs/join", json={"code": org["invite"]}, headers=auth(bo)).json()["user"]["id"]
+    link = client.post(f"/api/v1/orgs/{org['id']}/members/{bo_id}/reset", headers=auth(owner)).json()["link"]
+    token = link.split("token=")[1]
+    assert client.post("/api/v1/auth/reset", json={"token": token, "password": "bo's new passphrase"}).status_code == 200
+    owner_id = client.get("/api/v1/me", headers=auth(owner)).json()["user"]["id"]
+    bo2 = client.post("/api/v1/auth/login", json={"email": "bo@northwind.example", "password": "bo's new passphrase"}).json()["token"]
+    assert client.post(f"/api/v1/orgs/{org['id']}/members/{owner_id}/reset", headers=auth(bo2)).status_code == 403

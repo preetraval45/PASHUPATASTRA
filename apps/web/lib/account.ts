@@ -175,4 +175,32 @@ export async function saveTraining(slug: string, score: number, passed: boolean)
 }
 
 export const authConfig = () =>
-  call<{ google_client_id: string | null; guest: boolean; email: boolean }>("/auth/config");
+  call<{ google_client_id: string | null; guest: boolean; email: boolean; email_reset: boolean }>("/auth/config");
+
+/** Asks for a reset email. The answer says whether this deployment can send one at all. */
+export const forgotPassword = (email: string) =>
+  call<{ email_reset: boolean }>("/auth/forgot", { method: "POST", body: JSON.stringify({ email }) });
+
+/** Sets a new password from a reset link's token, and signs in with it. */
+export const resetPassword = (token: string, password: string) =>
+  begin(call("/auth/reset", { method: "POST", body: JSON.stringify({ token, password }) }));
+
+/** A new password, given the current one. Other devices are signed out; this one gets a fresh session. */
+export async function changePassword(current: string, password: string): Promise<void> {
+  const { token } = await call<{ token: string }>("/me/password", { method: "PUT", body: JSON.stringify({ current, password }) });
+  keep(token);
+  set({ token });
+}
+
+/** Ends every session on every device, this one included. */
+export async function signOutEverywhere(): Promise<void> {
+  await call("/me/signout-all", { method: "POST" });
+  signOut();
+}
+
+/** A one-hour reset link for a member, for an admin to hand over. */
+export const adminResetLink = (org: string, member: string) =>
+  call<{ link: string; expires_in: number }>(
+    `/orgs/${encodeURIComponent(org)}/members/${encodeURIComponent(member)}/reset`,
+    { method: "POST" },
+  );

@@ -1,17 +1,8 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
-import { SignIn } from "@/components/signin";
-
-export const metadata: Metadata = {
-  title: "Sign in",
-  description: "Sign in with Google, email or as a guest to keep your training and join your company's workspace.",
-};
-
-export default function SignInPage() {
-  return (
-    <Suspense fallback={null}>
-      <SignIn />
-    </Suspense>
-  );
+/** The first sign-in page lived here; it is now /login, with /signup beside it. Kept so old invite links work. */
+export default async function SignInPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const params = await searchParams;
+  const query = new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => typeof e[1] === "string"));
+  redirect(params.invite ? `/signup?${query}` : `/login${query.size ? `?${query}` : ""}`);
 }

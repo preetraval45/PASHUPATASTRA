@@ -5,7 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { initials, useAccount } from "@/components/account";
-import { AccountFailure, createCompany, deleteAccount, joinCompany, rename, signOut } from "@/lib/account";
+import {
+  AccountFailure,
+  changePassword,
+  createCompany,
+  deleteAccount,
+  joinCompany,
+  rename,
+  signOut,
+  signOutEverywhere,
+} from "@/lib/account";
 import { MODULES } from "@/lib/training";
 
 const ROLE_LABEL = { owner: "Owner", admin: "Admin", employee: "Employee" } as const;
@@ -21,10 +30,12 @@ export function AccountPage() {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [fresh, setFresh] = useState("");
   const joinedFromLink = useRef(false);
 
   useEffect(() => {
-    if (ready && !me) router.replace(`/signin?next=/account${params.get("invite") ? `&invite=${params.get("invite")}` : ""}`);
+    if (ready && !me) router.replace(`/login?next=/account${params.get("invite") ? `&invite=${params.get("invite")}` : ""}`);
   }, [ready, me, router, params]);
 
   const run = async (work: () => Promise<unknown>, ok: string) => {
@@ -111,7 +122,7 @@ export function AccountPage() {
         {guest && (
           <p className="mt-4 rounded-xl border border-[rgb(var(--warn))]/40 bg-[rgb(var(--warn))]/10 px-4 py-3 text-sm">
             You're a guest. Your training is saved, but a guest can't own a company or sign in on another device.{" "}
-            <Link href="/signin?next=/account" onClick={() => signOut()} className="font-semibold underline">
+            <Link href="/signup?next=/account" onClick={() => signOut()} className="font-semibold underline">
               Create a full account
             </Link>
             .
@@ -216,6 +227,40 @@ export function AccountPage() {
             </div>
             {guest && <p className="mt-2 text-xs text-[rgb(var(--faint))]">Needs a full account.</p>}
           </form>
+        </div>
+      </section>
+
+      <section className={card}>
+        <h2 className="text-lg font-semibold">Security</h2>
+        {me.user.provider === "email" && (
+          <form
+            className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
+            onSubmit={(e: FormEvent) => {
+              e.preventDefault();
+              run(() => changePassword(current, fresh), "Password changed. Your other devices were signed out.").then(() => {
+                setCurrent("");
+                setFresh("");
+              });
+            }}
+          >
+            <input className={field} type="password" placeholder="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required />
+            <input className={field} type="password" placeholder="New password (10+ characters)" value={fresh} onChange={(e) => setFresh(e.target.value)} autoComplete="new-password" minLength={10} required />
+            <button className={primary} disabled={busy}>Change password</button>
+          </form>
+        )}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgb(var(--edge))] p-4">
+          <span className="text-sm">
+            <span className="block font-semibold">Sign out everywhere</span>
+            <span className="block text-[rgb(var(--muted))]">Ends every session on every device, this one too. Use it if a device was lost.</span>
+          </span>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => run(signOutEverywhere, "Signed out everywhere.").then(() => router.push("/login"))}
+            className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]"
+          >
+            Sign out everywhere
+          </button>
         </div>
       </section>
 

@@ -615,6 +615,20 @@
         "title": "ExecutionResult",
         "type": "object"
       },
+      "Forgot": {
+        "properties": {
+          "email": {
+            "maxLength": 256,
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "Forgot",
+        "type": "object"
+      },
       "GeneralRequest": {
         "properties": {
           "history": {
@@ -944,6 +958,26 @@
         "title": "Named",
         "type": "object"
       },
+      "NewPassword": {
+        "properties": {
+          "current": {
+            "maxLength": 256,
+            "title": "Current",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 256,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current",
+          "password"
+        ],
+        "title": "NewPassword",
+        "type": "object"
+      },
       "PlanStep": {
         "properties": {
           "action_id": {
@@ -1178,6 +1212,26 @@
           "learned"
         ],
         "title": "RemediateResponse",
+        "type": "object"
+      },
+      "Reset": {
+        "properties": {
+          "password": {
+            "maxLength": 256,
+            "title": "Password",
+            "type": "string"
+          },
+          "token": {
+            "maxLength": 200,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "Reset",
         "type": "object"
       },
       "Result": {
@@ -1977,6 +2031,47 @@
         "summary": "Auth Config"
       }
     },
+    "/api/v1/auth/forgot": {
+      "post": {
+        "description": "Emails a one-hour reset link when the address has an account. The answer is the same either way,\nso this form cannot tell anyone which addresses have accounts.",
+        "operationId": "auth_forgot_api_v1_auth_forgot_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Forgot"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Forgot Api V1 Auth Forgot Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Forgot"
+      }
+    },
     "/api/v1/auth/google": {
       "post": {
         "operationId": "auth_google_api_v1_auth_google_post",
@@ -2115,6 +2210,46 @@
           }
         },
         "summary": "Auth Register"
+      }
+    },
+    "/api/v1/auth/reset": {
+      "post": {
+        "operationId": "auth_reset_api_v1_auth_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Reset Api V1 Auth Reset Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Reset"
       }
     },
     "/api/v1/detections": {
@@ -3342,6 +3477,112 @@
         "summary": "Me Rename"
       }
     },
+    "/api/v1/me/password": {
+      "put": {
+        "operationId": "me_password_api_v1_me_password_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Me Password Api V1 Me Password Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Me Password"
+      }
+    },
+    "/api/v1/me/signout-all": {
+      "post": {
+        "operationId": "me_signout_all_api_v1_me_signout_all_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Me Signout All Api V1 Me Signout All Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Me Signout All"
+      }
+    },
     "/api/v1/me/training/{slug}": {
       "put": {
         "operationId": "me_training_api_v1_me_training__slug__put",
@@ -4017,6 +4258,73 @@
           }
         },
         "summary": "Org Role"
+      }
+    },
+    "/api/v1/orgs/{org_id}/members/{member_id}/reset": {
+      "post": {
+        "description": "A one-time, one-hour reset link for a member, for the admin to hand over.",
+        "operationId": "org_reset_api_v1_orgs__org_id__members__member_id__reset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Reset Api V1 Orgs  Org Id  Members  Member Id  Reset Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Reset"
       }
     },
     "/api/v1/policy/approvals/fatigue": {
