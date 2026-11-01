@@ -14,6 +14,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -38,13 +40,14 @@ class IncidentWatch(context: Context, params: WorkerParameters) : Worker(context
         val incidents = runCatching { Api.parseIncidents(JSONArray(Api.get("/incidents"))) }
             .getOrElse { return Result.retry() }
         val prefs = applicationContext.getSharedPreferences("app", Context.MODE_PRIVATE)
+        IncidentsWidget.update(applicationContext, incidents)
         val alerting = incidents.filter {
             it.state == "awaiting_approval" ||
                 (it.severity == "critical" && it.state != "resolved" && it.state != "rolled_back")
         }
         val keys = alerting.map { key(it) }.toSet()
         val seen = prefs.getStringSet(SEEN, null)
-        if (seen != null) alerting.filter { key(it) !in seen }.forEach { notify(it) }
+        if (seen != null && prefs.getBoolean(ENABLED, true)) alerting.filter { key(it) !in seen }.forEach { notify(it) }
         prefs.edit().putStringSet(SEEN, keys).apply()
         return Result.success()
     }
@@ -101,17 +104,24 @@ class IncidentWatch(context: Context, params: WorkerParameters) : Worker(context
             )
         }
 
-        /** Starts or stops the watch, as the user's switch in More says. */
-        fun schedule(context: Context, enabled: Boolean) {
+        /**
+         * Keeps the check running: it feeds the widget always, and notifies only while
+         * alerts are on (the switch in More; read in doWork).
+         */
+        fun schedule(context: Context) {
             val work = WorkManager.getInstance(context)
-            if (!enabled) {
-                work.cancelUniqueWork(WORK)
-                return
-            }
             val request = PeriodicWorkRequestBuilder<IncidentWatch>(15, TimeUnit.MINUTES)
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .build()
             work.enqueueUniquePeriodicWork(WORK, ExistingPeriodicWorkPolicy.KEEP, request)
+        }
+
+        /** One check now, e.g. when a widget is placed, so it fills in without waiting 15 minutes. */
+        fun checkNow(context: Context) {
+            val request = OneTimeWorkRequestBuilder<IncidentWatch>()
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork("$WORK-now", ExistingWorkPolicy.REPLACE, request)
         }
     }
 }

@@ -33,5 +33,18 @@
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
+
+        <!-- Home-screen widget: live incident counts, refreshed by IncidentWatch. -->
+        <receiver
+            android:name=".IncidentsWidget"
+            android:exported="false"
+            android:label="@string/widget_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_incidents_info" />
+        </receiver>
     </application>
 </manifest>

@@ -111,3 +111,4 @@ Protocol: before every push, write a topic-named file from
 - [NativeHome.md](NativeHome.md) — Android Home tab native from API (HomeScreen.kt); frontier-model Sati AI needs owner's cost decision
 - [NativeIncidents.md](NativeIncidents.md) — native Incidents list (IncidentsScreen.kt), NativeScreen/Api split, web detail page slides over the list
 - [IncidentAlerts.md](IncidentAlerts.md) — WorkManager polls /incidents for alerts (no FCM); stray brace broke run 41323853703
+- [IncidentsWidget.md](IncidentsWidget.md) — home-screen widget; IncidentWatch always runs, switch gates notifications only

@@ -66,6 +66,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         Api.IO.execute {
             val incidents = runCatching { Api.parseIncidents(JSONArray(Api.get("/incidents"))) }.getOrNull()
             val health = runCatching { JSONObject(Api.get("/health")) }.getOrNull()
+            if (incidents != null) IncidentsWidget.update(activity, incidents)
             activity.runOnUiThread {
                 loading = false
                 refresh.isRefreshing = false

@@ -23,4 +23,9 @@
     <string name="sheet_dark">Dark theme</string>
     <string name="sheet_alerts">Alert me when an incident needs me</string>
     <string name="sheet_build">Pashupatastra for Android · build %1$s</string>
+    <string name="widget_title">Incidents</string>
+    <string name="widget_open">Open</string>
+    <string name="widget_need">Need you</string>
+    <string name="widget_critical">Critical</string>
+    <string name="widget_description">Open incidents, those awaiting your approval, and critical ones, live.</string>
 </resources>

@@ -79,7 +79,6 @@ class MainActivity : AppCompatActivity() {
     private val notifyPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) {
             prefs().edit().putBoolean(IncidentWatch.ENABLED, false).apply()
-            IncidentWatch.schedule(this, false)
         }
     }
 
@@ -209,7 +208,7 @@ class MainActivity : AppCompatActivity() {
 
         // Alerts are on unless turned off; the first launch asks for permission once, after the app has drawn.
         val alerts = prefs().getBoolean(IncidentWatch.ENABLED, true)
-        IncidentWatch.schedule(this, alerts)
+        IncidentWatch.schedule(this)
         if (alerts && !prefs().getBoolean(ASKED, false)) {
             prefs().edit().putBoolean(ASKED, true).apply()
             root.postDelayed({ askForAlerts() }, 1500)
@@ -487,7 +486,6 @@ class MainActivity : AppCompatActivity() {
         // Alerts on the phone when an incident needs its owner (IncidentWatch).
         list.addView(switchRow(R.drawable.ic_alert, getString(R.string.sheet_alerts), prefs().getBoolean(IncidentWatch.ENABLED, true)) { on ->
             prefs().edit().putBoolean(IncidentWatch.ENABLED, on).apply()
-            IncidentWatch.schedule(this, on)
             if (on) askForAlerts()
         }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
 
