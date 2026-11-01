@@ -1,6 +1,9 @@
 package app.pashupatastra
 
+import android.content.Context
 import org.json.JSONArray
+import java.text.DateFormat
+import java.util.Date
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -26,6 +29,38 @@ object Api {
     )
 
     val IO = Executors.newSingleThreadExecutor()
+
+    /** A response, and whether it came from the network now (`fresh`) or from the phone's copy. */
+    class Fetched(val body: String, val at: Long, val fresh: Boolean)
+
+    /**
+     * Reads `path`, keeping the answer on the phone. When the network fails, the last
+     * answer comes back marked not fresh, with its time, so a screen can show it and
+     * say how old it is rather than show nothing. Nothing is invented: no copy, null.
+     */
+    fun fetch(context: Context, path: String): Fetched? {
+        val prefs = context.getSharedPreferences(CACHE, Context.MODE_PRIVATE)
+        return try {
+            val body = get(path)
+            val now = System.currentTimeMillis()
+            prefs.edit().putString(path, body).putLong("$path@", now).apply()
+            Fetched(body, now, fresh = true)
+        } catch (error: Exception) {
+            recall(context, path)
+        }
+    }
+
+    /** The phone's copy of `path`, without asking the network: for the first paint. */
+    fun recall(context: Context, path: String): Fetched? {
+        val prefs = context.getSharedPreferences(CACHE, Context.MODE_PRIVATE)
+        val body = prefs.getString(path, null) ?: return null
+        return Fetched(body, prefs.getLong("$path@", 0L), fresh = false)
+    }
+
+    /** "3:41 PM", in the phone's own format. */
+    fun clock(at: Long): String = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(at))
+
+    private const val CACHE = "api-cache"
 
     fun get(path: String): String {
         val connection = URL(BuildConfig.API_URL.trimEnd('/') + path).openConnection() as HttpURLConnection

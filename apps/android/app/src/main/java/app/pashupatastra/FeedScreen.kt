@@ -41,6 +41,7 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
     private var reports: List<Report>? = null
     private var windowHours = 0
     private var failed = false
+    private var staleAt: Long? = null
     private var loading = false
     private var loadedAt = 0L
     private var source = "all"
@@ -72,13 +73,15 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
         if (loading) return
         loading = true
         Api.IO.execute {
-            val body = runCatching { JSONObject(Api.get("/intel?limit=80")) }.getOrNull()
+            val fetched = Api.fetch(activity, "/intel?limit=80")
+            val body = fetched?.let { runCatching { JSONObject(it.body) }.getOrNull() }
             val parsed = body?.let { runCatching { parse(it) }.getOrNull() }
             activity.runOnUiThread {
                 loading = false
                 refresh.isRefreshing = false
                 if (activity.isDestroyed) return@runOnUiThread
-                failed = parsed == null
+                failed = fetched?.fresh != true
+                staleAt = fetched?.takeIf { !it.fresh }?.at
                 if (parsed != null) {
                     reports = parsed
                     windowHours = body?.optInt("window_hours", 0) ?: 0
@@ -114,7 +117,13 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
         if (source !in sources) source = "all"
         column.addView(chips(sources, all), LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
         column.addView(list, lp(top = 6))
-        if (failed) list.addView(notice("Showing the last reports loaded: the API did not answer just now."), lp(top = 10))
+        if (failed) {
+            val at = staleAt
+            list.addView(notice(
+                if (at != null) "Offline · showing reports as of ${Api.clock(at)}. Pull down to try again."
+                else "Showing the last reports loaded: the API did not answer just now.",
+            ), lp(top = 10))
+        }
 
         val shown = if (source == "all") all else all.filter { it.source == source }
         val window = if (windowHours > 0) " · reports from the last $windowHours h count as active" else ""

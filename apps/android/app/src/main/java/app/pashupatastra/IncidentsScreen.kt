@@ -40,6 +40,7 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
     private val column = LinearLayout(activity)
     private var incidents: List<Api.Incident>? = null
     private var failed = false
+    private var staleAt: Long? = null
     private var loading = false
     private var loadedAt = 0L
     private var filter = "open"
@@ -79,12 +80,14 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
         if (loading) return
         loading = true
         Api.IO.execute {
-            val result = runCatching { Api.parseIncidents(JSONArray(Api.get("/incidents"))) }.getOrNull()
+            val fetched = Api.fetch(activity, "/incidents")
+            val result = fetched?.let { runCatching { Api.parseIncidents(JSONArray(it.body)) }.getOrNull() }
             activity.runOnUiThread {
                 loading = false
                 refresh.isRefreshing = false
                 if (activity.isDestroyed) return@runOnUiThread
-                failed = result == null
+                failed = fetched?.fresh != true
+                staleAt = fetched?.takeIf { !it.fresh }?.at
                 if (result != null) {
                     incidents = result
                     activity.setNeedYou(result.count { it.state == "awaiting_approval" })
@@ -118,7 +121,13 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
             )
             return
         }
-        if (failed) list.addView(notice("Showing the last list loaded: the API did not answer just now."), lp(top = 10))
+        if (failed) {
+            val at = staleAt
+            list.addView(notice(
+                if (at != null) "Offline · showing incidents as of ${Api.clock(at)}. Pull down to try again."
+                else "Showing the last list loaded: the API did not answer just now.",
+            ), lp(top = 10))
+        }
 
         val chosen = filters.first { it.key == filter }
         val shown = all.filter(chosen.test).sortedWith(compareBy({ Api.rank(it.severity) }, { it.state != "awaiting_approval" }))

@@ -25,7 +25,8 @@ import java.util.Calendar
  */
 class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
 
-    class Snapshot(val incidents: List<Api.Incident>?, val health: JSONObject?)
+    /** `staleAt`: when the incidents shown were loaded, if they are the phone's copy rather than fresh. */
+    class Snapshot(val incidents: List<Api.Incident>?, val health: JSONObject?, val staleAt: Long? = null)
 
     override val view = FrameLayout(activity)
     private val refresh = SwipeRefreshLayout(activity)
@@ -45,8 +46,13 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         refresh.addView(scroll, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         refresh.setOnRefreshListener { load() }
         view.addView(refresh, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        render()
+        // First paint from the phone's copy, so the screen is never empty while the API answers.
+        // It is marked stale; while loading, the screen says it is checking instead.
+        Api.recall(activity, "/incidents")?.let { copy ->
+            runCatching { Api.parseIncidents(JSONArray(copy.body)) }.getOrNull()?.let { snapshot = Snapshot(it, null, copy.at) }
+        }
         load()
+        render()
     }
 
     /** Reloads if what is shown is more than a minute old: called when the tab is shown again. */
@@ -64,14 +70,16 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         if (loading) return
         loading = true
         Api.IO.execute {
-            val incidents = runCatching { Api.parseIncidents(JSONArray(Api.get("/incidents"))) }.getOrNull()
+            val fetched = Api.fetch(activity, "/incidents")
+            val incidents = fetched?.let { runCatching { Api.parseIncidents(JSONArray(it.body)) }.getOrNull() }
+            // Health is about now: an old copy would claim the system is fine when it may not be.
             val health = runCatching { JSONObject(Api.get("/health")) }.getOrNull()
-            if (incidents != null) IncidentsWidget.update(activity, incidents)
+            if (incidents != null && fetched?.fresh == true) IncidentsWidget.update(activity, incidents)
             activity.runOnUiThread {
                 loading = false
                 refresh.isRefreshing = false
                 if (activity.isDestroyed) return@runOnUiThread
-                snapshot = Snapshot(incidents, health)
+                snapshot = Snapshot(incidents, health, fetched?.takeIf { !it.fresh }?.at)
                 if (incidents != null) activity.setNeedYou(incidents.count { it.state == "awaiting_approval" })
                 loadedAt = System.currentTimeMillis()
                 render()
@@ -90,6 +98,9 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         column.addView(text(greeting(), 14f, p.muted))
         column.addView(text("What do you want to do?", 24f, p.ink, bold = true), lp(top = 2))
 
+        if (!loading) snapshot?.staleAt?.let {
+            column.addView(notice("Offline · showing incidents as of ${Api.clock(it)}. Pull down to try again."), lp(top = 14))
+        }
         column.addView(askCard(), lp(top = 18))
 
         val all = snapshot?.incidents
@@ -218,7 +229,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
     private fun status(): View {
         val health = snapshot?.health
         val (dot, line) = when {
-            snapshot == null -> p.faint to "Checking the system…"
+            snapshot == null || (loading && health == null) -> p.faint to "Checking the system…"
             health == null -> p.warn to "API unreachable"
             else -> {
                 val dry = health.optBoolean("dry_run", true)
