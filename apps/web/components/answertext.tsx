@@ -6,7 +6,8 @@ export { defendFollowUp } from "@/lib/answerlinks";
 
 /**
  * Sati's plain-text answers, laid out to be read: the first line as the lead,
- * "- " and "1. " lines as a list, the "Sources:" line as links, and every
+ * "- " and "1. " lines as a list, "**bold**" as strong, a short line ending in
+ * a colon as a section heading, the "Sources:" line as links, and every
  * ATT&CK, CAPEC or CVE identifier as a link to its official page, so a
  * reader can check a claim in one tap (rule 1: claims carry their grounds).
  *
@@ -14,6 +15,13 @@ export { defendFollowUp } from "@/lib/answerlinks";
  * identifier itself; nothing is looked up or invented.
  */
 const ID = /\b(T\d{4}(?:\.\d{3})?|M\d{4}|CAPEC-\d+|CVE-\d{4}-\d{4,})\b/g;
+
+/** "**bold**" spans as strong text, then identifiers as links. */
+function inline(text: string): ReactNode[] {
+  return text.split(/\*\*(.+?)\*\*/g).flatMap((part, i) =>
+    i % 2 ? [<strong key={`b${i}`} className="font-semibold text-[rgb(var(--ink))]">{linkify(part)}</strong>] : linkify(part),
+  );
+}
 
 function linkify(text: string): ReactNode[] {
   const out: ReactNode[] = [];
@@ -73,7 +81,15 @@ export function AnswerText({ text, muted = false }: { text: string; muted?: bool
               <span aria-hidden="true" className="tnum w-4 shrink-0 text-right text-[rgb(var(--astra))]">
                 {item[1] ?? "›"}
               </span>
-              <span className="min-w-0">{linkify(item[2])}</span>
+              <span className="min-w-0">{inline(item[2])}</span>
+            </p>
+          );
+        }
+        // A short line ending in a colon heads the list below it ("How to defend against it:").
+        if (i !== lead && line.length < 60 && line.trimEnd().endsWith(":")) {
+          return (
+            <p key={i} style={reveal(i)} className="rise label pt-2 text-[rgb(var(--astra))]">
+              {line.trim().slice(0, -1)}
             </p>
           );
         }
@@ -85,7 +101,7 @@ export function AnswerText({ text, muted = false }: { text: string; muted?: bool
               i === lead && !muted ? "rise font-medium text-[rgb(var(--ink))]" : "rise text-[rgb(var(--muted))]"
             }
           >
-            {linkify(line)}
+            {inline(line)}
           </p>
         );
       })}

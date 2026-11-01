@@ -67,11 +67,40 @@ WHICH_TECHNIQUE = re.compile(r"\b(which|what)\b[^?]{0,60}\b(technique|ttp|att&ck
 #: Below this probability a mitigation is not recommended.
 RECOMMEND = 0.2
 
+#: Which model answered, by the kind of passage the answer rests on. Brahmacharini retrieves and names
+#: techniques, attack patterns and vulnerabilities; Skandamata ranks defences.
 AREA_BY_KIND = {
-    "technique": "katyayani",
-    "attack pattern": "katyayani",
+    "technique": "brahmacharini",
+    "attack pattern": "brahmacharini",
     "mitigation": "skandamata",
-    "exploited vulnerability": "chandraghanta",
+    "exploited vulnerability": "brahmacharini",
+}
+
+#: Words that frame a defence question rather than name its subject. Searched with them, "how do we
+#: defend against ransomware?" found Antivirus first; searched without, Data Encrypted for Impact (1 Nov).
+FRAMING = re.compile(
+    r"\b(how|what|which|do|does|can|could|should|would|we|i|you|our|my|us|me|the|a|an|is|are|to|from|for|"
+    r"against|best|ways?|way|good|steps?|it|this|that|be|of|in|on|with|about|tell|explain|please|"
+    r"mitigat\w*|defend\w*|defen[cs]es?|prevent\w*|protect\w*|stop|harden\w*|block\w*|remediat\w*|"
+    r"counter\w*|fix|respond|guard|secure|safe)\b|[?!.,]",
+    re.IGNORECASE,
+)
+
+#: Common names for vulnerabilities the catalogue lists only by CVE and product. Expanded only when
+#: the CVE is in the knowledge base, so a name never points at something it cannot cite.
+ALIASES = {
+    "log4shell": "CVE-2021-44228 Log4j",
+    "eternalblue": "CVE-2017-0144 SMB",
+    "proxylogon": "CVE-2021-26855 Exchange",
+    "proxyshell": "CVE-2021-34473 Exchange",
+    "printnightmare": "CVE-2021-34527 Print Spooler",
+    "follina": "CVE-2022-30190 MSDT",
+    "zerologon": "CVE-2020-1472 Netlogon",
+    "bluekeep": "CVE-2019-0708 Remote Desktop",
+    "citrix bleed": "CVE-2023-4966 Citrix",
+    "heartbleed": "CVE-2014-0160 OpenSSL",
+    "shellshock": "CVE-2014-6271 Bash",
+    "spring4shell": "CVE-2022-22965 Spring",
 }
 
 
@@ -243,6 +272,19 @@ class Knowledge:
     def technique(self, attack_id: str) -> dict | None:
         return next((p for p in self.passages if p["kind"] == "technique" and p["id"] == attack_id), None)
 
+    def passage(self, pid: str) -> dict | None:
+        if not hasattr(self, "_by_id"):
+            self._by_id = {p["id"]: p for p in self.passages}
+        return self._by_id.get(pid)
+
+    def capec_mitigations(self, capec_id: str) -> list[dict]:
+        """CAPEC's own mitigations for one attack pattern, filed as "CAPEC-N mitigation k"."""
+        found, k = [], 1
+        while (p := self.passage(f"{capec_id} mitigation {k}")) is not None:
+            found.append(p)
+            k += 1
+        return found
+
     def search(self, query: list[float], k: int = 3, question: str = "") -> list[tuple[float, dict]]:
         lexical = self.bm25(question)
         # A product-specific vulnerability answers only a question that names
@@ -306,6 +348,20 @@ def mitigation_scores(text: str) -> dict[str, float]:
     return {m["id"]: p for p, m in mitigator().recommend(text, k=1000)}
 
 
+def expand(question: str) -> str:
+    """The question with any common vulnerability name followed by its CVE and product."""
+    lower = question.lower()
+    extra = [cve for name, cve in ALIASES.items()
+             if name in lower and knowledge().passage(cve.split()[0]) is not None]
+    return f"{question} {' '.join(extra)}" if extra else question
+
+
+def subject(question: str) -> str:
+    """What a defence question is about, without its framing words; the question itself if nothing is left."""
+    rest = " ".join(FRAMING.sub(" ", question).split())
+    return rest if len(rest) >= 3 else question
+
+
 def cosine(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b, strict=True))
 
@@ -319,7 +375,10 @@ def first_sentences(text: str, limit: int = 320) -> str:
         if len(out) + len(s) > limit and out:
             break
         out = f"{out} {s}".strip()
-    return out or text[:limit]
+    if out and len(out) <= limit + 40:
+        return out
+    # One sentence longer than the limit: cut at a word, and say it was cut.
+    return text[:limit].rsplit(" ", 1)[0].rstrip(",;:") + "…"
 
 
 class SatiProvider:
@@ -356,36 +415,50 @@ class SatiProvider:
         return self.mode == "skandamata" or bool(MITIGATE.search(question))
 
     def _mitigation_lines(self, text: str) -> list[str] | None:
-        """Brahmacharini finds the technique; ATT&CK's own links give its
-        mitigations; Skandamata orders them. Skandamata alone was trained on
-        analysts' write-ups and misread plain questions ("ransomware encrypting
-        our file shares" → one wrong mitigation), while retrieval reads them well.
-        With no confident technique, Skandamata ranks alone, as before."""
+        """Defences for what the question names. Retrieval finds the subject (searched without the
+        question's framing words); ATT&CK's own links give a technique's mitigations, which Skandamata
+        orders; CAPEC lists its own for an attack pattern. Skandamata alone was trained on analysts'
+        write-ups and misread plain questions, so it ranks alone only when nothing else matched."""
         ranked = mitigation_scores(text)
         links = attack_links()
+        about = subject(expand(text))
+        hits = knowledge().search(embedder().embed(about), k=5, question=about)
         # Retrieval, not the fused ranking, picks the technique here. The fusion was measured on behaviour
         # descriptions; asked "how do we defend against ransomware encrypting our file shares?" (28 Oct) it
         # put Network Share Discovery first, where retrieval names Data Encrypted for Impact.
-        hits = knowledge().search(embedder().embed(text), k=3, question=text) if links else []
-        technique = next((p for s, p in hits if s >= ANSWERABLE and p.get("kind") == "technique"
-                          and p["id"] in links), None)
-        if technique is not None:
-            names = mitigator().by_id()
-            picks = sorted((m for m in links[technique["id"]] if m in names), key=lambda m: -ranked.get(m, 0.0))[:5]
-            if picks:
-                lines = [f"For {technique['title']} ({technique['id']}), which this matches, ATT&CK lists these "
-                         "defences, most relevant first:", ""]
-                lines += [f"- {names[m]['name']} ({m})" for m in picks]
-                urls = [technique.get("url", "")] + [names[m]["url"] for m in picks]
-                return lines + ["", "Sources: " + " · ".join(u for u in urls if u)]
         names = mitigator().by_id()
+        for score, hit in hits:
+            if score < ANSWERABLE:
+                break
+            if hit.get("kind") == "technique" and hit["id"] in links:
+                picks = sorted((m for m in links[hit["id"]] if m in names), key=lambda m: -ranked.get(m, 0.0))[:5]
+                if picks:
+                    lines = [f"To defend against {hit['title']} ({hit['id']}), most relevant first:", ""]
+                    lines += [self._defence(m, names[m]["name"]) for m in picks]
+                    lines += ["", f"What it is: {first_sentences(hit['text'], 220)}"]
+                    urls = [hit.get("url", "")] + [names[m]["url"] for m in picks]
+                    return lines + ["", "Sources: " + " · ".join(u for u in urls if u)]
+            if hit.get("kind") == "attack pattern":
+                own = knowledge().capec_mitigations(hit["id"])[:5]
+                if own:
+                    lines = [f"To defend against {hit['title']} ({hit['id']}):", ""]
+                    lines += [f"- {first_sentences(m['text'], 200)}" for m in own]
+                    lines += ["", f"What it is: {first_sentences(hit['text'], 220)}"]
+                    return lines + ["", f"Sources: {hit['url']}"]
         picks = [(p, names[m]) for m, p in sorted(ranked.items(), key=lambda kv: -kv[1])[:5]
                  if p >= RECOMMEND and m in names]
         if not picks:
             return None
-        lines = ["The ATT&CK mitigations Skandamata ranks highest for what you describe (its confidence in "
-                 "brackets):", ""] + [f"- {m['name']} ({m['id']}) — {p:.0%}" for p, m in picks]
+        lines = ["The defences that fit what you describe, most relevant first:", ""]
+        lines += [self._defence(m["id"], m["name"]) for _, m in picks]
         return lines + ["", "Sources: " + " · ".join(m["url"] for _, m in picks)]
+
+    @staticmethod
+    def _defence(mid: str, name: str) -> str:
+        """One defence as a list line: its name, then what it means in a sentence."""
+        passage = knowledge().passage(mid)
+        gist = first_sentences(passage["text"], 170) if passage else ""
+        return f"- **{name}** ({mid})" + (f": {gist}" if gist else "")
 
     def complete(self, prompt: str, request: ModelRequest) -> tuple[dict[str, Any], Usage]:
         if request.schema_name == "general_answer_v1":
@@ -405,8 +478,8 @@ class SatiProvider:
         question = next((e.content for e in request.evidence if e.ref == "visitor"), "")
         if HARMFUL.search(question):
             return {
-                "answer": "Sati won't help build attacks against systems you don't own. It can explain how an "
-                "attack works and how to detect and defend against it — ask that way and it will.",
+                "answer": "I won't help build attacks against systems you don't own. I can explain how an attack "
+                "works and how to detect and defend against it: ask that way and I will.",
                 "topic": "security",
                 "area": "skandamata",
                 "declined": True,
@@ -415,21 +488,21 @@ class SatiProvider:
             lines = self._mitigation_lines(question)
             if lines:
                 return {
-                    "answer": "\n".join([*lines, "", "These are recommendations. Applying any of them is a decision "
-                                         "for a person, and Dharma authorises every action."]),
+                    "answer": "\n".join([*lines[:-1], "These are recommendations: applying one is a person's decision.",
+                                         "", lines[-1]]),
                     "topic": "security",
                     "area": "skandamata",
                     "declined": False,
                 }
             if self.mode == "skandamata":
                 return {
-                    "answer": "Skandamata found no ATT&CK mitigation it is confident about for that. Describe "
-                    "the attacker behaviour you saw (what was run, accessed or changed), and it will rank "
-                    "the mitigations that defend against it.",
+                    "answer": "No defence stands out for that yet. Describe the attacker behaviour you saw (what "
+                    "was run, accessed or changed) and I will rank the defences against it.",
                     "topic": "security",
                     "area": "skandamata",
                     "declined": False,
                 }
+        question = expand(question)
         query = embedder().embed(question)
         hits = knowledge().search(query, k=3, question=question)
         if self.mode != "skandamata" and WHICH_TECHNIQUE.search(question):
@@ -442,24 +515,49 @@ class SatiProvider:
                 return written
         if not hits or hits[0][0] < ANSWERABLE:
             return {
-                "answer": "That is outside what Sati's own models know so far. Today they know MITRE ATT&CK "
-                "techniques and mitigations, CAPEC attack patterns and the CISA catalogue of exploited "
-                "vulnerabilities. Broader questions will be answered once Kushmanda, Sati's own language "
-                "model, has been trained — rather than borrowing someone else's model meanwhile.",
+                "answer": "I answer cyber security questions, and I couldn't find one in that. Ask me how an "
+                "attack works, which ATT&CK technique a behaviour is, how to defend against something, or "
+                "what to do about a vulnerability. For example:\n\n- What is credential stuffing?\n"
+                "- How do we defend against ransomware?\n- What should we do about Log4Shell?",
                 "topic": "general",
                 "area": "brahmacharini",
                 "declined": False,
             }
+        # A passage titled exactly what was asked about beats a near neighbour: "what is SQL injection?"
+        # ranked Blind SQL Injection first (1 Nov).
+        asked = subject(question).lower()
+        exact = next((h for h in hits if h[0] >= ANSWERABLE and h[1]["title"].lower() == asked), None)
+        if exact is None and asked != question.lower():
+            wider = knowledge().search(embedder().embed(asked), k=5, question=asked)
+            exact = next((h for h in wider if h[0] >= ANSWERABLE and h[1]["title"].lower() == asked), None)
+        if exact is not None:
+            hits = [exact] + [h for h in hits if h[1]["id"] != exact[1]["id"]]
         score, best = hits[0]
-        lines = [
-            f"The closest match in Sati's knowledge is {best['title']} ({best['source']} {best['id']}).",
-            "",
-            first_sentences(best["text"]),
-        ]
-        related = [p for s, p in hits[1:] if s >= ANSWERABLE]
+        lines = [f"**{best['title']}** ({best['id']})", "", first_sentences(best["text"], 520)]
+        # The answer goes on to what to do, so one question gets the explanation and the defence:
+        # Brahmacharini found the subject, ATT&CK or CAPEC names the defences, Skandamata orders them.
+        sources = [best.get("url", "")]
+        if self.mode == "auto" and best["kind"] == "technique" and best["id"] in attack_links():
+            # Ordered as for "how do we defend against it?": asked that way, the ranking put User Training
+            # first for phishing; asked "what is phishing?", Software Configuration (1 Nov).
+            names, ranked = mitigator().by_id(), mitigation_scores(f"How do we defend against {best['title'].lower()}?")
+            picks = sorted((m for m in attack_links()[best["id"]] if m in names), key=lambda m: -ranked.get(m, 0.0))[:3]
+            if picks:
+                lines += ["", "How to defend against it:", ""] + [self._defence(m, names[m]["name"]) for m in picks]
+                sources += [names[m]["url"] for m in picks]
+        elif self.mode == "auto" and best["kind"] == "attack pattern":
+            own = knowledge().capec_mitigations(best["id"])[:3]
+            if own:
+                lines += ["", "How to defend against it:", ""] + [f"- {first_sentences(m['text'], 200)}" for m in own]
+        related = [p for s, p in hits[1:] if s >= ANSWERABLE and p["id"] != best["id"] and p["kind"] != "mitigation"]
         if related:
             lines += ["", "Related: " + "; ".join(f"{p['title']} ({p['id']})" for p in related) + "."]
-        lines += ["", "Sources: " + " · ".join(p["url"] for _, p in hits if p.get("url"))]
+            sources += [p.get("url", "") for p in related]
+        seen: list[str] = []
+        for u in sources:
+            if u and u not in seen:
+                seen.append(u)
+        lines += ["", "Sources: " + " · ".join(seen)]
         return {
             "answer": "\n".join(lines).strip(),
             "topic": "security",
@@ -478,11 +576,11 @@ class SatiProvider:
         picks = [p for p in (knowledge().technique(t) for _, t in ranked[:3]) if p]
         if not picks:
             return None
-        lines = ["The ATT&CK techniques this most resembles, most likely first:", ""]
+        lines = ["Most likely first:", ""]
         lines += [f"{i}. {p['title']} ({p['id']})" for i, p in enumerate(picks, 1)]
         lines += ["", first_sentences(picks[0]["text"]), "",
-                  "Ranked by Brahmacharini with its TF-IDF classifier. On attackers it never trained on, the "
-                  "first is right about two times in three, so check it against what you saw.",
+                  "Check the first against what you observed: on attackers never seen in training it is right "
+                  "about two times in three.",
                   "", "Sources: " + " · ".join(p["url"] for p in picks if p.get("url"))]
         return {"answer": "\n".join(lines), "topic": "security", "area": "brahmacharini", "declined": False}
 
@@ -505,8 +603,8 @@ class SatiProvider:
             return None
         if body.rstrip(".").lower() == KUSHMANDA_ABSTAIN:
             return {
-                "answer": "Kushmanda read the closest passages in Sati's knowledge and found that none of them "
-                "answers this. It declines rather than guess.",
+                "answer": "None of the closest sources answers this, so I won't guess. Try asking it another way, "
+                "or name the technique, attack or CVE.",
                 "topic": "security", "area": "kushmanda", "declined": False,
             }
         index = int(cite.group(1)) - 1 if cite else None

@@ -16,12 +16,11 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { AnswerText, defendFollowUp } from "@/components/answertext";
 import { TurnView, type Turn as IncidentTurn } from "@/components/chat";
 import { examplesFor, runSpecialist, specialist, SPECIALISTS, type Example, type Specialist, type Verdict } from "@/components/specialists";
-import { Listbox } from "@/components/listbox";
 import { Icon } from "@/components/sidebar";
 import { Badge, Stated, statusForSeverity } from "@/components/ui";
 import { askAgent, askGeneral, type GeneralAnswer, type Incident, type ModelChoice } from "@/lib/api";
@@ -46,7 +45,6 @@ type Conversation = {
 
 const GENERAL = "general";
 const STORE_KEY = "pashu.ask.conversations.v1";
-const MODEL_KEY = "pashu.ask.model";
 const SPECIALIST_KEY = "pashu.ask.specialist";
 const KEEP_CONVERSATIONS = 50;
 const KEEP_TURNS = 40;
@@ -59,13 +57,15 @@ const INCIDENT_STARTERS = [
   { q: "What should we do first?", hint: "A next step, routed through policy" },
 ];
 
-/** Questions Sati's own models answer well today, each showing a different one at work. Chosen by
- *  asking them of the served models (28 Oct 2026); broader questions wait for Kushmanda. */
+/** Questions the served models answer well, each a different kind: what an attack is, how to defend,
+ *  which technique, what to do about a CVE. Checked against the served models (1 Nov 2026). */
 const GENERAL_STARTERS = [
-  { q: "Which ATT&CK technique is it when an attacker schedules a task to run their malware at every logon?", hint: "Brahmacharini names the technique" },
-  { q: "How do we defend against phishing emails?", hint: "ATT&CK's defences, ordered by Skandamata" },
-  { q: "What should we do about Log4Shell (CVE-2021-44228)?", hint: "CISA's required action, cited" },
-  { q: "What is credential stuffing?", hint: "The attack pattern, explained and cited" },
+  { q: "What is credential stuffing?", hint: "What it is, and how to defend against it" },
+  { q: "How do we defend against ransomware?", hint: "Defences, most relevant first" },
+  { q: "Which ATT&CK technique is it when an attacker schedules a task to run their malware at every logon?", hint: "Names the technique" },
+  { q: "What should we do about Log4Shell?", hint: "CISA's required action, cited" },
+  { q: "What is SQL injection?", hint: "The attack, and the fixes that stop it" },
+  { q: "How do we defend against phishing emails?", hint: "Training first, then the controls" },
 ];
 
 const AREA = Object.fromEntries(
@@ -139,15 +139,15 @@ export function ChatConsole({
       setActiveId(existing?.id ?? null);
       setPendingScope(wantedIncident);
     }
-    try {
-      const chosen = localStorage.getItem(MODEL_KEY);
-      if (chosen && models.some((m) => m.id === chosen)) setModel(chosen);
-    } catch {
-      // Default model.
-    }
+    // The model follows the specialist: Sati (the default) routes each question to the right model
+    // itself; picking Brahmacharini or Skandamata asks that one alone. There is no separate picker.
     try {
       const kept = localStorage.getItem(SPECIALIST_KEY);
-      if (kept && SPECIALISTS.some((s) => s.id === kept)) setSpecial(kept);
+      if (kept && SPECIALISTS.some((s) => s.id === kept)) {
+        setSpecial(kept);
+        const s = specialist(kept);
+        if (s.kind === "ask" && s.model && models.some((m) => m.id === s.model)) setModel(s.model);
+      }
     } catch {
       // Sati, all-round.
     }
@@ -203,14 +203,7 @@ export function ChatConsole({
     }
   };
 
-  const chooseModel = (id: string) => {
-    setModel(id);
-    try {
-      localStorage.setItem(MODEL_KEY, id);
-    } catch {
-      // Not remembered.
-    }
-  };
+  const chooseModel = (id: string) => setModel(id);
 
   const chooseSpecialist = (id: string) => {
     const s = specialist(id);
@@ -333,25 +326,6 @@ export function ChatConsole({
   };
 
   const current = models.find((m) => m.id === model) ?? models[0];
-  const scopeOptions = useMemo(
-    () => [
-      {
-        value: GENERAL,
-        label: "General — any question",
-        hint: "Cyber security or anything else; general knowledge, nothing from your systems",
-      },
-      ...incidents.map((i) => ({
-        value: i.id,
-        label: (
-          <span className="mono">
-            {i.id} · {i.severity}
-          </span>
-        ),
-        hint: i.hypotheses[0]?.statement,
-      })),
-    ],
-    [incidents],
-  );
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
@@ -483,44 +457,30 @@ export function ChatConsole({
             </svg>
             {conversations.length > 0 && <span className="tnum">{conversations.length}</span>}
           </button>
-          <div className="min-w-0">
-            <Listbox
-              label="What to ask about"
-              value={scope}
-              onChange={chooseScope}
-              dataAttr="data-ask-scope"
-              buttonClassName="text-xs"
-              options={scopeOptions}
-            />
-          </div>
-          {incident && (
-            <span className="hidden xl:inline-flex">
+          {incident ? (
+            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-[rgb(var(--edge))] py-1 pl-2.5 pr-1 text-xs">
+              <span className="text-[rgb(var(--muted))]">About</span>
+              <span className="mono truncate">{incident.id}</span>
               <Badge status={statusForSeverity(incident.severity)}>{incident.severity}</Badge>
+              <button
+                type="button"
+                onClick={() => chooseScope(GENERAL)}
+                aria-label="Stop asking about this incident"
+                className="focusable inline-flex h-6 w-6 items-center justify-center rounded-full text-[rgb(var(--faint))] hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]"
+              >
+                ×
+              </button>
             </span>
+          ) : (
+            <p className="min-w-0 truncate text-sm">
+              <span className="font-semibold">Sati AI</span>
+              <span className="hidden text-[rgb(var(--faint))] sm:inline">
+                {" "}· {special === "auto" ? "picks the right model for each question" : `asking ${specialist(special).name}`}
+              </span>
+            </p>
           )}
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
-            {models.length > 0 && (
-              <Listbox
-                label="Model"
-                value={current?.id ?? "default"}
-                onChange={chooseModel}
-                align="right"
-                dataAttr="data-model-picker"
-                buttonClassName="max-w-[11rem] text-xs sm:max-w-[16rem]"
-                options={models.map((choice) => ({
-                  value: choice.id,
-                  label: choice.label,
-                  hint:
-                    choice.description ||
-                    (choice.provider === "echo"
-                      ? "Deterministic stub — no model is configured"
-                      : choice.default
-                        ? "Default"
-                        : "Runs on the self-hosted box"),
-                }))}
-              />
-            )}
             {incident && (
               <button
                 type="button"

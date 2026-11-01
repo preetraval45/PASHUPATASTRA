@@ -74,12 +74,12 @@ def test_a_security_question_is_answered_from_the_knowledge_base_with_its_source
     out = ask(provider, "general_answer_v1", "how does phishing work")
     assert "Phishing" in out["answer"] and "T1566" in out["answer"]
     assert "attack.mitre.org/techniques/T1566" in out["answer"]
-    assert out["area"] == "katyayani" and not out["declined"]
+    assert out["area"] == "brahmacharini" and not out["declined"]
 
 
 def test_a_question_outside_its_knowledge_says_so_instead_of_inventing(provider):
     out = ask(provider, "general_answer_v1", "what is the capital of france")
-    assert "outside what Sati's own models know" in out["answer"]
+    assert "I answer cyber security questions" in out["answer"]
 
 
 def test_building_an_attack_is_declined(provider):
@@ -146,7 +146,7 @@ def _general(provider, question: str) -> dict:
 def test_a_defence_question_is_answered_by_skandamata_with_sources(provider, with_skandamata):
     out = _general(provider, "How do we defend against ransomware encrypting our files?")
     assert out["area"] == "skandamata"
-    assert "Data Backup (M1053)" in out["answer"] and "https://attack.mitre.org/mitigations/M1053/" in out["answer"]
+    assert "**Data Backup** (M1053)" in out["answer"] and "https://attack.mitre.org/mitigations/M1053/" in out["answer"]
     assert "User Training" not in out["answer"]  # below the confidence floor for this question
 
 
@@ -204,7 +204,7 @@ def test_an_identifier_its_cited_passage_lacks_is_never_shown(provider, monkeypa
 def test_an_uncited_answer_falls_back_and_a_refusal_is_said_plainly(provider, monkeypatch):
     assert _general(_kushmanda(monkeypatch, "Phishing tricks users."), "what is phishing")["area"] != "kushmanda"
     out = _general(_kushmanda(monkeypatch, "The context does not answer this."), "what is phishing")
-    assert out["area"] == "kushmanda" and "declines rather than guess" in out["answer"]
+    assert out["area"] == "kushmanda" and "won't guess" in out["answer"]
 
 
 def test_defences_follow_the_technique_brahmacharini_finds(provider, with_skandamata, monkeypatch):
@@ -212,7 +212,7 @@ def test_defences_follow_the_technique_brahmacharini_finds(provider, with_skanda
     monkeypatch.setattr(sati_module, "attack_links", lambda: {"T1486": ["M1053"], "T1566": ["M1017"]})
     out = _general(provider, "How do we defend against ransomware?")
     assert out["area"] == "skandamata"
-    assert "Data Encrypted for Impact (T1486)" in out["answer"] and "Data Backup (M1053)" in out["answer"]
+    assert "Data Encrypted for Impact (T1486)" in out["answer"] and "**Data Backup** (M1053)" in out["answer"]
     assert "https://attack.mitre.org/techniques/T1486/" in out["answer"]  # the technique is cited
 
 
@@ -228,7 +228,7 @@ def test_which_technique_is_answered_from_the_fused_ranking(provider, monkeypatc
 def test_which_technique_still_declines_without_a_foothold_in_attack(provider, monkeypatch):
     monkeypatch.setattr(sati_module, "rank_techniques", lambda text, query: [(2.0, "T1486")])
     out = ask(provider, "general_answer_v1", "which technique is the capital of france")
-    assert "outside what Sati's own models know" in out["answer"]
+    assert "I answer cyber security questions" in out["answer"]
 
 
 def test_without_the_classifier_retrieval_alone_answers(provider, monkeypatch):
@@ -247,3 +247,16 @@ def test_served_models_name_the_right_technique_for_a_defence_question_and_a_beh
     assert "Data Encrypted for Impact (T1486)" in defend["answer"]
     which = ask(provider, "general_answer_v1", "Which ATT&CK technique is it when the attacker dumps LSASS memory?")
     assert which["answer"].splitlines()[2].endswith("(T1003.001)")
+
+
+def test_a_defence_question_is_searched_by_its_subject_not_its_framing():
+    # Searched whole, "how do we defend against ransomware?" found Antivirus; by its subject, the technique.
+    assert sati_module.subject("How do we defend against ransomware?") == "ransomware"
+    assert sati_module.subject("What is SQL injection?") == "SQL injection"
+    assert sati_module.subject("How do we?") == "How do we?"  # nothing left: the question itself
+
+
+def test_a_long_first_sentence_is_cut_at_a_word_and_says_so():
+    text = "Behavior Prevention on Endpoint refers to " + "the use of technologies and strategies " * 10 + "here."
+    cut = sati_module.first_sentences(text, 80)
+    assert cut.endswith("…") and len(cut) <= 81 and not cut[:-1].endswith(" ")
