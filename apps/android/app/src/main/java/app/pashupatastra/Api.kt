@@ -30,6 +30,28 @@ object Api {
 
     val IO = Executors.newSingleThreadExecutor()
 
+    /** Questions to Sati go on their own thread: an answer can take many seconds, and screens must not wait behind it. */
+    val CHAT = Executors.newSingleThreadExecutor()
+
+    /** POSTs JSON; returns the status (0 when unreachable is thrown instead) and the body, error bodies included. */
+    fun post(path: String, json: String): Pair<Int, String> {
+        val connection = URL(BuildConfig.API_URL.trimEnd('/') + path).openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"
+        connection.doOutput = true
+        connection.connectTimeout = 10_000
+        connection.readTimeout = 60_000
+        connection.setRequestProperty("Content-Type", "application/json")
+        connection.setRequestProperty("Accept", "application/json")
+        try {
+            connection.outputStream.use { it.write(json.toByteArray(Charsets.UTF_8)) }
+            val code = connection.responseCode
+            val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+            return code to (stream?.bufferedReader()?.use { it.readText() } ?: "")
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     /** A response, and whether it came from the network now (`fresh`) or from the phone's copy. */
     class Fetched(val body: String, val at: Long, val fresh: Boolean)
 

@@ -295,7 +295,7 @@ class MainActivity : AppCompatActivity() {
         nav.menu.findItem(if (id == feed) R.id.tab_more else id)?.isChecked = true
     }
 
-    private fun hasNative(id: Int) = id == R.id.tab_home || id == R.id.tab_incidents || id == feed
+    private fun hasNative(id: Int) = id == R.id.tab_home || id == R.id.tab_incidents || id == R.id.tab_ask || id == feed
 
     /** The tab's native first screen, made on first use. */
     private fun native(id: Int): NativeScreen? {
@@ -304,6 +304,7 @@ class MainActivity : AppCompatActivity() {
             val screen = when (id) {
                 R.id.tab_home -> HomeScreen(this)
                 feed -> FeedScreen(this)
+                R.id.tab_ask -> AskScreen(this)
                 else -> IncidentsScreen(this)
             }
             screen.view.visibility = View.GONE
