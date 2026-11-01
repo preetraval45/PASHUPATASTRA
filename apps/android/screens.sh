@@ -29,7 +29,8 @@ adb shell am start -W -n app.pashupatastra/.MainActivity > /dev/null
 shot 2-home 15
 open /incidents;               shot 3-incidents 8
 open /incidents/INC-2026-0904; shot 4-incident 15
-open /ask;                     shot 5-sati-ai 15
+open /ask;                     shot 5-sati-ai 6
+open "/ask?q=What%20is%20SQL%20injection%3F"; shot 5b-sati-answer 25
 open /observatory;             shot 6-live-attacks 10
 open /training;                shot 7-training 15
 adb shell input tap 970 2230;  shot 8-more 3      # the More tab, on a 1080x2400 pixel_6

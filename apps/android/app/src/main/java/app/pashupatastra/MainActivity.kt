@@ -418,6 +418,14 @@ class MainActivity : AppCompatActivity() {
             return
         }
         val path = link.path.orEmpty()
+        // "/ask?q=…" asks Sati straight away, in the native chat (shortcuts, shared links, CI).
+        val question = if (path.trimEnd('/') == "/ask") link.getQueryParameter("q")?.trim()?.takeIf { it.isNotEmpty() } else null
+        if (question != null) {
+            dropPage(R.id.tab_ask)
+            select(R.id.tab_ask)
+            (native(R.id.tab_ask) as? AskScreen)?.ask(question.take(500))
+            return
+        }
         val id = tabFor(path)
         val atRoot = path.trimEnd('/') == rootPath(id).trimEnd('/')
         if (atRoot && id != R.id.tab_more) select(id) else select(id, link.toString())
