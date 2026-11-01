@@ -89,10 +89,15 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
         }
         val bottom = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(12), dp(8), dp(12), dp(8))
+            setPadding(dp(12), dp(6), dp(12), dp(6))
             addView(composer, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-            note.text = "Questions are kept in the public audit trail, so leave out personal details. Sati cannot act."
-            addView(note, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(6); marginStart = dp(4) })
+            // One quiet line: the disclosure that matters (questions are public, /privacy). That Sati
+            // cannot act is said once in the welcome card, not under every keystroke.
+            note.text = "Questions are public in the audit trail · leave out personal details"
+            note.maxLines = 1
+            note.ellipsize = TextUtils.TruncateAt.END
+            note.gravity = Gravity.CENTER
+            addView(note, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(4) })
         }
         root.addView(bottom, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
         view.addView(root, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
