@@ -109,3 +109,4 @@ Protocol: before every push, write a topic-named file from
 - [NativeShell.md](NativeShell.md) — Android app's native Material frame (RP-96): per-tab WebViews, PashupatastraNative UA hides web bars, theme from site localStorage
 - [WebsiteChatLiveTraining.md](WebsiteChatLiveTraining.md) — direct multi-model answers, no chat dropdowns, live feed + replay on incidents (RP-98), training games/flashcards/paths; autostash around android WIP
 - [NativeHome.md](NativeHome.md) — Android Home tab native from API (HomeScreen.kt); frontier-model Sati AI needs owner's cost decision
+- [NativeIncidents.md](NativeIncidents.md) — native Incidents list (IncidentsScreen.kt), NativeScreen/Api split, web detail page slides over the list

@@ -65,7 +65,8 @@ class MainActivity : AppCompatActivity() {
 
     private val tabs = LinkedHashMap<Int, WebTab>()
     private var current: WebTab? = null
-    private var home: HomeScreen? = null
+    /** Tabs whose first screen is native, drawn from the API; their pages open above them. */
+    private val natives = HashMap<Int, NativeScreen>()
     private var shown: View? = null
     private var currentId = 0
 
@@ -157,10 +158,12 @@ class MainActivity : AppCompatActivity() {
         }
         nav.setOnItemReselectedListener { item ->
             nav.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-            when (item.itemId) {
-                R.id.tab_more -> showMore()
-                R.id.tab_home -> home?.toTop()
-                else -> tabs[item.itemId]?.toRoot()
+            val id = item.itemId
+            when {
+                id == R.id.tab_more -> showMore()
+                hasNative(id) && tabs[id] != null -> closePage(id)
+                hasNative(id) -> native(id)?.toTop()
+                else -> tabs[id]?.toRoot()
             }
         }
 
@@ -184,6 +187,7 @@ class MainActivity : AppCompatActivity() {
                 val tab = current
                 when {
                     tab != null && tab.web.canGoBack() -> tab.web.goBack()
+                    tab != null && hasNative(currentId) -> closePage(currentId)
                     currentId != R.id.tab_home -> select(R.id.tab_home)
                     else -> moveTaskToBack(true)
                 }
@@ -201,7 +205,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (currentId == R.id.tab_home) home?.refreshIfStale()
+        if (current == null) native(currentId)?.refreshIfStale()
     }
 
     override fun onDestroy() {
@@ -242,21 +246,78 @@ class MainActivity : AppCompatActivity() {
         nav.menu.findItem(id)?.isChecked = true
     }
 
+    private fun hasNative(id: Int) = id == R.id.tab_home || id == R.id.tab_incidents
+
+    /** The tab's native first screen, made on first use. */
+    private fun native(id: Int): NativeScreen? {
+        if (!hasNative(id)) return null
+        return natives.getOrPut(id) {
+            val screen = if (id == R.id.tab_home) HomeScreen(this) else IncidentsScreen(this)
+            screen.view.visibility = View.GONE
+            content.addView(screen.view, 0, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            screen
+        }
+    }
+
+    /** Removes the page open above a native screen at once (a new page replaces it). */
+    private fun dropPage(id: Int) {
+        val tab = tabs.remove(id) ?: return
+        if (current === tab) current = null
+        if (shown === tab.view) shown = null
+        content.removeView(tab.view)
+        tab.web.destroy()
+    }
+
+    /** Back from a page to the native list beneath it: the page slides away, the list is where it was. */
+    private fun closePage(id: Int) {
+        val screen = native(id) ?: return
+        val tab = tabs.remove(id)
+        current = null
+        currentId = id
+        screen.view.animate().cancel()
+        screen.view.alpha = 1f
+        screen.view.translationY = 0f
+        screen.view.visibility = View.VISIBLE
+        if (shown !== screen.view && shown !== tab?.view) shown?.visibility = View.GONE
+        shown = screen.view
+        updateChrome()
+        if (tab != null) {
+            tab.view.animate().translationX(tab.view.width.toFloat()).setDuration(200).withEndAction {
+                content.removeView(tab.view)
+                tab.web.destroy()
+            }.start()
+        }
+    }
+
     /**
      * Shows a tab, loading `url` in it if given, or its first page if it has none yet.
-     * Home is native (HomeScreen, drawn from the API); the other tabs are pages.
+     * Home and Incidents start native (HomeScreen, IncidentsScreen); a page opened from
+     * them slides in above, as a native detail screen does. The other tabs are pages.
      */
     private fun show(id: Int, url: String? = null) {
         val next: View
-        if (id == R.id.tab_home) {
-            val screen = home ?: HomeScreen(this).also {
-                home = it
-                it.view.visibility = View.GONE
-                content.addView(it.view, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-            }
+        val screen = native(id)
+        if (screen != null && url == null && tabs[id] == null) {
             if (shown !== screen.view) screen.refreshIfStale()
             current = null
             next = screen.view
+        } else if (screen != null && url != null) {
+            // A fresh page above the list, so back always returns to the list.
+            dropPage(id)
+            val tab = tab(id)
+            tab.load(url)
+            if (shown != null && shown !== screen.view) shown?.visibility = View.GONE
+            screen.view.visibility = View.VISIBLE
+            tab.view.visibility = View.VISIBLE
+            tab.view.translationX = content.width.toFloat()
+            tab.view.animate().translationX(0f).setDuration(220).withEndAction {
+                if (shown === tab.view) screen.view.visibility = View.GONE
+            }.start()
+            current = tab
+            shown = tab.view
+            currentId = id
+            updateChrome()
+            return
         } else {
             val tab = tab(id)
             when {
@@ -268,6 +329,8 @@ class MainActivity : AppCompatActivity() {
         }
         if (shown !== next) {
             shown?.visibility = View.GONE
+            // A list left visible under a page still sliding in must not show through another tab.
+            natives.values.forEach { if (it.view !== next) it.view.visibility = View.GONE }
             next.alpha = 0f
             next.translationY = dp(8).toFloat()
             next.visibility = View.VISIBLE
@@ -283,6 +346,12 @@ class MainActivity : AppCompatActivity() {
      * A tab's own first page just selects the tab, so it keeps where the user was in it.
      */
     fun open(path: String) {
+        if (path.startsWith("/incidents?severity=")) {
+            dropPage(R.id.tab_incidents)
+            select(R.id.tab_incidents)
+            (native(R.id.tab_incidents) as? IncidentsScreen)?.show(path.substringAfter("="))
+            return
+        }
         val id = tabFor(path)
         if (id == R.id.tab_more || (id != R.id.tab_home && path != rootPath(id))) select(id, url(path)) else select(id)
     }
@@ -307,13 +376,13 @@ class MainActivity : AppCompatActivity() {
     private fun updateChrome() {
         val tab = current
         if (tab == null) {
-            toolbar.title = getString(R.string.app_name)
+            toolbar.title = if (currentId == R.id.tab_home) getString(R.string.app_name) else nav.menu.findItem(currentId)?.title
             toolbar.navigationIcon = null
             progress.visibility = View.INVISIBLE
             return
         }
         toolbar.title = titleOf(tab)
-        toolbar.navigationIcon = if (tab.web.canGoBack()) tinted(R.drawable.ic_back, palette.ink) else null
+        toolbar.navigationIcon = if (tab.web.canGoBack() || hasNative(currentId)) tinted(R.drawable.ic_back, palette.ink) else null
         if (tab.progress in 1..99) {
             progress.visibility = View.VISIBLE
             progress.progress = tab.progress
@@ -529,7 +598,7 @@ class MainActivity : AppCompatActivity() {
             isAppearanceLightNavigationBars = !p.dark
         }
         tabs.values.forEach { it.applyPalette(p) }
-        home?.applyPalette()
+        natives.values.forEach { it.applyPalette() }
         updateChrome()
     }
 
