@@ -435,6 +435,7 @@ def members(org_id: str, actor: User) -> list[dict]:
             "attempts": sum(int(m.get("attempts", 0)) for m in modules.values()),
             "last_active": max((int(m.get("at", 0)) for m in modules.values()), default=None),
             "average": round(sum(float(m.get("best", 0)) for m in modules.values()) / len(modules), 3) if modules else None,
+            "policies_acknowledged": acknowledged(org_id, user.id),
         })
     return sorted(out, key=lambda m: (ROLES.index(m["role"]), m["name"].lower()))
 
@@ -513,3 +514,59 @@ def admin_reset(org_id: str, actor: User, member_id: str) -> str:
     if member is None or member.provider != "email":
         raise AccountError("Only email accounts have a password to reset.")
     return _reset_token(member_id)
+
+
+# --- company policies ------------------------------------------------------------------------
+#
+# A company's own security policies (acceptable use, passwords, remote work …), published by its admins
+# and acknowledged by each member. Text only, kept with the company and visible to its members only.
+
+POLICY_TITLE, POLICY_BODY = 120, 20_000
+
+
+def add_policy(org_id: str, actor: User, title: str, body: str) -> dict:
+    require(org_id, actor, "owner", "admin")
+    title, body = title.strip(), body.strip()
+    if not title or not body:
+        raise AccountError("A policy needs a title and its text.")
+    if len(title) > POLICY_TITLE or len(body) > POLICY_BODY:
+        raise AccountError(f"Keep the title under {POLICY_TITLE} characters and the text under {POLICY_BODY:,}.")
+    policy = {"id": f"p_{secrets.token_hex(5)}", "title": title, "body": body, "created": int(time.time()), "by": actor.id}
+    store().put_doc("POLICY", f"{org_id}#{policy['id']}", policy)
+    return policy
+
+
+def remove_policy(org_id: str, actor: User, policy_id: str) -> None:
+    require(org_id, actor, "owner", "admin")
+    s = store()
+    s.delete_doc("POLICY", f"{org_id}#{policy_id}")
+    for key, _ in s.docs("ACK", f"{org_id}#{policy_id}#"):
+        s.delete_doc("ACK", key)
+
+
+def policies(org_id: str, user: User) -> list[dict]:
+    """The company's policies, newest first, each saying whether this member has acknowledged it and,
+    for admins, how many members have."""
+    require(org_id, user)
+    admin = role_in(org_id, user.id) in ("owner", "admin")
+    s = store()
+    out = []
+    for _, p in s.docs("POLICY", f"{org_id}#"):
+        acks = s.docs("ACK", f"{org_id}#{p['id']}#")
+        mine = next((a for k, a in acks if k.endswith(f"#{user.id}")), None)
+        out.append({**p, "acknowledged": mine["at"] if mine else None, **({"acks": len(acks)} if admin else {})})
+    return sorted(out, key=lambda p: -p["created"])
+
+
+def acknowledge(org_id: str, user: User, policy_id: str) -> None:
+    require(org_id, user)
+    if not store().get_doc("POLICY", f"{org_id}#{policy_id}"):
+        raise AccountError("That policy no longer exists.", 404)
+    store().put_doc("ACK", f"{org_id}#{policy_id}#{user.id}", {"at": int(time.time())})
+
+
+def acknowledged(org_id: str, user_id: str) -> int:
+    """How many of the company's current policies this member has acknowledged."""
+    s = store()
+    current = {p["id"] for _, p in s.docs("POLICY", f"{org_id}#")}
+    return sum(1 for key, _ in s.docs("ACK", f"{org_id}#") if key.endswith(f"#{user_id}") and key.split("#")[1] in current)

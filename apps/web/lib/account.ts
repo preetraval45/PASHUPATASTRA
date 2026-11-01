@@ -21,6 +21,7 @@ export type Member = Account & {
   attempts: number;
   last_active: number | null;
   average: number | null;
+  policies_acknowledged: number;
 };
 
 type State = { token: string | null; me: Me | null; ready: boolean };
@@ -204,3 +205,14 @@ export const adminResetLink = (org: string, member: string) =>
     `/orgs/${encodeURIComponent(org)}/members/${encodeURIComponent(member)}/reset`,
     { method: "POST" },
   );
+
+export type Policy = { id: string; title: string; body: string; created: number; acknowledged: number | null; acks?: number };
+
+export const companyPolicies = (org: string) =>
+  call<{ org: { id: string; name: string }; role: Membership["role"]; policies: Policy[] }>(`/orgs/${encodeURIComponent(org)}/policies`);
+export const addPolicy = (org: string, title: string, body: string) =>
+  call<Policy>(`/orgs/${encodeURIComponent(org)}/policies`, { method: "POST", body: JSON.stringify({ title, body }) });
+export const removePolicy = (org: string, policy: string) =>
+  call(`/orgs/${encodeURIComponent(org)}/policies/${encodeURIComponent(policy)}`, { method: "DELETE" });
+export const acknowledgePolicy = (org: string, policy: string) =>
+  call(`/orgs/${encodeURIComponent(org)}/policies/${encodeURIComponent(policy)}/ack`, { method: "POST" });

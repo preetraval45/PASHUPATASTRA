@@ -192,3 +192,27 @@ def test_an_admin_can_hand_a_member_a_reset_link_and_an_employee_cannot():
     owner_id = client.get("/api/v1/me", headers=auth(owner)).json()["user"]["id"]
     bo2 = client.post("/api/v1/auth/login", json={"email": "bo@northwind.example", "password": "bo's new passphrase"}).json()["token"]
     assert client.post(f"/api/v1/orgs/{org['id']}/members/{owner_id}/reset", headers=auth(bo2)).status_code == 403
+
+
+def test_admins_publish_policies_members_acknowledge_them_and_the_dashboard_counts():
+    owner = register()
+    org = client.post("/api/v1/orgs", json={"name": "Northwind"}, headers=auth(owner)).json()["orgs"][0]
+    bo = register("bo@northwind.example", name="Bo")
+    client.post("/api/v1/orgs/join", json={"code": org["invite"]}, headers=auth(bo))
+    added = client.post(f"/api/v1/orgs/{org['id']}/policies", json={"title": "Acceptable use", "body": "Lock your screen."}, headers=auth(owner))
+    assert added.status_code == 200
+    pid = added.json()["id"]
+    assert client.post(f"/api/v1/orgs/{org['id']}/policies", json={"title": "x", "body": "y"}, headers=auth(bo)).status_code == 403
+
+    seen = client.get(f"/api/v1/orgs/{org['id']}/policies", headers=auth(bo)).json()
+    assert seen["policies"][0]["acknowledged"] is None and "acks" not in seen["policies"][0]
+    assert client.post(f"/api/v1/orgs/{org['id']}/policies/{pid}/ack", headers=auth(bo)).json() == {"ok": True}
+    assert client.get(f"/api/v1/orgs/{org['id']}/policies", headers=auth(bo)).json()["policies"][0]["acknowledged"]
+    assert client.get(f"/api/v1/orgs/{org['id']}/policies", headers=auth(owner)).json()["policies"][0]["acks"] == 1
+    team = client.get(f"/api/v1/orgs/{org['id']}/members", headers=auth(owner)).json()["members"]
+    assert next(m for m in team if m["name"] == "Bo")["policies_acknowledged"] == 1
+
+    outsider = register("eve@elsewhere.example")
+    assert client.get(f"/api/v1/orgs/{org['id']}/policies", headers=auth(outsider)).status_code == 404
+    client.delete(f"/api/v1/orgs/{org['id']}/policies/{pid}", headers=auth(owner))
+    assert client.get(f"/api/v1/orgs/{org['id']}/policies", headers=auth(bo)).json()["policies"] == []

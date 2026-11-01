@@ -87,13 +87,17 @@ function AccountMenu() {
           </div>
           <div className="py-1">
             <Link href="/account" role="menuitem" onClick={() => setOpen(false)} className={item}>Account settings</Link>
-            {me.orgs
-              .filter((o) => o.role !== "employee")
-              .map((o) => (
-                <Link key={o.id} href={`/team/${o.id}`} role="menuitem" onClick={() => setOpen(false)} className={item}>
-                  <span className="min-w-0 truncate">Team · {o.name}</span>
-                </Link>
-              ))}
+            {me.orgs.map((o) => (
+              <Link
+                key={o.id}
+                href={o.role === "employee" ? `/company/${o.id}` : `/team/${o.id}`}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className={item}
+              >
+                <span className="min-w-0 truncate">{o.role === "employee" ? "Company" : "Team"} · {o.name}</span>
+              </Link>
+            ))}
             <Link href="/training" role="menuitem" onClick={() => setOpen(false)} className={item}>My training</Link>
           </div>
           <button

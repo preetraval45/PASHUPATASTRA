@@ -106,9 +106,14 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
           <p className="label text-[rgb(var(--astra))]">Team dashboard</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{data.org.name}</h1>
         </div>
-        <button type="button" onClick={download} className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]">
-          ↓ Export CSV
-        </button>
+        <span className="flex gap-2">
+          <Link href={`/company/${orgId}`} className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]">
+            Policies
+          </Link>
+          <button type="button" onClick={download} className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm transition hover:bg-[rgb(var(--raised))]">
+            ↓ Export CSV
+          </button>
+        </span>
       </header>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -198,6 +203,9 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
                 ))}
               </span>
               <span className="tnum w-14 text-right text-sm">{m.average === null ? "—" : `${Math.round(m.average * 100)}%`}</span>
+              <span className="tnum w-20 text-right text-xs text-[rgb(var(--muted))]" title="Company policies this person has acknowledged">
+                {m.policies_acknowledged} {m.policies_acknowledged === 1 ? "policy" : "policies"}
+              </span>
               {m.provider === "email" && m.id !== me?.user.id && m.role !== "owner" && (
                 <button
                   type="button"

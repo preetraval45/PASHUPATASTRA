@@ -190,6 +190,9 @@ export function AccountPage() {
                   <span className="block font-semibold">{o.name}</span>
                   <span className="block text-xs text-[rgb(var(--muted))]">{ROLE_LABEL[o.role]}</span>
                 </span>
+                <Link href={`/company/${o.id}`} className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-4 py-2.5 text-sm hover:bg-[rgb(var(--raised))]">
+                  Policies
+                </Link>
                 {o.role !== "employee" && (
                   <Link href={`/team/${o.id}`} className={primary}>
                     Team dashboard →

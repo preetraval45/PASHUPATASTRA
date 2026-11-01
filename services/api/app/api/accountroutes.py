@@ -98,6 +98,11 @@ class NewPassword(BaseModel):
     password: str = Field(max_length=256)
 
 
+class Policy(BaseModel):
+    title: str = Field(max_length=200)
+    body: str = Field(max_length=25_000)
+
+
 class Result(BaseModel):
     score: float = Field(ge=0, le=1)
     passed: bool
@@ -272,6 +277,43 @@ def org_reset(org_id: str, member_id: str, authorization: str | None = Header(de
 def org_remove(org_id: str, member_id: str, authorization: str | None = Header(default=None)) -> dict:
     try:
         accounts.remove_member(org_id, _user(authorization), member_id)
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    return {"ok": True}
+
+
+@router.get("/orgs/{org_id}/policies")
+def org_policies(org_id: str, authorization: str | None = Header(default=None)) -> dict:
+    user = _user(authorization)
+    try:
+        org = accounts.require(org_id, user)
+        return {"org": {"id": org["id"], "name": org["name"]}, "role": accounts.role_in(org_id, user.id),
+                "policies": accounts.policies(org_id, user)}
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+
+
+@router.post("/orgs/{org_id}/policies")
+def org_policy_add(org_id: str, body: Policy, authorization: str | None = Header(default=None)) -> dict:
+    try:
+        return accounts.add_policy(org_id, _user(authorization), body.title, body.body)
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+
+
+@router.delete("/orgs/{org_id}/policies/{policy_id}")
+def org_policy_remove(org_id: str, policy_id: str, authorization: str | None = Header(default=None)) -> dict:
+    try:
+        accounts.remove_policy(org_id, _user(authorization), policy_id)
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    return {"ok": True}
+
+
+@router.post("/orgs/{org_id}/policies/{policy_id}/ack")
+def org_policy_ack(org_id: str, policy_id: str, authorization: str | None = Header(default=None)) -> dict:
+    try:
+        accounts.acknowledge(org_id, _user(authorization), policy_id)
     except accounts.AccountError as error:
         raise _fail(error) from error
     return {"ok": True}

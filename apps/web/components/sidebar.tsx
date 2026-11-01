@@ -450,6 +450,7 @@ function titleFor(pathname: string): string {
   if (pathname === "/forgot-password" || pathname === "/reset-password") return "Password";
   if (pathname.startsWith("/account")) return "Account";
   if (pathname.startsWith("/team")) return "Team";
+  if (pathname.startsWith("/company")) return "Company";
   return "Console";
 }
 
