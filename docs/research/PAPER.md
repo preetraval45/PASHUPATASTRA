@@ -384,7 +384,7 @@ weight chosen on the validation sources, they reach Recall@1 0.673 and MRR
 
 The same holds for Skandamata, the mitigation recommender. A one-vs-rest
 logistic regression on TF-IDF features reaches hit@1 0.827 and MRR 0.880,
-against Skandamata's 0.790 and 0.851. Fusing the two does not help (0.824)
+against Skandamata's 0.787 and 0.849. Fusing the two does not help (0.822)
 ([skandamata.md](models/skandamata.md)): there, the simple model is the best one measured.
 
 ### 7.3 Against general LLMs, on a benchmark this project did not write
