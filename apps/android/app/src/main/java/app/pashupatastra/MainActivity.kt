@@ -1,6 +1,8 @@
 package app.pashupatastra
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
@@ -23,6 +25,7 @@ import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
@@ -72,6 +75,13 @@ class MainActivity : AppCompatActivity() {
 
     var palette: Palette = Palette.DARK
         private set
+
+    private val notifyPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (!granted) {
+            prefs().edit().putBoolean(IncidentWatch.ENABLED, false).apply()
+            IncidentWatch.schedule(this, false)
+        }
+    }
 
     /** A place in the site, as the website's rail lists it (apps/web/components/sidebar.tsx). */
     private class Dest(val path: String, val label: String, val icon: Int)
@@ -196,6 +206,14 @@ class MainActivity : AppCompatActivity() {
 
         applyPalette()
         route(intent)
+
+        // Alerts are on unless turned off; the first launch asks for permission once, after the app has drawn.
+        val alerts = prefs().getBoolean(IncidentWatch.ENABLED, true)
+        IncidentWatch.schedule(this, alerts)
+        if (alerts && !prefs().getBoolean(ASKED, false)) {
+            prefs().edit().putBoolean(ASKED, true).apply()
+            root.postDelayed({ askForAlerts() }, 1500)
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -462,34 +480,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         // The theme, for the app and the site together.
-        val themeRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(6), dp(8), dp(6))
-            background = rounded(p.ground, dp(16).toFloat(), p.edge)
-        }
-        themeRow.addView(ImageView(this).apply {
-            setImageResource(R.drawable.ic_moon)
-            imageTintList = ColorStateList.valueOf(p.muted)
-        }, LinearLayout.LayoutParams(dp(22), dp(22)))
-        themeRow.addView(TextView(this).apply {
-            setText(R.string.sheet_dark)
-            textSize = 15f
-            setTextColor(p.ink)
-            setPadding(dp(14), 0, 0, 0)
-        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        themeRow.addView(MaterialSwitch(this).apply {
-            isChecked = p.dark
-            val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
-            thumbTintList = ColorStateList(states, intArrayOf(p.ground, p.faint))
-            trackTintList = ColorStateList(states, intArrayOf(p.astra, p.raised))
-            setOnCheckedChangeListener { _, dark ->
-                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                useTheme(light = !dark)
-                dialog.dismiss()
-            }
-        })
-        list.addView(themeRow, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(12) })
+        list.addView(switchRow(R.drawable.ic_moon, getString(R.string.sheet_dark), p.dark) { dark ->
+            useTheme(light = !dark)
+            dialog.dismiss()
+        }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(12) })
+        // Alerts on the phone when an incident needs its owner (IncidentWatch).
+        list.addView(switchRow(R.drawable.ic_alert, getString(R.string.sheet_alerts), prefs().getBoolean(IncidentWatch.ENABLED, true)) { on ->
+            prefs().edit().putBoolean(IncidentWatch.ENABLED, on).apply()
+            IncidentWatch.schedule(this, on)
+            if (on) askForAlerts()
+        }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
 
         list.addView(TextView(this).apply {
             text = getString(R.string.sheet_build, BuildConfig.VERSION_NAME)
@@ -516,6 +516,46 @@ class MainActivity : AppCompatActivity() {
             dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
         dialog.show()
+    }
+
+    private fun switchRow(iconRes: Int, label: String, checked: Boolean, onChange: (Boolean) -> Unit): View {
+        val p = palette
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(6), dp(8), dp(6))
+            background = rounded(p.ground, dp(16).toFloat(), p.edge)
+        }
+        row.addView(ImageView(this).apply {
+            setImageResource(iconRes)
+            imageTintList = ColorStateList.valueOf(p.muted)
+        }, LinearLayout.LayoutParams(dp(22), dp(22)))
+        row.addView(TextView(this).apply {
+            text = label
+            textSize = 15f
+            setTextColor(p.ink)
+            setPadding(dp(14), 0, dp(8), 0)
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        row.addView(MaterialSwitch(this).apply {
+            isChecked = checked
+            val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+            thumbTintList = ColorStateList(states, intArrayOf(p.ground, p.faint))
+            trackTintList = ColorStateList(states, intArrayOf(p.astra, p.raised))
+            setOnCheckedChangeListener { view, on ->
+                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                onChange(on)
+            }
+        })
+        return row
+    }
+
+    /** Android 13+ asks before an app may notify; asked when alerts are wanted, not before. */
+    private fun askForAlerts() {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notifyPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 
     private fun tile(dest: Dest, active: Boolean, onClick: () -> Unit): View {
@@ -616,5 +656,6 @@ class MainActivity : AppCompatActivity() {
 
     private companion object {
         const val THEME = "theme"
+        const val ASKED = "alerts.asked"
     }
 }
