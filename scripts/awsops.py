@@ -32,7 +32,7 @@ def note(title: str, message: str, level: str = "notice") -> None:
     print(f"::{level} title={title}::{message}".replace("\n", " "))
 
 
-def status() -> None:
+def status(hours: float = 24) -> None:
     lam = boto3.client("lambda", region_name=REGION)
     config = lam.get_function_configuration(FunctionName=FUNCTION)
     names = sorted(config.get("Environment", {}).get("Variables", {}))
@@ -40,7 +40,7 @@ def status() -> None:
          f"code {config['CodeSize'] // 1024} KB, last modified {config['LastModified']}; env names: {', '.join(names)}")
 
     logs = boto3.client("logs", region_name=REGION)
-    since = int((datetime.now(UTC) - timedelta(hours=24)).timestamp() * 1000)
+    since = int((datetime.now(UTC) - timedelta(hours=hours)).timestamp() * 1000)
     errors = 0
     try:
         pages = logs.get_paginator("filter_log_events").paginate(
@@ -59,7 +59,7 @@ def status() -> None:
                 key = last[:160]
                 kinds[key] = kinds.get(key, 0) + 1
                 where.setdefault(key, frames[-1][:200] if frames else "")
-        note("Lambda errors (24h)", f"{errors} error lines", "warning" if errors else "notice")
+        note(f"Lambda errors ({hours:g}h)", f"{errors} error lines", "warning" if errors else "notice")
         for key, count in sorted(kinds.items(), key=lambda kv: -kv[1])[:6]:
             note("Lambda error", f"{count}x {key} at {where[key]}", "warning")
     except logs.exceptions.ResourceNotFoundException:
@@ -115,7 +115,7 @@ def ses_permission() -> None:
 
 def main() -> int:
     request = json.loads(open(sys.argv[1], encoding="utf-8").read())
-    ops = {"status": status, "ses-status": ses_status, "ses-permission": ses_permission,
+    ops = {"status": lambda: status(float(request.get("hours", 24))), "ses-status": ses_status, "ses-permission": ses_permission,
            "ses-verify": lambda: ses_verify(request.get("email", ""))}
     failed = False
     for name in request.get("ops", []):
