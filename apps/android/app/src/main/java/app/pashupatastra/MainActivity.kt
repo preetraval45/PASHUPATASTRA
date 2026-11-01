@@ -119,6 +119,7 @@ class MainActivity : AppCompatActivity() {
                 Dest("/impact", "Impact", R.drawable.ic_pulse),
                 Dest("/press", "Press", R.drawable.ic_news),
                 Dest("/search", "Search", R.drawable.ic_search),
+                Dest("/privacy", "Privacy", R.drawable.ic_shield),
             ),
         )
     }

@@ -114,3 +114,4 @@ Protocol: before every push, write a topic-named file from
 - [IncidentsWidget.md](IncidentsWidget.md) — home-screen widget; IncidentWatch always runs, switch gates notifications only
 - [NativeFeed.md](NativeFeed.md) — native Live attacks from /intel via synthetic 'feed' tab id; skeleton placeholders; need-you badge
 - [Onboarding.md](Onboarding.md) — first-run welcome overlay; alerts offered with reason; pre-API-30 insets fallback
+- [PlayReadiness.md](PlayReadiness.md) — /privacy, -Pplay AAB from secrets, emulator screenshots on the android release, store/listing.md

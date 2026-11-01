@@ -82,6 +82,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
 const FOOTER: Item[] = [
   { href: "/impact", label: "Impact", icon: "pulse" },
   { href: "/press", label: "Press", icon: "news" },
+  { href: "/privacy", label: "Privacy", icon: "shield" },
 ];
 
 function isCurrent(item: Item, pathname: string): boolean {

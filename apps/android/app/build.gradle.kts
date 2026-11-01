@@ -33,13 +33,24 @@ android {
             keyAlias = "pashupatastra-test"
             keyPassword = "android"
         }
+        // The Play Store upload key: private, never committed. CI writes it from the
+        // UPLOAD_KEYSTORE_BASE64 secret and passes the passwords as environment variables.
+        System.getenv("UPLOAD_STORE_FILE")?.let { path ->
+            create("upload") {
+                storeFile = file(path)
+                storePassword = System.getenv("UPLOAD_STORE_PASSWORD")
+                keyAlias = System.getenv("UPLOAD_KEY_ALIAS")
+                keyPassword = System.getenv("UPLOAD_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("test")
+            // -Pplay signs with the private upload key, for the store; otherwise the public test key.
+            signingConfig = signingConfigs.getByName(if (project.hasProperty("play")) "upload" else "test")
         }
     }
 

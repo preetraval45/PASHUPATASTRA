@@ -617,7 +617,11 @@ export function ChatConsole({
             <span>
               {incident
                 ? "Answers come from this incident's stored evidence, with citations. Sati cannot act."
-                : "General knowledge, not your systems. Sati cannot act, and won't help attack anyone."}
+                : "General knowledge, not your systems. Sati cannot act, and won't help attack anyone."}{" "}
+              {/* Questions are kept in the public audit trail (services/api routes._asked), with no
+                  name or address attached; /privacy says so too. Said here, where it is typed. */}
+              Questions are kept in the public <a href="/audit" className="underline">audit trail</a>, so leave out
+              personal details.
             </span>
             <span className="hidden sm:inline">Enter to send · Shift+Enter for a new line</span>
           </p>

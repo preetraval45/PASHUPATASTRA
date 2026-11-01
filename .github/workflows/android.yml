@@ -20,6 +20,9 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # The Play Store bundle is built only once the owner has added the private upload key.
+      HAS_UPLOAD_KEY: ${{ secrets.UPLOAD_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -42,6 +45,23 @@ jobs:
           reason=$( (grep -E -A25 "What went wrong|^e: |error:" build.log || tail -40 build.log) | head -60 )
           reason="${reason//'%'/'%25'}"; reason="${reason//$'\n'/'%0A'}"
           echo "::error title=Android build::${reason}"
+      - name: build the Play Store bundle (signed with the private upload key)
+        if: env.HAS_UPLOAD_KEY == 'true'
+        working-directory: apps/android
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+          UPLOAD_STORE_PASSWORD: ${{ secrets.UPLOAD_STORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          echo "$UPLOAD_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          UPLOAD_STORE_FILE="$RUNNER_TEMP/upload.jks" gradle --no-daemon bundleRelease -Pplay             -PversionCode=${{ github.run_number }} -PversionName=0.1.${{ github.run_number }}
+          rm -f "$RUNNER_TEMP/upload.jks"
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_UPLOAD_KEY == 'true'
+        with:
+          name: Pashupatastra-play-bundle
+          path: apps/android/app/build/outputs/bundle/release/app-release.aab
       - name: name it for a phone
         run: cp apps/android/app/build/outputs/apk/release/app-release.apk Pashupatastra.apk
       - uses: actions/upload-artifact@v4
@@ -57,3 +77,42 @@ jobs:
             --target "${{ github.sha }}" \
             --title "Android app (test build ${{ github.run_number }})" \
             --notes "Install on an Android phone: download Pashupatastra.apk, open it, and allow installs from this source when Android asks. The app shows the live website, so it updates whenever the site does. Built from ${{ github.sha }}."
+
+  # The app, run: installed on an Android emulator in CI, opened on each main screen, and
+  # photographed. Proof it starts and draws (no crash, no blank screen), and the screenshots
+  # for the store listing. They are attached to the "android" release, so they can be viewed
+  # without signing in.
+  screens:
+    needs: apk
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Pashupatastra-apk
+      - name: let the emulator use KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: open each screen and photograph it
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          script: bash apps/android/screens.sh Pashupatastra.apk
+      - name: fail on a crash
+        run: |
+          if [ -s crash.log ]; then
+            cat crash.log
+            echo "::error title=App crashed::$(head -c 1500 crash.log | paste -sd ' ')"
+            exit 1
+          fi
+      - name: attach the screenshots to the "android" release
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload android shot-*.png --clobber --repo "${{ github.repository }}"
