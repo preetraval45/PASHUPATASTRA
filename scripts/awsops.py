@@ -46,10 +46,12 @@ def status(hours: float = 24) -> None:
         pages = logs.get_paginator("filter_log_events").paginate(
             logGroupName=f"/aws/lambda/{FUNCTION}", startTime=since, filterPattern='?ERROR ?Traceback ?"Task timed out"')
         kinds: dict[str, int] = {}
+        newest = 0
         where: dict[str, str] = {}
         for page in pages:
             for event in page.get("events", []):
                 errors += 1
+                newest = max(newest, event["timestamp"])
                 text = event["message"].replace("\r", "")
                 lines = [line.strip() for line in text.split("\n") if line.strip()]
                 # The exception is the traceback's last line; the frame above it says where.
@@ -59,7 +61,9 @@ def status(hours: float = 24) -> None:
                 key = last[:600]
                 kinds[key] = kinds.get(key, 0) + 1
                 where.setdefault(key, frames[-1][:200] if frames else "")
-        note(f"Lambda errors ({hours:g}h)", f"{errors} error lines", "warning" if errors else "notice")
+        latest = datetime.fromtimestamp(newest / 1000, UTC).strftime("%H:%M:%S UTC") if newest else "none"
+        note(f"Lambda errors ({hours:g}h)", f"{errors} error lines; newest at {latest}; checked at "
+             f"{datetime.now(UTC).strftime('%H:%M:%S UTC')}", "warning" if errors else "notice")
         for key, count in sorted(kinds.items(), key=lambda kv: -kv[1])[:6]:
             note("Lambda error", f"{count}x {key} at {where[key]}", "warning")
     except logs.exceptions.ResourceNotFoundException:
