@@ -25,6 +25,13 @@ Add optional accounts (`services/api/app/accounts.py`, `api/accountroutes.py`), 
   - `/privacy` was updated in the same change.
 - **Storage:** documents in the existing DynamoDB table (partitions USER, LOGIN, ORG, MEMBER, MEMBEROF, INVITE, TRAINING), or memory when there is no durable store. Postgres has no document methods yet, so an on-prem Postgres deployment keeps accounts in memory until it gains them.
 
+## Amendment, 1 November 2026: AWS only
+
+The owner chose to stay on AWS and not use Google Cloud, so Google sign-in stays switched off: its code is
+dormant and shows nothing until `GOOGLE_CLIENT_ID` is set, which will not happen under this decision. Sign-in is
+email and password plus guest. Email verification and password reset will use Amazon SES, and a domain, when
+one is bought, will be registered in Route 53.
+
 ## Consequences
 
 - API Gateway and the Function URL must allow the `Authorization` header and the PUT, PATCH and DELETE methods (`scripts/deployapigateway.py`, `scripts/deploylambda.py`).
