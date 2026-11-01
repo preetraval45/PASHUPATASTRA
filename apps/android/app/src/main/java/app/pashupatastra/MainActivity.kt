@@ -212,7 +212,14 @@ class MainActivity : AppCompatActivity() {
         // Alerts are on unless turned off; the first launch asks for permission once, after the app has drawn.
         val alerts = prefs().getBoolean(IncidentWatch.ENABLED, true)
         IncidentWatch.schedule(this)
-        if (alerts && !prefs().getBoolean(ASKED, false)) {
+        if (!prefs().getBoolean(ONBOARDED, false)) {
+            // First launch: three short screens, ending with alerts offered and explained.
+            prefs().edit().putBoolean(ONBOARDED, true).putBoolean(ASKED, true).apply()
+            Onboarding(this, findViewById(android.R.id.content)) { on ->
+                prefs().edit().putBoolean(IncidentWatch.ENABLED, on).apply()
+                if (on) askForAlerts()
+            }.show()
+        } else if (alerts && !prefs().getBoolean(ASKED, false)) {
             prefs().edit().putBoolean(ASKED, true).apply()
             root.postDelayed({ askForAlerts() }, 1500)
         }
@@ -681,5 +688,6 @@ class MainActivity : AppCompatActivity() {
     private companion object {
         const val THEME = "theme"
         const val ASKED = "alerts.asked"
+        const val ONBOARDED = "onboarded"
     }
 }

@@ -113,3 +113,4 @@ Protocol: before every push, write a topic-named file from
 - [IncidentAlerts.md](IncidentAlerts.md) — WorkManager polls /incidents for alerts (no FCM); stray brace broke run 41323853703
 - [IncidentsWidget.md](IncidentsWidget.md) — home-screen widget; IncidentWatch always runs, switch gates notifications only
 - [NativeFeed.md](NativeFeed.md) — native Live attacks from /intel via synthetic 'feed' tab id; skeleton placeholders; need-you badge
+- [Onboarding.md](Onboarding.md) — first-run welcome overlay; alerts offered with reason; pre-API-30 insets fallback
