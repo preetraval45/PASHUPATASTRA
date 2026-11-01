@@ -12,6 +12,7 @@ import { CounterfactualPanel } from "@/components/counterfactual";
 import { DetectionRulePanel } from "@/components/detectionrule";
 import { DraftPanel } from "@/components/drafts";
 import { IncidentGraph } from "@/components/incidentgraph";
+import { IncidentReplay } from "@/components/incidentreplay";
 import { foldAudit, type Fold } from "@/lib/fold";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
@@ -197,6 +198,8 @@ export default async function IncidentDetailPage({
       <ChatPanel incident={incident} />
 
       <IncidentView incident={incident} risk={risk} />
+
+      <IncidentReplay audit={audit ?? []} incidentId={incident.id} />
 
       {/* Directly after the incident's own account of itself, before the loop.
           The map answers the question the chain raises — "and what else could

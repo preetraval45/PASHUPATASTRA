@@ -18,7 +18,7 @@ const ID = /\b(T\d{4}(?:\.\d{3})?|M\d{4}|CAPEC-\d+|CVE-\d{4}-\d{4,})\b/g;
 
 /** "**bold**" spans as strong text, then identifiers as links. */
 function inline(text: string): ReactNode[] {
-  return text.split(/\*\*(.+?)\*\*/g).flatMap((part, i) =>
+  return text.split(/\*\*(.+?)\*\*/g).flatMap<ReactNode>((part, i) =>
     i % 2 ? [<strong key={`b${i}`} className="font-semibold text-[rgb(var(--ink))]">{linkify(part)}</strong>] : linkify(part),
   );
 }

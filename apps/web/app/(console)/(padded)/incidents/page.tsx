@@ -1,4 +1,5 @@
 import { Filter, FilterRow } from "@/components/filter";
+import { HappeningNow } from "@/components/happeningnow";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
 import { TriageItem, TriageList } from "@/components/triage";
@@ -35,6 +36,9 @@ export default async function IncidentsPage({
       title="Incidents"
       description="One incident per failure, not one per alert. Every diagnosis cites the telemetry that supports it."
     >
+      <HappeningNow />
+
+      <h2 className="text-xl font-semibold tracking-tight">Investigations</h2>
       {all.length > 0 && (
         <div className="mb-6 space-y-3">
           <FilterRow label="Status">
