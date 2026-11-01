@@ -56,8 +56,8 @@ Category **Utility, Productivity, Communication or Other**. No violence, sexual 
 
 ## Graphics
 
-- **App icon 512×512:** `scripts/buildbrand.py` output (the launcher icon at 512).
-- **Feature graphic 1024×500:** to make; the spear on the dark ground with the name.
+- **App icon 512×512:** `apps/android/store/icon-512.png` (`scripts/buildbrand.py`).
+- **Feature graphic 1024×500:** `apps/android/store/feature-graphic.png` (`scripts/buildbrand.py`): the site's lockup and tagline on the dark ground.
 - **Phone screenshots (2–8):** taken by CI on an emulator on every build, attached to the `android` release as `shot-*.png` (`apps/android/screens.sh`).
 
 ## What only the owner can do

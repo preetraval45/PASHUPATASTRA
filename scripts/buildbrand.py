@@ -328,6 +328,38 @@ def app_icons(spear: Image.Image) -> None:
         android_adaptive(spear)
 
 
+STORE = WEB.parent / "android" / "store"
+FEATURE_SIZE = (1024, 500)
+
+
+def store_graphics(lockup: Image.Image, spear: Image.Image) -> None:
+    """Google Play's two required images (RP-85): the 1024x500 feature graphic and
+    the 512x512 store icon. The graphic is the social card's layout at Play's size,
+    from the same lockup, so the store shows the same artwork as the site."""
+    STORE.mkdir(parents=True, exist_ok=True)
+    card = Image.new("RGB", FEATURE_SIZE, GROUND)
+    draw = ImageDraw.Draw(card)
+    width = 640
+    height = round(width * lockup.size[1] / lockup.size[0])
+    art = lockup.resize((width, height), Image.LANCZOS)
+    block = height + 28 + 26 + 26 + 3
+    top = (FEATURE_SIZE[1] - block) // 2
+    card.paste(art, ((FEATURE_SIZE[0] - width) // 2, top), art)
+    font = load_font(26)
+    box = draw.textbbox((0, 0), TAGLINE, font=font)
+    text_y = top + height + 28
+    draw.text(((FEATURE_SIZE[0] - (box[2] - box[0])) // 2, text_y), TAGLINE, font=font, fill=(141, 151, 166))
+    rule_y = text_y + 26 + 26
+    draw.rectangle(
+        [(FEATURE_SIZE[0] // 2 - 40, rule_y), (FEATURE_SIZE[0] // 2 + 40, rule_y + 2)],
+        fill=(47, 163, 160),
+    )
+    card.save(STORE / "feature-graphic.png", "PNG", optimize=True)
+    on_ground(spear, 512, 0.8).convert("RGB").save(STORE / "icon-512.png", "PNG", optimize=True)
+    print(f"{'feature-graphic.png':18} {FEATURE_SIZE[0]}x{FEATURE_SIZE[1]}")
+    print(f"{'icon-512.png':18} 512x512")
+
+
 def main() -> int:
     lockup = dehalo(Image.open(LOCKUP_SOURCE))
     lockup.save(LOCKUP_OUT, "WEBP", quality=92, method=6, exact=True)
@@ -356,6 +388,7 @@ def main() -> int:
 
     card = social_card(lockup)
     card.save(OG_OUT, "PNG", optimize=True)
+    store_graphics(lockup, spear)
     print(f"{OG_OUT.name:18} {OG_SIZE[0]}x{OG_SIZE[1]}  {OG_OUT.stat().st_size // 1024} KB")
 
     # No favicon.svg. The artwork is raster, and wrapping a PNG in an <svg>
