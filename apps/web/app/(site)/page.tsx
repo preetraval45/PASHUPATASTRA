@@ -178,6 +178,57 @@ export default async function LandingPage() {
         <AskStrip />
       </section>
 
+      {/* --- for teams --------------------------------------------------- */}
+      {/* The product as a company buys it (adr/Accounts): a workspace, an invite link, a dashboard. */}
+      <section className="relative isolate overflow-hidden rounded-3xl border border-[rgb(var(--astra))]/30 bg-[rgb(var(--panel))] p-6 sm:p-10">
+        <div aria-hidden="true" className="hero-glow pointer-events-none absolute -inset-16 -z-10 opacity-70" />
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+          <div>
+            <p className="label text-[rgb(var(--astra))]">For your team</p>
+            <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-tight sm:text-4xl">
+              Train every employee. See who&rsquo;s ready.
+            </h2>
+            <p className="mt-3 max-w-xl text-[rgb(var(--muted))]">
+              People are the way in for most attacks. Give your team the nine levels, the games and the labs, and watch
+              their progress on one dashboard: who has finished, who is behind, who has gone quiet.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/signup?next=/account"
+                className="focusable rounded-xl bg-[rgb(var(--astra))] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[rgb(var(--astra))]/20 transition hover:brightness-110"
+              >
+                Create your team workspace
+              </Link>
+              <Link
+                href="/login"
+                className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-5 py-3 text-sm font-medium transition hover:bg-[rgb(var(--raised))]"
+              >
+                Sign in
+              </Link>
+            </div>
+            <p className="mt-3 text-xs text-[rgb(var(--faint))]">Free while in beta. No card needed.</p>
+          </div>
+          <ol className="grid gap-3">
+            {[
+              ["Create a workspace", "Sign up, name your company, and you are its owner."],
+              ["Invite with one link", "Share the invite link or code. Everyone who joins is on your dashboard."],
+              ["Watch progress", "Levels passed, scores and last activity per person, with a CSV for your records."],
+              ["Manage your people", "Make admins, remove leavers, and hand out password-reset links."],
+            ].map(([title, body], i) => (
+              <li key={title} className="flex gap-4 rounded-2xl border border-[rgb(var(--edge))] bg-[rgb(var(--ground))]/60 p-4">
+                <span className="tnum inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[rgb(var(--astra))]/15 font-semibold text-[rgb(var(--astra))]">
+                  {i + 1}
+                </span>
+                <span>
+                  <span className="block font-semibold">{title}</span>
+                  <span className="block text-sm text-[rgb(var(--muted))]">{body}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       {/* --- jump in ----------------------------------------------------- */}
       {/* The landing page sits inside the app frame now (RP-51), so after the
           one-paragraph pitch it does what an app's home does: shows the places
