@@ -180,6 +180,7 @@ export default async function IncidentDetailPage({
       actions={
         <Link
           href="/incidents"
+          data-web-back
           className="focusable rounded border border-[rgb(var(--edge-strong))] px-3 py-1.5 text-sm hover:bg-[rgb(var(--raised))]"
         >
           ← All incidents

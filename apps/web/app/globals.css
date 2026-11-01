@@ -619,6 +619,11 @@ html[data-native] [data-page-title] {
   display: none;
 }
 
+/* A page's own "back to the list" link repeats the native top bar's back arrow. */
+html[data-native] [data-web-back] {
+  display: none;
+}
+
 html[data-native] a,
 html[data-native] button {
   -webkit-user-select: none;
