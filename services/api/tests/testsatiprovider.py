@@ -260,3 +260,20 @@ def test_a_long_first_sentence_is_cut_at_a_word_and_says_so():
     text = "Behavior Prevention on Endpoint refers to " + "the use of technologies and strategies " * 10 + "here."
     cut = sati_module.first_sentences(text, 80)
     assert cut.endswith("…") and len(cut) <= 81 and not cut[:-1].endswith(" ")
+
+
+def test_a_follow_up_is_resolved_against_the_last_answer_only_when_it_refers_back():
+    turn = Evidence(ref="turn-1", source="conversation", content=(
+        "Visitor: How do we defend against ransomware?\nSati: To defend against Data Encrypted for Impact (T1486), "
+        "most relevant first:\n\n- **Data Backup** (M1053): copies."))
+    assert sati_module.resolve("How does it work?", [turn]) == "How does Data Encrypted for Impact work?"
+    assert sati_module.resolve("and detection?", [turn]) == "detection for Data Encrypted for Impact?"
+    # A new question, or "this" used as a determiner, is never bent towards the old subject.
+    assert sati_module.resolve("What is SQL injection?", [turn]) == "What is SQL injection?"
+    assert sati_module.resolve("Is this phishing email dangerous?", [turn]) == "Is this phishing email dangerous?"
+    assert sati_module.resolve("How does it work?", []) == "How does it work?"
+
+
+def test_a_bare_pronoun_with_nothing_before_it_is_asked_about_not_guessed(provider):
+    out = ask(provider, "general_answer_v1", "How does it work?")
+    assert out["answer"].startswith("What would you like to know about?")

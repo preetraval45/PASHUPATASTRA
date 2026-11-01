@@ -46,12 +46,13 @@ function linkify(text: string): ReactNode[] {
   return out;
 }
 
-export function AnswerText({ text, muted = false }: { text: string; muted?: boolean }) {
+export function AnswerText({ text, muted = false, still = false }: { text: string; muted?: boolean; still?: boolean }) {
   const lines = text.split("\n");
   const lead = lines.findIndex((l) => l.trim());
   // Each line rises in just after the one before, so an answer arrives as it would be read.
   // Capped, so a long answer is never held back; the reduced-motion rule in globals.css stills it.
-  const reveal = (i: number) => ({ animationDelay: `${Math.min(i, 12) * 45}ms` });
+  // A streamed answer is `still`: the words already arrive in order, so lines do not rise as well.
+  const reveal = (i: number) => (still ? { animation: "none" } : { animationDelay: `${Math.min(i, 12) * 45}ms` });
   return (
     <div className="space-y-2 text-[0.9375rem] leading-relaxed">
       {lines.map((line, i) => {

@@ -16,9 +16,9 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { AnswerText, defendFollowUp } from "@/components/answertext";
+import { AnswerText } from "@/components/answertext";
 import { TurnView, type Turn as IncidentTurn } from "@/components/chat";
 import { examplesFor, runSpecialist, specialist, SPECIALISTS, type Example, type Specialist, type Verdict } from "@/components/specialists";
 import { Icon } from "@/components/sidebar";
@@ -26,6 +26,7 @@ import { Badge, Stated, statusForSeverity } from "@/components/ui";
 import { askAgent, askGeneral, type GeneralAnswer, type Incident, type ModelChoice } from "@/lib/api";
 import { MODELS } from "@/lib/navadurga";
 import { servedName } from "@/lib/modelnames";
+import { followUps } from "@/lib/answerlinks";
 import { hue } from "@/lib/hues";
 
 type Turn =
@@ -127,6 +128,8 @@ export function ChatConsole({
   const [special, setSpecial] = useState("auto");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [examples, setExamples] = useState<Example[] | null | undefined>(undefined);
+  // The reply that has just arrived, as "<conversation>:<turn index>": only it is streamed in.
+  const [streaming, setStreaming] = useState<string | null>(null);
 
   const log = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -277,6 +280,7 @@ export function ChatConsole({
         setActiveId(convo.id);
       }
       const id = convo.id;
+      const replyAt = convo.turns.length + 1;
       update(
         list.map((c) =>
           c.id === id ? { ...c, turns: [...c.turns, { role: "you", text } as Turn], updated: Date.now() } : c,
@@ -307,6 +311,7 @@ export function ChatConsole({
             : { role: "error", text: result.error, retryable: result.retryable };
       }
 
+      setStreaming(`${id}:${replyAt}`);
       setConversations((current) => {
         const next = current
           .map((c) => (c.id === id ? { ...c, turns: [...c.turns, reply], updated: Date.now() } : c))
@@ -507,12 +512,13 @@ export function ChatConsole({
                 onExample={runExample}
               />
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {turns.map((turn, index) =>
                   turn.role === "general" ? (
                     <GeneralTurn
                       key={index}
                       answer={turn.answer}
+                      stream={streaming === `${activeId}:${index}`}
                       onAsk={index === turns.length - 1 && !busy ? ask : undefined}
                     />
                   ) : turn.role === "specialist" ? (
@@ -574,7 +580,7 @@ export function ChatConsole({
               event.preventDefault();
               ask(draft);
             }}
-            className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] p-2 shadow-lg transition focus-within:border-[rgb(var(--astra))]/60"
+            className="mx-auto flex max-w-3xl items-end gap-2 rounded-3xl border border-[rgb(var(--edge-strong))] bg-[rgb(var(--panel))] p-2 pl-3 shadow-[0_8px_30px_-12px_rgb(0_0_0/0.5)] transition focus-within:border-[rgb(var(--astra))]/60 focus-within:shadow-[0_8px_30px_-10px_rgb(var(--astra)/0.35)]"
           >
             <label htmlFor="ask-question" className="sr-only">
               {incident ? `Your question about ${incident.id}` : "Your question"}
@@ -593,14 +599,14 @@ export function ChatConsole({
                   ask(draft);
                 }
               }}
-              placeholder={incident ? `Ask about ${incident.id}…` : "Ask Sati anything — cyber security or otherwise…"}
+              placeholder={incident ? `Ask about ${incident.id}…` : "Ask about an attack, a technique, a defence or a CVE…"}
               className="max-h-[33vh] min-h-[2.5rem] flex-1 resize-none bg-transparent px-2.5 py-2 text-[0.9375rem] leading-relaxed outline-none placeholder:text-[rgb(var(--faint))]"
             />
             <button
               type="submit"
               disabled={busy || !draft.trim()}
               aria-label="Send"
-              className="focusable inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgb(var(--astra))] text-[rgb(var(--ground))] transition hover:brightness-110 disabled:bg-[rgb(var(--raised))] disabled:text-[rgb(var(--faint))]"
+              className="focusable inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--astra))] text-[rgb(var(--ground))] transition hover:scale-105 hover:brightness-110 disabled:scale-100 disabled:bg-[rgb(var(--raised))] disabled:text-[rgb(var(--faint))]"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -627,49 +633,115 @@ export function ChatConsole({
   );
 }
 
-/** A general answer: which Navadurga area it was routed to, the answer, and
- *  plainly that it is general knowledge rather than a finding. */
-function GeneralTurn({ answer, onAsk }: { answer: GeneralAnswer; onAsk?: (question: string) => void }) {
-  const area = AREA[answer.area];
-  const followUp = !answer.declined ? defendFollowUp(answer.answer) : null;
+/** The models an answer actually drew on, read from what it contains: the one it was routed to, Skandamata
+ *  when it lists defences, Brahmacharini when it explains or ranks what retrieval found. */
+function consulted(answer: GeneralAnswer): string[] {
+  if (answer.declined || answer.topic !== "security") return [];
+  const ids = new Set<string>();
+  if (AREA[answer.area]) ids.add(answer.area);
+  if (/^To defend against|\nHow to defend against it:/m.test(answer.answer)) ids.add("skandamata");
+  if (/\nWhat it is: |^\*\*|^Most likely first:/m.test(answer.answer)) ids.add("brahmacharini");
+  return [...ids].filter((id) => SPECIALISTS.some((s) => s.id === id));
+}
+
+/** Streams an answer in word by word, as it would be read, then shows its sources once the words are in.
+ *  Off for history and for anyone who asked for reduced motion. */
+function useStream(text: string, on: boolean): { shown: string; done: boolean } {
+  const sources = text.match(/\n*Sources?: .*$/)?.[0] ?? "";
+  const body = sources ? text.slice(0, text.length - sources.length) : text;
+  const words = useMemo(() => body.split(/(\s+)/), [body]);
+  const [count, setCount] = useState(on ? 0 : words.length);
+  useEffect(() => {
+    if (!on || document.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setCount(words.length);
+      return;
+    }
+    // Paced by the clock, not by ticks: a browser that throttles timers still finishes on time.
+    const started = Date.now();
+    const duration = Math.min(1800, 400 + words.length * 6);
+    const timer = setInterval(() => {
+      const n = Math.ceil(((Date.now() - started) / duration) * words.length);
+      setCount(n);
+      if (n >= words.length) clearInterval(timer);
+    }, 24);
+    return () => clearInterval(timer);
+  }, [on, words]);
+  const done = count >= words.length;
+  return { shown: done ? text : words.slice(0, count).join(""), done };
+}
+
+function SatiMark() {
   return (
-    <div data-turn="general" className="max-w-[95%] space-y-2">
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
-        <span aria-hidden="true" className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[rgb(var(--astra))]" />
-        <span className="font-medium text-[rgb(var(--astra))]">Sati</span>
-        {area && (
-          <span className="text-[rgb(var(--muted))]" title="The specialist area this question was routed to (adr/Navadurga)">
-            · {area.name} area — {area.job.toLowerCase()}
-          </span>
+    <span
+      aria-hidden="true"
+      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgb(var(--astra)),rgb(var(--astra)/0.55))] text-xs font-bold text-white shadow-[0_0_0_3px_rgb(var(--astra)/0.15)]"
+    >
+      S
+    </span>
+  );
+}
+
+/** A general answer, laid out like a conversation: Sati's mark, the models it drew on, the answer streamed
+ *  in, then what to do with it and what to ask next. Labelled as general knowledge, not a finding. */
+function GeneralTurn({
+  answer,
+  onAsk,
+  stream = false,
+}: {
+  answer: GeneralAnswer;
+  onAsk?: (question: string) => void;
+  stream?: boolean;
+}) {
+  const { shown, done } = useStream(answer.answer, stream);
+  const used = consulted(answer);
+  const next = done && !answer.declined ? followUps(answer.answer) : [];
+  return (
+    <div data-turn="general" className="flex gap-3">
+      <SatiMark />
+      <div className="min-w-0 flex-1 space-y-3">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs">
+          <span className="font-semibold text-[rgb(var(--ink))]">Sati</span>
+          {used.length > 0 && (
+            <span className="inline-flex flex-wrap items-center gap-1.5 text-[rgb(var(--faint))]" title={`Served by ${servedName(answer.model)}`}>
+              · drew on
+              {used.map((id) => {
+                const s = specialist(id);
+                return (
+                  <span key={id} style={hueOf(s)} className="sp-tint inline-flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-2 font-medium">
+                    <Monogram s={s} size="xs" />
+                    {s.name}
+                  </span>
+                );
+              })}
+            </span>
+          )}
+        </p>
+        <div data-answer className={answer.declined ? "rounded-xl border border-dashed border-[rgb(var(--edge))] px-4 py-3" : ""}>
+          <AnswerText text={shown} muted={answer.declined} still={stream} />
+          {!done && <span aria-hidden="true" className="ml-0.5 inline-block h-4 w-2 animate-pulse rounded-sm bg-[rgb(var(--astra))] align-middle" />}
+        </div>
+        {done && (
+          <div className="rise flex flex-wrap items-center gap-x-3 gap-y-2">
+            <AnswerActions text={answer.answer} />
+            <span className="text-[11px] text-[rgb(var(--faint))]">General knowledge from MITRE ATT&amp;CK, CAPEC and CISA, not your systems</span>
+          </div>
         )}
-      </p>
-      <div
-        data-answer
-        className={
-          answer.declined
-            ? "rounded-lg border border-dashed border-[rgb(var(--edge))] px-3 py-2"
-            : "rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-4 py-3.5"
-        }
-      >
-        <AnswerText text={answer.answer} muted={answer.declined} />
-        <AnswerActions text={answer.answer} />
+        {next.length > 0 && onAsk && (
+          <div className="rise flex flex-col items-start gap-1.5 pt-1">
+            {next.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => onAsk(q)}
+                className="focusable group inline-flex max-w-full items-center gap-2 rounded-xl border border-[rgb(var(--edge))] px-3 py-1.5 text-left text-sm text-[rgb(var(--muted))] transition hover:border-[rgb(var(--astra))]/50 hover:bg-[rgb(var(--astra))]/5 hover:text-[rgb(var(--ink))]"
+              >
+                <span aria-hidden="true" className="text-[rgb(var(--astra))] transition group-hover:translate-x-0.5">↳</span>
+                <span className="min-w-0">{q}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      {followUp && onAsk && (
-        <button
-          type="button"
-          onClick={() => onAsk(followUp)}
-          className="focusable rise inline-flex max-w-full items-center gap-2 rounded-full border border-[rgb(var(--astra))]/40 bg-[rgb(var(--astra))]/5 px-3.5 py-1.5 text-left text-sm text-[rgb(var(--ink))] transition hover:bg-[rgb(var(--astra))]/10"
-        >
-          <span aria-hidden="true" className="text-[rgb(var(--astra))]">↳</span>
-          <span className="min-w-0">{followUp}</span>
-        </button>
-      )}
-      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[rgb(var(--faint))]">
-        <Badge status="neutral">general knowledge — not from your evidence</Badge>
-        {answer.declined && <Badge status="warning">declined</Badge>}
-        <span>{answer.tokens} tokens</span>
-        <span className="mono">{servedName(answer.model)}</span>
-      </p>
     </div>
   );
 }
@@ -848,24 +920,37 @@ function AnswerActions({ text }: { text: string }) {
       copy();
     }
   };
+  const [rated, setRated] = useState<"up" | "down" | null>(null);
+  const rate = (r: "up" | "down") => {
+    setRated(r);
+    try {
+      const kept = JSON.parse(localStorage.getItem("pashu.ask.rated") ?? "{}") as Record<string, string>;
+      kept[text.slice(0, 120)] = r;
+      localStorage.setItem("pashu.ask.rated", JSON.stringify(kept));
+    } catch {
+      // Not remembered.
+    }
+  };
+  const icon = "focusable inline-flex h-8 w-8 items-center justify-center rounded-lg text-[rgb(var(--faint))] transition hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]";
   return (
-    <p className="mt-3 flex gap-1 border-t border-[rgb(var(--edge))] pt-2">
-      {(
-        [
-          [copied ? "Copied" : "Copy", copy],
-          ["Share", share],
-        ] as const
-      ).map(([label, action]) => (
-        <button
-          key={label === "Copied" ? "Copy" : label}
-          type="button"
-          onClick={action}
-          className="focusable rounded-md px-2 py-1 text-xs text-[rgb(var(--faint))] transition hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink))]"
-        >
-          {label}
-        </button>
-      ))}
-    </p>
+    <span className="-ml-1.5 flex items-center gap-0.5">
+      <button type="button" onClick={copy} className={icon} aria-label={copied ? "Copied" : "Copy answer"} title={copied ? "Copied" : "Copy"}>
+        {copied ? (
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 text-[rgb(var(--ok))]" fill="none" stroke="currentColor" strokeWidth={2.2}><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        ) : (
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8}><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" strokeLinecap="round" /></svg>
+        )}
+      </button>
+      <button type="button" onClick={share} className={icon} aria-label="Share answer" title="Share">
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8}><path d="M12 15V3m0 0L8 7m4-4 4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+      <button type="button" onClick={() => rate("up")} aria-pressed={rated === "up"} className={`${icon} ${rated === "up" ? "text-[rgb(var(--ok))]" : ""}`} aria-label="Helpful" title="Helpful">
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill={rated === "up" ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8}><path d="M7 10v11H4V10h3Zm0 0 4-7a2 2 0 0 1 2 2v4h5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 16.8 21H7" strokeLinejoin="round" /></svg>
+      </button>
+      <button type="button" onClick={() => rate("down")} aria-pressed={rated === "down"} className={`${icon} ${rated === "down" ? "text-[rgb(var(--crit))]" : ""}`} aria-label="Not helpful" title="Not helpful">
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 rotate-180" fill={rated === "down" ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8}><path d="M7 10v11H4V10h3Zm0 0 4-7a2 2 0 0 1 2 2v4h5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 16.8 21H7" strokeLinejoin="round" /></svg>
+      </button>
+    </span>
   );
 }
 
@@ -1097,19 +1182,51 @@ function Context({ incident }: { incident: Incident }) {
   );
 }
 
+const STEPS_GENERAL = [
+  "Reading the question",
+  "Searching MITRE ATT&CK, CAPEC and CISA's catalogue",
+  "Picking the models that fit",
+  "Ranking and writing the answer",
+];
+const STEPS_INCIDENT = ["Reading the question", "Gathering this incident's evidence", "Checking each claim against it", "Writing the answer"];
+
+/** While Sati works: the steps its pipeline takes, each ticked as time passes, so the wait reads as work. */
 function Waiting({ model, general }: { model?: string; general: boolean }) {
-  const [seconds, setSeconds] = useState(0);
+  const [ms, setMs] = useState(0);
   useEffect(() => {
     const started = Date.now();
-    const tick = setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 500);
+    const tick = setInterval(() => setMs(Date.now() - started), 200);
     return () => clearInterval(tick);
   }, []);
+  const steps = general ? STEPS_GENERAL : STEPS_INCIDENT;
+  const at = Math.min(steps.length - 1, Math.floor(ms / 650));
   return (
-    <p data-waiting aria-live="polite" className="flex items-center gap-3 text-sm text-[rgb(var(--faint))]">
-      <span className="loose" aria-hidden="true" />
-      {general ? "Thinking" : "Reading the stored evidence"}
-      {model && <span className="hidden text-xs sm:inline">· {model}</span>}
-      {seconds >= 2 && <span className="tnum text-xs">{seconds}s</span>}
-    </p>
+    <div data-waiting aria-live="polite" className="flex gap-3">
+      <span className="relative inline-flex h-7 w-7 shrink-0">
+        <span className="absolute inset-0 animate-ping rounded-full bg-[rgb(var(--astra))]/30" />
+        <SatiMark />
+      </span>
+      <div className="min-w-0 space-y-1.5 pt-1">
+        <p className="flex items-center gap-2 text-xs">
+          <span className="font-semibold">Sati</span>
+          <span className="text-[rgb(var(--faint))]">is working{model ? ` · ${model}` : ""}</span>
+          {ms >= 2000 && <span className="tnum text-[rgb(var(--faint))]">{Math.floor(ms / 1000)}s</span>}
+        </p>
+        <ol className="space-y-1 text-sm">
+          {steps.slice(0, at + 1).map((step, i) => (
+            <li key={step} className="rise flex items-center gap-2">
+              {i < at ? (
+                <span aria-hidden="true" className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[rgb(var(--ok))]/15 text-[10px] text-[rgb(var(--ok))]">✓</span>
+              ) : (
+                <span aria-hidden="true" className="inline-flex h-4 w-4 items-center justify-center">
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-[rgb(var(--astra))] border-t-transparent" />
+                </span>
+              )}
+              <span className={i < at ? "text-[rgb(var(--faint))]" : "text-[rgb(var(--ink))]"}>{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
   );
 }

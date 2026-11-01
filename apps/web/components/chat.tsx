@@ -214,7 +214,7 @@ export function TurnView({ turn, incident }: { turn: Turn; incident: Incident })
     return (
       <p
         data-turn="you"
-        className="ml-auto max-w-[85%] rounded-lg rounded-br-sm bg-[rgb(var(--raised))] px-3 py-2 text-sm"
+        className="rise ml-auto w-fit max-w-[85%] whitespace-pre-wrap break-words rounded-3xl rounded-br-lg bg-[rgb(var(--raised))] px-4 py-2.5 text-[0.9375rem] leading-relaxed"
       >
         {turn.text}
       </p>

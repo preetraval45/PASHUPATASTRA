@@ -362,6 +362,48 @@ def subject(question: str) -> str:
     return rest if len(rest) >= 3 else question
 
 
+#: A follow-up that points back at the last answer: "how do we defend against it?"
+REFERS = re.compile(r"\b(it|them|they)\b|\b(this|that|these|those)\s*[?.!]*\s*$", re.IGNORECASE)
+
+#: A follow-up that continues the last answer's subject: "and detection?", "what about mitigations?"
+CONTINUES = re.compile(r"^\s*(and|also|what about|how about|then)\b\s*", re.IGNORECASE)
+
+#: What a previous answer was about: its bold title, the technique it defended against, or its first ranked
+#: technique. The earliest match wins, which is the answer's own first line.
+ANSWERED = re.compile(
+    r"\*\*(?P<a>[^*\n]+)\*\* \((?P<ai>[A-Z][\w.-]+)\)"
+    r"|defend against (?P<b>[^\n(]+?) \((?P<bi>T\d{4}(?:\.\d{3})?|CAPEC-\d+)\)"
+    r"|^1\. (?P<c>[^\n(]+?) \((?P<ci>T\d{4}(?:\.\d{3})?)\)",
+    re.MULTILINE,
+)
+
+
+def resolve(question: str, evidence: list) -> str:
+    """A follow-up rewritten to name what the conversation is about. "How do we defend against it?" after
+    an answer about Data Encrypted for Impact becomes "How do we defend against Data Encrypted for Impact?".
+    Only a question that refers back (it, them, a closing "this", or a leading "and" or "what about") is
+    rewritten, and only from the last answer, so a new question is never bent towards an old one: "what
+    is SQL injection?" and "is this phishing email dangerous?" pass through unchanged."""
+    turns = [e.content for e in evidence if str(e.ref).startswith("turn-")]
+    if not turns:
+        return question
+    pointer = REFERS.search(question)
+    going_on = CONTINUES.match(question)
+    if not pointer and not going_on:
+        return question
+    last = turns[-1].split("\nSati: ", 1)[-1]
+    found = ANSWERED.search(last)
+    if not found:
+        return question
+    title = next(found.group(k) for k in ("a", "b", "c") if found.group(k)).strip()
+    if pointer:
+        end = pointer.end(1) if pointer.group(1) else pointer.end(2)
+        start = pointer.start(1) if pointer.group(1) else pointer.start(2)
+        return f"{question[:start]}{title}{question[end:]}"
+    rest = question[going_on.end():].rstrip("?. ") if going_on else question
+    return f"{rest} for {title}?"
+
+
 def cosine(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b, strict=True))
 
@@ -484,6 +526,17 @@ class SatiProvider:
                 "area": "skandamata",
                 "declined": True,
             }
+        asked = question
+        question = resolve(question, request.evidence)
+        if question == asked and REFERS.search(question) and len(terms(question)) <= 2:
+            # "How does it work?" with nothing before it: ask, rather than guess what "it" is.
+            return {
+                "answer": "What would you like to know about? Name the attack, technique, defence or CVE, "
+                "for example: how does ransomware work?",
+                "topic": "security",
+                "area": "brahmacharini",
+                "declined": False,
+            }
         if self._wants_mitigations(question):
             lines = self._mitigation_lines(question)
             if lines:
@@ -504,7 +557,11 @@ class SatiProvider:
                 }
         question = expand(question)
         query = embedder().embed(question)
-        hits = knowledge().search(query, k=3, question=question)
+        hits = knowledge().search(query, k=6, question=question)
+        # One step of a CAPEC pattern's mitigation list is not a subject to explain: asked "how does it
+        # work?", one led the answer (1 Nov). It answers only when nothing else does.
+        whole = [h for h in hits if " mitigation " not in h[1]["id"]]
+        hits = (whole or hits)[:3]
         if self.mode != "skandamata" and WHICH_TECHNIQUE.search(question):
             named = self._which_technique(question, query, hits)
             if named:
