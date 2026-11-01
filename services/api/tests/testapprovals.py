@@ -131,3 +131,16 @@ def test_deliberated_approvals_do_not_look_decorative() -> None:
 def test_the_summary_leads_with_the_uncomfortable_number() -> None:
     client.post("/api/v1/policy/approve", json={"verdict": a_verdict(), "approver": "alice"})
     assert list(client.get("/api/v1/policy/approvals/fatigue").json())[0] == "looks_decorative"
+
+
+def test_decisions_survive_a_restart_through_the_audit_trail(monkeypatch) -> None:
+    """A cold start used to reset the measure to nothing. Each decision now rides on its audit record,
+    and a process with a durable store reloads them before first use."""
+    from app.api import routes
+
+    client.post("/api/v1/policy/approve", json={"verdict": a_verdict(), "approver": "persisted"})
+    APPROVALS._requests.clear()  # the restart
+    monkeypatch.setattr(routes, "_approvals_hydrated", False)
+    monkeypatch.setattr(routes, "_durable_store", lambda: object())
+    body = client.get("/api/v1/policy/approvals/fatigue").json()
+    assert "persisted" in body["by_approver"]

@@ -687,7 +687,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 **Phase 3 — Astra + Dharma · Action · Weeks 11–14 · Oct 19 – Nov 15 › 3.4 Approval UX**
 
 - [x] Wire the web approve button to the endpoint — *done 1 Nov (RP-106): Approve and Deny on the incident's Authorization panel, for platform administrators only; Approve asks Dharma for a recorded verdict, then approves it as the signed-in account; actions stay dry-run.*
-- [ ] Persist approvals alongside the audit trail — fatigue numbers are per-process until then, so a restart currently resets the measurement
+- [x] Persist approvals alongside the audit trail — *done 1 Nov: each approval or denial's audit record now carries the decision (tier, risk, presented and decided times, approver, reason); a process with a durable store reloads them before first use, so a Lambda cold start no longer resets the fatigue measure. Decisions recorded before then carried no detail and are skipped. Evidence: `test_decisions_survive_a_restart_through_the_audit_trail`; 535 API tests pass.*
 
 **Phase 3 — Astra + Dharma · Action · Weeks 11–14 · Oct 19 – Nov 15 › 3.5 AWS enforcement floor**
 

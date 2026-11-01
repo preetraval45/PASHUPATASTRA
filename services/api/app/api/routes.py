@@ -20,6 +20,7 @@ from pashupatastra import (
     evaluate,
 )
 from pashupatastra.approvals import ApprovalLog, Decision
+from pashupatastra.dharma import Tier
 from pashupatastra.learning import Prediction
 from pashupatastra.defang import refang
 from pashupatastra.registry import all_actions, get as get_action
@@ -722,7 +723,7 @@ def approve(request: ApproveRequest, authorization: str | None = Header(default=
     now = datetime.now().astimezone()
     verdict.granted_by = f"human:{request.approver}"
     verdict.granted_at = now
-    _record_decision(verdict, Decision.APPROVED, request.approver, request.presented_at, now)
+    decided = _record_decision(verdict, Decision.APPROVED, request.approver, request.presented_at, now)
 
     AUDIT.append(
         AuditRecord(
@@ -730,6 +731,7 @@ def approve(request: ApproveRequest, authorization: str | None = Header(default=
             actor=verdict.granted_by,
             incident_ref=verdict.incident_ref,
             summary=f"approved {verdict.action_id} at tier {verdict.tier}",
+            detail=_decision_detail(decided),
         )
     )
     return verdict
@@ -750,7 +752,7 @@ def deny(request: DenyRequest, authorization: str | None = Header(default=None))
     now = datetime.now().astimezone()
     verdict.denial_reason = request.reason
     verdict.granted_by = None
-    _record_decision(verdict, Decision.DENIED, request.approver, request.presented_at, now)
+    decided = _record_decision(verdict, Decision.DENIED, request.approver, request.presented_at, now)
 
     AUDIT.append(
         AuditRecord(
@@ -758,6 +760,7 @@ def deny(request: DenyRequest, authorization: str | None = Header(default=None))
             actor=f"human:{request.approver}",
             incident_ref=verdict.incident_ref,
             summary=f"denied {verdict.action_id}: {request.reason}",
+            detail=_decision_detail(decided),
         )
     )
     return verdict
@@ -769,10 +772,67 @@ def _record_decision(
     approver: str,
     presented_at: datetime | None,
     now: datetime,
-) -> None:
-    """Log the decision for the fatigue measurement."""
+):
+    """Log the decision for the fatigue measurement, and return it for the audit record."""
+    _hydrate_approvals()
     request = APPROVALS.present(verdict, at=presented_at or now)
-    APPROVALS.resolve(request, decision, at=now, approver=approver)
+    return APPROVALS.resolve(request, decision, at=now, approver=approver)
+
+
+def _decision_detail(request) -> dict[str, object]:
+    """Everything the fatigue measure needs, kept on the approval's audit record. The audit trail is
+    durable where the deployment has a store, so the measure survives restarts (RESEARCH PLAN 3.4)."""
+    return {
+        "action_id": request.action_id,
+        "tier": str(request.tier),
+        "effective_risk": request.effective_risk,
+        "presented_at": request.presented_at.isoformat(),
+        "decided_at": request.decided_at.isoformat() if request.decided_at else None,
+        "decision": str(request.decision),
+        "approver": request.approver,
+        "reason": request.reason,
+    }
+
+
+_approvals_hydrated = False
+
+
+def _durable_store():
+    from ..backend import durable
+
+    return durable()
+
+
+def _hydrate_approvals() -> None:
+    """Reload past decisions from the durable audit trail, once per process. Without it every Lambda
+    cold start reset the fatigue measure to nothing. In memory (development, tests) there is nothing to
+    reload: the in-process log is the whole record."""
+    global _approvals_hydrated
+    if _approvals_hydrated:
+        return
+    _approvals_hydrated = True
+    if _durable_store() is None:
+        return
+    from pashupatastra.approvals import ApprovalRequest
+
+    for record in reversed(AUDIT.records(kind=AuditKind.APPROVAL, limit=5000)):
+        d = record.detail or {}
+        if "decision" not in d or "presented_at" not in d:
+            continue  # decisions recorded before 1 Nov 2026 carried no detail
+        try:
+            APPROVALS._requests.append(ApprovalRequest(
+                action_id=str(d["action_id"]),
+                incident_ref=record.incident_ref,
+                tier=Tier(d["tier"]),
+                effective_risk=int(d["effective_risk"]),
+                presented_at=datetime.fromisoformat(str(d["presented_at"])),
+                decision=Decision(d["decision"]),
+                decided_at=datetime.fromisoformat(str(d["decided_at"])) if d.get("decided_at") else None,
+                approver=d.get("approver"),
+                reason=d.get("reason"),
+            ))
+        except (KeyError, ValueError):
+            continue
 
 
 @router.get("/policy/approvals/fatigue")
@@ -784,6 +844,7 @@ def approval_fatigue() -> dict[str, object]:
     `looks_decorative` requires *both* near-total approval and near-instant
     decisions; either alone is consistent with a well-calibrated system.
     """
+    _hydrate_approvals()
     APPROVALS.expire_stale(datetime.now().astimezone())
     fatigue = APPROVALS.fatigue()
     return {**fatigue.summary(), "by_approver": fatigue.by_approver()}
