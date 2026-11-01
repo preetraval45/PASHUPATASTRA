@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The four places a phone user goes most, plus every other section behind More (a native sheet). -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/tab_home" android:icon="@drawable/ic_home" android:title="@string/tab_home" />
+    <item android:id="@+id/tab_incidents" android:icon="@drawable/ic_alert" android:title="@string/tab_incidents" />
+    <item android:id="@+id/tab_ask" android:icon="@drawable/ic_chat" android:title="@string/tab_ask" />
+    <item android:id="@+id/tab_learn" android:icon="@drawable/ic_cap" android:title="@string/tab_learn" />
+    <item android:id="@+id/tab_more" android:icon="@drawable/ic_menu" android:title="@string/tab_more" />
+</menu>

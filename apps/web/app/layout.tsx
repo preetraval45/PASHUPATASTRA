@@ -118,10 +118,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/* Inside the Android app (its user agent says PashupatastraApp), or the site installed to a
             home screen (iPhone or Android, display-mode standalone), before first paint: the
-            app has its own look (globals.css, html[data-app]), not the website squeezed onto a phone. */}
+            app has its own look (globals.css, html[data-app]), not the website squeezed onto a phone.
+            An app build that draws native bars also says PashupatastraNative (html[data-native]). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `if(/PashupatastraApp/.test(navigator.userAgent)||navigator.standalone||matchMedia("(display-mode: standalone)").matches)document.documentElement.setAttribute("data-app","")`,
+            __html: `if(/PashupatastraApp/.test(navigator.userAgent)||navigator.standalone||matchMedia("(display-mode: standalone)").matches)document.documentElement.setAttribute("data-app","");if(/PashupatastraNative/.test(navigator.userAgent))document.documentElement.setAttribute("data-native","")`,
           }}
         />
       </head>

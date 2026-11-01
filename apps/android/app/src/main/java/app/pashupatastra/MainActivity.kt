@@ -1,142 +1,508 @@
 package app.pashupatastra
 
-import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.View
-import android.view.ViewGroup
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.materialswitch.MaterialSwitch
 
 /**
- * The Pashupatastra app: the live website in a full-screen WebView.
+ * The Pashupatastra app: native bars around the live site.
  *
- * Every page comes from the deployed site, so whatever ships to main shows up
- * in the app with no rebuild. The app adds what a browser tab does not: its
- * own icon and splash, pull to refresh, the back button walking back through
- * pages, a native share sheet, and an offline page instead of a browser error.
+ * The pages come from the deployed site, so whatever ships to main shows up in
+ * the app with no rebuild. The frame is native, so it behaves as a phone app
+ * rather than a website saved to the home screen: a Material top bar with the
+ * page's name, back arrow, search and share; a bottom tab bar whose tabs each
+ * keep their own page and history; every other section in a native sheet;
+ * edge-to-edge drawing; and native loading and offline states. The site hides
+ * its own header and tab bar when the user agent says PashupatastraNative.
+ *
  * Links that leave the site open in the phone's browser, so the app never
  * becomes a browser for someone else's pages.
  */
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var web: WebView
-    private lateinit var refresh: SwipeRefreshLayout
-    private lateinit var progress: ProgressBar
     private val site: Uri = Uri.parse(BuildConfig.SITE_URL)
 
-    /** Set by the page (AppBridge.atTop): the site scrolls inside a panel, so the WebView's own scrollY stays 0. */
-    @Volatile
-    var pageAtTop = true
+    private lateinit var root: LinearLayout
+    private lateinit var appBar: LinearLayout
+    private lateinit var toolbar: MaterialToolbar
+    private lateinit var progress: ProgressBar
+    private lateinit var content: FrameLayout
+    private lateinit var nav: BottomNavigationView
+    private lateinit var topLine: View
+    private lateinit var bottomLine: View
 
-    @SuppressLint("SetJavaScriptEnabled")
+    private val tabs = LinkedHashMap<Int, WebTab>()
+    private var current: WebTab? = null
+    private var currentId = 0
+
+    var palette: Palette = Palette.DARK
+        private set
+
+    /** A place in the site, as the website's rail lists it (apps/web/components/sidebar.tsx). */
+    private class Dest(val path: String, val label: String, val icon: Int)
+
+    private val sections: List<Pair<String, List<Dest>>> by lazy {
+        listOf(
+            "Start" to listOf(
+                Dest("/", "Home", R.drawable.ic_home),
+                Dest("/how-it-works", "How it works", R.drawable.ic_book),
+            ),
+            "Operate" to listOf(
+                Dest("/overview", "Overview", R.drawable.ic_grid),
+                Dest("/incidents", "Incidents", R.drawable.ic_alert),
+                Dest("/ask", "Sati AI", R.drawable.ic_chat),
+                Dest("/observatory", "Observatory", R.drawable.ic_radar),
+            ),
+            "Analyze" to listOf(
+                Dest("/analytics", "Analytics", R.drawable.ic_chart),
+                Dest("/world", "World threats", R.drawable.ic_globe),
+                Dest("/models", "Sati models", R.drawable.ic_cube),
+            ),
+            "Respond" to listOf(
+                Dest("/actions", "Actions", R.drawable.ic_bolt),
+                Dest("/detections", "Detections", R.drawable.ic_shield),
+                Dest("/attack", "ATT&CK coverage", R.drawable.ic_matrix),
+            ),
+            "Learn" to listOf(
+                Dest("/training", "Training", R.drawable.ic_cap),
+                Dest("/findings", "Findings", R.drawable.ic_news),
+                Dest("/evaluation", "Evaluation", R.drawable.ic_check),
+            ),
+            "More" to listOf(
+                Dest("/impact", "Impact", R.drawable.ic_pulse),
+                Dest("/press", "Press", R.drawable.ic_news),
+                Dest("/search", "Search", R.drawable.ic_search),
+            ),
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
+        setContentView(R.layout.activity_main)
 
-        web = WebView(this).apply {
-            setBackgroundColor(Color.parseColor("#0b0d11"))
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.cacheMode = WebSettings.LOAD_DEFAULT
-            settings.mediaPlaybackRequiresUserGesture = true
-            settings.allowFileAccess = false
-            // The site can tell it is inside the app, e.g. to hide an "install the app" prompt.
-            settings.userAgentString = settings.userAgentString + " PashupatastraApp/" + BuildConfig.VERSION_NAME
-            addJavascriptInterface(AppBridge(this@MainActivity), "PashupatastraApp")
-            webViewClient = Client()
-            webChromeClient = object : WebChromeClient() {
-                override fun onProgressChanged(view: WebView, newProgress: Int) {
-                    this@MainActivity.progress.progress = newProgress
-                    this@MainActivity.progress.visibility = if (newProgress < 100) View.VISIBLE else View.GONE
-                }
+        root = findViewById(R.id.root)
+        appBar = findViewById(R.id.appbar)
+        toolbar = findViewById(R.id.toolbar)
+        progress = findViewById(R.id.progress)
+        content = findViewById(R.id.content)
+        nav = findViewById(R.id.nav)
+        topLine = findViewById(R.id.topline)
+        bottomLine = findViewById(R.id.bottomline)
+        currentId = R.id.tab_home
+
+        palette = if (prefs().getString(THEME, "dark") == "light") Palette.LIGHT else Palette.DARK
+
+        toolbar.inflateMenu(R.menu.toolbar)
+        toolbar.setNavigationContentDescription(R.string.action_back)
+        toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_search -> { open("/search"); true }
+                R.id.action_share -> { current?.let { share(titleOf(it), it.web.url ?: site.toString()) }; true }
+                else -> false
             }
         }
-        refresh = SwipeRefreshLayout(this).apply {
-            setColorSchemeColors(Color.parseColor("#2fa3a0"))
-            setProgressBackgroundColorSchemeColor(Color.parseColor("#161a21"))
-            addView(web, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-            setOnRefreshListener { web.reload() }
-            // Only pull-to-refresh at the very top of a page, so scrolling inside panels still works.
-            setOnChildScrollUpCallback { _, _ -> !pageAtTop || web.scrollY > 0 }
+
+        nav.setOnItemSelectedListener { item ->
+            nav.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            if (item.itemId == R.id.tab_more) {
+                showMore()
+                false
+            } else {
+                show(item.itemId)
+                true
+            }
         }
-        progress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
-            max = 100
-            progressTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#2fa3a0"))
+        nav.setOnItemReselectedListener { item ->
+            nav.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            if (item.itemId == R.id.tab_more) showMore() else tabs[item.itemId]?.toRoot()
         }
-        setContentView(FrameLayout(this).apply {
-            setBackgroundColor(Color.parseColor("#0b0d11"))
-            addView(refresh, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-            addView(progress, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, 6))
-        })
+
+        // Edge to edge: the bars sit under the status and navigation bars, padded clear of them.
+        // While the keyboard is up the tab bar steps aside and the page ends at the keyboard,
+        // so Sati AI's input stays visible as it is typed in.
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val typing = insets.isVisible(WindowInsetsCompat.Type.ime())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            appBar.setPadding(bars.left, bars.top, bars.right, 0)
+            nav.setPadding(bars.left, 0, bars.right, bars.bottom)
+            nav.visibility = if (typing) View.GONE else View.VISIBLE
+            bottomLine.visibility = nav.visibility
+            root.setPadding(0, 0, 0, if (typing) ime.bottom else 0)
+            WindowInsetsCompat.CONSUMED
+        }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (web.canGoBack()) web.goBack() else finish()
+                val tab = current
+                when {
+                    tab != null && tab.web.canGoBack() -> tab.web.goBack()
+                    currentId != R.id.tab_home -> select(R.id.tab_home)
+                    else -> moveTaskToBack(true)
+                }
             }
         })
 
-        if (savedInstanceState != null) web.restoreState(savedInstanceState) else web.loadUrl(startUrl(intent))
+        applyPalette()
+        route(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        web.loadUrl(startUrl(intent))
+        route(intent)
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        web.saveState(outState)
+    override fun onDestroy() {
+        tabs.values.forEach { it.web.destroy() }
+        super.onDestroy()
     }
 
-    /** A link to the site opens that page; anything else opens the home page. */
-    private fun startUrl(intent: Intent?): String {
-        val link = intent?.data
-        return if (link != null && isSite(link)) link.toString() else site.toString()
+    // --- tabs ---------------------------------------------------------------
+
+    private fun rootPath(id: Int): String = when (id) {
+        R.id.tab_incidents -> "/incidents"
+        R.id.tab_ask -> "/ask"
+        R.id.tab_learn -> "/training"
+        else -> "/"
     }
 
-    private fun isSite(uri: Uri): Boolean = uri.scheme == "https" && uri.host == site.host
+    /** Which tab a path belongs to; anything not under the four tabs opens in More's own stack. */
+    private fun tabFor(path: String): Int = when {
+        path == "" || path == "/" -> R.id.tab_home
+        path.startsWith("/incidents") -> R.id.tab_incidents
+        path.startsWith("/ask") -> R.id.tab_ask
+        path.startsWith("/training") || path.startsWith("/blue-team") -> R.id.tab_learn
+        else -> R.id.tab_more
+    }
 
-    private inner class Client : WebViewClient() {
-        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-            val uri = request.url
-            if (isSite(uri)) return false
-            // Everything else (other sites, mailto:, tel:) goes to the app that handles it.
-            runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
-            return true
+    private fun url(path: String): String = BuildConfig.SITE_URL.trimEnd('/') + path
+
+    private fun tab(id: Int): WebTab = tabs.getOrPut(id) {
+        WebTab(this).also {
+            it.view.visibility = View.GONE
+            content.addView(it.view, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        }
+    }
+
+    /** Selects a tab from code, which moves the tab bar's highlight too. */
+    private fun select(id: Int, url: String? = null) {
+        show(id, url)
+        nav.menu.findItem(id)?.isChecked = true
+    }
+
+    /** Shows a tab, loading `url` in it if given, or its first page if it has none yet. */
+    private fun show(id: Int, url: String? = null) {
+        val tab = tab(id)
+        when {
+            url != null -> tab.load(url)
+            tab.isEmpty -> tab.load(url(rootPath(id)))
+        }
+        if (current !== tab) {
+            current?.view?.visibility = View.GONE
+            tab.view.alpha = 0f
+            tab.view.translationY = dp(8).toFloat()
+            tab.view.visibility = View.VISIBLE
+            tab.view.animate().alpha(1f).translationY(0f).setDuration(180).start()
+            current = tab
+            currentId = id
+        }
+        updateChrome()
+    }
+
+    /** A place in the site, opened where it belongs: its tab if it has one, More's stack if not. */
+    private fun open(path: String) {
+        val id = tabFor(path)
+        if (id == R.id.tab_more) select(id, url(path)) else select(id)
+    }
+
+    /** A link to the site opens that page in its tab; a launch with no link resumes where the app was. */
+    private fun route(intent: Intent?) {
+        val link = intent?.data?.takeIf { isSite(it) }
+        if (link == null) {
+            select(currentId)
+            return
+        }
+        val path = link.path.orEmpty()
+        val id = tabFor(path)
+        val atRoot = path.trimEnd('/') == rootPath(id).trimEnd('/')
+        if (atRoot && id != R.id.tab_more) select(id) else select(id, link.toString())
+    }
+
+    fun onTabChanged(tab: WebTab) {
+        if (tab === current) updateChrome()
+    }
+
+    private fun updateChrome() {
+        val tab = current ?: return
+        toolbar.title = titleOf(tab)
+        toolbar.navigationIcon = if (tab.web.canGoBack()) tinted(R.drawable.ic_back, palette.ink) else null
+        if (tab.progress in 1..99) {
+            progress.visibility = View.VISIBLE
+            progress.progress = tab.progress
+        } else {
+            progress.visibility = View.INVISIBLE
+        }
+    }
+
+    /** The page's name, as the site titles it ("Incidents · Pashupatastra"), without the suffix. */
+    private fun titleOf(tab: WebTab): String {
+        val path = Uri.parse(tab.web.url ?: "").path.orEmpty()
+        if (path == "" || path == "/") return getString(R.string.app_name)
+        val title = tab.pageTitle.substringBefore(" · ").trim()
+        if (title.isNotEmpty() && !title.startsWith("http") && !title.contains(".vercel.app")) return title
+        return sections.flatMap { it.second }.firstOrNull { it.path != "/" && path.startsWith(it.path) }?.label
+            ?: getString(R.string.app_name)
+    }
+
+    fun isSite(uri: Uri): Boolean = uri.scheme == "https" && uri.host == site.host
+
+    fun openOutside(uri: Uri) {
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+    }
+
+    fun share(title: String, url: String) {
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, title.take(200))
+            putExtra(Intent.EXTRA_TEXT, url.take(2000))
+        }
+        startActivity(Intent.createChooser(send, getString(R.string.action_share)))
+    }
+
+    // --- More: every section, as a native sheet ------------------------------
+
+    private fun showMore() {
+        val p = palette
+        val dialog = BottomSheetDialog(this)
+        val here = Uri.parse(current?.web?.url ?: "").path.orEmpty()
+
+        val list = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(10), dp(16), dp(20))
+        }
+        list.addView(View(this).apply {
+            background = rounded(p.edge, dp(2).toFloat())
+        }, LinearLayout.LayoutParams(dp(36), dp(4)).apply { gravity = Gravity.CENTER_HORIZONTAL; bottomMargin = dp(12) })
+
+        for ((title, dests) in sections) {
+            list.addView(TextView(this).apply {
+                text = title.uppercase()
+                textSize = 11f
+                letterSpacing = 0.08f
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                setTextColor(p.faint)
+                setPadding(dp(4), dp(10), 0, dp(8))
+            })
+            dests.chunked(3).forEach { row ->
+                val line = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+                for (i in 0 until 3) {
+                    val params = LinearLayout.LayoutParams(0, dp(84), 1f).apply {
+                        if (i > 0) marginStart = dp(8)
+                    }
+                    val dest = row.getOrNull(i)
+                    if (dest == null) {
+                        line.addView(View(this), params)
+                        continue
+                    }
+                    val active = if (dest.path == "/") here == "" || here == "/" else here.startsWith(dest.path)
+                    line.addView(tile(dest, active) {
+                        dialog.dismiss()
+                        open(dest.path)
+                    }, params)
+                }
+                list.addView(line, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = dp(8) })
+            }
         }
 
-        override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
-            pageAtTop = true
+        // The theme, for the app and the site together.
+        val themeRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(6), dp(8), dp(6))
+            background = rounded(p.ground, dp(16).toFloat(), p.edge)
         }
+        themeRow.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_moon)
+            imageTintList = ColorStateList.valueOf(p.muted)
+        }, LinearLayout.LayoutParams(dp(22), dp(22)))
+        themeRow.addView(TextView(this).apply {
+            setText(R.string.sheet_dark)
+            textSize = 15f
+            setTextColor(p.ink)
+            setPadding(dp(14), 0, 0, 0)
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        themeRow.addView(MaterialSwitch(this).apply {
+            isChecked = p.dark
+            val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+            thumbTintList = ColorStateList(states, intArrayOf(p.ground, p.faint))
+            trackTintList = ColorStateList(states, intArrayOf(p.astra, p.raised))
+            setOnCheckedChangeListener { _, dark ->
+                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                useTheme(light = !dark)
+                dialog.dismiss()
+            }
+        })
+        list.addView(themeRow, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(12) })
 
-        override fun onPageFinished(view: WebView, url: String) {
-            refresh.isRefreshing = false
+        list.addView(TextView(this).apply {
+            text = getString(R.string.sheet_build, BuildConfig.VERSION_NAME)
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setTextColor(p.faint)
+            setPadding(0, dp(16), 0, 0)
+        })
+
+        val scroll = ScrollView(this).apply {
+            isVerticalScrollBarEnabled = false
+            background = GradientDrawable().apply {
+                setColor(p.panel)
+                val r = dp(28).toFloat()
+                cornerRadii = floatArrayOf(r, r, r, r, 0f, 0f, 0f, 0f)
+            }
+            addView(list)
         }
+        dialog.setContentView(scroll)
+        dialog.setOnShowListener {
+            dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                ?.background = ColorDrawable(Color.TRANSPARENT)
+            dialog.behavior.skipCollapsed = true
+            dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
+        dialog.show()
+    }
 
-        override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-            // Only a failed page, not a failed image or API call inside a page that loaded.
-            if (request.isForMainFrame) {
-                refresh.isRefreshing = false
-                view.loadUrl("file:///android_asset/offline.html")
+    private fun tile(dest: Dest, active: Boolean, onClick: () -> Unit): View {
+        val p = palette
+        val ground = if (active) ColorUtils.setAlphaComponent(p.astra, 36) else p.ground
+        val stroke = if (active) ColorUtils.setAlphaComponent(p.astra, 150) else p.edge
+        val shape = rounded(ground, dp(18).toFloat(), stroke)
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(6), dp(8), dp(6), dp(8))
+            background = RippleDrawable(ColorStateList.valueOf(ColorUtils.setAlphaComponent(p.astra, 60)), shape, null)
+            isClickable = true
+            isFocusable = true
+            contentDescription = dest.label
+            setOnClickListener { onClick() }
+            addView(ImageView(context).apply {
+                setImageResource(dest.icon)
+                imageTintList = ColorStateList.valueOf(if (active) p.astra else p.muted)
+            }, LinearLayout.LayoutParams(dp(24), dp(24)))
+            addView(TextView(context).apply {
+                text = dest.label
+                textSize = 12f
+                gravity = Gravity.CENTER
+                maxLines = 2
+                setTextColor(if (active) p.ink else p.muted)
+                if (active) typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(6) })
+        }
+    }
+
+    // --- theme ----------------------------------------------------------------
+
+    private fun prefs() = getSharedPreferences("app", MODE_PRIVATE)
+
+    /** Switches app and site together: the site keeps its theme in localStorage, shared by every tab. */
+    private fun useTheme(light: Boolean) {
+        val name = if (light) "light" else "dark"
+        prefs().edit().putString(THEME, name).apply()
+        palette = if (light) Palette.LIGHT else Palette.DARK
+        applyPalette()
+        val script = "try{localStorage.setItem('theme','$name')}catch(e){};document.documentElement.setAttribute('data-theme','$name')"
+        tabs.values.forEach { it.web.evaluateJavascript(script, null) }
+    }
+
+    /** The site's stored theme wins over the app's, so a choice made on a page before this build still holds. */
+    fun syncThemeFrom(web: WebView) {
+        web.evaluateJavascript("(function(){try{return localStorage.getItem('theme')}catch(e){return null}})()") { value ->
+            val light = value?.contains("light") == true
+            if (light != !palette.dark) {
+                prefs().edit().putString(THEME, if (light) "light" else "dark").apply()
+                palette = if (light) Palette.LIGHT else Palette.DARK
+                applyPalette()
             }
         }
     }
 
-    /** Called from the offline page's "Try again" button. */
-    fun retry() {
-        runOnUiThread { web.loadUrl(site.toString()) }
+    private fun applyPalette() {
+        val p = palette
+        root.setBackgroundColor(p.ground)
+        appBar.setBackgroundColor(p.ground)
+        toolbar.setBackgroundColor(p.ground)
+        toolbar.setTitleTextColor(p.ink)
+        toolbar.menu.findItem(R.id.action_search)?.icon = tinted(R.drawable.ic_search, p.muted)
+        toolbar.menu.findItem(R.id.action_share)?.icon = tinted(R.drawable.ic_share, p.muted)
+        progress.progressTintList = ColorStateList.valueOf(p.astra)
+        progress.progressBackgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+        topLine.setBackgroundColor(p.edge)
+        bottomLine.setBackgroundColor(p.edge)
+
+        val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+        nav.setBackgroundColor(p.panel)
+        nav.itemIconTintList = ColorStateList(states, intArrayOf(p.astra, p.faint))
+        nav.itemTextColor = ColorStateList(states, intArrayOf(p.ink, p.faint))
+        nav.itemActiveIndicatorColor = ColorStateList.valueOf(ColorUtils.setAlphaComponent(p.astra, 46))
+        nav.itemRippleColor = ColorStateList.valueOf(ColorUtils.setAlphaComponent(p.astra, 30))
+
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !p.dark
+            isAppearanceLightNavigationBars = !p.dark
+        }
+        tabs.values.forEach { it.applyPalette(p) }
+        updateChrome()
+    }
+
+    // --- helpers --------------------------------------------------------------
+
+    fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private fun tinted(res: Int, color: Int) = ContextCompat.getDrawable(this, res)?.mutate()?.apply { setTint(color) }
+
+    private fun rounded(color: Int, radius: Float, stroke: Int? = null) = GradientDrawable().apply {
+        setColor(color)
+        cornerRadius = radius
+        if (stroke != null) setStroke(dp(1), stroke)
+    }
+
+    private companion object {
+        const val THEME = "theme"
     }
 }

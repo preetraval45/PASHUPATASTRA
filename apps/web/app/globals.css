@@ -601,6 +601,26 @@ html[data-app] .app-tabbar [aria-current="page"] > span:first-child + span:not(.
   font-weight: 600;
 }
 
+/* The Android app from its native build on (html[data-native], user agent says
+   PashupatastraNative) draws its own Material top bar, tab bar and "More" sheet,
+   so the page drops its web ones and is only the screen between them. Older
+   app builds without native bars keep the web ones above. */
+html[data-native] .app-header,
+html[data-native] .app-tabbar {
+  display: none !important;
+}
+
+html[data-native] body {
+  overscroll-behavior: none;
+}
+
+html[data-native] a,
+html[data-native] button {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 /* Rounder, softer panels in the app: cards read as touchable surfaces. */
 html[data-app] .rounded-xl {
   border-radius: 1rem;

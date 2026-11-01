@@ -7,4 +7,19 @@
     <string name="shortcut_training_long">Cyber defence training</string>
     <string name="shortcut_incidents_short">Incidents</string>
     <string name="shortcut_incidents_long">Open incidents</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_incidents">Incidents</string>
+    <string name="tab_ask">Sati AI</string>
+    <string name="tab_learn">Learn</string>
+    <string name="tab_more">More</string>
+    <string name="action_search">Search</string>
+    <string name="action_share">Share</string>
+    <string name="action_back">Back</string>
+
+    <string name="offline_title">You\'re offline</string>
+    <string name="offline_body">Pashupatastra needs a connection to load this page. Check your Wi-Fi or mobile data, then try again.</string>
+    <string name="offline_retry">Try again</string>
+    <string name="sheet_dark">Dark theme</string>
+    <string name="sheet_build">Pashupatastra for Android · build %1$s</string>
 </resources>
