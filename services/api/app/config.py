@@ -50,6 +50,14 @@ class Settings(BaseSettings):
     expire — see docs/research/RESEARCH PLAN.md. A deployment with a real database should set
     `database_url` and leave this unset."""
 
+    auth_secret: str | None = None
+    """Signs session tokens (accounts.py). Unset, a key is made once and kept in the store, so a fresh
+    deployment works without configuration; set it to rotate every session at once."""
+
+    google_client_id: str | None = None
+    """Google Identity Services client id, for "Sign in with Google". Public, not a secret: it is the
+    audience every Google ID token must name. Unset, the site offers email and guest sign-in only."""
+
     dynamo_namespace: str = "prod"
     """Which slice of the table this deployment owns.
 

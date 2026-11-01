@@ -19,8 +19,11 @@ export const metadata: Metadata = {
  * - on the device: theme and training progress (localStorage); the app's prefs
  *   (`IncidentWatch`, `IncidentsWidget`): seen incident ids and the widget's counts.
  *
- * Plain sentences, no legal boilerplate standing in for facts. If the product
- * gains accounts, this page changes before they ship.
+ * - accounts (since 1 Nov 2026): `services/api/app/accounts.py`: an id and a name; an email and a
+ *   scrypt hash for email accounts; Google's subject id and verified email for Google accounts; nothing
+ *   for guests. Training results and company memberships. `DELETE /me` erases all of it.
+ *
+ * Plain sentences, no legal boilerplate standing in for facts.
  */
 const UPDATED = "1 November 2026";
 
@@ -30,8 +33,9 @@ export default function PrivacyPage() {
       <div className="max-w-3xl space-y-4 text-sm leading-relaxed">
         <Panel title="In short">
           <p>
-            There are no accounts, no advertising and no tracking across other sites or apps. Nothing is sold
-            or shared for marketing. The app asks for no location, contacts, photos, camera or microphone.
+            Accounts are optional: everything public works without one. There is no advertising and no tracking
+            across other sites or apps. Nothing is sold or shared for marketing. The app asks for no location,
+            contacts, photos, camera or microphone.
           </p>
         </Panel>
 
@@ -52,9 +56,40 @@ export default function PrivacyPage() {
           </ul>
         </Panel>
 
+        <Panel title="If you create an account">
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <strong>What is kept.</strong> Your name as you typed it. For an email account, the address and a
+              one-way scrypt hash of your password (never the password itself). For Google sign-in, Google's
+              account id and your verified address, which Google shares when you choose to continue. A guest
+              account keeps nothing but a random id.
+            </li>
+            <li>
+              <strong>Your training record.</strong> Each module's best and last score, attempts and whether you
+              passed. Scores are marked in your browser, so a company reads them as your own record, not as a
+              supervised exam.
+            </li>
+            <li>
+              <strong>Companies.</strong> If you join a company with its invite code, that company's owner and
+              admins can see your name, email, training record and when you were last active. Nobody else can.
+            </li>
+            <li>
+              <strong>Never public.</strong> The audit trail records that an account or company was created, never
+              whose. No IP address or device detail is kept with an account.
+            </li>
+            <li>
+              <strong>Deleting it.</strong> <Link href="/account" className="underline">Account</Link> → Delete
+              account erases the account, its sign-in, its memberships and its training record at once.
+            </li>
+          </ul>
+        </Panel>
+
         <Panel title="What stays on your device">
           <ul className="list-disc space-y-2 pl-5">
-            <li>Your theme choice and your training progress, in the browser's or app's own storage.</li>
+            <li>
+              Your theme choice and your training progress, in the browser's or app's own storage, and your
+              sign-in token if you have an account. Signing out removes the token.
+            </li>
             <li>
               In the Android app: whether alerts are on, which incidents you have already been alerted about,
               and the home-screen widget's last counts. Removing the app removes them.

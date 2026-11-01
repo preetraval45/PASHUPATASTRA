@@ -67,8 +67,9 @@ def main() -> int:
 
     cors = [
         "--cors-configuration",
-        f"AllowOrigins={','.join(args.cors)},AllowMethods=GET,POST,OPTIONS,"
-        "AllowHeaders=content-type,MaxAge=3600",
+        # PUT, PATCH, DELETE and the Authorization header carry signed-in requests (accounts.py).
+        f"AllowOrigins={','.join(args.cors)},AllowMethods=GET,POST,PUT,PATCH,DELETE,OPTIONS,"
+        "AllowHeaders=content-type,authorization,MaxAge=3600",
     ]
 
     api = find_api(args.name, args.region)

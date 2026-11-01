@@ -290,6 +290,20 @@
         "title": "ChatRequest",
         "type": "object"
       },
+      "Code": {
+        "properties": {
+          "code": {
+            "maxLength": 16,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "Code",
+        "type": "object"
+      },
       "DenyRequest": {
         "properties": {
           "approver": {
@@ -636,6 +650,20 @@
         "title": "GeneralRequest",
         "type": "object"
       },
+      "Google": {
+        "properties": {
+          "credential": {
+            "maxLength": 4096,
+            "title": "Credential",
+            "type": "string"
+          }
+        },
+        "required": [
+          "credential"
+        ],
+        "title": "Google",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -882,6 +910,40 @@
         "title": "InvestigateRequest",
         "type": "object"
       },
+      "Login": {
+        "properties": {
+          "email": {
+            "maxLength": 256,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 256,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Login",
+        "type": "object"
+      },
+      "Named": {
+        "properties": {
+          "name": {
+            "maxLength": 80,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "Named",
+        "type": "object"
+      },
       "PlanStep": {
         "properties": {
           "action_id": {
@@ -927,6 +989,32 @@
           "expected_post_state"
         ],
         "title": "PlanStep",
+        "type": "object"
+      },
+      "Register": {
+        "properties": {
+          "email": {
+            "maxLength": 256,
+            "title": "Email",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "maxLength": 80,
+            "title": "Name",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 256,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Register",
         "type": "object"
       },
       "RemediateRequest": {
@@ -1092,6 +1180,26 @@
         "title": "RemediateResponse",
         "type": "object"
       },
+      "Result": {
+        "properties": {
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "score",
+          "passed"
+        ],
+        "title": "Result",
+        "type": "object"
+      },
       "RiskAdjustment": {
         "properties": {
           "delta": {
@@ -1126,6 +1234,20 @@
         ],
         "title": "RiskFactor",
         "type": "string"
+      },
+      "Role": {
+        "properties": {
+          "role": {
+            "maxLength": 16,
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "title": "Role",
+        "type": "object"
       },
       "Source": {
         "description": "One published reference, named so a reader can go and read it.",
@@ -1832,6 +1954,167 @@
           }
         },
         "summary": "Audit"
+      }
+    },
+    "/api/v1/auth/config": {
+      "get": {
+        "description": "Which sign-ins this deployment offers. The Google client id is public by design.",
+        "operationId": "auth_config_api_v1_auth_config_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Config Api V1 Auth Config Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Auth Config"
+      }
+    },
+    "/api/v1/auth/google": {
+      "post": {
+        "operationId": "auth_google_api_v1_auth_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Google"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Google Api V1 Auth Google Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Google"
+      }
+    },
+    "/api/v1/auth/guest": {
+      "post": {
+        "operationId": "auth_guest_api_v1_auth_guest_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Guest Api V1 Auth Guest Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Auth Guest"
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "auth_login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Login Api V1 Auth Login Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Login"
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "auth_register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Register Api V1 Auth Register Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Register"
       }
     },
     "/api/v1/detections": {
@@ -2909,6 +3192,223 @@
         "summary": "Intel Status"
       }
     },
+    "/api/v1/me": {
+      "delete": {
+        "operationId": "me_delete_api_v1_me_delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Me Delete Api V1 Me Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Me Delete"
+      },
+      "get": {
+        "operationId": "me_api_v1_me_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Me Api V1 Me Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Me"
+      },
+      "patch": {
+        "operationId": "me_rename_api_v1_me_patch",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Named"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Me Rename Api V1 Me Patch",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Me Rename"
+      }
+    },
+    "/api/v1/me/training/{slug}": {
+      "put": {
+        "operationId": "me_training_api_v1_me_training__slug__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Result"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Me Training Api V1 Me Training  Slug  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Me Training"
+      }
+    },
     "/api/v1/models": {
       "get": {
         "description": "The models the Ask console may choose from (RP-50).\n\nBuilt from server configuration only, so it is an allow-list: the chat route\naccepts an `id` from here and refuses anything else. A visitor can pick which\nconfigured model answers; they cannot point the server at a model or an\nendpoint of their own.",
@@ -3147,6 +3647,376 @@
           }
         },
         "summary": "Tree Run"
+      }
+    },
+    "/api/v1/orgs": {
+      "post": {
+        "operationId": "org_create_api_v1_orgs_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Named"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Create Api V1 Orgs Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Create"
+      }
+    },
+    "/api/v1/orgs/join": {
+      "post": {
+        "operationId": "org_join_api_v1_orgs_join_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Code"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Join Api V1 Orgs Join Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Join"
+      }
+    },
+    "/api/v1/orgs/{org_id}/invite": {
+      "post": {
+        "operationId": "org_rotate_api_v1_orgs__org_id__invite_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Rotate Api V1 Orgs  Org Id  Invite Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Rotate"
+      }
+    },
+    "/api/v1/orgs/{org_id}/members": {
+      "get": {
+        "operationId": "org_members_api_v1_orgs__org_id__members_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Members Api V1 Orgs  Org Id  Members Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Members"
+      }
+    },
+    "/api/v1/orgs/{org_id}/members/{member_id}": {
+      "delete": {
+        "operationId": "org_remove_api_v1_orgs__org_id__members__member_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Remove Api V1 Orgs  Org Id  Members  Member Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Remove"
+      },
+      "put": {
+        "operationId": "org_role_api_v1_orgs__org_id__members__member_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Role"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Role Api V1 Orgs  Org Id  Members  Member Id  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Role"
       }
     },
     "/api/v1/policy/approvals/fatigue": {

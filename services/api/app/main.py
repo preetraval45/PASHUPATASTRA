@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pashupatastra.dharma import ActionDomain
 
+from .api.accountroutes import router as account_router
 from .api.routes import router
 from .config import get_settings
 
@@ -30,6 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/api/v1")
+app.include_router(account_router, prefix="/api/v1")
 
 
 def _seed_demo() -> None:

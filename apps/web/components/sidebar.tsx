@@ -20,6 +20,7 @@ import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { Attribution } from "@/components/attribution";
 import { Mark, Sigil } from "@/components/chrome";
 import { Search } from "@/components/search";
+import { AccountButton } from "@/components/account";
 import { ThemeToggle } from "@/components/theme";
 
 type Item = { href: string; label: string; icon: keyof typeof ICONS; hint?: string; exact?: boolean };
@@ -198,6 +199,7 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
             </span>
             {status}
             <ThemeToggle />
+            <AccountButton />
           </div>
         </header>
 

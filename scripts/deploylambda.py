@@ -93,10 +93,14 @@ def exists(function: str, region: str) -> bool:
 
 def environment(cors: list[str]) -> str:
     """The function's environment, plus abuse.ch's Auth-Key when CI has the ABUSECH_AUTH_KEY secret,
-    which brings the URLhaus and ThreatFox feeds back (their anonymous exports are gone)."""
+    which brings the URLhaus and ThreatFox feeds back (their anonymous exports are gone), and the
+    Google sign-in client id when the GOOGLE_CLIENT_ID variable is set."""
     env = json.loads(_environment(cors))
     if os.environ.get("ABUSECH_AUTH_KEY"):
         env["Variables"]["ABUSECH_AUTH_KEY"] = os.environ["ABUSECH_AUTH_KEY"]
+    # "Sign in with Google" (app/accounts.py). A public client id, kept as a GitHub variable, not a secret.
+    if os.environ.get("GOOGLE_CLIENT_ID"):
+        env["Variables"]["PASHU_GOOGLE_CLIENT_ID"] = os.environ["GOOGLE_CLIENT_ID"]
     return json.dumps(env)
 
 
@@ -266,8 +270,9 @@ def main() -> int:
     cors_config = json.dumps(
         {
             "AllowOrigins": origins,
-            "AllowMethods": ["GET", "POST"],
-            "AllowHeaders": ["content-type"],
+            # PUT, PATCH, DELETE and the Authorization header carry signed-in requests (accounts.py).
+            "AllowMethods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+            "AllowHeaders": ["content-type", "authorization"],
             "MaxAge": 3600,
         }
     )

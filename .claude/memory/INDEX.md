@@ -115,3 +115,4 @@ Protocol: before every push, write a topic-named file from
 - [NativeFeed.md](NativeFeed.md) — native Live attacks from /intel via synthetic 'feed' tab id; skeleton placeholders; need-you badge
 - [Onboarding.md](Onboarding.md) — first-run welcome overlay; alerts offered with reason; pre-API-30 insets fallback
 - [PlayReadiness.md](PlayReadiness.md) — /privacy, -Pplay AAB from secrets, emulator screenshots on the android release, store/listing.md
+- [Accounts.md](Accounts.md) — accounts/companies/team dashboard (adr/Accounts); stdlib auth; gateway CORS step in CI; stage own paths only

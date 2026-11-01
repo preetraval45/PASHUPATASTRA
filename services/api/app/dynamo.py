@@ -846,6 +846,49 @@ class DynamoStore:
         ).get("Item")
         return _plain(row) if row else None
 
+    # --- documents (accounts.py) ---------------------------------------------
+
+    def get_doc(self, partition: str, key: str) -> dict | None:
+        row = self.table.get_item(Key={"PK": self._pk(partition), "SK": key}).get("Item")
+        return json.loads(row["doc"]) if row else None
+
+    def put_doc(self, partition: str, key: str, doc: dict, *, only_if_new: bool = False) -> bool:
+        """Writes one document. With `only_if_new`, refuses to overwrite: two sign-ups racing for one
+        email, or two cold starts making the session key, end with exactly one winner."""
+        item = {"PK": self._pk(partition), "SK": key, "doc": json.dumps(doc)}
+        if not only_if_new:
+            self.table.put_item(Item=item)
+            return True
+        try:
+            self.table.put_item(Item=item, ConditionExpression="attribute_not_exists(SK)")
+            return True
+        except Exception as exc:  # only the conditional failure means "already there"
+            if "ConditionalCheckFailed" in type(exc).__name__ or "ConditionalCheckFailed" in str(exc):
+                return False
+            raise
+
+    def delete_doc(self, partition: str, key: str) -> None:
+        self.table.delete_item(Key={"PK": self._pk(partition), "SK": key})
+
+    def docs(self, partition: str, prefix: str = "") -> list[tuple[str, dict]]:
+        """Every document in a partition whose key starts with `prefix`, paginated."""
+        from boto3.dynamodb.conditions import Key
+
+        condition = Key("PK").eq(self._pk(partition))
+        if prefix:
+            condition = condition & Key("SK").begins_with(prefix)
+        items: list[dict] = []
+        start = None
+        while True:
+            query: dict[str, Any] = {"KeyConditionExpression": condition}
+            if start:
+                query["ExclusiveStartKey"] = start
+            page = self.table.query(**query)
+            items.extend(page.get("Items", []))
+            start = page.get("LastEvaluatedKey")
+            if not start:
+                return sorted((row["SK"], json.loads(row["doc"])) for row in items)
+
     # --- blue team progress --------------------------------------------------
 
     def get_player(self, player_id: str) -> dict | None:

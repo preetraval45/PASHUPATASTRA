@@ -4,15 +4,17 @@
  * The course's interactive parts: the quiz at the end of each module, and the
  * evaluation that summarises what this browser has learned.
  *
- * Progress lives in `localStorage` and nowhere else — like the drill token,
- * a learner's record is theirs, stays on their device, and can be erased with
- * one click.
+ * Progress lives in `localStorage`. Signed in, it is also saved to the account
+ * (lib/account.ts) so it follows the learner to another device and counts in
+ * their company's team dashboard; on sign-in the two records are merged, best
+ * score and any pass kept. Signed out, nothing leaves the device.
  */
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui";
+import { saveTraining, snapshot, subscribe } from "@/lib/account";
 import { arranged, levelReached, MODULES, PASS_MARK, type Question } from "@/lib/training";
 
 const KEY = "pashu.training.v1";
@@ -36,9 +38,43 @@ function write(store: Store) {
   }
 }
 
+/** Folds the account's record into this browser's, and sends up what only this browser had. */
+let uploaded = false;
+function merge(): Store | null {
+  const me = snapshot().me;
+  if (!me) return null;
+  const local = read();
+  const merged: Store = { ...local };
+  for (const [slug, r] of Object.entries(me.training)) {
+    const mine = local[slug];
+    merged[slug] = {
+      best: Math.max(r.best, mine?.best ?? 0),
+      last: mine && Date.parse(mine.at) > r.at * 1000 ? mine.last : r.last,
+      attempts: Math.max(r.attempts, mine?.attempts ?? 0),
+      passed: r.passed || Boolean(mine?.passed),
+      at: mine && Date.parse(mine.at) > r.at * 1000 ? mine.at : new Date(r.at * 1000).toISOString(),
+    };
+  }
+  if (!uploaded) {
+    uploaded = true;
+    for (const [slug, r] of Object.entries(local)) {
+      const theirs = me.training[slug];
+      if (!theirs || r.best > theirs.best || (r.passed && !theirs.passed)) saveTraining(slug, r.best, r.passed);
+    }
+  }
+  write(merged);
+  return merged;
+}
+
 export function useCourse() {
   const [store, setStore] = useState<Store>({});
-  useEffect(() => setStore(read()), []);
+  useEffect(() => {
+    setStore(merge() ?? read());
+    return subscribe(() => {
+      const merged = merge();
+      if (merged) setStore(merged);
+    });
+  }, []);
   const record = useCallback((slug: string, score: number) => {
     const prior = read();
     const before = prior[slug];
@@ -54,6 +90,7 @@ export function useCourse() {
     };
     write(next);
     setStore(next);
+    saveTraining(slug, score, score >= PASS_MARK);
   }, []);
   const reset = useCallback(() => {
     write({});
