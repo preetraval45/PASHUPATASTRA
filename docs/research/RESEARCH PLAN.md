@@ -706,7 +706,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 
 **Phase 4 — Verification · Weeks 15–17 · Nov 16 – Dec 6 › 4.4 Timeline UI**
 
-- [ ] Frontend has no test framework, so the timeline is verified by rendering rather than by test. Worth adding before the logic grows
+- [x] Frontend has no test framework, so the timeline is verified by rendering rather than by test — *done 1 Nov: the web app's tests run on Node's built-in runner (`npm test`, 80 tests); the timeline's stage logic moved to `lib/timelinestages.ts` with 5 tests, including the circular-evidence case (a resolved incident that never verified shows verification as skipped).*
 
 **Phase 5 — PIB · Benchmark · Weeks 18–20 · Dec 7 – Dec 27 › 5.2 Harness**
 
