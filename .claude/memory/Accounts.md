@@ -33,3 +33,9 @@ The owner wants to sell the product as a service, with companies tracking their 
 
 - **After deploy:** preflight check that `OPTIONS` on `/api/v1/me` with `Access-Control-Request-Headers: authorization` returns the header. Then register on the live site.
 - **When the owner sets `vars.GOOGLE_CLIENT_ID`:** confirm `/auth/config` returns it, and that the Google button shows.
+
+## Cross-session hazard (1 Nov)
+
+`git rm` stages the deletion immediately. The Android session committed its own work while that deletion was staged, so 5e357ec removed `components/signin.tsx` while `/signin` still imported it, and Vercel failed. 4d94b6e repaired it.
+
+**Rule:** don't leave anything staged between commands. Run `git rm` or `git add` only in the same command as `git commit`. Otherwise use plain `rm` and stage it at commit time.
