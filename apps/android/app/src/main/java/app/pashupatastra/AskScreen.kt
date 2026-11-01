@@ -349,6 +349,23 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
         val out = SpannableStringBuilder()
         val lines = answer.trim().lines()
         lines.forEachIndexed { index, raw ->
+            // The sources line: each address as a short label (host and last part), linked to
+            // the full address, instead of four lines of raw URLs on a phone.
+            if (raw.startsWith("Sources:")) {
+                out.append("Sources: ")
+                Regex("https://\\S+").findAll(raw).forEachIndexed { n, m ->
+                    val url = m.value.trimEnd('.', ',', ';', ')')
+                    val uri = android.net.Uri.parse(url)
+                    val tail = uri.lastPathSegment?.substringBeforeLast('.')?.takeIf { it.isNotBlank() }
+                    val label = (uri.host.orEmpty().removePrefix("www.") + (if (tail != null) "/$tail" else "")) + " ↗"
+                    if (n > 0) out.append("  ·  ")
+                    val s = out.length
+                    out.append(label)
+                    out.setSpan(URLSpan(url), s, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                if (index < lines.lastIndex) out.append('\n')
+                return@forEachIndexed
+            }
             val bullet = raw.startsWith("- ") || raw.startsWith("* ")
             var rest = if (bullet) raw.drop(2) else raw
             val start = out.length
