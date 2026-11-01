@@ -65,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nav: BottomNavigationView
     private lateinit var topLine: View
     private lateinit var bottomLine: View
+    private lateinit var lock: AppLock
 
     private val tabs = LinkedHashMap<Int, WebTab>()
     private var current: WebTab? = null
@@ -140,6 +141,8 @@ class MainActivity : AppCompatActivity() {
         topLine = findViewById(R.id.topline)
         bottomLine = findViewById(R.id.bottomline)
         currentId = R.id.tab_home
+        lock = AppLock(this, findViewById(android.R.id.content))
+        applySecure()
 
         palette = if (prefs().getString(THEME, "dark") == "light") Palette.LIGHT else Palette.DARK
 
@@ -229,6 +232,22 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         route(intent)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        lock.onStart()
+    }
+
+    override fun onStop() {
+        lock.onStop()
+        super.onStop()
+    }
+
+    /** With the app lock on, the window is secure: no screenshots, and a blank recent-apps preview. */
+    private fun applySecure() {
+        if (lock.enabled) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        else window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
     }
 
     override fun onResume() {
@@ -521,6 +540,13 @@ class MainActivity : AppCompatActivity() {
         list.addView(switchRow(R.drawable.ic_alert, getString(R.string.sheet_alerts), prefs().getBoolean(IncidentWatch.ENABLED, true)) { on ->
             prefs().edit().putBoolean(IncidentWatch.ENABLED, on).apply()
             if (on) askForAlerts()
+        }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
+        // The app lock (AppLock): fingerprint, face or the phone's screen lock.
+        list.addView(switchRow(R.drawable.ic_shield, getString(R.string.sheet_lock), lock.enabled) { on ->
+            lock.setEnabled(on) {
+                applySecure()
+                dialog.dismiss()
+            }
         }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
 
         list.addView(TextView(this).apply {

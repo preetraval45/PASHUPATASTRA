@@ -21,6 +21,7 @@
     <string name="offline_body">Pashupatastra needs a connection to load this page. Check your Wi-Fi or mobile data, then try again.</string>
     <string name="offline_retry">Try again</string>
     <string name="sheet_dark">Dark theme</string>
+    <string name="sheet_lock">Lock with fingerprint or screen lock</string>
     <string name="sheet_alerts">Alert me when an incident needs me</string>
     <string name="sheet_build">Pashupatastra for Android · build %1$s</string>
     <string name="feed_title">Live attacks</string>
