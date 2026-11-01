@@ -46,6 +46,8 @@ abstract class NativeScreen(protected val activity: MainActivity) {
             setPadding(dp(16), dp(14), dp(16), dp(14))
             background = ripple(rounded(p.panel, 18, p.edge))
             pressable { activity.open("/incidents/" + incident.id) }
+            // One sentence for TalkBack instead of five fragments.
+            contentDescription = "${incident.severity} incident ${incident.id}. ${incident.statement}. ${Api.stateLabel(incident.state)}"
             addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL

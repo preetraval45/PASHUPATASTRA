@@ -177,6 +177,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         setPadding(dp(14), dp(12), dp(14), dp(12))
         background = ripple(rounded(p.panel, 18, p.edge))
         pressable(onClick)
+        contentDescription = if (value == null) "$label: loading" else "$value $label"
         addView(text(value?.toString() ?: "–", 26f, if (value != null && value > 0) tone else p.ink, bold = true))
         addView(text(label, 12f, p.muted), lp(top = 2))
     }

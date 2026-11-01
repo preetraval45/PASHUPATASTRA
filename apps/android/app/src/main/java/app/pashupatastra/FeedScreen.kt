@@ -166,6 +166,8 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
             background = ripple(rounded(p.panel, 18, p.edge))
             val url = report.url
             if (url != null) pressable { activity.openOutside(Uri.parse(url)) }
+            contentDescription = "${label(report.source)}, ${report.verification}. ${report.title}." +
+                if (url != null) " Opens the source record." else ""
             addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL

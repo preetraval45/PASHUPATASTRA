@@ -16,6 +16,12 @@ on:
 permissions:
   contents: write
 
+# One run at a time: each deletes and recreates the "android" release, and two at once
+# raced (run 41327683570 failed publishing while another run held the tag).
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
 jobs:
   apk:
     runs-on: ubuntu-latest
