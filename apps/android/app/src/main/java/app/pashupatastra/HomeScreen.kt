@@ -28,6 +28,9 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
     /** `staleAt`: when the incidents shown were loaded, if they are the phone's copy rather than fresh. */
     class Snapshot(val incidents: List<Api.Incident>?, val health: JSONObject?, val staleAt: Long? = null)
 
+    /** A newer test build to offer, for copies installed from the APK (Api.newerBuild). */
+    private var update: Int? = null
+
     override val view = FrameLayout(activity)
     private val refresh = SwipeRefreshLayout(activity)
     private val scroll = NestedScrollView(activity)
@@ -75,11 +78,13 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
             // Health is about now: an old copy would claim the system is fine when it may not be.
             val health = runCatching { JSONObject(Api.get("/health")) }.getOrNull()
             if (incidents != null && fetched?.fresh == true) IncidentsWidget.update(activity, incidents)
+            val newer = Api.newerBuild(activity)
             activity.runOnUiThread {
                 loading = false
                 refresh.isRefreshing = false
                 if (activity.isDestroyed) return@runOnUiThread
                 snapshot = Snapshot(incidents, health, fetched?.takeIf { !it.fresh }?.at)
+                update = newer
                 if (incidents != null) activity.setNeedYou(incidents.count { it.state == "awaiting_approval" })
                 loadedAt = System.currentTimeMillis()
                 render()
@@ -98,6 +103,18 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         column.addView(text(greeting(), 14f, p.muted))
         column.addView(text("What do you want to do?", 24f, p.ink, bold = true), lp(top = 2))
 
+        update?.let { build ->
+            column.addView(LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(16), dp(12), dp(12), dp(12))
+                background = ripple(rounded(ColorUtils.setAlphaComponent(p.astra, 36), 16, ColorUtils.setAlphaComponent(p.astra, 120)))
+                pressable { activity.openOutside(android.net.Uri.parse(Api.APK)) }
+                contentDescription = "A new version of the app is ready. Download build $build."
+                addView(text("A new version is ready (build $build)", 14f, p.ink, bold = true), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+                addView(text("Update", 14f, p.astra, bold = true))
+            }, lp(top = 12))
+        }
         if (!loading) snapshot?.staleAt?.let {
             column.addView(notice("Offline · showing incidents as of ${Api.clock(it)}. Pull down to try again."), lp(top = 14))
         }

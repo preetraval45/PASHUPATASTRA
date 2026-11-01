@@ -57,6 +57,48 @@ object Api {
         return Fetched(body, prefs.getLong("$path@", 0L), fresh = false)
     }
 
+    /**
+     * The newest test build on the repository's `android` release, if it is newer than this
+     * one; null otherwise, or when this copy came from Google Play (the store updates it).
+     * Asked at most once an hour; the release title carries the build ("test build 21").
+     */
+    fun newerBuild(context: Context): Int? {
+        val installer = runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getInstallerPackageName(context.packageName)
+            }
+        }.getOrNull()
+        if (installer == "com.android.vending") return null
+        val prefs = context.getSharedPreferences(CACHE, Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        var latest = prefs.getInt("release.build", 0)
+        if (now - prefs.getLong("release.at", 0L) > 3_600_000) {
+            val title = runCatching {
+                val connection = java.net.URL(RELEASE).openConnection() as HttpURLConnection
+                connection.connectTimeout = 8_000
+                connection.readTimeout = 8_000
+                connection.setRequestProperty("Accept", "application/vnd.github+json")
+                try {
+                    org.json.JSONObject(connection.inputStream.bufferedReader().use { it.readText() }).optString("name")
+                } finally {
+                    connection.disconnect()
+                }
+            }.getOrNull()
+            val found = title?.let { Regex("build (\\d+)").find(it)?.groupValues?.get(1)?.toIntOrNull() }
+            if (found != null) {
+                latest = found
+                prefs.edit().putInt("release.build", found).putLong("release.at", now).apply()
+            }
+        }
+        return latest.takeIf { it > BuildConfig.VERSION_CODE }
+    }
+
+    const val APK = "https://github.com/preetraval45/PASHUPATASTRA/releases/download/android/Pashupatastra.apk"
+    private const val RELEASE = "https://api.github.com/repos/preetraval45/PASHUPATASTRA/releases/tags/android"
+
     /** "3:41 PM", in the phone's own format. */
     fun clock(at: Long): String = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(at))
 

@@ -111,8 +111,10 @@ jobs:
           profile: pixel_6
           script: bash apps/android/screens.sh Pashupatastra.apk
       - name: fail on a crash
+        # Only this app's crashes: the emulator's own apps crash too (run 41329316034: Google
+        # Search's WebView hit SIGILL on the emulated CPU), and those say nothing about this app.
         run: |
-          if [ -s crash.log ]; then
+          if grep -q "app.pashupatastra" crash.log 2>/dev/null; then
             cat crash.log
             echo "::error title=App crashed::$(head -c 1500 crash.log | paste -sd ' ')"
             exit 1
