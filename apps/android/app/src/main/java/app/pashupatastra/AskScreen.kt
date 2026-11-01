@@ -43,7 +43,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
     override val view = FrameLayout(activity)
     private val root = LinearLayout(activity)
     private val scroll = NestedScrollView(activity)
-    private val column = LinearLayout(activity)
+    private val column = ReadableColumn(activity, activity.dp(720))
     private val composer = LinearLayout(activity)
     private val input = EditText(activity)
     private val send = FrameLayout(activity)
@@ -57,7 +57,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
         column.setPadding(dp(16), dp(12), dp(16), dp(16))
         scroll.isVerticalScrollBarEnabled = false
         scroll.overScrollMode = View.OVER_SCROLL_NEVER
-        scroll.addView(column, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        scroll.addView(column, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, android.view.Gravity.CENTER_HORIZONTAL))
         root.addView(scroll, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
 
         input.apply {
@@ -87,7 +87,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             addView(input, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
             addView(send, LinearLayout.LayoutParams(dp(40), dp(40)))
         }
-        val bottom = LinearLayout(activity).apply {
+        val bottom = ReadableColumn(activity, activity.dp(720)).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(12), dp(6), dp(12), dp(6))
             addView(composer, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
@@ -99,7 +99,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             note.gravity = Gravity.CENTER
             addView(note, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(4) })
         }
-        root.addView(bottom, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        root.addView(bottom, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { gravity = android.view.Gravity.CENTER_HORIZONTAL })
         view.addView(root, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         applyPalette()
     }

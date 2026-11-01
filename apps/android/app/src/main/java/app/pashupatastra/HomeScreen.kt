@@ -34,7 +34,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
     override val view = FrameLayout(activity)
     private val refresh = SwipeRefreshLayout(activity)
     private val scroll = NestedScrollView(activity)
-    private val column = LinearLayout(activity)
+    private val column = ReadableColumn(activity, activity.dp(720))
     private var snapshot: Snapshot? = null
     private var loading = false
     private var loadedAt = 0L
@@ -45,7 +45,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         column.setPadding(dp(16), dp(12), dp(16), dp(24))
         scroll.isVerticalScrollBarEnabled = false
         scroll.overScrollMode = View.OVER_SCROLL_NEVER
-        scroll.addView(column, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        scroll.addView(column, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, android.view.Gravity.CENTER_HORIZONTAL))
         refresh.addView(scroll, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         refresh.setOnRefreshListener { load() }
         view.addView(refresh, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))

@@ -37,7 +37,7 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
     override val view = FrameLayout(activity)
     private val refresh = SwipeRefreshLayout(activity)
     private val scroll = NestedScrollView(activity)
-    private val column = LinearLayout(activity)
+    private val column = ReadableColumn(activity, activity.dp(720))
     private var incidents: List<Api.Incident>? = null
     private var failed = false
     private var staleAt: Long? = null
@@ -50,7 +50,7 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
         column.setPadding(0, dp(12), 0, dp(24))
         scroll.isVerticalScrollBarEnabled = false
         scroll.overScrollMode = View.OVER_SCROLL_NEVER
-        scroll.addView(column, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        scroll.addView(column, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, android.view.Gravity.CENTER_HORIZONTAL))
         refresh.addView(scroll, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         refresh.setOnRefreshListener { load() }
         view.addView(refresh, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
