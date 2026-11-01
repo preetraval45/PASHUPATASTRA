@@ -4,7 +4,10 @@ import type { CSSProperties } from "react";
 
 import { Evaluation, ModuleStatus } from "@/components/course";
 import { DailyQuestion } from "@/components/dailyquestion";
+import { Games } from "@/components/games";
 import { Labs } from "@/components/labs";
+import { Paths } from "@/components/paths";
+import { Practice } from "@/components/practice";
 import { TrainingBoard } from "@/components/training";
 import { TrainingHero } from "@/components/traininghero";
 import { Page, Panel } from "@/components/ui";
@@ -40,7 +43,28 @@ export default async function TrainingPage() {
     >
       <TrainingHero minutes={minutes} questions={questions} />
 
+      <section id="paths" className="scroll-mt-24 space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">From beginner to expert</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
+            Four paths through everything on this page. Start where you are; the levels tick themselves as you pass them.
+          </p>
+        </div>
+        <Paths />
+      </section>
+
       <DailyQuestion />
+
+      <section id="games" className="scroll-mt-24 space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Games</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
+            Quick rounds that teach the tricks attackers use on people. Every answer explains itself, and your best score is
+            kept in this browser.
+          </p>
+        </div>
+        <Games />
+      </section>
 
       <section id="labs" className="scroll-mt-24 space-y-4">
         <div>
@@ -51,6 +75,17 @@ export default async function TrainingPage() {
           </p>
         </div>
         <Labs />
+      </section>
+
+      <section id="practice" className="scroll-mt-24 space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Practice questions</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
+            Questions an interviewer or an incident would ask, beginner to expert, each with a worked answer. Say yours first,
+            then compare.
+          </p>
+        </div>
+        <Practice />
       </section>
 
       <section id="levels" className="scroll-mt-24 space-y-4">

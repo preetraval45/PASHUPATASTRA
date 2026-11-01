@@ -15,7 +15,10 @@ import { levelReached, MODULES } from "@/lib/training";
  * from this browser's own record (course.tsx); a first visit shows level 0.
  */
 const SECTIONS = [
+  { href: "#paths", label: "Paths" },
+  { href: "#games", label: "Games" },
   { href: "#labs", label: "Labs" },
+  { href: "#practice", label: "Practice" },
   { href: "#levels", label: "Nine levels" },
   { href: "#drills", label: "Drills" },
   { href: "#evaluation", label: "Your record" },
