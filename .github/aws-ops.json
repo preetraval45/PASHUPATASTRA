@@ -1,1 +1,1 @@
-{"ops": ["status", "ses-status"]}
+{"ops": ["status"], "run": 2}
