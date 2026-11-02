@@ -207,7 +207,7 @@ class WebTab(private val activity: MainActivity) {
             refresh.isRefreshing = false
             loading.visibility = View.GONE
             if (!failed) offline.visibility = View.GONE
-            activity.syncThemeFrom(web)
+            activity.syncFromPage(web)
             activity.onTabChanged(this@WebTab)
         }
 

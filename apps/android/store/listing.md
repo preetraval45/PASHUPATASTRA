@@ -24,27 +24,37 @@ IN THE APP
 • Live attacks: what public feeds reported in the last hours (exploited vulnerabilities, ransomware, botnet servers, malware addresses), each linked to the source's own record.
 • Training: nine levels and hands-on labs (spot a phish, read a log, name the technique), with your progress kept on your phone.
 • Alerts: a notification when an incident awaits approval or a critical one opens, and a home-screen widget with the counts.
+• Your company: sign in to keep your training record, read and acknowledge your company's security policies, and see the levels it requires. Owners and admins see their team's progress.
+• App lock: optionally lock the app with your fingerprint, face or screen lock.
 
 PRIVATE BY DESIGN
-No account, no ads, no tracking. The app asks for no location, contacts, camera or microphone. Questions to Sati AI are kept anonymously in a public audit trail, so every answer can be explained, which is why you should leave personal details out of them.
+Accounts are optional, and there are no ads and no tracking. The app asks for no location, contacts, camera or microphone. Questions to Sati AI are kept anonymously in a public audit trail, so every answer can be explained, which is why you should leave personal details out of them.
 
 The public deployment runs in dry-run mode: approvals describe what would change, and nothing executes.
 ```
 
 ## Data safety form
 
+Accounts are optional (RP-101); everything public works without one. Matches `/privacy`,
+which is checked against `services/api/app/accounts.py`.
+
 | Question | Answer | Why |
 |---|---|---|
-| Does the app collect or share user data? | **Yes, collects** | Questions typed into Sati AI are stored. |
-| Data types collected | **App activity → Other user-generated content** (questions to Sati AI) | `services/api` `routes._asked`, the audit trail. |
-| Collected data is | **Not shared**; **processed ephemerally: no**; **required: no** (the user chooses to ask) | It is kept in the audit trail. |
-| Purpose | **App functionality** | It lets any answer be explained later. |
-| Linked to the user's identity? | **No** | No account, IP or device id is stored with it. |
+| Does the app collect or share user data? | **Yes, collects; does not share** | Optional accounts, and questions to Sati AI. |
+| **Personal info → Name** | Collected, **optional**, linked to the account | The name typed at sign-up. |
+| **Personal info → Email address** | Collected, **optional**, linked | Email accounts only; guests give none. |
+| **App activity → Other user-generated content** | Collected, **optional** | Questions to Sati AI (not linked to identity: the audit trail never records who asked); company policies an admin writes, and members' acknowledgements (linked). |
+| **App activity → Other actions** | Collected, **optional**, linked | Training results (scores, attempts, passed) for a signed-in account. |
+| **App info and performance** | **Not collected** | No crash reporting or analytics SDK. |
+| Purpose | **App functionality**, **Account management** | Sign-in, training records, company workspaces. |
+| Shared with third parties? | **No** | A company's owner and admins see their own members' name, email and training; that is the user joining that company, not sharing with a third party. |
 | Encrypted in transit? | **Yes** | HTTPS only (`usesCleartextTraffic=false`). |
-| Can users request deletion? | **No** | The trail is append-only and nothing identifies who asked; say so in the form's explanation. |
-| Page counts | Not "user data": a daily count per path with no identifier. | `routes.record_view` |
+| Can users request deletion? | **Yes** | Account → Delete account erases the account, sign-in, memberships and training at once (`DELETE /me`). Questions in the audit trail cannot be deleted, and nothing identifies who asked them. |
+| Passwords | Never stored; a one-way scrypt hash. | |
+| Account deletion URL (Play requires one for apps with accounts) | https://pashupatastra.vercel.app/account | Signed in, "Delete account". |
 
-Location, contacts, photos, files, health, financial info, device ids, crash logs: **not collected**.
+Location, contacts, photos, files, health, financial info and device ids: **not collected**.
+The app keeps its own preferences and the sign-in token in its private storage on the phone.
 
 ## Content rating questionnaire
 

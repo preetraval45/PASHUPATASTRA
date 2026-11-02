@@ -126,12 +126,17 @@ object Api {
 
     private const val CACHE = "api-cache"
 
-    fun get(path: String): String {
+    /** Thrown for an expired or revoked session, so the caller can forget it. */
+    class Unauthorized : Exception("signed out")
+
+    fun get(path: String, token: String? = null): String {
         val connection = URL(BuildConfig.API_URL.trimEnd('/') + path).openConnection() as HttpURLConnection
         connection.connectTimeout = 10_000
         connection.readTimeout = 20_000
         connection.setRequestProperty("Accept", "application/json")
+        if (token != null) connection.setRequestProperty("Authorization", "Bearer $token")
         try {
+            if (connection.responseCode == 401) throw Unauthorized()
             if (connection.responseCode !in 200..299) error("HTTP ${connection.responseCode}")
             return connection.inputStream.bufferedReader().use { it.readText() }
         } finally {

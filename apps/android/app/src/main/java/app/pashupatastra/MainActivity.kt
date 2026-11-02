@@ -80,6 +80,9 @@ class MainActivity : AppCompatActivity() {
     var palette: Palette = Palette.DARK
         private set
 
+    /** The signed-in account, as Home last loaded it (Session.load); null when signed out or not yet known. */
+    var me: Session.Me? = null
+
     private val notifyPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) {
             prefs().edit().putBoolean(IncidentWatch.ENABLED, false).apply()
@@ -510,7 +513,81 @@ class MainActivity : AppCompatActivity() {
             background = rounded(p.edge, dp(2).toFloat())
         }, LinearLayout.LayoutParams(dp(36), dp(4)).apply { gravity = Gravity.CENTER_HORIZONTAL; bottomMargin = dp(12) })
 
-        for ((title, dests) in sections) {
+        // Who is signed in, or the way to sign in (the site's own pages; Session reads the result).
+        val account = me
+        val signedIn = Session.token(this) != null
+        list.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = RippleDrawable(ColorStateList.valueOf(ColorUtils.setAlphaComponent(p.astra, 60)), rounded(p.ground, dp(18).toFloat(), p.edge), null)
+            isClickable = true
+            setOnClickListener {
+                dialog.dismiss()
+                open(if (signedIn) "/account" else "/login")
+            }
+            val name = account?.name ?: if (signedIn) "Your account" else "Sign in"
+            val detail = when {
+                account == null && !signedIn -> "Save your training and join your company"
+                account == null -> "Open your account"
+                account.guest -> "Guest" + (account.org?.let { " · ${it.name}" } ?: "")
+                else -> listOfNotNull(account.email, account.org?.let { "${it.name} · ${it.role}" }).joinToString(" · ")
+            }
+            contentDescription = "$name. $detail"
+            val avatar: View = if (account == null) {
+                FrameLayout(this@MainActivity).apply {
+                    addView(ImageView(this@MainActivity).apply {
+                        setImageResource(R.drawable.ic_user)
+                        imageTintList = ColorStateList.valueOf(p.astra)
+                    }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
+                }
+            } else {
+                TextView(this@MainActivity).apply {
+                    text = account.name.split(' ').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }
+                    textSize = 15f
+                    gravity = Gravity.CENTER
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                    setTextColor(p.astra)
+                }
+            }
+            avatar.background = rounded(ColorUtils.setAlphaComponent(p.astra, 40), dp(22).toFloat())
+            addView(avatar, LinearLayout.LayoutParams(dp(44), dp(44)))
+            addView(LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(TextView(this@MainActivity).apply {
+                    text = name
+                    textSize = 16f
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                    setTextColor(p.ink)
+                })
+                addView(TextView(this@MainActivity).apply {
+                    text = detail
+                    textSize = 12f
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setTextColor(p.muted)
+                })
+            }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(12) })
+            addView(TextView(this@MainActivity).apply {
+                text = if (signedIn) "→" else "Sign in"
+                textSize = 14f
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                setTextColor(p.astra)
+            })
+        }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = dp(4) })
+
+        // The workspace (RP-101, RP-106): what this account's role opens, ahead of the product's sections.
+        val workspace = buildList {
+            add(Dest("/apps", "All apps", R.drawable.ic_grid))
+            account?.org?.let { org ->
+                add(Dest("/company/${org.id}", org.name, R.drawable.ic_company))
+                if (org.role == "owner" || org.role == "admin") add(Dest("/team", "Team", R.drawable.ic_team))
+            }
+            if (account?.platformAdmin == true) add(Dest("/admin", "Admin", R.drawable.ic_shield))
+            if (signedIn) add(Dest("/account", "Account", R.drawable.ic_user))
+        }
+
+        for ((title, dests) in listOf("Workspace" to workspace) + sections) {
             list.addView(TextView(this).apply {
                 text = title.uppercase()
                 textSize = 11f
@@ -669,13 +746,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** The site's stored theme wins over the app's, so a choice made on a page before this build still holds. */
-    fun syncThemeFrom(web: WebView) {
-        web.evaluateJavascript("(function(){try{return localStorage.getItem('theme')}catch(e){return null}})()") { value ->
-            val light = value?.contains("light") == true
+    /**
+     * After each page load: the site's theme and its session, read from the page's storage.
+     * The site's stored theme wins over the app's, so a choice made on a page still holds; a
+     * sign-in, sign-out or account switch on a page reaches the native screens (Session).
+     */
+    fun syncFromPage(web: WebView) {
+        val script = "(function(){try{return JSON.stringify([localStorage.getItem('theme'),localStorage.getItem('pashu.session')])}catch(e){return null}})()"
+        web.evaluateJavascript(script) { value ->
+            // evaluateJavascript hands back a JSON value: here a string holding the JSON array.
+            val pair = runCatching { org.json.JSONArray(org.json.JSONTokener(value).nextValue() as String) }.getOrNull() ?: return@evaluateJavascript
+            val light = pair.optString(0) == "light"
             if (light != !palette.dark) {
                 prefs().edit().putString(THEME, if (light) "light" else "dark").apply()
                 palette = if (light) Palette.LIGHT else Palette.DARK
                 applyPalette()
+            }
+            val token = if (pair.isNull(1)) null else pair.optString(1).takeIf { it.isNotBlank() }
+            if (Session.set(this, token)) {
+                me = null
+                natives[R.id.tab_home]?.let { (it as? HomeScreen)?.reload() }
             }
         }
     }

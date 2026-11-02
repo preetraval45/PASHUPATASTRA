@@ -69,6 +69,9 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
 
     override fun applyPalette() = render()
 
+    /** Load again now, e.g. after the person signed in or out on a page. */
+    fun reload() = load()
+
     private fun load() {
         if (loading) return
         loading = true
@@ -79,12 +82,14 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
             val health = runCatching { JSONObject(Api.get("/health")) }.getOrNull()
             if (incidents != null && fetched?.fresh == true) IncidentsWidget.update(activity, incidents)
             val newer = Api.newerBuild(activity)
+            val account = Session.load(activity)
             activity.runOnUiThread {
                 loading = false
                 refresh.isRefreshing = false
                 if (activity.isDestroyed) return@runOnUiThread
                 snapshot = Snapshot(incidents, health, fetched?.takeIf { !it.fresh }?.at)
                 update = newer
+                activity.me = account
                 if (incidents != null) activity.setNeedYou(incidents.count { it.state == "awaiting_approval" })
                 loadedAt = System.currentTimeMillis()
                 render()
@@ -100,7 +105,8 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         refresh.setProgressBackgroundColorSchemeColor(p.raised)
         column.removeAllViews()
 
-        column.addView(text(greeting(), 14f, p.muted))
+        val me = activity.me
+        column.addView(text(if (me != null && !me.guest) "${greeting()}, ${me.name.substringBefore(' ')}" else greeting(), 14f, p.muted))
         column.addView(text("What do you want to do?", 24f, p.ink, bold = true), lp(top = 2))
 
         update?.let { build ->
@@ -130,6 +136,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         stats.addView(stat(awaiting?.size, "Need you", p.warn) { activity.open("/incidents") }, weighted(10))
         stats.addView(stat(critical, "Critical", p.crit) { activity.open("/incidents?severity=critical") }, weighted(10))
         column.addView(stats, lp(top = 14))
+        column.addView(accountCard(me), lp(top = 14))
 
         if (live != null) {
             val needs = awaiting.orEmpty()
@@ -164,6 +171,60 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
 
         column.addView(status(), lp(top = 22))
     }
+
+    /**
+     * The person's place in the product: their company's required training and policies
+     * still to read (RP-101, RP-103, RP-105), or an invitation to sign in or join one.
+     * Everything in it is the API's answer for this account (Session.load).
+     */
+    private fun accountCard(me: Session.Me?): View {
+        val org = me?.org
+        val (title, body, target) = when {
+            me == null -> Triple(
+                "Sign in to save your progress",
+                "Your training follows you across devices, and your company can share its policies and required levels.",
+                "/login",
+            )
+            org == null -> Triple(
+                "Join your company's workspace",
+                "Ask your administrator for an invite link, or create a workspace for your team.",
+                "/account",
+            )
+            else -> {
+                val lines = buildList {
+                    if (org.required.isNotEmpty()) {
+                        add("Required training: ${org.requiredPassed} of ${org.required.size} passed" + (org.due?.let { " · due $it" } ?: ""))
+                    }
+                    org.policiesToRead?.let { add(if (it == 0) "All policies acknowledged" else "$it ${if (it == 1) "policy" else "policies"} to read and acknowledge") }
+                    if (isEmpty()) add("Your company's policies, training and team")
+                }
+                Triple(org.name, lines.joinToString("\n"), "/company/${org.id}")
+            }
+        }
+        val attention = org != null && ((org.policiesToRead ?: 0) > 0 || org.requiredPassed < org.required.size)
+        val tone = if (attention) p.warn else p.astra
+        return LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(14), dp(14), dp(14))
+            background = ripple(rounded(p.panel, 18, if (attention) ColorUtils.setAlphaComponent(p.warn, 110) else p.edge))
+            pressable { activity.open(target) }
+            contentDescription = "$title. $body"
+            addView(text(initials(org?.name ?: me?.name ?: "?"), 15f, tone, bold = true).apply {
+                gravity = Gravity.CENTER
+                background = rounded(ColorUtils.setAlphaComponent(tone, 40), 14)
+            }, LinearLayout.LayoutParams(dp(44), dp(44)))
+            addView(LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(text(title, 15f, p.ink, bold = true))
+                addView(text(body, 13f, if (attention) p.warn else p.muted).apply { setLineSpacing(0f, 1.15f) }, lp(top = 2))
+            }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(12) })
+            addView(text("→", 16f, p.faint), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(8) })
+        }
+    }
+
+    private fun initials(name: String) =
+        name.split(' ').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
 
     private fun askCard(): View {
         val shape = GradientDrawable(
