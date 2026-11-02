@@ -650,6 +650,20 @@ class MainActivity : AppCompatActivity() {
             }
         }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
 
+        // Help (RP-107): a problem report with the facts a fix needs, and email when a support address is set.
+        list.addView(actionRow(R.drawable.ic_alert, getString(R.string.sheet_report)) {
+            dialog.dismiss()
+            reportProblem()
+        }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
+        if (BuildConfig.SUPPORT_EMAIL.isNotBlank()) {
+            list.addView(actionRow(R.drawable.ic_chat, getString(R.string.sheet_contact)) {
+                dialog.dismiss()
+                val mail = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:" + BuildConfig.SUPPORT_EMAIL))
+                    .putExtra(Intent.EXTRA_SUBJECT, "Pashupatastra app " + BuildConfig.VERSION_NAME)
+                runCatching { startActivity(mail) }
+            }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
+        }
+
         list.addView(TextView(this).apply {
             text = getString(R.string.sheet_build, BuildConfig.VERSION_NAME)
             textSize = 12f
@@ -675,6 +689,63 @@ class MainActivity : AppCompatActivity() {
             dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
         dialog.show()
+    }
+
+    /** A tappable row in the More sheet, shaped like the switch rows. */
+    private fun actionRow(iconRes: Int, label: String, onClick: () -> Unit): View {
+        val p = palette
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            background = RippleDrawable(ColorStateList.valueOf(ColorUtils.setAlphaComponent(p.astra, 60)), rounded(p.ground, dp(16).toFloat(), p.edge), null)
+            isClickable = true
+            contentDescription = label
+            setOnClickListener {
+                it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                onClick()
+            }
+            addView(ImageView(this@MainActivity).apply {
+                setImageResource(iconRes)
+                imageTintList = ColorStateList.valueOf(p.muted)
+            }, LinearLayout.LayoutParams(dp(22), dp(22)))
+            addView(TextView(this@MainActivity).apply {
+                text = label
+                textSize = 15f
+                setTextColor(p.ink)
+                setPadding(dp(14), 0, dp(8), 0)
+            }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+            addView(TextView(this@MainActivity).apply {
+                text = "↗"
+                textSize = 15f
+                setTextColor(p.faint)
+            })
+        }
+    }
+
+    /**
+     * A problem report as a new issue on the project's tracker, with what a fix needs already filled in:
+     * the app's build, Android's version, the phone model and the screen. Nothing personal: no account,
+     * no email, no location. The person reads it before sending and can change anything.
+     */
+    private fun reportProblem() {
+        val screen = current?.web?.url?.let { Uri.parse(it).path } ?: rootPath(currentId)
+        val body = buildString {
+            appendLine("What happened, and what did you expect?")
+            appendLine()
+            appendLine()
+            appendLine("---")
+            appendLine("App build: ${BuildConfig.VERSION_NAME}")
+            appendLine("Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+            appendLine("Phone: ${Build.MANUFACTURER} ${Build.MODEL}")
+            appendLine("Screen: $screen")
+        }
+        val issue = Uri.parse("https://github.com/preetraval45/PASHUPATASTRA/issues/new").buildUpon()
+            .appendQueryParameter("title", "App: ")
+            .appendQueryParameter("labels", "android")
+            .appendQueryParameter("body", body)
+            .build()
+        openOutside(issue)
     }
 
     private fun switchRow(iconRes: Int, label: String, checked: Boolean, onChange: (Boolean) -> Unit): View {

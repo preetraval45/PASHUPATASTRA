@@ -21,6 +21,8 @@ android {
         versionName = (project.findProperty("versionName") as String?) ?: "0.1"
         buildConfigField("String", "SITE_URL", "\"$siteUrl\"")
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
+        // A support address for the More sheet's "Contact support"; empty hides it. Set with -PsupportEmail=...
+        buildConfigField("String", "SUPPORT_EMAIL", "\"${(project.findProperty("supportEmail") as String?) ?: ""}\"")
     }
 
     signingConfigs {
