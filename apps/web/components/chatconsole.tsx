@@ -1060,7 +1060,7 @@ function Welcome({
         {chosen.kind === "private" ? (
           <p className="rounded-xl border border-dashed border-[rgb(var(--edge-strong))] p-4 text-sm leading-relaxed text-[rgb(var(--muted))]">
             Kushmanda, Sati&apos;s own language model, writes answers in its own words from the passages the other models
-            find. Its weights are kept private for now, so it does not answer on this site yet. Its measured results are on{" "}
+            find. It isn't reachable on this deployment right now, so it can't answer here. Its measured results are on{" "}
             <Link href="/models#kushmanda-results" className="text-[rgb(var(--astra))] hover:underline">the models page</Link>.
           </p>
         ) : chosen.kind === "auto" || chosen.kind === "ask" ? (

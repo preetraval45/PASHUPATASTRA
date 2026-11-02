@@ -17,7 +17,7 @@ import { MODELS } from "@/lib/navadurga";
  * than words: log sessions, network flows, incidents, server metrics. For them
  * the chat offers held-out examples the model never trained on; tapping one
  * runs the served model live and replies with its verdict, the truth beside it,
- * and why. Kushmanda is not served publicly yet and says so.
+ * and why. Kushmanda answers once the API lists it (served since 2 Nov 2026); until then it says so.
  */
 export type SpecialistKind = "auto" | "ask" | "tree" | "cases" | "servers" | "private";
 

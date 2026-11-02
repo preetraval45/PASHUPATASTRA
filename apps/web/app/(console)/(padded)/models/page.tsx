@@ -51,7 +51,7 @@ const LINKS: Record<string, { results: string; live?: { href: string; label: str
   "sati-shailaputri": { results: "#shailaputri-results", live: { href: "#try-servers", label: "Try it on a held-out server" } },
   "sati-brahmacharini": { results: "#brahmacharini-results", live: { href: "/ask?model=sati:brahmacharini", label: "Ask it in Sati AI" } },
   "sati-chandraghanta": { results: "#chandraghanta-results", live: { href: "#chandraghanta-results", label: "Try it on a held-out flow" } },
-  "sati-kushmanda": { results: "#kushmanda-results" },
+  "sati-kushmanda": { results: "#kushmanda-results", live: { href: "/ask?model=sati:kushmanda", label: "Ask it in Sati AI" } },
   "sati-skandamata": { results: "#skandamata-results", live: { href: "/ask?model=sati:skandamata", label: "Ask it in Sati AI" } },
   "sati-katyayani": { results: "#katyayani-results", live: { href: "#katyayani-results", label: "Try it on a held-out incident" } },
   "sati-kalaratri": { results: "#kalaratri-results", live: { href: "#kalaratri-results", label: "Try it on a held-out session" } },
