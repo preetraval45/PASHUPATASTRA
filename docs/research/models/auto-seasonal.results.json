@@ -1,0 +1,1831 @@
+{
+  "experiment": "auto-seasonal on NAB",
+  "dataset": {
+    "name": "NAB (real series only)",
+    "repo": "numenta/NAB",
+    "revision": "ea702d75cc2258d9d7dd35ca8e5e2539d71f3140",
+    "series": 47,
+    "families": [
+      "realAWSCloudwatch",
+      "realAdExchange",
+      "realKnownCause",
+      "realTraffic",
+      "realTweets"
+    ]
+  },
+  "detectors": [
+    "robust-z",
+    "auto-seasonal",
+    "seasonal-robust-z@288"
+  ],
+  "summary": {
+    "series_with_a_period": 8,
+    "periods_found": [
+      8,
+      12,
+      17,
+      24,
+      49,
+      54
+    ],
+    "episodes": 110,
+    "caught": {
+      "robust-z": 100,
+      "auto-seasonal": 105,
+      "seasonal-robust-z@288": 90
+    },
+    "series_where_auto_missed_what_robust_z_caught": [],
+    "series_where_auto_caught_what_robust_z_missed": [
+      "realAdExchange/exchange-2_cpm_results.csv",
+      "realKnownCause/nyc_taxi.csv"
+    ]
+  },
+  "mean_across_families": {
+    "robust-z": {
+      "precision": 0.212,
+      "recall": 0.911,
+      "f1": 0.325,
+      "false_alarms_per_1000": 78.745,
+      "mean_lead": 234.142
+    },
+    "auto-seasonal": {
+      "precision": 0.211,
+      "recall": 0.95,
+      "f1": 0.327,
+      "false_alarms_per_1000": 78.553,
+      "mean_lead": 239.623
+    },
+    "seasonal-robust-z@288": {
+      "precision": 0.22,
+      "recall": 0.761,
+      "f1": 0.312,
+      "false_alarms_per_1000": 74.715,
+      "mean_lead": 241.285
+    }
+  },
+  "by_family": {
+    "realAWSCloudwatch": {
+      "robust-z": {
+        "precision": 0.218,
+        "recall": 0.892,
+        "f1": 0.325,
+        "false_alarms_per_1000": 132.591,
+        "mean_lead": 199.176
+      },
+      "auto-seasonal": {
+        "precision": 0.237,
+        "recall": 0.892,
+        "f1": 0.352,
+        "false_alarms_per_1000": 130.487,
+        "mean_lead": 200.912
+      },
+      "seasonal-robust-z@288": {
+        "precision": 0.251,
+        "recall": 0.804,
+        "f1": 0.361,
+        "false_alarms_per_1000": 118.244,
+        "mean_lead": 198.682
+      }
+    },
+    "realAdExchange": {
+      "robust-z": {
+        "precision": 0.201,
+        "recall": 0.875,
+        "f1": 0.313,
+        "false_alarms_per_1000": 36.555,
+        "mean_lead": 66.217
+      },
+      "auto-seasonal": {
+        "precision": 0.155,
+        "recall": 0.958,
+        "f1": 0.263,
+        "false_alarms_per_1000": 46.322,
+        "mean_lead": 68.717
+      },
+      "seasonal-robust-z@288": {
+        "precision": 0.131,
+        "recall": 0.444,
+        "f1": 0.188,
+        "false_alarms_per_1000": 43.362,
+        "mean_lead": 41.5
+      }
+    },
+    "realKnownCause": {
+      "robust-z": {
+        "precision": 0.14,
+        "recall": 0.786,
+        "f1": 0.219,
+        "false_alarms_per_1000": 93.103,
+        "mean_lead": 339.543
+      },
+      "auto-seasonal": {
+        "precision": 0.16,
+        "recall": 0.9,
+        "f1": 0.254,
+        "false_alarms_per_1000": 84.483,
+        "mean_lead": 362.714
+      },
+      "seasonal-robust-z@288": {
+        "precision": 0.157,
+        "recall": 0.821,
+        "f1": 0.249,
+        "false_alarms_per_1000": 99.103,
+        "mean_lead": 409.229
+      }
+    },
+    "realTraffic": {
+      "robust-z": {
+        "precision": 0.352,
+        "recall": 1.0,
+        "f1": 0.508,
+        "false_alarms_per_1000": 38.054,
+        "mean_lead": 95.543
+      },
+      "auto-seasonal": {
+        "precision": 0.352,
+        "recall": 1.0,
+        "f1": 0.508,
+        "false_alarms_per_1000": 38.054,
+        "mean_lead": 95.543
+      },
+      "seasonal-robust-z@288": {
+        "precision": 0.413,
+        "recall": 0.738,
+        "f1": 0.503,
+        "false_alarms_per_1000": 27.939,
+        "mean_lead": 88.214
+      }
+    },
+    "realTweets": {
+      "robust-z": {
+        "precision": 0.15,
+        "recall": 1.0,
+        "f1": 0.259,
+        "false_alarms_per_1000": 93.42,
+        "mean_lead": 470.23
+      },
+      "auto-seasonal": {
+        "precision": 0.15,
+        "recall": 1.0,
+        "f1": 0.259,
+        "false_alarms_per_1000": 93.42,
+        "mean_lead": 470.23
+      },
+      "seasonal-robust-z@288": {
+        "precision": 0.149,
+        "recall": 1.0,
+        "f1": 0.258,
+        "false_alarms_per_1000": 84.928,
+        "mean_lead": 468.8
+      }
+    }
+  },
+  "series": [
+    {
+      "name": "realAWSCloudwatch/ec2_cpu_utilization_24ae8d.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.082,
+          "recall": 1.0,
+          "f1": 0.152,
+          "false_alarms_per_1000": 301.35,
+          "mean_lead": 201.0
+        },
+        "auto-seasonal": {
+          "precision": 0.082,
+          "recall": 1.0,
+          "f1": 0.152,
+          "false_alarms_per_1000": 301.35,
+          "mean_lead": 201.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.111,
+          "recall": 1.0,
+          "f1": 0.2,
+          "false_alarms_per_1000": 289.39,
+          "mean_lead": 198.5
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_cpu_utilization_53ea38.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 2,
+      "period": 54,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.103,
+          "recall": 1.0,
+          "f1": 0.187,
+          "false_alarms_per_1000": 86.74,
+          "mean_lead": 191.0
+        },
+        "auto-seasonal": {
+          "precision": 0.323,
+          "recall": 1.0,
+          "f1": 0.488,
+          "false_alarms_per_1000": 26.17,
+          "mean_lead": 197.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.461,
+          "recall": 1.0,
+          "f1": 0.631,
+          "false_alarms_per_1000": 13.02,
+          "mean_lead": 169.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_cpu_utilization_5f5533.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 2,
+      "period": 8,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.119,
+          "recall": 1.0,
+          "f1": 0.213,
+          "false_alarms_per_1000": 12.96,
+          "mean_lead": 128.0
+        },
+        "auto-seasonal": {
+          "precision": 0.186,
+          "recall": 1.0,
+          "f1": 0.314,
+          "false_alarms_per_1000": 23.93,
+          "mean_lead": 169.5
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.267,
+          "recall": 0.5,
+          "f1": 0.348,
+          "false_alarms_per_1000": 3.49,
+          "mean_lead": 150.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_cpu_utilization_77c1ca.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 1,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.106,
+          "recall": 1.0,
+          "f1": 0.192,
+          "false_alarms_per_1000": 354.69,
+          "mean_lead": 399.0
+        },
+        "auto-seasonal": {
+          "precision": 0.106,
+          "recall": 1.0,
+          "f1": 0.192,
+          "false_alarms_per_1000": 354.69,
+          "mean_lead": 399.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.14,
+          "recall": 1.0,
+          "f1": 0.246,
+          "false_alarms_per_1000": 328.78,
+          "mean_lead": 399.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_cpu_utilization_825cc2.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 1,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.403,
+          "recall": 1.0,
+          "f1": 0.574,
+          "false_alarms_per_1000": 42.87,
+          "mean_lead": 260.0
+        },
+        "auto-seasonal": {
+          "precision": 0.403,
+          "recall": 1.0,
+          "f1": 0.574,
+          "false_alarms_per_1000": 42.87,
+          "mean_lead": 260.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.494,
+          "recall": 1.0,
+          "f1": 0.661,
+          "false_alarms_per_1000": 37.8,
+          "mean_lead": 265.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_cpu_utilization_ac20cd.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 1,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.3,
+          "recall": 1.0,
+          "f1": 0.462,
+          "false_alarms_per_1000": 59.82,
+          "mean_lead": 354.0
+        },
+        "auto-seasonal": {
+          "precision": 0.3,
+          "recall": 1.0,
+          "f1": 0.462,
+          "false_alarms_per_1000": 59.82,
+          "mean_lead": 354.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.754,
+          "recall": 1.0,
+          "f1": 0.86,
+          "false_alarms_per_1000": 10.8,
+          "mean_lead": 393.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_cpu_utilization_c6585a.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 0,
+      "period": null,
+      "caught": {
+        "robust-z": 0,
+        "auto-seasonal": 0,
+        "seasonal-robust-z@288": 0
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 433.7,
+          "mean_lead": 0.0
+        },
+        "auto-seasonal": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 433.7,
+          "mean_lead": 0.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 268.42,
+          "mean_lead": 0.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_cpu_utilization_fe7f93.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.161,
+          "recall": 1.0,
+          "f1": 0.277,
+          "false_alarms_per_1000": 141.33,
+          "mean_lead": 115.0
+        },
+        "auto-seasonal": {
+          "precision": 0.161,
+          "recall": 1.0,
+          "f1": 0.277,
+          "false_alarms_per_1000": 141.33,
+          "mean_lead": 115.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.071,
+          "recall": 0.667,
+          "f1": 0.128,
+          "false_alarms_per_1000": 169.63,
+          "mean_lead": 129.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_disk_write_bytes_1ef3de.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4730,
+      "episodes": 1,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.135,
+          "recall": 1.0,
+          "f1": 0.238,
+          "false_alarms_per_1000": 88.32,
+          "mean_lead": 395.0
+        },
+        "auto-seasonal": {
+          "precision": 0.135,
+          "recall": 1.0,
+          "f1": 0.238,
+          "false_alarms_per_1000": 88.32,
+          "mean_lead": 395.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.14,
+          "recall": 1.0,
+          "f1": 0.246,
+          "false_alarms_per_1000": 113.1,
+          "mean_lead": 395.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_disk_write_bytes_c0d644.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 3
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.166,
+          "recall": 0.667,
+          "f1": 0.266,
+          "false_alarms_per_1000": 159.27,
+          "mean_lead": 135.0
+        },
+        "auto-seasonal": {
+          "precision": 0.166,
+          "recall": 0.667,
+          "f1": 0.266,
+          "false_alarms_per_1000": 159.27,
+          "mean_lead": 135.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.176,
+          "recall": 1.0,
+          "f1": 0.299,
+          "false_alarms_per_1000": 209.02,
+          "mean_lead": 134.3
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_network_in_257a54.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 1,
+      "period": 12,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.198,
+          "recall": 1.0,
+          "f1": 0.331,
+          "false_alarms_per_1000": 94.72,
+          "mean_lead": 403.0
+        },
+        "auto-seasonal": {
+          "precision": 0.262,
+          "recall": 1.0,
+          "f1": 0.415,
+          "false_alarms_per_1000": 54.84,
+          "mean_lead": 360.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.302,
+          "recall": 1.0,
+          "f1": 0.464,
+          "false_alarms_per_1000": 90.85,
+          "mean_lead": 403.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/ec2_network_in_5abac7.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4730,
+      "episodes": 2,
+      "period": 17,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.213,
+          "recall": 1.0,
+          "f1": 0.351,
+          "false_alarms_per_1000": 84.71,
+          "mean_lead": 189.5
+        },
+        "auto-seasonal": {
+          "precision": 0.189,
+          "recall": 1.0,
+          "f1": 0.318,
+          "false_alarms_per_1000": 138.43,
+          "mean_lead": 214.5
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.209,
+          "recall": 1.0,
+          "f1": 0.346,
+          "false_alarms_per_1000": 116.22,
+          "mean_lead": 179.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/elb_request_count_8c0756.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.101,
+          "recall": 1.0,
+          "f1": 0.183,
+          "false_alarms_per_1000": 37.64,
+          "mean_lead": 146.5
+        },
+        "auto-seasonal": {
+          "precision": 0.101,
+          "recall": 1.0,
+          "f1": 0.183,
+          "false_alarms_per_1000": 37.64,
+          "mean_lead": 146.5
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.161,
+          "recall": 0.5,
+          "f1": 0.244,
+          "false_alarms_per_1000": 23.19,
+          "mean_lead": 188.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/grok_asg_anomaly.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4621,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 3
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.165,
+          "recall": 1.0,
+          "f1": 0.283,
+          "false_alarms_per_1000": 227.78,
+          "mean_lead": 141.0
+        },
+        "auto-seasonal": {
+          "precision": 0.165,
+          "recall": 1.0,
+          "f1": 0.283,
+          "false_alarms_per_1000": 227.78,
+          "mean_lead": 141.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.227,
+          "recall": 1.0,
+          "f1": 0.37,
+          "false_alarms_per_1000": 184.37,
+          "mean_lead": 124.3
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/iio_us-east-1_i-a2eb1cd9_NetworkIn.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 1243,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 0
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.394,
+          "recall": 0.5,
+          "f1": 0.441,
+          "false_alarms_per_1000": 70.32,
+          "mean_lead": 63.0
+        },
+        "auto-seasonal": {
+          "precision": 0.394,
+          "recall": 0.5,
+          "f1": 0.441,
+          "false_alarms_per_1000": 70.32,
+          "mean_lead": 63.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 27.86,
+          "mean_lead": 0.0
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/rds_cpu_utilization_cc0c53.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.498,
+          "recall": 1.0,
+          "f1": 0.665,
+          "false_alarms_per_1000": 25.92,
+          "mean_lead": 143.0
+        },
+        "auto-seasonal": {
+          "precision": 0.498,
+          "recall": 1.0,
+          "f1": 0.665,
+          "false_alarms_per_1000": 25.92,
+          "mean_lead": 143.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.381,
+          "recall": 1.0,
+          "f1": 0.552,
+          "false_alarms_per_1000": 53.68,
+          "mean_lead": 149.5
+        }
+      }
+    },
+    {
+      "name": "realAWSCloudwatch/rds_cpu_utilization_e47b3b.csv",
+      "family": "realAWSCloudwatch",
+      "samples": 4032,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.559,
+          "recall": 1.0,
+          "f1": 0.717,
+          "false_alarms_per_1000": 31.9,
+          "mean_lead": 122.0
+        },
+        "auto-seasonal": {
+          "precision": 0.559,
+          "recall": 1.0,
+          "f1": 0.717,
+          "false_alarms_per_1000": 31.9,
+          "mean_lead": 122.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.375,
+          "recall": 1.0,
+          "f1": 0.545,
+          "false_alarms_per_1000": 70.52,
+          "mean_lead": 101.0
+        }
+      }
+    },
+    {
+      "name": "realAdExchange/exchange-2_cpc_results.csv",
+      "family": "realAdExchange",
+      "samples": 1624,
+      "episodes": 1,
+      "period": 24,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 0
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "false_alarms_per_1000": 5.61,
+          "mean_lead": 111.0
+        },
+        "auto-seasonal": {
+          "precision": 0.103,
+          "recall": 1.0,
+          "f1": 0.187,
+          "false_alarms_per_1000": 21.82,
+          "mean_lead": 103.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 55.41,
+          "mean_lead": 0.0
+        }
+      }
+    },
+    {
+      "name": "realAdExchange/exchange-2_cpm_results.csv",
+      "family": "realAdExchange",
+      "samples": 1624,
+      "episodes": 2,
+      "period": 24,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.286,
+          "recall": 0.5,
+          "f1": 0.364,
+          "false_alarms_per_1000": 3.12,
+          "mean_lead": 41.0
+        },
+        "auto-seasonal": {
+          "precision": 0.161,
+          "recall": 1.0,
+          "f1": 0.277,
+          "false_alarms_per_1000": 45.51,
+          "mean_lead": 64.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.208,
+          "recall": 0.5,
+          "f1": 0.294,
+          "false_alarms_per_1000": 51.35,
+          "mean_lead": 73.0
+        }
+      }
+    },
+    {
+      "name": "realAdExchange/exchange-3_cpc_results.csv",
+      "family": "realAdExchange",
+      "samples": 1538,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.184,
+          "recall": 1.0,
+          "f1": 0.311,
+          "false_alarms_per_1000": 87.62,
+          "mean_lead": 34.3
+        },
+        "auto-seasonal": {
+          "precision": 0.184,
+          "recall": 1.0,
+          "f1": 0.311,
+          "false_alarms_per_1000": 87.62,
+          "mean_lead": 34.3
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.244,
+          "recall": 0.333,
+          "f1": 0.282,
+          "false_alarms_per_1000": 51.99,
+          "mean_lead": 50.0
+        }
+      }
+    },
+    {
+      "name": "realAdExchange/exchange-3_cpm_results.csv",
+      "family": "realAdExchange",
+      "samples": 1538,
+      "episodes": 1,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.083,
+          "recall": 1.0,
+          "f1": 0.153,
+          "false_alarms_per_1000": 72.46,
+          "mean_lead": 153.0
+        },
+        "auto-seasonal": {
+          "precision": 0.083,
+          "recall": 1.0,
+          "f1": 0.153,
+          "false_alarms_per_1000": 72.46,
+          "mean_lead": 153.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.114,
+          "recall": 1.0,
+          "f1": 0.205,
+          "false_alarms_per_1000": 47.4,
+          "mean_lead": 77.0
+        }
+      }
+    },
+    {
+      "name": "realAdExchange/exchange-4_cpc_results.csv",
+      "family": "realAdExchange",
+      "samples": 1643,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.257,
+          "recall": 1.0,
+          "f1": 0.409,
+          "false_alarms_per_1000": 32.04,
+          "mean_lead": 37.0
+        },
+        "auto-seasonal": {
+          "precision": 0.257,
+          "recall": 1.0,
+          "f1": 0.409,
+          "false_alarms_per_1000": 32.04,
+          "mean_lead": 37.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.083,
+          "recall": 0.333,
+          "f1": 0.133,
+          "false_alarms_per_1000": 28.99,
+          "mean_lead": 28.0
+        }
+      }
+    },
+    {
+      "name": "realAdExchange/exchange-4_cpm_results.csv",
+      "family": "realAdExchange",
+      "samples": 1643,
+      "episodes": 4,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.143,
+          "recall": 0.75,
+          "f1": 0.24,
+          "false_alarms_per_1000": 18.48,
+          "mean_lead": 21.0
+        },
+        "auto-seasonal": {
+          "precision": 0.143,
+          "recall": 0.75,
+          "f1": 0.24,
+          "false_alarms_per_1000": 18.48,
+          "mean_lead": 21.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.136,
+          "recall": 0.5,
+          "f1": 0.214,
+          "false_alarms_per_1000": 25.03,
+          "mean_lead": 21.0
+        }
+      }
+    },
+    {
+      "name": "realKnownCause/ambient_temperature_system_failure.csv",
+      "family": "realKnownCause",
+      "samples": 7267,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.272,
+          "recall": 0.5,
+          "f1": 0.352,
+          "false_alarms_per_1000": 13.66,
+          "mean_lead": 208.0
+        },
+        "auto-seasonal": {
+          "precision": 0.272,
+          "recall": 0.5,
+          "f1": 0.352,
+          "false_alarms_per_1000": 13.66,
+          "mean_lead": 208.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.164,
+          "recall": 0.5,
+          "f1": 0.247,
+          "false_alarms_per_1000": 23.19,
+          "mean_lead": 363.0
+        }
+      }
+    },
+    {
+      "name": "realKnownCause/cpu_utilization_asg_misconfiguration.csv",
+      "family": "realKnownCause",
+      "samples": 18050,
+      "episodes": 1,
+      "period": 12,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.075,
+          "recall": 1.0,
+          "f1": 0.14,
+          "false_alarms_per_1000": 193.57,
+          "mean_lead": 1492.0
+        },
+        "auto-seasonal": {
+          "precision": 0.128,
+          "recall": 1.0,
+          "f1": 0.227,
+          "false_alarms_per_1000": 61.29,
+          "mean_lead": 1479.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.078,
+          "recall": 1.0,
+          "f1": 0.145,
+          "false_alarms_per_1000": 125.89,
+          "mean_lead": 1479.0
+        }
+      }
+    },
+    {
+      "name": "realKnownCause/ec2_request_latency_system_failure.csv",
+      "family": "realKnownCause",
+      "samples": 4032,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 3
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.328,
+          "recall": 1.0,
+          "f1": 0.494,
+          "false_alarms_per_1000": 10.22,
+          "mean_lead": 75.3
+        },
+        "auto-seasonal": {
+          "precision": 0.328,
+          "recall": 1.0,
+          "f1": 0.494,
+          "false_alarms_per_1000": 10.22,
+          "mean_lead": 75.3
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.367,
+          "recall": 1.0,
+          "f1": 0.537,
+          "false_alarms_per_1000": 9.85,
+          "mean_lead": 75.3
+        }
+      }
+    },
+    {
+      "name": "realKnownCause/machine_temperature_system_failure.csv",
+      "family": "realKnownCause",
+      "samples": 22695,
+      "episodes": 4,
+      "period": null,
+      "caught": {
+        "robust-z": 4,
+        "auto-seasonal": 4,
+        "seasonal-robust-z@288": 3
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.152,
+          "recall": 1.0,
+          "f1": 0.264,
+          "false_alarms_per_1000": 99.98,
+          "mean_lead": 379.0
+        },
+        "auto-seasonal": {
+          "precision": 0.152,
+          "recall": 1.0,
+          "f1": 0.264,
+          "false_alarms_per_1000": 99.98,
+          "mean_lead": 379.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.169,
+          "recall": 0.75,
+          "f1": 0.276,
+          "false_alarms_per_1000": 66.85,
+          "mean_lead": 556.3
+        }
+      }
+    },
+    {
+      "name": "realKnownCause/nyc_taxi.csv",
+      "family": "realKnownCause",
+      "samples": 10320,
+      "episodes": 5,
+      "period": 49,
+      "caught": {
+        "robust-z": 0,
+        "auto-seasonal": 4,
+        "seasonal-robust-z@288": 5
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 0.39,
+          "mean_lead": 0.0
+        },
+        "auto-seasonal": {
+          "precision": 0.088,
+          "recall": 0.8,
+          "f1": 0.159,
+          "false_alarms_per_1000": 72.33,
+          "mean_lead": 175.2
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.101,
+          "recall": 1.0,
+          "f1": 0.183,
+          "false_alarms_per_1000": 94.0,
+          "mean_lead": 152.0
+        }
+      }
+    },
+    {
+      "name": "realKnownCause/rogue_agent_key_hold.csv",
+      "family": "realKnownCause",
+      "samples": 1882,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.096,
+          "recall": 1.0,
+          "f1": 0.175,
+          "false_alarms_per_1000": 233.62,
+          "mean_lead": 46.5
+        },
+        "auto-seasonal": {
+          "precision": 0.096,
+          "recall": 1.0,
+          "f1": 0.175,
+          "false_alarms_per_1000": 233.62,
+          "mean_lead": 46.5
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.154,
+          "recall": 0.5,
+          "f1": 0.235,
+          "false_alarms_per_1000": 259.52,
+          "mean_lead": 63.0
+        }
+      }
+    },
+    {
+      "name": "realKnownCause/rogue_agent_key_updown.csv",
+      "family": "realKnownCause",
+      "samples": 5315,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.057,
+          "recall": 1.0,
+          "f1": 0.108,
+          "false_alarms_per_1000": 100.28,
+          "mean_lead": 176.0
+        },
+        "auto-seasonal": {
+          "precision": 0.057,
+          "recall": 1.0,
+          "f1": 0.108,
+          "false_alarms_per_1000": 100.28,
+          "mean_lead": 176.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.063,
+          "recall": 1.0,
+          "f1": 0.119,
+          "false_alarms_per_1000": 114.42,
+          "mean_lead": 176.0
+        }
+      }
+    },
+    {
+      "name": "realTraffic/TravelTime_387.csv",
+      "family": "realTraffic",
+      "samples": 2500,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.291,
+          "recall": 1.0,
+          "f1": 0.451,
+          "false_alarms_per_1000": 52.02,
+          "mean_lead": 69.3
+        },
+        "auto-seasonal": {
+          "precision": 0.291,
+          "recall": 1.0,
+          "f1": 0.451,
+          "false_alarms_per_1000": 52.02,
+          "mean_lead": 69.3
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.349,
+          "recall": 0.667,
+          "f1": 0.458,
+          "false_alarms_per_1000": 33.42,
+          "mean_lead": 57.0
+        }
+      }
+    },
+    {
+      "name": "realTraffic/TravelTime_451.csv",
+      "family": "realTraffic",
+      "samples": 2162,
+      "episodes": 1,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 0
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.175,
+          "recall": 1.0,
+          "f1": 0.298,
+          "false_alarms_per_1000": 105.51,
+          "mean_lead": 148.0
+        },
+        "auto-seasonal": {
+          "precision": 0.175,
+          "recall": 1.0,
+          "f1": 0.298,
+          "false_alarms_per_1000": 105.51,
+          "mean_lead": 148.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_alarms_per_1000": 70.42,
+          "mean_lead": 0.0
+        }
+      }
+    },
+    {
+      "name": "realTraffic/occupancy_6005.csv",
+      "family": "realTraffic",
+      "samples": 2380,
+      "episodes": 1,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.216,
+          "recall": 1.0,
+          "f1": 0.355,
+          "false_alarms_per_1000": 33.9,
+          "mean_lead": 136.0
+        },
+        "auto-seasonal": {
+          "precision": 0.216,
+          "recall": 1.0,
+          "f1": 0.355,
+          "false_alarms_per_1000": 33.9,
+          "mean_lead": 136.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.305,
+          "recall": 1.0,
+          "f1": 0.467,
+          "false_alarms_per_1000": 27.41,
+          "mean_lead": 129.0
+        }
+      }
+    },
+    {
+      "name": "realTraffic/occupancy_t4013.csv",
+      "family": "realTraffic",
+      "samples": 2500,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.6,
+          "recall": 1.0,
+          "f1": 0.75,
+          "false_alarms_per_1000": 4.03,
+          "mean_lead": 64.5
+        },
+        "auto-seasonal": {
+          "precision": 0.6,
+          "recall": 1.0,
+          "f1": 0.75,
+          "false_alarms_per_1000": 4.03,
+          "mean_lead": 64.5
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.586,
+          "recall": 1.0,
+          "f1": 0.739,
+          "false_alarms_per_1000": 7.43,
+          "mean_lead": 72.5
+        }
+      }
+    },
+    {
+      "name": "realTraffic/speed_6005.csv",
+      "family": "realTraffic",
+      "samples": 2500,
+      "episodes": 1,
+      "period": null,
+      "caught": {
+        "robust-z": 1,
+        "auto-seasonal": 1,
+        "seasonal-robust-z@288": 1
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.385,
+          "recall": 1.0,
+          "f1": 0.556,
+          "false_alarms_per_1000": 3.23,
+          "mean_lead": 114.0
+        },
+        "auto-seasonal": {
+          "precision": 0.385,
+          "recall": 1.0,
+          "f1": 0.556,
+          "false_alarms_per_1000": 3.23,
+          "mean_lead": 114.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.375,
+          "recall": 1.0,
+          "f1": 0.545,
+          "false_alarms_per_1000": 6.19,
+          "mean_lead": 222.0
+        }
+      }
+    },
+    {
+      "name": "realTraffic/speed_7578.csv",
+      "family": "realTraffic",
+      "samples": 1127,
+      "episodes": 4,
+      "period": null,
+      "caught": {
+        "robust-z": 4,
+        "auto-seasonal": 4,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.424,
+          "recall": 1.0,
+          "f1": 0.596,
+          "false_alarms_per_1000": 44.26,
+          "mean_lead": 20.0
+        },
+        "auto-seasonal": {
+          "precision": 0.424,
+          "recall": 1.0,
+          "f1": 0.596,
+          "false_alarms_per_1000": 44.26,
+          "mean_lead": 20.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.71,
+          "recall": 0.5,
+          "f1": 0.587,
+          "false_alarms_per_1000": 37.04,
+          "mean_lead": 20.5
+        }
+      }
+    },
+    {
+      "name": "realTraffic/speed_t4013.csv",
+      "family": "realTraffic",
+      "samples": 2495,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.376,
+          "recall": 1.0,
+          "f1": 0.547,
+          "false_alarms_per_1000": 23.43,
+          "mean_lead": 117.0
+        },
+        "auto-seasonal": {
+          "precision": 0.376,
+          "recall": 1.0,
+          "f1": 0.547,
+          "false_alarms_per_1000": 23.43,
+          "mean_lead": 117.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.569,
+          "recall": 1.0,
+          "f1": 0.725,
+          "false_alarms_per_1000": 13.66,
+          "mean_lead": 116.5
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_AAPL.csv",
+      "family": "realTweets",
+      "samples": 15902,
+      "episodes": 4,
+      "period": null,
+      "caught": {
+        "robust-z": 4,
+        "auto-seasonal": 4,
+        "seasonal-robust-z@288": 4
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.237,
+          "recall": 1.0,
+          "f1": 0.383,
+          "false_alarms_per_1000": 62.78,
+          "mean_lead": 384.0
+        },
+        "auto-seasonal": {
+          "precision": 0.237,
+          "recall": 1.0,
+          "f1": 0.383,
+          "false_alarms_per_1000": 62.78,
+          "mean_lead": 384.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.216,
+          "recall": 1.0,
+          "f1": 0.355,
+          "false_alarms_per_1000": 70.38,
+          "mean_lead": 386.2
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_AMZN.csv",
+      "family": "realTweets",
+      "samples": 15831,
+      "episodes": 4,
+      "period": null,
+      "caught": {
+        "robust-z": 4,
+        "auto-seasonal": 4,
+        "seasonal-robust-z@288": 4
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.198,
+          "recall": 1.0,
+          "f1": 0.331,
+          "false_alarms_per_1000": 18.22,
+          "mean_lead": 285.5
+        },
+        "auto-seasonal": {
+          "precision": 0.198,
+          "recall": 1.0,
+          "f1": 0.331,
+          "false_alarms_per_1000": 18.22,
+          "mean_lead": 285.5
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.151,
+          "recall": 1.0,
+          "f1": 0.262,
+          "false_alarms_per_1000": 29.37,
+          "mean_lead": 279.2
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_CRM.csv",
+      "family": "realTweets",
+      "samples": 15902,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 3
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.163,
+          "recall": 1.0,
+          "f1": 0.28,
+          "false_alarms_per_1000": 63.41,
+          "mean_lead": 483.7
+        },
+        "auto-seasonal": {
+          "precision": 0.163,
+          "recall": 1.0,
+          "f1": 0.28,
+          "false_alarms_per_1000": 63.41,
+          "mean_lead": 483.7
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.164,
+          "recall": 1.0,
+          "f1": 0.282,
+          "false_alarms_per_1000": 60.73,
+          "mean_lead": 488.0
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_CVS.csv",
+      "family": "realTweets",
+      "samples": 15853,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 3
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.102,
+          "recall": 1.0,
+          "f1": 0.185,
+          "false_alarms_per_1000": 206.09,
+          "mean_lead": 499.3
+        },
+        "auto-seasonal": {
+          "precision": 0.102,
+          "recall": 1.0,
+          "f1": 0.185,
+          "false_alarms_per_1000": 206.09,
+          "mean_lead": 499.3
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.09,
+          "recall": 1.0,
+          "f1": 0.165,
+          "false_alarms_per_1000": 255.8,
+          "mean_lead": 499.3
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_FB.csv",
+      "family": "realTweets",
+      "samples": 15833,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.137,
+          "recall": 1.0,
+          "f1": 0.241,
+          "false_alarms_per_1000": 58.12,
+          "mean_lead": 760.0
+        },
+        "auto-seasonal": {
+          "precision": 0.137,
+          "recall": 1.0,
+          "f1": 0.241,
+          "false_alarms_per_1000": 58.12,
+          "mean_lead": 760.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.154,
+          "recall": 1.0,
+          "f1": 0.267,
+          "false_alarms_per_1000": 47.16,
+          "mean_lead": 760.0
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_GOOG.csv",
+      "family": "realTweets",
+      "samples": 15842,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 3
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.149,
+          "recall": 1.0,
+          "f1": 0.259,
+          "false_alarms_per_1000": 56.82,
+          "mean_lead": 412.0
+        },
+        "auto-seasonal": {
+          "precision": 0.149,
+          "recall": 1.0,
+          "f1": 0.259,
+          "false_alarms_per_1000": 56.82,
+          "mean_lead": 412.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.152,
+          "recall": 1.0,
+          "f1": 0.264,
+          "false_alarms_per_1000": 46.4,
+          "mean_lead": 397.7
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_IBM.csv",
+      "family": "realTweets",
+      "samples": 15893,
+      "episodes": 2,
+      "period": null,
+      "caught": {
+        "robust-z": 2,
+        "auto-seasonal": 2,
+        "seasonal-robust-z@288": 2
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.128,
+          "recall": 1.0,
+          "f1": 0.227,
+          "false_alarms_per_1000": 63.25,
+          "mean_lead": 789.0
+        },
+        "auto-seasonal": {
+          "precision": 0.128,
+          "recall": 1.0,
+          "f1": 0.227,
+          "false_alarms_per_1000": 63.25,
+          "mean_lead": 789.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.104,
+          "recall": 1.0,
+          "f1": 0.188,
+          "false_alarms_per_1000": 59.16,
+          "mean_lead": 790.5
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_KO.csv",
+      "family": "realTweets",
+      "samples": 15851,
+      "episodes": 3,
+      "period": null,
+      "caught": {
+        "robust-z": 3,
+        "auto-seasonal": 3,
+        "seasonal-robust-z@288": 3
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.222,
+          "false_alarms_per_1000": 63.86,
+          "mean_lead": 471.0
+        },
+        "auto-seasonal": {
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.222,
+          "false_alarms_per_1000": 63.86,
+          "mean_lead": 471.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.141,
+          "recall": 1.0,
+          "f1": 0.247,
+          "false_alarms_per_1000": 53.72,
+          "mean_lead": 470.7
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_PFE.csv",
+      "family": "realTweets",
+      "samples": 15858,
+      "episodes": 4,
+      "period": null,
+      "caught": {
+        "robust-z": 4,
+        "auto-seasonal": 4,
+        "seasonal-robust-z@288": 4
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.116,
+          "recall": 1.0,
+          "f1": 0.208,
+          "false_alarms_per_1000": 236.2,
+          "mean_lead": 370.8
+        },
+        "auto-seasonal": {
+          "precision": 0.116,
+          "recall": 1.0,
+          "f1": 0.208,
+          "false_alarms_per_1000": 236.2,
+          "mean_lead": 370.8
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.144,
+          "recall": 1.0,
+          "f1": 0.252,
+          "false_alarms_per_1000": 154.87,
+          "mean_lead": 366.0
+        }
+      }
+    },
+    {
+      "name": "realTweets/Twitter_volume_UPS.csv",
+      "family": "realTweets",
+      "samples": 15866,
+      "episodes": 5,
+      "period": null,
+      "caught": {
+        "robust-z": 5,
+        "auto-seasonal": 5,
+        "seasonal-robust-z@288": 5
+      },
+      "rows": {
+        "robust-z": {
+          "precision": 0.143,
+          "recall": 1.0,
+          "f1": 0.25,
+          "false_alarms_per_1000": 105.45,
+          "mean_lead": 247.0
+        },
+        "auto-seasonal": {
+          "precision": 0.143,
+          "recall": 1.0,
+          "f1": 0.25,
+          "false_alarms_per_1000": 105.45,
+          "mean_lead": 247.0
+        },
+        "seasonal-robust-z@288": {
+          "precision": 0.178,
+          "recall": 1.0,
+          "f1": 0.302,
+          "false_alarms_per_1000": 71.69,
+          "mean_lead": 250.4
+        }
+      }
+    }
+  ],
+  "seconds": 144.5
+}
