@@ -347,7 +347,7 @@ jobs:
           fi
           # Fail-soft: a Kushmanda problem must not stop the API deploying (it did on 2 Nov), and its
           # reason is surfaced as a warning, since the job log needs a sign-in to read.
-          if ! { pip install --quiet "kaggle>=1.7" numpy \
+          if ! { pip install --quiet "kagglehub>=0.4.1" numpy \
                  && pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu \
                  && PYTHONPATH=packages/sati python scripts/fetchkushmanda.py; } > /tmp/kushmanda.log 2>&1; then
             echo "::warning title=Kushmanda not deployed::$(tail -c 1500 /tmp/kushmanda.log | tr '\n\r' '  ')"
