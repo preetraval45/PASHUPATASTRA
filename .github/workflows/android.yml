@@ -75,14 +75,27 @@ jobs:
           name: Pashupatastra-apk
           path: Pashupatastra.apk
       - name: publish as the "android" release
+        # Updated in place, never deleted first: run 41466851607 deleted the release and then
+        # failed to create it again (the old tag was still being removed), which left the
+        # download link broken. The tag moves to this commit; the APK is replaced.
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          TITLE: "Android app (test build ${{ github.run_number }})"
+          NOTES: "Install on an Android phone: download Pashupatastra.apk, open it, and allow installs from this source when Android asks. The app shows the live website inside native screens, so it updates whenever the site does. Built from ${{ github.sha }}."
         run: |
-          gh release delete android --yes --cleanup-tag || true
-          gh release create android Pashupatastra.apk \
-            --target "${{ github.sha }}" \
-            --title "Android app (test build ${{ github.run_number }})" \
-            --notes "Install on an Android phone: download Pashupatastra.apk, open it, and allow installs from this source when Android asks. The app shows the live website, so it updates whenever the site does. Built from ${{ github.sha }}."
+          if gh release view android --repo "$REPO" > /dev/null 2>&1; then
+            gh api -X PATCH "repos/$REPO/git/refs/tags/android" -f sha="$SHA" -F force=true > /dev/null
+            gh release edit android --repo "$REPO" --title "$TITLE" --notes "$NOTES"
+            gh release upload android Pashupatastra.apk --clobber --repo "$REPO"
+          else
+            for attempt in 1 2 3 4; do
+              gh release create android Pashupatastra.apk --repo "$REPO" --target "$SHA" --title "$TITLE" --notes "$NOTES" && exit 0
+              sleep 15
+            done
+            exit 1
+          fi
 
   # The app, run: installed on an Android emulator in CI, opened on each main screen, and
   # photographed. Proof it starts and draws (no crash, no blank screen), and the screenshots
