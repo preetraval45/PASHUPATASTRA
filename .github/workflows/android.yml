@@ -85,10 +85,19 @@ jobs:
           TITLE: "Android app (test build ${{ github.run_number }})"
           NOTES: "Install on an Android phone: download Pashupatastra.apk, open it, and allow installs from this source when Android asks. The app shows the live website inside native screens, so it updates whenever the site does. Built from ${{ github.sha }}."
         run: |
+          # Each step retried, and a failure says GitHub's own words (run 41484496045 failed here silently).
+          attempt() {
+            for n in 1 2 3; do
+              if out=$("$@" 2>&1); then return 0; fi
+              echo "$out"; sleep 10
+            done
+            echo "::error title=Publish failed::$1 $2: $(echo "$out" | tail -3 | paste -sd ' ')"
+            return 1
+          }
           if gh release view android --repo "$REPO" > /dev/null 2>&1; then
-            gh api -X PATCH "repos/$REPO/git/refs/tags/android" -f sha="$SHA" -F force=true > /dev/null
-            gh release edit android --repo "$REPO" --title "$TITLE" --notes "$NOTES"
-            gh release upload android Pashupatastra.apk --clobber --repo "$REPO"
+            attempt gh api -X PATCH "repos/$REPO/git/refs/tags/android" -f sha="$SHA" -F force=true
+            attempt gh release edit android --repo "$REPO" --title "$TITLE" --notes "$NOTES"
+            attempt gh release upload android Pashupatastra.apk --clobber --repo "$REPO"
           else
             for attempt in 1 2 3 4; do
               if out=$(gh release create android Pashupatastra.apk --repo "$REPO" --target "$SHA" --title "$TITLE" --notes "$NOTES" 2>&1); then exit 0; fi
