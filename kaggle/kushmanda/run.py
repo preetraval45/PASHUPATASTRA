@@ -3,6 +3,7 @@
 Clones this repository at the exact commit the workflow names, trains Kushmanda
 with `sati.lm.train`, and leaves the results in /kaggle/working/out for the
 workflow to download. Nothing here is specific to the machine it runs on.
+(2 Nov 2026: the run also writes corpus-manifest.json, RP-42.)
 """
 
 import shutil

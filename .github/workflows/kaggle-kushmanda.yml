@@ -56,7 +56,7 @@ jobs:
         with:
           python-version: "3.12"
       - if: steps.gate.outputs.ready == 'true'
-        run: pip install "kaggle>=1.7"
+        run: pip install "kaggle==2.2.4"  # the version known to work with this account (2 Nov 2026)
       - name: prepare the kernel
         if: steps.gate.outputs.ready == 'true'
         run: |
@@ -79,7 +79,14 @@ jobs:
           JSON
       - name: push to Kaggle
         if: steps.gate.outputs.ready == 'true'
-        run: kaggle kernels push -p build/kernel
+        # The CLI's own words become the error, since the job log needs a sign-in to read (it failed
+        # silently on 2 Nov).
+        run: |
+          if ! kaggle kernels push -p build/kernel > /tmp/push.log 2>&1; then
+            echo "::error title=Kaggle push failed::$(tail -c 1500 /tmp/push.log | tr '\n\r' '  ')"
+            exit 1
+          fi
+          cat /tmp/push.log
       - name: wait for the GPU run
         if: steps.gate.outputs.ready == 'true'
         run: |
