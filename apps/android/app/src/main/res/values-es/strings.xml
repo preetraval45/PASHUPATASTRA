@@ -87,6 +87,7 @@
     <string name="state_resolved">Resuelto</string>
     <string name="state_rolled_back">Revertido</string>
     <string name="state_investigating">En investigación</string>
+    <string name="state_detected">Detectado</string>
     <string name="state_open">Abierto</string>
     <string name="ago_now">ahora mismo</string>
     <string name="ago_min">hace %1$d min</string>

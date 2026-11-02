@@ -87,6 +87,7 @@
     <string name="state_resolved">सुलझ गई</string>
     <string name="state_rolled_back">वापस ली गई</string>
     <string name="state_investigating">जाँच जारी</string>
+    <string name="state_detected">पहचानी गई</string>
     <string name="state_open">खुली</string>
     <string name="ago_now">अभी</string>
     <string name="ago_min">%1$d मिनट पहले</string>

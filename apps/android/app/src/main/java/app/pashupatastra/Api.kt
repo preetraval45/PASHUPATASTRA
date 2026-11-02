@@ -175,6 +175,7 @@ object Api {
         "rolled_back" -> context.getString(R.string.state_rolled_back)
         "investigating" -> context.getString(R.string.state_investigating)
         "open" -> context.getString(R.string.state_open)
+        "detected" -> context.getString(R.string.state_detected)
         else -> state.replace('_', ' ').replaceFirstChar { it.uppercase() }
     }
 

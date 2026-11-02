@@ -91,6 +91,7 @@
     <string name="state_resolved">Resolved</string>
     <string name="state_rolled_back">Rolled back</string>
     <string name="state_investigating">Investigating</string>
+    <string name="state_detected">Detected</string>
     <string name="state_open">Open</string>
     <string name="ago_now">just now</string>
     <string name="ago_min">%1$d min ago</string>
