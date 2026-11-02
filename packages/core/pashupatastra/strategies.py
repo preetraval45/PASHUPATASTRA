@@ -286,9 +286,82 @@ class SeasonalRobustZ:
         return self._n
 
 
+class AutoSeasonal:
+    """Robust-z until the series shows a period unmistakably, then seasonal robust-z at that period.
+
+    The Seasonality ADR made `SeasonalRobustZ` opt-in per metric because nobody knows the period of
+    an arbitrary metric, and a wrong one is silent blindness. This strategy finds it from the
+    metric's own history (`period.detect_period`, which abstains unless the evidence is strong,
+    prominent and recurring) and switches only when two checks in a row agree. Until then, and for
+    ever if no check agrees, it is exactly robust-z. The seasonal model is primed with the history
+    already seen, so the switch costs no warm-up.
+
+    Checks run at geometrically spaced history lengths rather than every sample: the history is
+    capped, and a series that has shown no period at 1,000 samples gains little by being asked again
+    at 1,001.
+    """
+
+    name = "auto-seasonal"
+
+    def __init__(
+        self,
+        max_period: int = 288 * 7,
+        history: int = 288 * 7 * 3,
+        first_check: int = 120,
+        growth: float = 1.25,
+        threshold: float = 3.0,
+    ) -> None:
+        self.max_period = max_period
+        self.threshold = threshold
+        self._fallback = RobustZScore(threshold=threshold)
+        self._seasonal: SeasonalRobustZ | None = None
+        self._history: deque[float] = deque(maxlen=history)
+        self._next_check = first_check
+        self._growth = growth
+        self._previous: int | None = None
+        self._n = 0
+        self.period: int | None = None
+        """The period switched to, or None while the series is treated as non-seasonal."""
+
+    def evaluate_and_observe(self, value: float) -> Reading:
+        if self._seasonal is not None:
+            reading = self._seasonal.evaluate_and_observe(value)
+        else:
+            reading = self._fallback.evaluate_and_observe(value)
+            self._history.append(value)
+            if self._n + 1 >= self._next_check:
+                self._check()
+        self._n += 1
+        return reading
+
+    def _check(self) -> None:
+        from .period import detect_period
+
+        self._next_check = int(self._next_check * self._growth) + 1
+        found = detect_period(list(self._history), max_period=self.max_period).period
+        agreed = (
+            found is not None
+            and self._previous is not None
+            and abs(found - self._previous) <= max(1, self._previous // 50)
+        )
+        self._previous = found
+        if not agreed:
+            return
+        self.period = found
+        seasonal = SeasonalRobustZ(period=found, threshold=self.threshold)
+        for past in self._history:
+            seasonal.observe(past)
+        self._seasonal = seasonal
+        self._history.clear()
+
+    def __len__(self) -> int:
+        return self._n
+
+
 STRATEGIES: dict[str, type] = {
     RobustZScore.name: RobustZScore,
     Ewma.name: Ewma,
     SeasonalNaive.name: SeasonalNaive,
     SeasonalRobustZ.name: SeasonalRobustZ,
+    AutoSeasonal.name: AutoSeasonal,
 }

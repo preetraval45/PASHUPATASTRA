@@ -155,6 +155,22 @@ one.
 safe. It is Phase 5 work — it needs the benchmark's labelled scenarios to
 validate against, and shipping it on judgement is how we got here.
 
+**Amendment, 2 November 2026 — automatic period detection, built to abstain.**
+`pashupatastra.period.detect_period` reads a period from a metric's own history by
+autocorrelation and commits only when the peak is strong (≥ 0.5), prominent (0.3 above the
+lowest shorter lag), recurs at twice the lag, and spans three cycles; otherwise it returns
+`None` with its reason. `strategies.AutoSeasonal` is robust-z until two checks in a row agree,
+then `SeasonalRobustZ` at that period, primed with the history it has seen. In a sweep of 600
+seasonal series (sine, square, sawtooth and burst shapes; periods 12–288; noise up to half the
+amplitude) it named 466 periods exactly, 3 at an exact multiple (still correct for a seasonal
+model), abstained on 131 and was **wrong on none**; on 200 series without a period (noise,
+trend, random walk, outage, irregular level shifts) it abstained every time. A staircase with
+perfectly regular steps is periodic once detrended and is detected; the seasonal model absorbs
+the step as an offset. In `benchdetect` it matches the told-the-period sensitivity (110) with no
+false alarms after the switch. **The default is unchanged** until the labelled-data check this
+ADR asked for — every real NAB series, `sati.seasonal.run` — reports whether it ever misses an
+episode robust-z caught ([models/auto-seasonal.md](../research/models/auto-seasonal.md)).
+
 **Guard.** `scripts/benchdetect.py --strict` runs in CI and fails if the recorded
 recommendation stops winning.
 

@@ -17,6 +17,8 @@ on:
       # The detectors are scored by the core harness, so a scoring change must re-run them.
       - packages/core/pashupatastra/evaluation.py
       - packages/core/pashupatastra/kaal/**
+      - packages/core/pashupatastra/period.py
+      - packages/core/pashupatastra/strategies.py
       - docs/research/datasets/**
       - .github/workflows/train-sati.yml
 
@@ -54,6 +56,7 @@ jobs:
       katyayani-pooled: ${{ steps.filter.outputs.katyayani-pooled }}
       katyayani-events: ${{ steps.filter.outputs.katyayani-events }}
       serve-smd: ${{ steps.filter.outputs.serve-smd }}
+      auto-seasonal: ${{ steps.filter.outputs.auto-seasonal }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -72,6 +75,12 @@ jobs:
               - 'packages/sati/sati/rca/model.py'
               - 'packages/sati/sati/rca/features.py'
               - 'packages/sati/sati/rca/report.py'
+            auto-seasonal:
+              - *shared
+              - 'packages/sati/sati/seasonal/**'
+              - 'packages/core/pashupatastra/period.py'
+              - 'packages/core/pashupatastra/strategies.py'
+              - 'packages/core/pashupatastra/evaluation.py'
             shailaputri:
               - *shared
               - 'packages/sati/sati/detect/**'
@@ -209,6 +218,36 @@ jobs:
           cp results/sati-rca/results.json apps/web/lib/models/katyayani.results.json
           (cd packages/sati && python -m sati.rca.report ../../results/sati-rca/results.json) > docs/research/models/sati-rca.md
           bash scripts/pushresults.sh "docs(models): Sati-RCA v0 results from run ${{ github.run_id }}" docs/research/models/sati-rca.results.json docs/research/models/sati-rca-v0.meta.json docs/research/models/sati-rca.md apps/web/lib/models/katyayani.results.json
+
+  auto-seasonal:
+    # Automatic period detection (adr/Seasonality, "Owed"): on every real NAB series, robust-z,
+    # auto-seasonal and seasonal-robust-z at one day, scored episode by episode. Nothing trains.
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.auto-seasonal == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati
+      - uses: actions/cache@v4
+        with:
+          path: .cache/nab
+          key: nab-v1
+      - name: score on NAB
+        working-directory: packages/sati
+        # The same pinned commit as Shailaputri's results.
+        run: python -m sati.seasonal.run --cache ../../.cache/nab --out ../../results/auto-seasonal --revision ea702d75cc2258d9d7dd35ca8e5e2539d71f3140
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models
+          cp results/auto-seasonal/results.json docs/research/models/auto-seasonal.results.json
+          (cd packages/sati && python -m sati.seasonal.report ../../results/auto-seasonal/results.json) > docs/research/models/auto-seasonal.md
+          bash scripts/pushresults.sh "docs(models): auto-seasonal on NAB, run ${{ github.run_id }}" docs/research/models/auto-seasonal.results.json docs/research/models/auto-seasonal.md
 
   shailaputri:
     # Model 1 of the nine (adr/Navadurga): metric anomaly detection on NAB's

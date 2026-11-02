@@ -32,6 +32,7 @@ sys.path.insert(0, "packages/core")
 from pashupatastra.baselines import Band  # noqa: E402
 from pashupatastra.evaluation import Series, evaluate  # noqa: E402
 from pashupatastra.strategies import (  # noqa: E402
+    AutoSeasonal,
     Ewma,
     RobustZScore,
     SeasonalNaive,
@@ -159,6 +160,8 @@ CANDIDATES = {
     "ewma": lambda: Ewma(),
     "seasonal-naive": lambda: SeasonalNaive(period=PERIOD),
     "seasonal-robust-z": lambda: SeasonalRobustZ(period=PERIOD),
+    # Told nothing: finds the period itself, or stays robust-z (ADR Seasonality, "Owed").
+    "auto-seasonal": lambda: AutoSeasonal(),
 }
 
 

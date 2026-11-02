@@ -661,7 +661,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 
 **Phase 2 — Buddhi + Smriti · Intelligence · Weeks 7–10 · Sep 21 – Oct 18 › 2.1 Detection**
 
-- [ ] Period detection by autocorrelation, to make the opt-in automatic and safe *(Phase 5 — needs labelled scenarios to validate against)*
+- [~] Period detection by autocorrelation, to make the opt-in automatic and safe *(Phase 5 — needs labelled scenarios to validate against)* — *built 2 Nov: `pashupatastra.period` (abstains unless a strong, prominent, recurring peak spans three cycles) and `strategies.AutoSeasonal` (robust-z until two checks agree, then seasonal robust-z primed with its history). 0 wrong periods in a 600-series sweep, abstention on all 200 non-seasonal series; matches the told-the-period sensitivity in `benchdetect`; 30 tests in `testperiod.py`; amendment in adr/Seasonality. Remains: the NAB check (`sati.seasonal.run`, `auto-seasonal` job in train-sati.yml) on whether it ever misses an episode robust-z caught, then the decision on the default.*
 - [x] ML detection — decided 18 Oct ([adr/SatiDetect](../adr/SatiDetect.md)): Shailaputri v0 wins on F1 but not on lead time and only ties on false alarms, so the statistical default stays and the model is a second opinion. RP-23
 
 **Phase 2 — Buddhi + Smriti · Intelligence · Weeks 7–10 · Sep 21 – Oct 18 › 2.2 Correlation**
