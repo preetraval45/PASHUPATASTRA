@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from pashupatastra.dharma import Tier, Verdict
 
 from app.api.routes import APPROVALS
+from app.engines.seal import seal
 from app.main import app
 
 client = TestClient(app)
@@ -20,7 +21,7 @@ NOW = datetime.now().astimezone()
 
 
 def a_verdict(expires_in_minutes: int = 15, tier: Tier = Tier.APPROVAL) -> dict:
-    return Verdict(
+    return seal(Verdict(
         action_id="rollback_deployment",
         incident_ref="INC-1",
         base_risk=45,
@@ -29,7 +30,7 @@ def a_verdict(expires_in_minutes: int = 15, tier: Tier = Tier.APPROVAL) -> dict:
         tier=tier,
         required_approvers=["sre-oncall"],
         expires_at=NOW + timedelta(minutes=expires_in_minutes),
-    ).model_dump(mode="json")
+    )).model_dump(mode="json")
 
 
 def setup_function() -> None:

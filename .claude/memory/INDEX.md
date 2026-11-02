@@ -119,3 +119,4 @@ Protocol: before every push, write a topic-named file from
 - [EmulatorFindings.md](EmulatorFindings.md) — renderer crash on incident page fixed; Api.fetch offline copies; CI evidence on the release (summary.txt/shots)
 - [NativeAsk.md](NativeAsk.md) — native Sati AI chat (AskScreen, /agent/ask, Api.CHAT executor); full console at /ask?full=1; AppLock
 - [AppAccounts.md](AppAccounts.md) — app reads site session (pashu.session) after page loads; Home company card; More workspace; Data safety updated for accounts
+- [VerdictSeals.md](VerdictSeals.md) — verdicts are HMAC-sealed by the API; execute/remediate/approve/deny refuse forged ones; excessive-agency tests

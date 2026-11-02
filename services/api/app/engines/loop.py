@@ -33,6 +33,7 @@ from pydantic import BaseModel
 from ..config import get_settings
 from . import astra
 from .audit import AUDIT, AuditKind, AuditRecord
+from .seal import require_seal, seal
 
 HISTORY = ExecutionHistory()
 """Process-wide, like the audit log. In-memory until it moves to Postgres — the
@@ -76,7 +77,7 @@ def _authorise(
         now,
         RiskContext(environment=environment, dry_run=get_settings().dry_run),
     )
-    verdict = evaluate(action, context, incident_ref=incident_ref)
+    verdict = seal(evaluate(action, context, incident_ref=incident_ref))
     AUDIT.append(
         AuditRecord(
             kind=AuditKind.POLICY_EVALUATION,
@@ -153,7 +154,7 @@ def remediate(
     # back — so a PolicyViolation swallowed there would turn an unauthorised
     # request into a real rollback, authorised on its own verdict, undoing
     # something that never ran. Refusing up front is the only safe order.
-    require_verdict(verdict, action)
+    require_verdict(require_seal(verdict), action)
 
     settings = get_settings()
     environment = settings.environment

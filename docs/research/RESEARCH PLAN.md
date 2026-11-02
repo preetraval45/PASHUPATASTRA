@@ -130,7 +130,7 @@ Thanksgiving (26 Nov) and the holidays.
 | Kaal | Simulation — named in the architecture, not built. **The incident generator (RP-17) becomes its first real piece.** |
 | Paper | PAPER.md §7.1–§7.4 and §8 drafted by Claude for the owner to revise; the IEEE paper carries every model result as tracked changes (RP-78) |
 | Compute | GitHub Actions (training, PIB, the Android build), Kaggle GPU (Kushmanda, Brahmacharini transformer) and CPU (Chandraghanta), AWS Lambda (the API) — nothing runs on the owner's PC |
-| Sati models | Nine trained; eight answer live from the AWS API (RP-76), each with results, a model card and a public Kaggle dataset, notebook and model (RP-77); Kushmanda waits on the owner's secrets |
+| Sati models | Nine trained; all nine answer live from the AWS API (RP-76), each with results and a model card; eight have a public Kaggle dataset, notebook and model (RP-77), and Kushmanda's weights are served from a private Kaggle model |
 | Site and apps | pashupatastra.vercel.app, with a phone tab bar (RP-83); Android test app built in CI and installable from the `android` release (RP-82), with native bars and tabs (RP-96); Play Store and iOS wait on the owner's developer accounts (RP-85, RP-86) |
 
 ---
@@ -977,7 +977,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 
 - [ ] Evidence trail per decision: inputs, retrieved evidence, sources, tool
 - [ ] Prompt-injection defense across telemetry, intel, and attacker-controlled
-- [ ] Excessive-agency test: no path reaches an executor without a recorded verdict
+- [x] Excessive-agency test: no path reaches an executor without a recorded verdict — *done 2 Nov: the test found a real gap first. `/actions/execute`, `/actions/remediate`, `/policy/approve` and `/policy/deny` took the verdict from the request body, so a caller could write `"tier": "autonomous"` and execute (dry-run on the deployed API, but recorded in the audit trail as authorised). Verdicts are now sealed: the API signs the fields that carry authority (HMAC with a key derived from its signing key, `app/engines/seal.py`) when Dharma issues one, and again after an approval or denial, and all four routes and the loop refuse a verdict whose seal does not match. Previews are never sealed. Evidence: `services/api/tests/testexcessiveagency.py`, 13 tests: forged, tier-raised, approver-written and expiry-extended verdicts are refused with no execution attempt in the audit trail, an issued verdict still executes after the JSON round trip, only Astra builds an executor, and the set of routes that accept a verdict is pinned to the four checked.*
 - [ ] **Automation-bias measurement** — how often approvers accept without
 
 **Phase 11 — Cyber Range · Weeks 46–51 › 11.1 Range**

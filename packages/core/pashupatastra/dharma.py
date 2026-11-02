@@ -178,6 +178,15 @@ class Verdict(BaseModel):
     expires_at: datetime | None = None
     constraints: dict[str, str] = Field(default_factory=dict)
     denial_reason: str | None = None
+    seal: str | None = None
+    """Proof that the service which executes this verdict also issued it.
+
+    A verdict is plain data, and a service that accepts one over the network would
+    otherwise execute whatever tier a caller wrote into it. The issuing service
+    signs the fields that carry authority and refuses any verdict whose signature
+    does not match. Core does not compute it: the key belongs to a deployment, and
+    a verdict built in-process is passed by reference, never over a wire.
+    """
 
     @property
     def is_executable(self) -> bool:

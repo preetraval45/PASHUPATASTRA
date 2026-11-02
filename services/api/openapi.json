@@ -1670,6 +1670,17 @@
             "title": "Required Approvers",
             "type": "array"
           },
+          "seal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seal"
+          },
           "tier": {
             "$ref": "#/components/schemas/Tier"
           },

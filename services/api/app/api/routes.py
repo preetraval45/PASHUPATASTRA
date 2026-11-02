@@ -29,6 +29,7 @@ from pydantic import BaseModel
 from ..config import get_settings
 from ..engines import astra, loop as loop_engine, verification as verify_engine
 from ..engines.audit import AUDIT, AuditKind, AuditRecord
+from ..engines.seal import is_sealed, seal
 from ..defanging import defang_record
 from ..engines.buddhi import model_health
 from ..graph import GraphStore, chain_times, entitystore, events_by_id
@@ -540,6 +541,7 @@ def preview_policy(request: EvaluateRequest) -> Verdict:
 def evaluate_policy(request: EvaluateRequest) -> Verdict:
     """Dharma. The only way to obtain authorization to execute."""
     action, verdict = _evaluate(request)
+    seal(verdict)
     # Denials are recorded too — they document where autonomy stopped and why.
     AUDIT.append(
         AuditRecord(
@@ -709,6 +711,11 @@ def approve(request: ApproveRequest, authorization: str | None = Header(default=
             status_code=409,
             detail="preview verdicts cannot be approved; obtain one from /policy/evaluate",
         )
+    if not is_sealed(verdict):
+        raise HTTPException(
+            status_code=403,
+            detail="this verdict was not issued by Dharma here, or was changed after it was",
+        )
     if verdict.tier.value == "denied":
         raise HTTPException(status_code=403, detail="denied verdicts cannot be approved")
     if verdict.expires_at is not None and datetime.now().astimezone() > verdict.expires_at:
@@ -723,6 +730,7 @@ def approve(request: ApproveRequest, authorization: str | None = Header(default=
     now = datetime.now().astimezone()
     verdict.granted_by = f"human:{request.approver}"
     verdict.granted_at = now
+    seal(verdict)
     decided = _record_decision(verdict, Decision.APPROVED, request.approver, request.presented_at, now)
 
     AUDIT.append(
@@ -749,9 +757,15 @@ def deny(request: DenyRequest, authorization: str | None = Header(default=None))
 
     request.approver = approver(authorization, request.approver)
     verdict = request.verdict
+    if not is_sealed(verdict):
+        raise HTTPException(
+            status_code=403,
+            detail="this verdict was not issued by Dharma here, or was changed after it was",
+        )
     now = datetime.now().astimezone()
     verdict.denial_reason = request.reason
     verdict.granted_by = None
+    seal(verdict)
     decided = _record_decision(verdict, Decision.DENIED, request.approver, request.presented_at, now)
 
     AUDIT.append(
@@ -2202,6 +2216,7 @@ def _queue_proposal(result, incident) -> None:
         ),
         incident_ref=incident.id,
     )
+    seal(verdict)
     result.verdict = verdict.model_dump(mode="json")
 
     now = datetime.now().astimezone()

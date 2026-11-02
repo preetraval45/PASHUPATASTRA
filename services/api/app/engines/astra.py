@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from ..config import get_settings
 from .audit import AUDIT, AuditKind, AuditRecord
+from .seal import require_seal
 
 
 class ExecutionResult(BaseModel):
@@ -68,7 +69,7 @@ def execute(
 ) -> ExecutionResult:
     """The single execution path. A missing or invalid verdict raises."""
     action = get_action(action_id)
-    verdict = require_verdict(verdict, action)
+    verdict = require_verdict(require_seal(verdict), action)
 
     settings = get_settings()
     # Three ways to stay in dry-run and only one way out. `live_execution_enabled`

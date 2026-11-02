@@ -18,6 +18,7 @@ from pashupatastra.observation import WindowObserver
 from pashupatastra.remediation import Disposition
 
 from app.engines import loop as loop_engine
+from app.engines.seal import seal
 from app.main import app
 
 NOW = datetime(2026, 8, 18, 16, 0, 0).astimezone()
@@ -49,7 +50,7 @@ def instant() -> WindowObserver:
 
 
 def a_verdict(action_id: str = "rollback_deployment") -> Verdict:
-    return Verdict(
+    return seal(Verdict(
         action_id=action_id,
         incident_ref="INC-1",
         base_risk=10,
@@ -58,7 +59,7 @@ def a_verdict(action_id: str = "rollback_deployment") -> Verdict:
         tier=Tier.AUTONOMOUS,
         required_approvers=[],
         expires_at=datetime.now().astimezone() + timedelta(minutes=15),
-    )
+    ))
 
 
 def run(action_id: str = "rollback_deployment", **kwargs):
