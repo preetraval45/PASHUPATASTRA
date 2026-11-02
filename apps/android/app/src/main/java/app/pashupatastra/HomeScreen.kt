@@ -26,7 +26,7 @@ import java.util.Calendar
 class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
 
     /** `staleAt`: when the incidents shown were loaded, if they are the phone's copy rather than fresh. */
-    class Snapshot(val incidents: List<Api.Incident>?, val health: JSONObject?, val staleAt: Long? = null)
+    class Snapshot(val incidents: List<Api.Incident>?, val health: JSONObject?, val staleAt: Long? = null, val past: Int? = null)
 
     /** A newer test build to offer, for copies installed from the APK (Api.newerBuild). */
     private var update: Int? = null
@@ -82,12 +82,15 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
             val health = runCatching { JSONObject(Api.get("/health")) }.getOrNull()
             if (incidents != null && fetched?.fresh == true) IncidentsWidget.update(activity, incidents)
             val newer = Api.newerBuild(activity)
+            // How many past incidents the record holds (/incidents/past): one row asked for, its total read.
+            val pastTotal = runCatching { JSONObject(Api.get("/incidents/past?limit=1")).optInt("total", -1) }
+                .getOrNull()?.takeIf { it >= 0 }
             val account = Session.load(activity)
             activity.runOnUiThread {
                 loading = false
                 refresh.isRefreshing = false
                 if (activity.isDestroyed) return@runOnUiThread
-                snapshot = Snapshot(incidents, health, fetched?.takeIf { !it.fresh }?.at)
+                snapshot = Snapshot(incidents, health, fetched?.takeIf { !it.fresh }?.at, pastTotal)
                 update = newer
                 activity.me = account
                 if (incidents != null) activity.setNeedYou(incidents.count { it.state == "awaiting_approval" })
@@ -126,15 +129,16 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         }
         column.addView(askCard(), lp(top = 18))
 
-        val all = snapshot?.incidents
+        // Only real incidents (LIVE-…); the written scenarios are drills now, not incidents to list.
+        val all = snapshot?.incidents?.filter { it.id.startsWith("LIVE-") }
         val live = all?.filter { it.state != "resolved" && it.state != "rolled_back" }
         val awaiting = live?.filter { it.state == "awaiting_approval" }
         val critical = live?.count { it.severity == "critical" }
 
         val stats = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
-        stats.addView(stat(live?.size, s(R.string.stat_open), p.astra) { activity.open("/incidents") }, weighted(0))
-        stats.addView(stat(awaiting?.size, s(R.string.stat_need_you), p.warn) { activity.open("/incidents") }, weighted(10))
+        stats.addView(stat(live?.size, s(R.string.inc_tab_live), p.astra) { activity.open("/incidents") }, weighted(0))
         stats.addView(stat(critical, s(R.string.stat_critical), p.crit) { activity.open("/incidents?severity=critical") }, weighted(10))
+        stats.addView(stat(snapshot?.past, s(R.string.inc_tab_past), p.ok) { activity.open("/incidents?tab=past") }, weighted(10))
         column.addView(stats, lp(top = 14))
         column.addView(accountCard(me), lp(top = 14))
 

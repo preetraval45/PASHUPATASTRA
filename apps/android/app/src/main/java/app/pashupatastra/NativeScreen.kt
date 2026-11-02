@@ -44,6 +44,16 @@ abstract class NativeScreen(protected val activity: MainActivity) {
     /** A count with its noun, by the language's own plural rules ("1 incident", "3 incidents"). */
     protected fun q(id: Int, count: Int): String = activity.resources.getQuantityString(id, count, count)
 
+    /** A kind's name, matching the site's labels (apps/web/lib/incidentkinds.ts). */
+    protected fun kindLabel(kind: String?): String = when (kind) {
+        "KEV" -> s(R.string.kind_kev)
+        "NVD" -> s(R.string.kind_nvd)
+        "C2" -> s(R.string.kind_c2)
+        "RW" -> s(R.string.kind_rw)
+        "BREACH" -> s(R.string.kind_breach)
+        else -> kind.orEmpty()
+    }
+
     protected fun sevLabel(severity: String): String = when (severity) {
         "critical" -> s(R.string.stat_critical)
         "high" -> s(R.string.sev_high)
@@ -79,6 +89,8 @@ abstract class NativeScreen(protected val activity: MainActivity) {
                 setLineSpacing(0f, 1.15f)
             }, lp(top = 10))
             val detail = buildList {
+                // A real incident says what kind it is; it has no services or users to count, so none are shown.
+                kindOf(incident.id)?.let { add(kindLabel(it)) }
                 if (incident.services.isNotEmpty()) add(incident.services.take(3).joinToString(", "))
                 if (incident.simulated) add("simulation")
             }.joinToString(" · ")

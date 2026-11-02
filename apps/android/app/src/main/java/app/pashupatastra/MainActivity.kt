@@ -418,6 +418,12 @@ class MainActivity : AppCompatActivity() {
      * A tab's own first page just selects the tab, so it keeps where the user was in it.
      */
     fun open(path: String) {
+        if (path.startsWith("/incidents?tab=past")) {
+            dropPage(R.id.tab_incidents)
+            select(R.id.tab_incidents)
+            (native(R.id.tab_incidents) as? IncidentsScreen)?.showPast()
+            return
+        }
         if (path.startsWith("/incidents?severity=")) {
             dropPage(R.id.tab_incidents)
             select(R.id.tab_incidents)

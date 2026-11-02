@@ -47,7 +47,7 @@ class IncidentWatch(context: Context, params: WorkerParameters) : Worker(context
         }
         val keys = alerting.map { key(it) }.toSet()
         val seen = prefs.getStringSet(SEEN, null)
-        if (seen != null && prefs.getBoolean(ENABLED, true)) alerting.filter { key(it) !in seen }.forEach { notify(it) }
+        if (seen != null && prefs.getBoolean(ENABLED, true)) alerting.filter { key(it) !in seen }.sortedBy { Api.rank(it.severity) }.take(3).forEach { notify(it) }
         prefs.edit().putStringSet(SEEN, keys).apply()
         return Result.success()
     }
