@@ -212,6 +212,8 @@ def _advisory_lines(identifier: str, row: dict) -> list[str]:
         lines.append(labels["summary"])
     if labels.get("required_action"):
         lines.append(f"required action: {labels['required_action']}")
+    if labels.get("cwe"):
+        lines.append(f"weakness: {labels['cwe']}")
     if labels.get("due_date"):
         lines.append(f"federal remediation due: {labels['due_date']}")
     if labels.get("ransomware") == "known":

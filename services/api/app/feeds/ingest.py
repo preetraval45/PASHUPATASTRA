@@ -26,6 +26,18 @@ FEEDS = {**INDICATOR_FEEDS, **ATTACK_FEEDS}
 
 log = logging.getLogger(__name__)
 
+LICENSES = {
+    "cisa-kev": "CC0-1.0",
+    "nvd": "public domain (U.S. government work)",
+    "urlhaus": "abuse.ch terms of use (commercial use may need a Spamhaus subscription)",
+    "threatfox": "abuse.ch terms of use (commercial use may need a Spamhaus subscription)",
+    "feodo-tracker": "CC0-1.0",
+    "ransomware-live": "not stated by the publisher",
+    "hibp": "CC-BY-4.0 (attribution with a link to haveibeenpwned.com)",
+}
+"""Each feed's terms, as each publisher states them, read on 2 Nov 2026 (Kavach 7.3). Stamped on
+every record at ingest so a reader of one record can see what it may be used for."""
+
 DEFAULT_LIMIT = 25
 """Per feed, per run. The catalogues hold thousands; what is wanted is what
 changed. This is also the write-rate ceiling on a 25-unit DynamoDB table —
@@ -77,6 +89,9 @@ def run(store, cursors, limit: int = DEFAULT_LIMIT) -> dict[str, object]:
             summary[name] = {"ok": True, "stored": 0, "cursor": since}
             continue
 
+        for event in events:
+            if event.provenance.license is None:
+                event.provenance.license = LICENSES.get(name)
         store.save_events(events)
 
         # The newest offset actually written, taken from provenance rather than

@@ -880,12 +880,12 @@ Items already covered by an RP task stay listed until that RP task closes them.
 
 **Phase 7 — Security Data Foundation · Weeks 25–28 › 7.3 Threat intelligence ingestion (Drishti — the intel plane)**
 
-- [ ] CVE / NVD, with CVSS and CWE linkage
-- [ ] CISA Known Exploited Vulnerabilities
-- [ ] MITRE ATT&CK, **version-pinned** — every mapping and every experiment
+- [x] CVE / NVD, with CVSS and CWE linkage — *done 2 Nov: the NVD poll stores CVSS (score, severity, vector, newest version present) and now the CWE ids NVD links (`labels.cwe`); KEV records carry CISA's `cwes` too, and an advisory shown to Sati names its weakness. Evidence: `services/api/tests/testprovenance.py` (CWE ids read from the captured real NVD sample).*
+- [x] CISA Known Exploited Vulnerabilities — *done: polled on the API's schedule (`feeds/sources.fetch_kev`, healthy in `/intel/status` on 2 Nov), the whole catalogue (1,766) in the deploy-time record, and every CVE it added in 90 days a live incident (RP-108).*
+- [~] MITRE ATT&CK, **version-pinned** — every mapping and every experiment — *2 Nov: the campaign record reads ATT&CK v20.0 by its versioned file and stamps `feed_version` on each record. Remains: the model corpora (`sati/lm/corpus.py`, used by Brahmacharini, Skandamata and Kushmanda) still read `mitre/cti` master; pinning them to the `ATT&CK-v20.0` tag (checked to resolve) changes `corpus.py`, which starts a Kaggle retrain, so it goes with the next real retrain rather than one spent reproducing today's edition.*
 - [ ] STIX/TAXII and MISP-compatible feed ingestion
 - [ ] Vendor advisories and public threat reports
-- [ ] Per-record provenance: source, retrieval time, license, confidence, feed version
+- [x] Per-record provenance: source, retrieval time, license, confidence, feed version — *done 2 Nov: `Provenance` gains `license` and `feed_version` (core, optional, additive). Ingest stamps each feed's terms as its publisher states them (`feeds/ingest.LICENSES`: KEV and Feodo CC0, NVD public domain, abuse.ch's terms with the commercial caveat, HIBP CC BY 4.0, ransomware.live unstated); KEV records carry CISA's catalogue version and NVD's the API edition. Source (`source_system`), retrieval time (`observed_at`) and confidence (`payload.confidence`, plus `verification`) were already on every record. Evidence: `testprovenance.py` (4 tests), including that every polled feed has its terms on file.*
 
 **Phase 7 — Security Data Foundation · Weeks 25–28 › 7.4 Intel is data, never instruction**
 

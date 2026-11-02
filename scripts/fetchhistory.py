@@ -148,7 +148,9 @@ def nvd(severity: str = "CRITICAL", days: int = 365) -> list[dict]:
 
 
 RANSOMWATCH = "https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json"
-ATTACK = "https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json"
+# Pinned to a release, never master: every campaign mapping names the edition it came from.
+ATTACK_VERSION = "20.0"
+ATTACK = f"https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack-{ATTACK_VERSION}.json"
 
 
 def ransomwatch(minimum: int = 3) -> list[dict]:
@@ -225,7 +227,8 @@ def attack_campaigns() -> list[dict]:
                        "group": groups.get(campaign["id"], ""), "techniques": ";".join(sorted(set(techniques.get(campaign["id"], [])))),
                        "verification": "corroborated"},
             "provenance": {"source_system": "mitre-attack", "url": ext.get("url") or f"https://attack.mitre.org/campaigns/{cid}/",
-                           "offset": campaign.get("modified"), "license": "MITRE ATT&CK terms of use"},
+                           "offset": campaign.get("modified"), "license": "MITRE ATT&CK terms of use",
+                           "feed_version": f"ATT&CK v{ATTACK_VERSION}"},
         })
     return rows
 

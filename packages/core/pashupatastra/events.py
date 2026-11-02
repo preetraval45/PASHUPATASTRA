@@ -154,6 +154,12 @@ class Provenance(BaseModel):
     query: str | None = None
     url: str | None = None
     offset: str | None = None
+    license: str | None = None
+    """The terms the publisher gives the record under, as read from the publisher; `None` when
+    nobody has checked. Reuse is decided by this, not by the fact that a record was downloadable."""
+    feed_version: str | None = None
+    """The publisher's own version of the feed the record came from (a catalogue version, an API
+    version), where it states one, so a result can be traced to the edition that produced it."""
 
 
 # --- class-specific payloads -------------------------------------------------

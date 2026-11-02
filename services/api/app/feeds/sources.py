@@ -109,6 +109,7 @@ def fetch_kev(limit: int = 25, since: str | None = None) -> list[Event]:
     advisories presented as news.
     """
     payload = _get(KEV_URL)
+    version = str(payload.get("catalogVersion") or "") or None
     entries: Iterable[dict] = payload.get("vulnerabilities") or []
     ordered = sorted(entries, key=lambda entry: entry.get("dateAdded", ""), reverse=True)
 
@@ -141,6 +142,7 @@ def fetch_kev(limit: int = 25, since: str | None = None) -> list[Event]:
                 ),
                 provenance=Provenance(
                     source_system="cisa-kev",
+                    feed_version=version,
                     url=f"https://nvd.nist.gov/vuln/detail/{cve}",
                     offset=added,
                 ),
@@ -151,6 +153,9 @@ def fetch_kev(limit: int = 25, since: str | None = None) -> list[Event]:
                     "required_action": str(entry.get("requiredAction", ""))[:300],
                     "due_date": str(entry.get("dueDate", "")),
                     "ransomware": "known" if ransomware else "unknown",
+                    # The weaknesses CISA links the CVE to, so an exploited flaw can be read by
+                    # its class (CWE-78, OS command injection) as well as its number.
+                    "cwe": ",".join(str(c) for c in entry.get("cwes") or []),
                 },
             )
         )
@@ -236,6 +241,12 @@ def fetch_nvd(limit: int = 25, since: str | None = None) -> list[Event]:
             "",
         )
         score, severity_word, vector = _nvd_cvss(cve.get("metrics") or {})
+        cwes = sorted({
+            d.get("value", "")
+            for weakness in cve.get("weaknesses") or []
+            for d in weakness.get("description") or []
+            if str(d.get("value", "")).startswith("CWE-")
+        })
         status = str(cve.get("vulnStatus", ""))
         analysed = status.lower() == "analyzed"
         events.append(
@@ -253,6 +264,7 @@ def fetch_nvd(limit: int = 25, since: str | None = None) -> list[Event]:
                 ),
                 provenance=Provenance(
                     source_system="nvd",
+                    feed_version=f"NVD API {payload.get('version', '2.0')}, {payload.get('timestamp', '')}".strip(", "),
                     url=f"https://nvd.nist.gov/vuln/detail/{identifier}",
                     offset=published,
                 ),
@@ -269,6 +281,7 @@ def fetch_nvd(limit: int = 25, since: str | None = None) -> list[Event]:
                     "cvss_severity": severity_word,
                     "vector": vector,
                     "cna": str(cve.get("sourceIdentifier", ""))[:120],
+                    "cwe": ",".join(cwes),
                 },
             )
         )
