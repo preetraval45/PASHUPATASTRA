@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 type Params = Record<string, string | string[] | undefined>;
 
 const PAGE = 25;
-const PAST_KINDS: Kind[] = ["KEV", "BREACH"];
+const PAST_KINDS: Kind[] = ["KEV", "NVD", "BREACH"];
 
 function one(params: Params, key: string): string | undefined {
   const v = params[key];
@@ -124,8 +124,8 @@ export default async function IncidentsPage({ searchParams }: { searchParams: Pr
             From the record
           </h2>
           <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
-            Every vulnerability CISA has confirmed exploited since 2021, and every breach Have I Been
-            Pwned has published{past?.total ? `: ${past.total.toLocaleString()} incidents` : ""}. Breach
+            Every vulnerability CISA has confirmed exploited since 2021, a year of critical disclosures from
+            NIST&apos;s NVD, and every breach Have I Been Pwned has published{past?.total ? `: ${past.total.toLocaleString()} incidents` : ""}. Breach
             data is HIBP&apos;s, under CC BY 4.0; each incident links its page.
           </p>
         </div>

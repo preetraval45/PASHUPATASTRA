@@ -1,4 +1,5 @@
-"""Past incidents: every exploited CVE CISA has catalogued, and every breach HIBP has published.
+"""Past incidents: every exploited CVE CISA has catalogued, every breach HIBP has published, and
+a year of critical CVEs from NVD.
 
 `scripts/fetchhistory.py` writes the records at deploy time, in the shape the feed poll stores;
 this builds incidents from them with the same rules as the live ones (`liveincidents.py`), without
@@ -65,9 +66,13 @@ def incidents() -> tuple[Incident, ...]:
         return [r for r in records if r["source"] == source
                 and (rules._when(r) or now) < now - timedelta(days=days)]
 
+    exploited = {r["entity_key"] for r in records if r["source"] == "cisa-kev"}
     built = (
         rules._kev(older("cisa-kev", rules.KEV_DAYS), now, days=None, prefix=PREFIX)
         + rules._breaches(older("hibp", rules.BREACH_DAYS), now, days=None, prefix=PREFIX)
+        # A disclosure CISA later confirmed exploited is listed once, as exploited.
+        + rules._nvd([r for r in older("nvd", rules.NVD_DAYS) if r["entity_key"] not in exploited],
+                     now, days=None, prefix=PREFIX)
     )
     built.sort(key=lambda i: i.opened_at, reverse=True)
     return tuple(built)

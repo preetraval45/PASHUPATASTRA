@@ -155,7 +155,7 @@ def _kev(rows: list[dict], now: datetime, days: int | None = KEV_DAYS, prefix: s
     return out
 
 
-def _nvd(rows: list[dict], now: datetime) -> list[Incident]:
+def _nvd(rows: list[dict], now: datetime, days: int | None = NVD_DAYS, prefix: str = PREFIX) -> list[Incident]:
     out = []
     for row in rows:
         at = _when(row)
@@ -165,11 +165,11 @@ def _nvd(rows: list[dict], now: datetime) -> list[Incident]:
             score = float(labels.get("cvss") or 0)
         except ValueError:
             score = 0.0
-        if at is None or not cve or score < NVD_CRITICAL or now - at > timedelta(days=NVD_DAYS):
+        if at is None or not cve or score < NVD_CRITICAL or (days is not None and now - at > timedelta(days=days)):
             continue
         entity = EntityRef(kind=EntityKind.VULNERABILITY, id=cve, name=cve)
         out.append(Incident(
-            id=f"{PREFIX}NVD-{cve}",
+            id=f"{prefix}NVD-{cve}",
             severity=IncidentSeverity.HIGH,
             opened_at=at,
             affected_entities=[entity],
