@@ -13,7 +13,9 @@ import shutil
 import sys
 from pathlib import Path
 
-MODEL = "preetraval4518071604/sati-kushmanda/pyTorch/v2/1"
+# The private copy (2 Nov 2026): Kaggle cannot make a public model private, so the weights were re-uploaded
+# to a private model and the deploy reads that one.
+MODEL = "preetraval4518071604/sati-kushmanda-private/pyTorch/v2/1"
 OUT = Path("services/api/app/sati_models/kushmanda")
 
 
