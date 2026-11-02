@@ -20,6 +20,7 @@
 
 - Read `summary.txt` and the shots after every Android change; they are the only eyes on the app.
 
-## Open questions
+## Open questions (answered 2 Nov)
 
-- Twice (runs 41328701921 and 41329886458), on the Sati AI screen, the emulator's `com.google.android.gms.persistent` died, and Android killed this app because it "depends on provider ...FontsProvider". Something in the app or its WebView binds to Play services' font provider. Same screen both times, so memory pressure from the `/ask` page may be what kills Play services on the small emulator. If a real phone ever reports the app closing on Sati AI, start here.
+- **The Play-services kill is the emulator, not a page.** It hit `/ask` (twice), the incident page, and in run 41469132496 the *native* Sati AI answer screen. Each time it was ~2–3 minutes into the run, when `com.google.android.gms.persistent` dies and Android kills every app bound to its font provider (any WebView binds it). `screens.sh` records the reason and passes on it. Reduce the app's memory anyway (hidden tabs pause; `onTrimMemory` drops them), but do not chase this as an app bug.
+- **Release publishing:** delete-then-create lost the release when the old tag was still being removed (runs 41466851607, 41468389530). The step now updates in place and retries creation; failures surface as a "Publish failed" annotation.
