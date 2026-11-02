@@ -112,5 +112,8 @@ jobs:
           mkdir -p docs/research/models apps/web/lib/models
           cp "$RESULTS" docs/research/models/kushmanda.results.json
           cp "$RESULTS" apps/web/lib/models/kushmanda.results.json
+          # The corpus manifest the run wrote while building its corpus (RP-42), when there is one.
+          MANIFEST=$(find results/kushmanda -name corpus-manifest.json | head -1)
+          [ -n "$MANIFEST" ] && cp "$MANIFEST" docs/research/datasets/kushmanda-corpus.json
           (cd packages/sati && python -m sati.lm.report "../../$RESULTS") > docs/research/models/kushmanda.md
-          bash scripts/pushresults.sh "docs(models): Kushmanda results from Kaggle, run ${{ github.run_id }}" docs/research/models/kushmanda.results.json docs/research/models/kushmanda.md apps/web/lib/models/kushmanda.results.json
+          bash scripts/pushresults.sh "docs(models): Kushmanda results from Kaggle, run ${{ github.run_id }}" docs/research/models/kushmanda.results.json docs/research/models/kushmanda.md apps/web/lib/models/kushmanda.results.json $([ -f docs/research/datasets/kushmanda-corpus.json ] && echo docs/research/datasets/kushmanda-corpus.json)

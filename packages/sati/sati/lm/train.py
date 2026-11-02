@@ -219,6 +219,11 @@ def main() -> int:
     docs = corpus_mod.build(args.cache, args.root, cve=not (args.no_cve or args.tiny),
                             more=args.version != "v2" and not args.tiny)
     train_docs, test_docs = corpus_mod.split(docs)
+    # The corpus manifest, written by the run that built the corpus (RP-42).
+    (args.out / "corpus-manifest.json").write_text(json.dumps(corpus_mod.manifest(
+        docs, train_docs, test_docs,
+        {"version": args.version, "cve": not (args.no_cve or args.tiny), "more": args.version != "v2" and not args.tiny,
+         "tiny": args.tiny}), indent=2) + "\n", encoding="utf-8")
     by_source: dict[str, int] = {}
     for d in docs:
         by_source[d["source"]] = by_source.get(d["source"], 0) + 1

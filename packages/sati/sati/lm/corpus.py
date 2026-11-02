@@ -257,3 +257,32 @@ def split(docs: list[dict], held_out: float = 0.05) -> tuple[list[dict], list[di
         bucket = int(hashlib.sha256(f"{doc['source']}:{doc['id']}".encode()).hexdigest(), 16) % 1000
         (test if bucket < held_out * 1000 else train).append(doc)
     return train, test
+
+
+def _digest(lines: list[str]) -> str:
+    return hashlib.sha256("\n".join(sorted(lines)).encode()).hexdigest()
+
+
+def manifest(docs: list[dict], train: list[dict], test: list[dict], options: dict) -> dict:
+    """What a training run's corpus was, written by the run that built it (RP-42): the options, document and
+    character counts per source and per split, and SHA-256 hashes of the sorted document ids and of the
+    sorted per-document text hashes. Like Kaal's manifest, it lets a later run check it saw the same corpus
+    without storing the text, and it is written at build time because the public sources change: a
+    manifest rebuilt later would describe a different corpus."""
+    def summary(subset: list[dict]) -> dict:
+        return {
+            "documents": len(subset),
+            "characters": sum(len(d["text"]) for d in subset),
+            "ids_sha256": _digest([f"{d['source']}:{d['id']}" for d in subset]),
+            "texts_sha256": _digest([hashlib.sha256(d["text"].encode()).hexdigest() for d in subset]),
+        }
+
+    sources = sorted({d["source"] for d in docs})
+    return {
+        "options": options,
+        "split_rule": "sha256(source:id) mod 1000 < 50 is held out (5%)",
+        "total": summary(docs),
+        "train": summary(train),
+        "held_out": summary(test),
+        "by_source": {s: summary([d for d in docs if d["source"] == s]) for s in sources},
+    }
