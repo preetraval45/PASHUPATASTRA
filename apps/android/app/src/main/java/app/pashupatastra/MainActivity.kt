@@ -526,7 +526,7 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
                 open(if (signedIn) "/account" else "/login")
             }
-            val name = account?.name ?: if (signedIn) "Your account" else "Sign in"
+            val name = account?.name ?: if (signedIn) "Your account" else "Not signed in"
             val detail = when {
                 account == null && !signedIn -> "Save your training and join your company"
                 account == null -> "Open your account"

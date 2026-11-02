@@ -210,10 +210,15 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
             background = ripple(rounded(p.panel, 18, if (attention) ColorUtils.setAlphaComponent(p.warn, 110) else p.edge))
             pressable { activity.open(target) }
             contentDescription = "$title. $body"
-            addView(text(initials(org?.name ?: me?.name ?: "?"), 15f, tone, bold = true).apply {
-                gravity = Gravity.CENTER
-                background = rounded(ColorUtils.setAlphaComponent(tone, 40), 14)
-            }, LinearLayout.LayoutParams(dp(44), dp(44)))
+            val badge: View = if (me == null) {
+                FrameLayout(activity).apply {
+                    addView(icon(R.drawable.ic_user, tone, 22), FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
+                }
+            } else {
+                text(initials(org?.name ?: me.name), 15f, tone, bold = true).apply { gravity = Gravity.CENTER }
+            }
+            badge.background = rounded(ColorUtils.setAlphaComponent(tone, 40), 14)
+            addView(badge, LinearLayout.LayoutParams(dp(44), dp(44)))
             addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 addView(text(title, 15f, p.ink, bold = true))
