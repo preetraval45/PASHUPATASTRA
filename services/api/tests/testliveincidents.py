@@ -40,10 +40,11 @@ def corpus() -> list[dict]:
     rows = [
         row("cisa-kev", "kev-new", NOW - timedelta(days=2), "vulnerability:CVE-2026-1000",
             title="Acme Gateway Injection", ransomware="known", due_date="2026-11-20"),
-        row("cisa-kev", "kev-old", NOW - timedelta(days=45), "vulnerability:CVE-2026-0999", title="Old"),
+        row("cisa-kev", "kev-old", NOW - timedelta(days=120), "vulnerability:CVE-2026-0999", title="Old"),
         row("nvd", "nvd-crit", NOW - timedelta(days=1), "vulnerability:CVE-2026-2000", cvss="9.8",
             cvss_severity="CRITICAL", summary="Auth bypass."),
-        row("nvd", "nvd-high", NOW - timedelta(days=1), "vulnerability:CVE-2026-2001", cvss="8.9"),
+        row("nvd", "nvd-high", NOW - timedelta(days=1), "vulnerability:CVE-2026-2001", cvss="8.1"),
+        row("nvd", "nvd-low", NOW - timedelta(days=1), "vulnerability:CVE-2026-2002", cvss="6.9"),
         row("hibp", "hibp-1", NOW - timedelta(days=3), "organisation:breach:acme",
             title="Acme: 2,000,000 accounts exposed", accounts="2000000", exposed="Emails"),
     ]
@@ -52,13 +53,21 @@ def corpus() -> list[dict]:
             malware="AMOS")
         for i in range(6)
     ]
-    rows += [row("threatfox", "tf-few", NOW, "indicator:ip:203.0.113.9", malware="Rare")]
+    rows += [row("threatfox", f"tf-few-{i}", NOW, f"indicator:ip:203.0.113.{i}", malware="Rare") for i in range(2)]
     rows += [
         row("ransomware-live", f"rw-{i}", NOW - timedelta(hours=10 * i), f"organisation:victim:victim corp {i}",
             group="pear", sector="Finance", country="US", title=f"pear claims a breach of Victim Corp {i}")
         for i in range(4)
     ]
     return rows
+
+
+@pytest.fixture(autouse=True)
+def no_record(monkeypatch):
+    """The deploy-time record is merged into the live windows; these tests read only their rows."""
+    from app.feeds import history
+
+    monkeypatch.setattr(history, "records", lambda: [])
 
 
 @pytest.fixture
@@ -68,11 +77,12 @@ def built() -> dict[str, object]:
 
 def test_each_rule_fires_inside_its_window_and_only_there(built) -> None:
     assert "LIVE-KEV-CVE-2026-1000" in built
-    assert "LIVE-KEV-CVE-2026-0999" not in built, "older than 30 days"
+    assert "LIVE-KEV-CVE-2026-0999" not in built, "older than 90 days"
     assert "LIVE-NVD-CVE-2026-2000" in built
-    assert "LIVE-NVD-CVE-2026-2001" not in built, "below CVSS 9.0"
+    assert built["LIVE-NVD-CVE-2026-2001"].severity == "medium", "high CVSS, below critical"
+    assert "LIVE-NVD-CVE-2026-2002" not in built, "below CVSS 7.0"
     assert "LIVE-C2-amos-20261102" in built
-    assert not any("rare" in i for i in built), "one indicator is not a surge"
+    assert not any("rare" in i for i in built), "two indicators are not a surge"
     assert "LIVE-RW-pear-20261102" in built
     assert "LIVE-BREACH-acme" in built
 
@@ -127,3 +137,32 @@ def test_the_store_lists_live_incidents_when_the_deployment_serves_them(monkeypa
     assert listed and all(live.is_live(i.id) for i in listed)
     assert STORE.get("LIVE-KEV-CVE-2026-1000").severity == "critical"
     assert STORE.get("LIVE-KEV-CVE-1999-0001") is None
+
+
+def test_the_record_fills_the_live_window_and_the_poll_is_cited_first(monkeypatch) -> None:
+    from app.feeds import history
+
+    recorded = [
+        row("cisa-kev", "hist-kev-CVE-2026-1000", NOW - timedelta(days=2), "vulnerability:CVE-2026-1000", title="dup"),
+        row("cisa-kev", "hist-kev-CVE-2026-3000", NOW - timedelta(days=60), "vulnerability:CVE-2026-3000", title="older"),
+    ]
+    monkeypatch.setattr(history, "records", lambda: recorded)
+    built = {i.id: i for i in live.build(Store(corpus()), now=NOW)}
+    assert built["LIVE-KEV-CVE-2026-1000"].event_ids == ["kev-new"], "the polled record is cited"
+    assert "LIVE-KEV-CVE-2026-3000" in built
+    assert len([i for i in built if i == "LIVE-KEV-CVE-2026-1000"]) == 1
+
+
+def test_scenario_records_stay_out_of_the_activity_views(monkeypatch) -> None:
+    from app.engines import audit as audit_module
+    from app.engines.audit import AuditKind, AuditLog, AuditRecord
+
+    log = AuditLog()
+    monkeypatch.setattr(log, "_store", lambda: None)
+    log.append(AuditRecord(kind=AuditKind.OBSERVATION, actor="drishti", incident_ref="INC-2026-0904", summary="seeded"))
+    log.append(AuditRecord(kind=AuditKind.AGENT_TURN, actor="sati.analyst", incident_ref=None, summary="real"))
+    monkeypatch.setattr(audit_module, "_hide_scenarios", lambda: True)
+    assert [r.summary for r in log.records()] == ["real"]
+    assert [r.summary for r in log.records(incident_ref="INC-2026-0904")] == ["seeded"], "a drill reads its own trail"
+    monkeypatch.setattr(audit_module, "_hide_scenarios", lambda: False)
+    assert len(log.records()) == 2

@@ -7,6 +7,7 @@ the most interesting records for the research.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -40,6 +41,23 @@ class AuditRecord(BaseModel):
     incident_ref: str | None = None
     summary: str
     detail: dict[str, Any] = Field(default_factory=dict)
+
+
+_SCENARIO = re.compile(r"^INC-\d{4}-\d{4}$")
+SCENARIO_RECORDS = 200
+"""More than the seeded scenarios write, so hiding theirs never shortens a page of real ones."""
+
+
+def _hide_scenarios() -> bool:
+    """A deployment that lists live incidents keeps the written scenarios for drills only, and
+    their seeded trail out of every view of what the system has done."""
+    from ..config import get_settings
+
+    return get_settings().live_incidents
+
+
+def _real(rows: list[AuditRecord]) -> list[AuditRecord]:
+    return [r for r in rows if not (r.incident_ref and _SCENARIO.match(r.incident_ref))]
 
 
 class AuditLog:
@@ -84,6 +102,15 @@ class AuditLog:
         Filtered by the store, before the limit, so "no approvals" means none
         were recorded, not that none were among the newest hundred lines.
         """
+        if incident_ref is None and _hide_scenarios():
+            # Asked for a specific incident's trail (a drill's), the scenario's records are the
+            # answer; asked for the system's activity, they are not activity.
+            return _real(self._records_raw(None, limit + SCENARIO_RECORDS, kind))[:limit]
+        return self._records_raw(incident_ref, limit, kind)
+
+    def _records_raw(
+        self, incident_ref: str | None, limit: int, kind: AuditKind | None
+    ) -> list[AuditRecord]:
         store = self._store()
         if store is not None:
             return store.audit_records(incident_ref=incident_ref, limit=limit, kind=kind)
@@ -104,7 +131,8 @@ class AuditLog:
         """
         store = self._store()
         rows = store.audit_since(when) if store is not None else list(reversed(self._records))
-        return [r for r in rows if r.at >= when and (kind is None or r.kind is kind)]
+        rows = [r for r in rows if r.at >= when and (kind is None or r.kind is kind)]
+        return _real(rows) if _hide_scenarios() else rows
 
     def __len__(self) -> int:
         store = self._store()

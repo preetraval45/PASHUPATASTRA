@@ -9,15 +9,15 @@ did not state.
 Five kinds, each a rule a reader can check against the source:
 
 - **Actively exploited** — every CVE CISA added to its Known Exploited Vulnerabilities catalogue
-  in the last 30 days. Critical when CISA records ransomware use.
-- **Critical disclosure** — every CVE NVD published in the last 7 days with a CVSS score of 9.0
-  or more. Reported, not known to be exploited, and said so.
+  in the last 90 days. Critical when CISA records ransomware use.
+- **Serious disclosure** — every CVE NVD published in the last 7 days with a CVSS score of 7.0
+  or more (high at 9.0). Reported, not known to be exploited, and said so.
 - **Botnet infrastructure** — a malware family with at least `C2_MIN` new command-and-control
   indicators reported to ThreatFox or Feodo Tracker in the last 24 hours.
 - **Ransomware campaign** — a group claiming at least `RW_MIN` victims on its leak site in the
-  last 72 hours. Victims are counted by sector and country, never named here: the claim is the
+  last 7 days. Victims are counted by sector and country, never named here: the claim is the
   attacker's, and repeating names is publishing the extortion.
-- **Data breach** — a breach Have I Been Pwned published in the last 30 days.
+- **Data breach** — a breach Have I Been Pwned published in the last 90 days.
 
 They are derived, not stored: a pure function of the event store, rebuilt at most every
 `CACHE_SECONDS` per process. An incident leaves the list when its window passes, so there is no
@@ -48,16 +48,17 @@ from pashupatastra.registry import get as get_action
 PREFIX = "LIVE-"
 PUBLISHERS = {"threatfox": "ThreatFox", "feodo-tracker": "Feodo Tracker"}
 CACHE_SECONDS = 600
-C2_MIN = 5
-RW_MIN = 3
+C2_MIN = 3
+RW_MIN = 2
 MAX_EVIDENCE = 25
 
-KEV_DAYS = 30
+KEV_DAYS = 90
 NVD_DAYS = 7
 NVD_CRITICAL = 9.0
+NVD_HIGH = 7.0
 C2_HOURS = 24
-RW_HOURS = 72
-BREACH_DAYS = 30
+RW_HOURS = 24 * 7
+BREACH_DAYS = 90
 
 LIMITS = {
     "cisa-kev": 100,
@@ -165,18 +166,18 @@ def _nvd(rows: list[dict], now: datetime, days: int | None = NVD_DAYS, prefix: s
             score = float(labels.get("cvss") or 0)
         except ValueError:
             score = 0.0
-        if at is None or not cve or score < NVD_CRITICAL or (days is not None and now - at > timedelta(days=days)):
+        if at is None or not cve or score < NVD_HIGH or (days is not None and now - at > timedelta(days=days)):
             continue
         entity = EntityRef(kind=EntityKind.VULNERABILITY, id=cve, name=cve)
         out.append(Incident(
             id=f"{prefix}NVD-{cve}",
-            severity=IncidentSeverity.HIGH,
+            severity=IncidentSeverity.HIGH if score >= NVD_CRITICAL else IncidentSeverity.MEDIUM,
             opened_at=at,
             affected_entities=[entity],
             event_ids=[row["id"]],
             hypotheses=[Hypothesis(
                 statement=(
-                    f"{cve} was disclosed with CVSS {score:.1f} ({labels.get('cvss_severity', 'critical').lower()}): "
+                    f"{cve} was disclosed with CVSS {score:.1f} ({(labels.get('cvss_severity') or 'high').lower()}): "
                     f"{_clip(labels.get('summary', ''), 240)} Reported, not yet known to be exploited."
                 ),
                 confidence=0.6,
@@ -329,9 +330,17 @@ def build(store, now: datetime | None = None) -> list[Incident]:
             rows = [row for s in sources for row in store.recent_events(sources=[s], limit=LIMITS[s])]
         except Exception:  # noqa: BLE001 - one unreadable source must not empty the page
             continue
+        if source in ("cisa-kev", "hibp", "nvd"):
+            # The poll has stored only what arrived since it began; the deploy-time record holds
+            # the rest of each window. Stored rows come first, so they are the ones cited.
+            from . import history
+
+            rows += [r for r in history.records() if r["source"] == source]
         incidents.extend(rule(rows, now))
-    incidents.sort(key=lambda i: i.opened_at, reverse=True)
-    return incidents
+    seen: set[str] = set()
+    unique = [i for i in incidents if not (i.id in seen or seen.add(i.id))]
+    unique.sort(key=lambda i: i.opened_at, reverse=True)
+    return unique
 
 
 _cache: dict[str, object] = {"at": 0.0, "incidents": []}

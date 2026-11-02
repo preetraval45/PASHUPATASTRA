@@ -8,7 +8,7 @@
 
 export const KINDS = {
   KEV: { label: "Actively exploited", source: "CISA KEV" },
-  NVD: { label: "Critical disclosure", source: "NIST NVD" },
+  NVD: { label: "Serious disclosure", source: "NIST NVD" },
   C2: { label: "Botnet infrastructure", source: "ThreatFox · Feodo Tracker" },
   RW: { label: "Ransomware campaign", source: "ransomware.live" },
   BREACH: { label: "Data breach", source: "Have I Been Pwned" },

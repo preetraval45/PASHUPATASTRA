@@ -128,7 +128,7 @@ export default async function OverviewPage() {
         {real ? (
           <>
             <Stat
-              label="Exploited, 30 days"
+              label="Exploited, 90 days"
               value={exploited}
               status={exploited ? "warning" : undefined}
               hint="CVEs CISA confirmed exploited"

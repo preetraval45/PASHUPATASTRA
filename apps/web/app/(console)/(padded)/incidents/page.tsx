@@ -76,6 +76,18 @@ export default async function IncidentsPage({ searchParams }: { searchParams: Pr
       title="Incidents"
       description="What is happening in the world now, from public threat feeds, and the record of what has happened. Every incident cites the records behind it."
     >
+      <p className="panel px-5 py-4 text-sm text-[rgb(var(--muted))]">
+        <span className="text-2xl font-semibold text-[rgb(var(--ink))] tnum">
+          {(all.length + (past?.total ?? 0)).toLocaleString()}
+        </span>{" "}
+        real incidents: <span className="tnum text-[rgb(var(--ink))]">{all.length.toLocaleString()}</span> live from
+        the feeds,{" "}
+        <a className="underline underline-offset-4" href="#record-section">
+          <span className="tnum">{(past?.total ?? 0).toLocaleString()}</span> from the record
+        </a>
+        . No scenario or sample data is listed here.
+      </p>
+
       <HappeningNow />
 
       <section aria-labelledby="live" className="space-y-4">

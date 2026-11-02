@@ -37,6 +37,10 @@ def _data() -> dict:
         return {"generated": None, "records": []}
 
 
+def records() -> list[dict]:
+    return _data().get("records") or []
+
+
 def available() -> dict[str, object]:
     data = _data()
     return {"generated": data.get("generated"), "records": len(data.get("records") or [])}
