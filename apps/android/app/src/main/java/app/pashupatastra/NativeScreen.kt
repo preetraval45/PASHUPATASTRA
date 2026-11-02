@@ -51,6 +51,7 @@ abstract class NativeScreen(protected val activity: MainActivity) {
         "C2" -> s(R.string.kind_c2)
         "RW" -> s(R.string.kind_rw)
         "BREACH" -> s(R.string.kind_breach)
+        "CAMPAIGN" -> s(R.string.kind_campaign)
         else -> kind.orEmpty()
     }
 

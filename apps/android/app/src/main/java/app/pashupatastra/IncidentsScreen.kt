@@ -329,6 +329,6 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
 
     private companion object {
         const val LIVE_PAGE = 40
-        val PAST_KINDS = listOf("ALL", "KEV", "NVD", "BREACH")
+        val PAST_KINDS = listOf("ALL", "KEV", "NVD", "BREACH", "RW", "CAMPAIGN")
     }
 }

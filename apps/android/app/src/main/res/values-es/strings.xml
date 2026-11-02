@@ -196,11 +196,12 @@
     <string name="inc_tab_live">En vivo</string>
     <string name="inc_tab_past">Del registro</string>
     <string name="inc_live_note">construidos con fuentes públicas, cada uno con sus registros</string>
-    <string name="inc_past_note">de CISA KEV, NVD y Have I Been Pwned</string>
+    <string name="inc_past_note">de CISA KEV, NVD, Have I Been Pwned, el archivo de ransomware y campañas de MITRE ATT&amp;CK</string>
     <string name="kind_kev">Explotada activamente</string>
     <string name="kind_nvd">Divulgación grave</string>
     <string name="kind_c2">Infraestructura de botnet</string>
     <string name="kind_rw">Campaña de ransomware</string>
+    <string name="kind_campaign">Campaña de intrusión</string>
     <string name="kind_breach">Filtración de datos</string>
     <string name="past_search_hint">Busca en el registro: un producto, una CVE o una empresa</string>
     <string name="past_count">%1$d de %2$d</string>

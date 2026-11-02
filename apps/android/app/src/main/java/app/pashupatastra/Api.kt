@@ -17,9 +17,9 @@ import java.util.concurrent.Executors
  * here can act, so nothing here bypasses Dharma.
  */
 /** The kinds of real incident, as the second part of their id: LIVE-KEV-…, PAST-NVD-… */
-val KINDS = listOf("KEV", "NVD", "C2", "RW", "BREACH")
+val KINDS = listOf("KEV", "NVD", "C2", "RW", "BREACH", "CAMPAIGN")
 
-private val KIND = Regex("^(LIVE|PAST)-(KEV|NVD|C2|RW|BREACH)-")
+private val KIND = Regex("^(LIVE|PAST)-(KEV|NVD|C2|RW|BREACH|CAMPAIGN)-")
 
 /** The kind an incident id names, or null for anything else (a written drill, INC-…). */
 fun kindOf(id: String): String? = KIND.find(id)?.groupValues?.get(2)
