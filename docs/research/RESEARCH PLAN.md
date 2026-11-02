@@ -898,7 +898,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 - [ ] Deduplication, label normalization, and taxonomy mapping across sources
 - [ ] Quality score per record, and per feed
 - [ ] Documented analysis of class imbalance, label noise, and **temporal
-- [ ] Dataset cards for every corpus used
+- [x] Dataset cards for every corpus used — *done 2 Nov: [datasheets.md](datasheets.md) now covers every corpus in use: the training sets (RP-59), Kushmanda's text corpus, Kaal-v1 and the live-stack set, and the nine intelligence sources the console serves (terms, collection, known limits per source, and what each is used for).*
 
 **Phase 8 — Security Knowledge · Weeks 29–33 › 8.1 Ontology**
 
