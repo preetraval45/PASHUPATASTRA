@@ -25,7 +25,7 @@ export const metadata: Metadata = {
  *
  * Plain sentences, no legal boilerplate standing in for facts.
  */
-const UPDATED = "1 November 2026";
+const UPDATED = "2 November 2026";
 
 export default function PrivacyPage() {
   return (
@@ -122,15 +122,49 @@ export default function PrivacyPage() {
           </p>
         </Panel>
 
-        <Panel title="Children">
-          <p>The product is for security professionals and learners. It is not directed at children under 13.</p>
+        <Panel title="Where it is kept">
+          <p>
+            Accounts, training records, companies&apos; policies and alerts, and Sati AI&apos;s audit trail are stored with
+            Amazon Web Services in the United States (us-east-1). If you use Pashupatastra from India or anywhere else
+            outside the United States, what you give it is transferred to and kept in the United States.
+          </p>
+        </Panel>
+
+        <Panel title="Your rights">
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <strong>See and correct it.</strong> Your name, email, training record and companies are on your{" "}
+              <Link href="/account" className="underline">Account</Link> page, where you can change your name.
+            </li>
+            <li>
+              <strong>Delete it.</strong> Account → Delete account erases your account, sign-in, memberships and training
+              record at once. Questions in the audit trail are not linked to you, so there is nothing of yours in it to
+              find or delete.
+            </li>
+            <li>
+              <strong>Nothing is sold or shared.</strong> No personal information is sold, rented or shared for
+              advertising, in the United States, India or anywhere.
+            </li>
+            <li>
+              <strong>Ask, or complain.</strong> For a question, a request about your data, or a grievance, email{" "}
+              <a href="mailto:preetraval45@gmail.com" className="underline">preetraval45@gmail.com</a>.
+            </li>
+          </ul>
+        </Panel>
+
+        <Panel title="Who it is for">
+          <p>
+            The product is for adults: security professionals, teams and learners. It is not directed at anyone under 18,
+            and accounts are not meant for children.
+          </p>
         </Panel>
 
         <Panel title="Changes and contact">
           <p>
             If what is collected changes, this page changes first, with a new date. Questions or requests:{" "}
+            <a href="mailto:preetraval45@gmail.com" className="underline">preetraval45@gmail.com</a>, or{" "}
             <a href="https://github.com/preetraval45/PASHUPATASTRA/issues" className="underline">
-              open an issue on the project's repository
+              an issue on the project&apos;s repository
             </a>
             .
           </p>
