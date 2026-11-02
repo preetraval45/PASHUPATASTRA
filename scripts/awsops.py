@@ -6,7 +6,7 @@ asked for by committing `.github/aws-ops.json`:
     {"ops": ["status", "ses-status"], "email": "sender@example.com"}
 
 Each operation prints its findings as GitHub annotations (`::notice::`), which the Checks API shows for a
-public repository without signing in. Read-only operations: `status`, `ses-status`. Operations that change
+public repository without signing in. Read-only operations: `status`, `ses-status`, `schedules`. Operations that change
 the account say so in their name: `ses-verify` (asks SES to send `email` a confirmation link) and
 `ses-permission` (lets the API's Lambda role send email through SES).
 
@@ -134,10 +134,24 @@ def role_policies() -> None:
             note("Lambda role inline", f"{policy}: {st.get('Effect')} {sorted(actions)} on {st.get('Resource')}")
 
 
+def schedules() -> None:
+    """Read-only: the EventBridge rules that invoke the API's function, with their schedules and inputs."""
+    lam = boto3.client("lambda", region_name=REGION)
+    arn = lam.get_function_configuration(FunctionName=FUNCTION)["FunctionArn"]
+    events = boto3.client("events", region_name=REGION)
+    names = events.list_rule_names_by_target(TargetArn=arn).get("RuleNames", [])
+    if not names:
+        note("Schedules", "no EventBridge rule targets the function")
+    for name in names:
+        rule = events.describe_rule(Name=name)
+        inputs = [t.get("Input", "") for t in events.list_targets_by_rule(Rule=name).get("Targets", [])]
+        note("Schedule", f"{name}: {rule.get('ScheduleExpression')} ({rule.get('State')}); input {inputs}")
+
+
 def main() -> int:
     request = json.loads(open(sys.argv[1], encoding="utf-8").read())
     ops = {"status": lambda: status(float(request.get("hours", 24))), "role-policies": role_policies, "ses-status": ses_status, "ses-permission": ses_permission,
-           "ses-verify": lambda: ses_verify(request.get("email", ""))}
+           "ses-verify": lambda: ses_verify(request.get("email", "")), "schedules": schedules}
     failed = False
     for name in request.get("ops", []):
         try:
