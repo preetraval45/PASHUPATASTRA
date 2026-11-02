@@ -286,11 +286,13 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             "skandamata" -> "Defences"
             "kushmanda" -> "Explanation"
             "katyayani" -> "Root cause"
+            "glossary" -> "Definition"
             else -> null
         }
         val model = turn.area.replaceFirstChar { it.uppercase() }
         return when {
             turn.answer == null && turn.error == null -> "Sati is answering"
+            turn.area == "glossary" -> "Sati · Definition · NIST glossary"
             job != null -> "Sati · $job · $model"
             turn.area.isNotBlank() -> "Sati · $model"
             else -> "Sati"

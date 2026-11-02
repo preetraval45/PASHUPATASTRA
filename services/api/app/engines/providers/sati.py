@@ -531,6 +531,19 @@ class SatiProvider:
         return {"answer": "\n".join([*lines, "", "Sources: " + " · ".join(urls)]), "topic": "security",
                 "area": "brahmacharini", "declined": False}
 
+    def _defined(self, entry: tuple) -> dict[str, Any]:
+        """A glossary term: NIST's definition quoted with the publication it cites, then the knowledge-base
+        entries that bear on it, each in the knowledge base's own words."""
+        title, definition, cited, url, related = entry
+        found = [p for p in (knowledge().passage(r) for r in related) if p]
+        lines = [f"**{title}**", "", f"{definition} ({cited}, quoted in NIST's glossary)"]
+        if found:
+            lines += ["", "Related:", ""]
+            lines += [f"- **{p['title']}** ({p['id']}): {first_sentences(p['text'], 170)}" for p in found]
+        urls = [url] + [p["url"] for p in found if p.get("url")]
+        return {"answer": "\n".join([*lines, "", "Sources: " + " · ".join(urls)]), "topic": "security",
+                "area": "glossary", "declined": False}
+
     @staticmethod
     def _defence(mid: str, name: str) -> str:
         """One defence as a list line: its name, then what it means in a sentence."""
@@ -576,6 +589,12 @@ class SatiProvider:
         goal = concepts.tactic(subject(question))
         if goal is not None and not self._wants_mitigations(question) and self.mode != "skandamata":
             return self._tactic(goal)
+        # A term the knowledge base has no entry for ("what is a zero-day?"): NIST's own definition, then
+        # the entries that bear on it, rather than a near neighbour found by retrieval (2 Nov).
+        defined = concepts.glossary(question)
+        if (defined is not None and not concepts.concept(question) and not self._wants_mitigations(question)
+                and self.mode != "skandamata"):
+            return self._defined(defined)
         if self._wants_mitigations(question):
             lines = self._mitigation_lines(question)
             if lines:

@@ -50,6 +50,36 @@ CONCEPTS: dict[str, str] = {
     "password policies": "M1027",
     "trojan": "T1036",
     "trojan horse": "T1036",
+    # Added 2 Nov (owner: launch blockers). Each checked against knowledge.json.
+    "sql injection": "CAPEC-66",
+    "sqli": "CAPEC-66",
+    "cross-site scripting": "CAPEC-63",
+    "cross site scripting": "CAPEC-63",
+    "xss": "CAPEC-63",
+    "social engineering": "T1684",
+    "vishing": "T1598.004",
+    "voice phishing": "T1598.004",
+    "cryptojacking": "T1496",
+    "cryptomining": "T1496",
+    "crypto mining": "T1496",
+    "least privilege": "M1026",
+    "principle of least privilege": "M1026",
+    "watering hole": "T1189",
+    "drive-by download": "T1189",
+    "web shell": "T1505.003",
+    "webshell": "T1505.003",
+    "rootkit": "T1014",
+    "botnet": "T1583.005",
+    "session hijacking": "CAPEC-593",
+    "clickjacking": "CAPEC-103",
+    "backups": "M1053",
+    "data backup": "M1053",
+    "antivirus": "M1049",
+    "anti-virus": "M1049",
+    "network segmentation": "M1030",
+    "patching": "M1051",
+    "patch management": "M1051",
+    "software updates": "M1051",
 }
 
 #: ATT&CK's enterprise tactics: name, ID, MITRE's description, three well-known techniques.
@@ -72,6 +102,58 @@ TACTICS: dict[str, tuple[str, str, str, tuple[str, ...]]] = {
     "data exfiltration": ("Exfiltration", "TA0010", "The adversary is trying to steal data.", ("T1041", "T1567", "T1020")),
     "impact": ("Impact", "TA0040", "The adversary is trying to manipulate, interrupt, or destroy your systems and data.", ("T1486", "T1490", "T1498")),
 }
+
+#: Everyday terms the knowledge base has no entry for, defined in the words of NIST's security glossary
+#: (https://csrc.nist.gov/glossary), quoted exactly with the publication NIST cites, plus the knowledge-base
+#: entries that bear on each. Rule 1: the definition is a published source's text with its link, never ours;
+#: the related entries' text comes from the knowledge base. Retrieved 2 Nov 2026.
+#: name -> (title, definition, cited publication, NIST glossary URL, related knowledge-base IDs)
+GLOSSARY: dict[str, tuple[str, str, str, str, tuple[str, ...]]] = {}
+
+_DEFINED = (
+    (("zero-day", "zero day", "0-day", "zero-day attack", "zero-day exploit", "zero-day vulnerability", "zero day attack"),
+     "Zero-day attack", "An attack that exploits a previously unknown hardware, firmware, or software vulnerability.",
+     "CNSSI 4009-2022", "https://csrc.nist.gov/glossary/term/zero_day_attack", ("T1190", "T1203", "M1051")),
+    (("vpn", "virtual private network"),
+     "Virtual private network (VPN)",
+     "Protected information system link utilizing tunneling, security controls, and endpoint address translation "
+     "giving the impression of a dedicated line.",
+     "CNSSI 4009-2022", "https://csrc.nist.gov/glossary/term/virtual_private_network", ("T1133", "M1032")),
+    (("worm", "computer worm"),
+     "Worm",
+     "Self-contained program that can propagate itself through data processing systems or computer networks. Note: "
+     "Worms are often designed to use up available resources such as storage space or processing time.",
+     "CNSSI 4009-2022, from ISO/IEC 2382:2015", "https://csrc.nist.gov/glossary/term/worm", ("T1210", "T1570")),
+    (("spyware",),
+     "Spyware",
+     "Software that is secretly or surreptitiously installed into an information system to gather information on "
+     "individuals or organizations without their knowledge; a type of malicious code.",
+     "NIST SP 800-128, from CNSSI 4009-2022", "https://csrc.nist.gov/glossary/term/spyware", ("T1056.001", "M1049")),
+    (("backdoor", "back door"),
+     "Backdoor", "An undocumented way of gaining access to a computer system. A backdoor is a potential security risk.",
+     "NIST SP 800-82r3", "https://csrc.nist.gov/glossary/term/backdoor", ("T1505.003", "T1136")),
+    (("insider threat", "insider threats", "insider"),
+     "Insider threat",
+     "The threat that an insider will use her/his authorized access, wittingly or unwittingly, to do harm to the "
+     "security of organizational operations and assets, individuals, other organizations, and the Nation. This "
+     "threat can include damage through espionage, terrorism, unauthorized disclosure of national security "
+     "information, or through the loss or degradation of organizational resources or capabilities.",
+     "NIST SP 800-53 Rev. 5, adapted from CNSSI 4009-2022", "https://csrc.nist.gov/glossary/term/insider_threat",
+     ("M1026", "M1018")),
+    (("zero trust", "zero-trust", "zero trust architecture"),
+     "Zero trust",
+     "A collection of concepts and ideas designed to minimize uncertainty in enforcing accurate, least privilege "
+     "per-request access decisions in information systems and services in the face of a network viewed as compromised.",
+     "NIST SP 800-207", "https://csrc.nist.gov/glossary/term/zero_trust", ("M1032", "M1030", "M1026")),
+    (("honeypot", "honey pot", "honeypots"),
+     "Honeypot",
+     "A system (e.g., a web server) or system resource (e.g., a file on a server) that is designed to be attractive "
+     "to potential crackers and intruders, like honey is attractive to bears.",
+     "CNSSI 4009-2022, from IETF RFC 4949 Ver 2", "https://csrc.nist.gov/glossary/term/honeypot", ()),
+)
+for _names, *_entry in _DEFINED:
+    for _name in _names:
+        GLOSSARY[_name] = tuple(_entry)  # type: ignore[assignment]
 
 #: Words around a name that do not change what it names: "a DDoS attack", "ransomware attacks".
 _AROUND = re.compile(r"^(?:a|an|the)\s+|\s+(?:attacks?|tactic|techniques?)$", re.IGNORECASE)
@@ -101,3 +183,15 @@ def concept(question: str) -> str | None:
 
 def tactic(subject: str) -> tuple[str, str, str, tuple[str, ...]] | None:
     return TACTICS.get(normalise(subject))
+
+
+def glossary(question: str) -> tuple[str, str, str, str, tuple[str, ...]] | None:
+    """The glossary entry a short question names, matched as whole words, longest name first; None when the
+    question is long (retrieval's job) or names nothing defined here."""
+    text = " ".join(question.lower().split())
+    if len(re.findall(r"[a-z0-9]+", text)) > 8:
+        return None
+    for name in sorted(GLOSSARY, key=len, reverse=True):
+        if re.search(rf"(?<![\w-]){re.escape(name)}(?![\w-])", text):
+            return GLOSSARY[name]
+    return None

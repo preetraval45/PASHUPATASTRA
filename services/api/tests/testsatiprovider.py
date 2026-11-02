@@ -277,3 +277,18 @@ def test_a_follow_up_is_resolved_against_the_last_answer_only_when_it_refers_bac
 def test_a_bare_pronoun_with_nothing_before_it_is_asked_about_not_guessed(provider):
     out = ask(provider, "general_answer_v1", "How does it work?")
     assert out["answer"].startswith("What would you like to know about?")
+
+
+def test_a_term_the_knowledge_base_lacks_is_answered_with_nists_definition():
+    for cached in (sati_module.embedder, sati_module.knowledge, sati_module.mitigator, sati_module.attack_links):
+        cached.cache_clear()  # other tests build these from fixtures
+    provider = sati_module.SatiProvider()
+    out = ask(provider, "general_answer_v1", "What is a zero-day?")
+    assert out["area"] == "glossary" and not out["declined"]
+    assert out["answer"].startswith("**Zero-day attack**")
+    assert "previously unknown hardware, firmware, or software vulnerability" in out["answer"]
+    assert "https://csrc.nist.gov/glossary/term/zero_day_attack" in out["answer"]
+    assert "**Exploit Public-Facing Application** (T1190)" in out["answer"]  # related, in the knowledge base's words
+    # A name the knowledge base does hold still goes to its entry, not the glossary.
+    sqli = ask(provider, "general_answer_v1", "What is SQL injection?")
+    assert sqli["area"] != "glossary" and "CAPEC-66" in sqli["answer"]
