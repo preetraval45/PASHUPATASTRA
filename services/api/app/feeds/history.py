@@ -13,6 +13,7 @@ failed) has no history, and says so through `available()`, rather than inventing
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
@@ -179,7 +180,11 @@ def _index() -> tuple[dict, ...]:
                     "id": incident.id,
                     "severity": str(incident.severity),
                     "opened_at": incident.opened_at.isoformat(),
-                    "text": (incident.id + " " + " ".join(h.statement for h in incident.hypotheses)).lower(),
+                    # The techniques too, so campaigns that worked the same way resemble each other.
+                    "text": " ".join(
+                        [incident.id, *(h.statement for h in incident.hypotheses),
+                         *(link.attack_technique.id for link in incident.causal_chain if link.attack_technique)]
+                    ).lower(),
                     "record": incident.event_ids[0],
                     "source": source,
                 })
@@ -232,3 +237,83 @@ def page(
         "generated": _data().get("generated"),
         "items": [i.model_dump(mode="json") for i in items],
     }
+
+
+_TOKEN = re.compile(r"[a-z0-9][a-z0-9_.-]*[a-z0-9]")
+_STOP = frozenset(
+    "the and for with from that this was were has have its are not but can into via all any one "
+    "past live kev nvd rw breach campaign pkg cve version versions before after allows allow "
+    "attacker attackers remote unauthenticated authenticated vulnerability vulnerable could would "
+    "exploited exploit exploitation wild added catalogue cisa known federal remediation due "
+    "disclosed cvss critical high medium reported yet group claimed victims leak site claims "
+    "unverified own published malicious code package accounts exposed infrastructure active new "
+    "indicators last hours days months attributed documented intrusion conducted cyber operation "
+    "operations used they their them also which other including malware distributed compromise "
+    "threat actor actors activity targeted targeting hints".split()
+)
+
+
+def _tokens(text: str) -> frozenset[str]:
+    # Nothing starting with a digit: dates and version numbers are shared by unrelated incidents
+    # (every group's claims in the same month), and they outweighed the name that mattered.
+    return frozenset(t for t in _TOKEN.findall(text.lower()) if len(t) > 2 and t not in _STOP
+                     and not t[0].isdigit())
+
+
+@lru_cache(maxsize=1)
+def _postings() -> tuple[dict[str, list[int]], tuple[frozenset[str], ...]]:
+    """Which past incidents each word appears in, so a query reads only the incidents that share
+    a word with it instead of all of them."""
+    sets = tuple(_tokens(entry["text"]) for entry in _index())
+    postings: dict[str, list[int]] = {}
+    for position, words in enumerate(sets):
+        for word in words:
+            postings.setdefault(word, []).append(position)
+    return postings, sets
+
+
+def similar(incident: Incident, limit: int = 6) -> list[dict[str, object]]:
+    """Past incidents that resemble `incident`, most alike first, each with the words they share.
+
+    Resemblance is the summed rarity (inverse document frequency) of the words two incidents share:
+    a ransomware group's name or a product appears in a handful of the record's incidents and
+    weighs a great deal; a word in thousands weighs almost nothing. Plain and checkable, which a
+    learned similarity would not be, and every match says which words it rests on."""
+    import math
+
+    postings, sets = _postings()
+    total = max(len(sets), 1)
+    statements = " ".join(h.statement for h in incident.hypotheses)
+    techniques = " ".join(l.attack_technique.id for l in incident.causal_chain if l.attack_technique)
+    names = _tokens(" ".join(e.name for e in incident.affected_entities))
+    query = _tokens(f"{statements} {techniques}") | names
+    kind = incident.id.split("-")[1] if "-" in incident.id else ""
+    scores: dict[int, float] = {}
+    shared: dict[int, list[tuple[float, str]]] = {}
+    for word in query:
+        found = postings.get(word)
+        if not found or len(found) > total // 100:
+            continue  # absent, or in more than 1% of the record: it says nothing about this one
+        # A word naming who or what was hit (the group, the product) counts double.
+        weight = math.log(total / len(found)) * (2.0 if word in names else 1.0)
+        for position in found:
+            scores[position] = scores.get(position, 0.0) + weight
+            shared.setdefault(position, []).append((weight, word))
+    index = _index()
+    for position in scores:  # the same kind of incident first, when the evidence is close
+        if index[position]["id"].split("-")[1] == kind:
+            scores[position] *= 1.5
+    ranked = sorted(
+        (p for p in scores if index[p]["id"] != incident.id),
+        key=lambda p: (scores[p], index[p]["opened_at"]),
+        reverse=True,
+    )
+    out = []
+    for position in ranked[:limit]:
+        built = _build(index[position])
+        if built is None:
+            continue
+        words = [w for _, w in sorted(shared[position], reverse=True)[:4]]
+        out.append({"incident": built.model_dump(mode="json"), "shared": words,
+                    "score": round(scores[position], 2)})
+    return out

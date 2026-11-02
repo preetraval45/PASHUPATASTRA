@@ -36,10 +36,10 @@ def recorded(tmp_path, monkeypatch):
                title="Acme: 2,000,000 accounts exposed", accounts="2000000", exposed="Emails"),
     ]}), encoding="utf-8")
     monkeypatch.setattr(history, "FILE", path)
-    for cached in (history._data, history._by_id, history._index):
+    for cached in (history._data, history._by_id, history._index, history._postings):
         cached.cache_clear()
     yield
-    for cached in (history._data, history._by_id, history._index):
+    for cached in (history._data, history._by_id, history._index, history._postings):
         cached.cache_clear()
 
 
@@ -74,3 +74,29 @@ def test_without_the_file_there_is_no_history_and_it_says_so(tmp_path, monkeypat
     assert history.available()["records"] == 0 and history.incidents() == ()
     history._data.cache_clear()
     history._index.cache_clear()
+
+
+def test_seen_before_ranks_by_rare_shared_words_and_says_which(tmp_path, monkeypatch) -> None:
+    def rw(group: str, month: str) -> dict:
+        return {"id": f"hist-rw-{group}-{month}", "source": "ransomwatch", "occurred_at": f"{month}-01T00:00:00+00:00",
+                "entity_key": f"organisation:group:{group}",
+                "labels": {"group": group, "month": month, "claims": "12"},
+                "provenance": {"url": "https://ransomwatch.telemetry.ltd/"}}
+
+    path = tmp_path / "history.json"
+    records = [rw("lockbit3", "2024-01"), rw("lockbit3", "2024-02"), rw("akira", "2024-02")]
+    records += [rw(f"filler{i}", "2023-05") for i in range(200)]  # so a group name is a rare word
+    path.write_text(json.dumps({"generated": NOW.isoformat(), "records": records}), encoding="utf-8")
+    monkeypatch.setattr(history, "FILE", path)
+    for cached in (history._data, history._by_id, history._index, history._postings):
+        cached.cache_clear()
+    try:
+        client = TestClient(__import__("app.main", fromlist=["app"]).app)
+        found = client.get("/api/v1/incidents/PAST-RW-lockbit3-202402/similar").json()["items"]
+        assert found[0]["incident"]["id"] == "PAST-RW-lockbit3-202401"
+        assert found[0]["shared"] == ["lockbit3"]
+        assert all(f["incident"]["id"] != "PAST-RW-lockbit3-202402" for f in found), "never itself"
+        assert client.get("/api/v1/incidents/PAST-NOPE/similar").status_code == 404
+    finally:
+        for cached in (history._data, history._by_id, history._index, history._postings):
+            cached.cache_clear()

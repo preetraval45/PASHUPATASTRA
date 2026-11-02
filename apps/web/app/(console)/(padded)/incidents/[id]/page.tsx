@@ -16,6 +16,7 @@ import { IncidentReplay } from "@/components/incidentreplay";
 import { foldAudit, type Fold } from "@/lib/fold";
 import { IncidentView } from "@/components/incident";
 import { Scenarios } from "@/components/scenarios";
+import { SeenBefore } from "@/components/seenbefore";
 import { Timeline } from "@/components/timeline";
 import { Ago, Badge, Empty, Ident, Offline, Page, Panel, type Status } from "@/components/ui";
 import {
@@ -31,6 +32,7 @@ import {
   getDraft,
   getTimeline,
   getPolicyModel,
+  getSimilarIncidents,
   type AuditRecord,
 } from "@/lib/api";
 
@@ -89,7 +91,7 @@ export default async function IncidentDetailPage({
   // metadata, then ten calls, then rules, then the counterfactual, then a
   // verdict, then two more verdicts: the two to three seconds of skeleton a
   // reviewer measured on every transition was mostly waiting in line.
-  const [incident, actions, audit, all, policy, report, plan, ruleIndex, timeline, contest] =
+  const [incident, actions, audit, all, policy, report, plan, ruleIndex, timeline, contest, similar] =
     await Promise.all([
     incidentOnce(id),
     getActions(),
@@ -118,6 +120,8 @@ export default async function IncidentDetailPage({
     // 422 where the incident records no rival worth arguing, which arrives here
     // as null — no panel rather than a manufactured contest.
     getContest(id),
+    // "Have we seen this before?", answered from the record of real past incidents.
+    getSimilarIncidents(id),
   ]);
 
   // `null` means the API could not be reached; a 404 is handled by the client
@@ -207,6 +211,8 @@ export default async function IncidentDetailPage({
           it have touched?" — so it belongs where that question occurs, not on a
           separate page a reader has to think to visit. */}
       <IncidentGraph incident={incident} />
+
+      <SeenBefore items={similar?.items ?? []} />
 
       <BlastPanel incident={incident} />
 

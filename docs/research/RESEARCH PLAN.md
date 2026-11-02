@@ -920,7 +920,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 - [ ] "What techniques does this incident exhibit?"
 - [ ] "Which of *our* assets are exposed to this CVE?" — the join between public
 - [ ] "What mitigations address this technique, and do we have them?"
-- [ ] "What historical incidents resemble this one?"
+- [x] "What historical incidents resemble this one?" — *done 2 Nov: `/incidents/{id}/similar` ranks the record's ~19,000 real past incidents by the words they share with this one, each weighted by its rarity (inverse document frequency), ATT&CK technique ids included, entity names counted double, nothing found in more than 1% of the record counted at all; every match lists the words it rests on, and the incident page shows them as "Seen before". Checked on real incidents: a LockBit month finds LockBit's other months, Log4Shell finds CVE-2021-45046 first, the SolarWinds campaign finds campaigns using the same techniques. Evidence: `testhistory.py`.*
 
 **Phase 8 — Security Knowledge · Weeks 29–33 › 8.4 ATT&CK integration**
 
@@ -954,7 +954,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 - [ ] Semantic: the knowledge graph
 - [ ] Procedural: runbooks and approved response playbooks
 - [ ] Organizational: environment topology, owners, security policy
-- [ ] "We have seen this before" surfaced with the prior incident and its outcome
+- [~] "We have seen this before" surfaced with the prior incident and its outcome — *2 Nov: surfaced with the prior incident (the "Seen before" panel, from the record). Remains: the outcome, which public records do not carry; it needs incidents this system handled (a company's own, through its intake) with their resolution recorded.*
 - [ ] Every memory carries source, timestamp, confidence, owner, retention policy
 - [ ] **Tenant isolation from the first commit**, not retrofitted — global
 - [ ] Private telemetry never trains a global model — *evidence: an explicit

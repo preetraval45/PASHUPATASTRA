@@ -437,6 +437,16 @@ export interface PastIncidents {
   items: Incident[];
 }
 
+/** A past incident that resembles another, with the rare words the two share. */
+export interface SimilarIncident {
+  incident: Incident;
+  shared: string[];
+  score: number;
+}
+
+export const getSimilarIncidents = (id: string) =>
+  get<{ incident_id: string; items: SimilarIncident[] }>(`/incidents/${encodeURIComponent(id)}/similar`);
+
 export function getPastIncidents(query: {
   offset?: number;
   limit?: number;

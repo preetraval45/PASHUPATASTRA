@@ -106,6 +106,18 @@ def past_incidents(
     return history.page(limit=limit, offset=offset, kind=kind, q=q, severity=severity)
 
 
+@router.get("/incidents/{incident_id}/similar")
+def similar_incidents(incident_id: str, limit: int = 6) -> dict[str, object]:
+    """Past incidents that resemble this one, from the record, each with the words it shares —
+    "have we seen this before?" answered from thousands of real incidents (Kavach 8.3, 9.4)."""
+    from ..feeds import history
+
+    incident = STORE.get(incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail=f"unknown incident {incident_id}")
+    return {"incident_id": incident_id, "items": history.similar(incident, limit=max(1, min(limit, 20)))}
+
+
 @router.get("/incidents/{incident_id}", response_model=Incident)
 def get_incident(incident_id: str) -> Incident:
     incident = STORE.get(incident_id)

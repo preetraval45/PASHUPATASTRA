@@ -3497,6 +3497,58 @@
         "summary": "Incident Graph"
       }
     },
+    "/api/v1/incidents/{incident_id}/similar": {
+      "get": {
+        "description": "Past incidents that resemble this one, from the record, each with the words it shares \u2014\n\"have we seen this before?\" answered from thousands of real incidents (Kavach 8.3, 9.4).",
+        "operationId": "similar_incidents_api_v1_incidents__incident_id__similar_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 6,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Similar Incidents Api V1 Incidents  Incident Id  Similar Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Similar Incidents"
+      }
+    },
     "/api/v1/incidents/{incident_id}/timeline": {
       "get": {
         "description": "The causal chain placed in time, and the moments worth asking about.\n\nOffered rather than left free-form. The interesting counterfactuals sit at\nthe boundaries between steps, and a caller made to invent a timestamp will\ninvent one the records do not support \u2014 then get a refusal it reads as the\nfeature being broken.",
