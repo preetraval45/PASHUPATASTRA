@@ -28,7 +28,9 @@ adb shell am force-stop app.pashupatastra
 adb shell am start -W -n app.pashupatastra/.MainActivity > /dev/null
 shot 2-home 15
 open /incidents;               shot 3-incidents 8
-open /incidents/INC-2026-0904; shot 4-incident 15
+# A real live incident, whichever the API lists first: it opens natively (IncidentsScreen.openDetail).
+live=$(curl -s https://265d0hsmwa.execute-api.us-east-1.amazonaws.com/api/v1/incidents | python3 -c "import sys,json; print(next((i['id'] for i in json.load(sys.stdin) if i['id'].startswith('LIVE-')), ''))" || true)
+open "/incidents/${live:-LIVE-unknown}"; shot 4-incident 12
 open /ask;                     shot 5-sati-ai 6
 open "/ask?q=What%20is%20SQL%20injection%3F"; shot 5b-sati-answer 25
 open /observatory;             shot 6-live-attacks 10

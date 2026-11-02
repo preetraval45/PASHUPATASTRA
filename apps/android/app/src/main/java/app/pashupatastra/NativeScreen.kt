@@ -36,6 +36,12 @@ abstract class NativeScreen(protected val activity: MainActivity) {
     /** The theme changed: redraw in the new palette. */
     abstract fun applyPalette()
 
+    /** Back, handled inside the screen (a detail open above its list); false when there is nothing to close. */
+    open fun onBack(): Boolean = false
+
+    /** The top bar's title while the screen shows its own page; null for the tab's name. */
+    open val title: String? get() = null
+
     protected val p get() = activity.palette
 
     /** The app's own words, in the phone's language (res/values, values-hi, values-es). */

@@ -57,13 +57,58 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
     private var pastFailed = false
     private val search = EditText(activity)
 
+    // A real incident opened from a card, shown in place of the list; back returns to the list where it was.
+    private var detailId: String? = null
+    private var detail: JSONObject? = null
+    private var detailFailed = false
+    private var listScroll = 0
+
+    override val title: String? get() = detailId
+
+    override fun onBack(): Boolean {
+        if (detailId == null) return false
+        detailId = null
+        detail = null
+        render()
+        scroll.post { scroll.scrollTo(0, listScroll) }
+        return true
+    }
+
+    /** Opens one real incident natively (`/incidents/{id}`): its claim, how it unfolded, and its sources. */
+    fun openDetail(id: String) {
+        if (detailId == null) listScroll = scroll.scrollY
+        detailId = id
+        detail = null
+        detailFailed = false
+        render()
+        scroll.scrollTo(0, 0)
+        activity.refreshChrome()
+        Api.IO.execute {
+            val body = runCatching { JSONObject(Api.get("/incidents/" + java.net.URLEncoder.encode(id, "UTF-8"))) }.getOrNull()
+            activity.runOnUiThread {
+                if (activity.isDestroyed || detailId != id) return@runOnUiThread
+                refresh.isRefreshing = false
+                detail = body
+                detailFailed = body == null
+                render()
+            }
+        }
+    }
+
     init {
         column.setPadding(0, dp(12), 0, dp(24))
         scroll.isVerticalScrollBarEnabled = false
         scroll.overScrollMode = View.OVER_SCROLL_NEVER
         scroll.addView(column, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, Gravity.CENTER_HORIZONTAL))
         refresh.addView(scroll, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        refresh.setOnRefreshListener { if (tab == "live") load() else loadPast(reset = true) }
+        refresh.setOnRefreshListener {
+            val open = detailId
+            when {
+                open != null -> openDetail(open)
+                tab == "live" -> load()
+                else -> loadPast(reset = true)
+            }
+        }
         view.addView(refresh, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         search.apply {
             hint = s(R.string.past_search_hint)
@@ -176,6 +221,10 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
         refresh.setColorSchemeColors(p.astra)
         refresh.setProgressBackgroundColorSchemeColor(p.raised)
         column.removeAllViews()
+        if (detailId != null) {
+            renderDetail()
+            return
+        }
         column.addView(tabs(), LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
             marginStart = dp(16)
             marginEnd = dp(16)
@@ -269,6 +318,133 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
         past.forEach { list.addView(incidentCard(it), lp(top = 10)) }
         if (past.size < total) list.addView(more { loadPast(reset = false) }, lp(top = 14))
         if (pastFailed && past.isNotEmpty()) list.addView(notice(s(R.string.past_failed)), lp(top = 10))
+    }
+
+    /**
+     * One incident: kind, severity and age; the claim as the rule that built it states it; each step of the
+     * causal chain with its ATT&CK technique when it has one; and the publishers' records it rests on. Every
+     * line is the API's; nothing is summarised here. The site's page (plan, timeline, evidence) is a tap away.
+     */
+    private fun renderDetail() {
+        val id = detailId ?: return
+        val body = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), 0, dp(16), 0)
+        }
+        column.addView(body)
+        val d = detail
+        if (d == null) {
+            body.addView(if (detailFailed) notice(s(R.string.detail_failed)) else skeleton(3), lp(top = 4))
+            return
+        }
+        val severity = d.optString("severity")
+        val tone = when (severity) {
+            "critical" -> p.crit
+            "high" -> p.high
+            "medium" -> p.warn
+            else -> p.ok
+        }
+        val hypothesis = d.optJSONArray("hypotheses")?.optJSONObject(0)
+
+        // Kind, severity, age, state.
+        body.addView(LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(text(sevLabel(severity).uppercase(java.util.Locale.getDefault()), 11f, tone, bold = true).apply {
+                setPadding(dp(8), dp(3), dp(8), dp(3))
+                background = rounded(ColorUtils.setAlphaComponent(tone, 40), 10)
+            })
+            kindOf(id)?.let {
+                addView(text(kindLabel(it), 13f, p.muted, bold = true), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(10) })
+            }
+        }, lp(top = 4))
+        body.addView(text(
+            s(R.string.detail_opened, Api.ago(activity, d.optString("opened_at"))) + " · " + Api.stateLabel(activity, d.optString("state")),
+            12f, p.faint,
+        ), lp(top = 8))
+
+        // The claim.
+        body.addView(text(hypothesis?.optString("statement").orEmpty().ifBlank { s(R.string.incident_no_hypothesis) }, 17f, p.ink).apply {
+            setLineSpacing(0f, 1.25f)
+            setTextIsSelectable(true)
+        }, lp(top = 12))
+        hypothesis?.optDouble("confidence")?.takeIf { !it.isNaN() }?.let {
+            body.addView(text(s(R.string.detail_confidence, (it * 100).toInt()), 12f, p.muted), lp(top = 8))
+        }
+
+        // How it unfolded.
+        val chain = d.optJSONArray("causal_chain")
+        if (chain != null && chain.length() > 0) {
+            body.addView(text(s(R.string.detail_what), 16f, p.ink, bold = true), lp(top = 22))
+            for (i in 0 until chain.length()) {
+                val step = chain.optJSONObject(i) ?: continue
+                val entity = step.optJSONObject("entity")
+                val name = entity?.optString("name").orEmpty().ifBlank { entity?.optString("id").orEmpty() }
+                val technique = step.optString("attack_technique").takeIf { it.isNotBlank() && it != "null" }
+                body.addView(LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    setPadding(dp(14), dp(12), dp(14), dp(12))
+                    background = rounded(p.panel, 16, p.edge)
+                    addView(text("${i + 1}", 13f, p.astra, bold = true).apply {
+                        gravity = Gravity.CENTER
+                        background = rounded(ColorUtils.setAlphaComponent(p.astra, 36), 12)
+                    }, LinearLayout.LayoutParams(dp(26), dp(26)))
+                    addView(LinearLayout(activity).apply {
+                        orientation = LinearLayout.VERTICAL
+                        addView(text(name, 14f, p.ink, bold = true))
+                        addView(text(step.optString("transition"), 13f, p.muted), lp(top = 2))
+                        if (technique != null) {
+                            addView(text("ATT&CK $technique ↗", 12f, p.astra, bold = true).apply {
+                                setPadding(0, dp(4), 0, 0)
+                                isClickable = true
+                                setOnClickListener {
+                                    val path = technique.replace('.', '/')
+                                    activity.openOutside(android.net.Uri.parse("https://attack.mitre.org/techniques/$path/"))
+                                }
+                            })
+                        }
+                    }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(12) })
+                }, lp(top = 8))
+            }
+        }
+
+        // The records it rests on.
+        val sources = d.optJSONArray("sources")
+        if (sources != null && sources.length() > 0) {
+            body.addView(text(s(R.string.detail_sources), 16f, p.ink, bold = true), lp(top = 22))
+            for (i in 0 until sources.length()) {
+                val source = sources.optJSONObject(i) ?: continue
+                val url = source.optString("url").takeIf { it.startsWith("https://") }
+                body.addView(LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(14), dp(12), dp(14), dp(12))
+                    background = ripple(rounded(p.panel, 16, p.edge))
+                    if (url != null) pressable { activity.openOutside(android.net.Uri.parse(url)) }
+                    addView(text(source.optString("title") + if (url != null) "  ↗" else "", 14f, if (url != null) p.astra else p.ink, bold = true))
+                    source.optString("publisher").takeIf { it.isNotBlank() }?.let { addView(text(it, 12f, p.muted), lp(top = 2)) }
+                }, lp(top = 8))
+            }
+        }
+
+        // The evidence ids the claim cites.
+        val evidence = hypothesis?.optJSONArray("evidence")
+        if (evidence != null && evidence.length() > 0) {
+            body.addView(text(s(R.string.detail_evidence), 16f, p.ink, bold = true), lp(top = 22))
+            body.addView(text((0 until evidence.length()).joinToString("\n") { evidence.optString(it) }, 12f, p.muted).apply {
+                typeface = android.graphics.Typeface.MONOSPACE
+                setTextIsSelectable(true)
+            }, lp(top = 6))
+        }
+
+        // Everything else, on the site.
+        body.addView(LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            background = ripple(rounded(p.ground, 18, p.edge))
+            pressable { activity.openWebPage("/incidents/$id") }
+            addView(text(s(R.string.detail_full) + "  ↗", 15f, p.ink, bold = true))
+            addView(text(s(R.string.detail_full_body), 12f, p.muted), lp(top = 2))
+        }, lp(top = 22))
     }
 
     // --- pieces ----------------------------------------------------------------------------

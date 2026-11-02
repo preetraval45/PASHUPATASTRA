@@ -208,6 +208,15 @@
     <string name="past_more">Cargar más</string>
     <string name="past_failed">No se pudo cargar el registro. Desliza hacia abajo para reintentar.</string>
     <string name="past_empty">Nada en el registro coincide.</string>
+    <string name="detail_title">Incidente</string>
+    <string name="detail_what">Qué pasó</string>
+    <string name="detail_sources">Fuentes</string>
+    <string name="detail_evidence">Evidencia</string>
+    <string name="detail_confidence">Confianza según la regla: %1$d %%</string>
+    <string name="detail_full">Abrir la página completa</string>
+    <string name="detail_full_body">Plan, cronología y la evidencia</string>
+    <string name="detail_failed">No se pudo cargar este incidente. Desliza hacia abajo para reintentar.</string>
+    <string name="detail_opened">Abierto %1$s</string>
     <plurals name="account_policies_to_read">
         <item quantity="one">%d política por leer y aceptar</item>
         <item quantity="other">%d políticas por leer y aceptar</item>

@@ -208,6 +208,15 @@
     <string name="past_more">और दिखाएँ</string>
     <string name="past_failed">रिकॉर्ड लोड नहीं हो सका। फिर कोशिश करने के लिए नीचे खींचें।</string>
     <string name="past_empty">रिकॉर्ड में कुछ भी मेल नहीं खाता।</string>
+    <string name="detail_title">घटना</string>
+    <string name="detail_what">क्या हुआ</string>
+    <string name="detail_sources">स्रोत</string>
+    <string name="detail_evidence">साक्ष्य</string>
+    <string name="detail_confidence">नियम के अनुसार विश्वास: %1$d%%</string>
+    <string name="detail_full">पूरा पेज खोलें</string>
+    <string name="detail_full_body">योजना, समय-रेखा और साक्ष्य</string>
+    <string name="detail_failed">यह घटना लोड नहीं हो सकी। फिर कोशिश करने के लिए नीचे खींचें।</string>
+    <string name="detail_opened">%1$s खुली</string>
     <plurals name="account_policies_to_read">
         <item quantity="one">पढ़ने और स्वीकार करने के लिए %d नीति</item>
         <item quantity="other">पढ़ने और स्वीकार करने के लिए %d नीतियाँ</item>

@@ -205,6 +205,7 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 val tab = current
                 when {
+                    tab == null && native(currentId)?.onBack() == true -> updateChrome()
                     tab != null && tab.web.canGoBack() -> tab.web.goBack()
                     tab != null && hasNative(currentId) -> closePage(currentId)
                     currentId != R.id.tab_home -> select(R.id.tab_home)
@@ -417,7 +418,23 @@ class MainActivity : AppCompatActivity() {
      * A place in the site, opened where it belongs: its tab if it has one, More's stack if not.
      * A tab's own first page just selects the tab, so it keeps where the user was in it.
      */
+    /** A native screen changed what it shows (a detail opened or closed): the top bar follows. */
+    fun refreshChrome() = updateChrome()
+
+    /** The site's own page for a path, above its tab, even where the app has a native page for it. */
+    fun openWebPage(path: String) {
+        val id = tabFor(path)
+        select(id, url(path))
+    }
+
     fun open(path: String) {
+        // A real incident (LIVE-… or PAST-…) opens natively inside the Incidents tab.
+        if (REAL_INCIDENT.matches(path)) {
+            dropPage(R.id.tab_incidents)
+            select(R.id.tab_incidents)
+            (native(R.id.tab_incidents) as? IncidentsScreen)?.openDetail(path.substringAfter("/incidents/"))
+            return
+        }
         if (path.startsWith("/incidents?tab=past")) {
             dropPage(R.id.tab_incidents)
             select(R.id.tab_incidents)
@@ -442,6 +459,10 @@ class MainActivity : AppCompatActivity() {
             return
         }
         val path = link.path.orEmpty()
+        if (REAL_INCIDENT.matches(path)) {
+            open(path)
+            return
+        }
         // "/ask?q=…" asks Sati straight away, in the native chat (shortcuts, shared links, CI).
         val question = if (path.trimEnd('/') == "/ask") link.getQueryParameter("q")?.trim()?.takeIf { it.isNotEmpty() } else null
         if (question != null) {
@@ -475,12 +496,13 @@ class MainActivity : AppCompatActivity() {
     private fun updateChrome() {
         val tab = current
         if (tab == null) {
-            toolbar.title = when (currentId) {
+            val screen = natives[currentId]
+            toolbar.title = screen?.title ?: when (currentId) {
                 R.id.tab_home -> getString(R.string.app_name)
                 feed -> getString(R.string.feed_title)
                 else -> nav.menu.findItem(currentId)?.title
             }
-            toolbar.navigationIcon = null
+            toolbar.navigationIcon = if (screen?.title != null) tinted(R.drawable.ic_back, palette.ink) else null
             progress.visibility = View.INVISIBLE
             return
         }
@@ -914,5 +936,6 @@ class MainActivity : AppCompatActivity() {
         const val THEME = "theme"
         const val ASKED = "alerts.asked"
         const val ONBOARDED = "onboarded"
+        val REAL_INCIDENT = Regex("^/incidents/(LIVE|PAST)-[A-Za-z0-9._-]+$")
     }
 }

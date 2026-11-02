@@ -212,6 +212,15 @@
     <string name="past_more">Load more</string>
     <string name="past_failed">The record could not be loaded. Pull down to try again.</string>
     <string name="past_empty">Nothing in the record matches.</string>
+    <string name="detail_title">Incident</string>
+    <string name="detail_what">What happened</string>
+    <string name="detail_sources">Sources</string>
+    <string name="detail_evidence">Evidence</string>
+    <string name="detail_confidence">Confidence as the rule states it: %1$d%%</string>
+    <string name="detail_full">Open the full page</string>
+    <string name="detail_full_body">Plan, timeline and the evidence itself</string>
+    <string name="detail_failed">This incident could not be loaded. Pull down to try again.</string>
+    <string name="detail_opened">Opened %1$s</string>
     <plurals name="account_policies_to_read">
         <item quantity="one">%d policy to read and acknowledge</item>
         <item quantity="other">%d policies to read and acknowledge</item>
