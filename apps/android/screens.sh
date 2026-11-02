@@ -36,6 +36,7 @@ open "/ask?q=What%20is%20SQL%20injection%3F"; shot 5b-sati-answer 25
 open /observatory;             shot 6-live-attacks 10
 open /training;                shot 7-training 15
 adb shell input tap 970 2230;  shot 8-more 3      # the More tab, on a 1080x2400 pixel_6
+adb shell input keyevent KEYCODE_BACK; sleep 1    # close the sheet, or it covers every page below
 
 # Every other page in the app, as a reader reaches it from More: each one photographed, so every page is
 # checked in the native frame (phase 2 of "complete all pages").
