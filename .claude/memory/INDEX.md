@@ -121,3 +121,4 @@ Protocol: before every push, write a topic-named file from
 - [AppAccounts.md](AppAccounts.md) — app reads site session (pashu.session) after page loads; Home company card; More workspace; Data safety updated for accounts
 - [VerdictSeals.md](VerdictSeals.md) — verdicts are HMAC-sealed by the API; execute/remediate/approve/deny refuse forged ones; excessive-agency tests
 - [AutoSeasonal.md](AutoSeasonal.md) — autocorrelation period detection that abstains; AutoSeasonal strategy; NAB check job auto-seasonal; default unchanged pending results
+- [KavachFeeds.md](KavachFeeds.md) — feed advisories screened by Kavach; feed-poisoning + intel-never-in-memory tests; SECURITY.md + security.txt (owner must enable private reporting)
