@@ -258,6 +258,18 @@ class MainActivity : AppCompatActivity() {
         if (current == null) native(currentId)?.refreshIfStale()
     }
 
+    /**
+     * Android is short of memory: let go of every page that is not on screen. Each is a
+     * whole browser renderer; a tab whose page was dropped loads its first page again when
+     * it is next opened. Heavy pages held in hidden tabs were what the emulator runs were
+     * short of when Play services died and Android closed the app with it.
+     */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level < android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) return
+        tabs.entries.filter { it.value !== current }.map { it.key }.forEach { dropPage(it) }
+    }
+
     override fun onDestroy() {
         tabs.values.forEach { it.web.destroy() }
         super.onDestroy()
@@ -373,6 +385,7 @@ class MainActivity : AppCompatActivity() {
             current = tab
             shown = tab.view
             currentId = id
+            tabs.values.forEach { if (it === current) it.web.onResume() else it.web.onPause() }
             updateChrome()
             return
         } else {
@@ -384,6 +397,8 @@ class MainActivity : AppCompatActivity() {
             current = tab
             next = tab.view
         }
+        // Only the page on screen runs: hidden tabs' scripts, timers and animations pause.
+        tabs.values.forEach { if (it === current) it.web.onResume() else it.web.onPause() }
         if (shown !== next) {
             shown?.visibility = View.GONE
             // A list left visible under a page still sliding in must not show through another tab.
