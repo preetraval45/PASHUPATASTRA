@@ -1318,7 +1318,8 @@ def game_scenarios() -> list[dict[str, object]]:
     # `game.playable`, not every incident in the store: an incident whose
     # opening alert cannot be resolved is not an exercise, and offering it
     # hands a player a briefing with nothing in it.
-    for incident in game.playable(STORE.all(), graph):
+    # Exercises, never the live list: a drill needs an incident whose answer is known.
+    for incident in game.playable(STORE.exercises(), graph):
         alert = game.opening_alert(incident, graph)
         out.append(
             {

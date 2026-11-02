@@ -66,6 +66,10 @@ class Store:
         return incident
 
     def get(self, incident_id: str) -> Incident | None:
+        from .feeds.liveincidents import is_live
+
+        if is_live(incident_id):
+            return next((i for i in self._live() if i.id == incident_id), None)
         backend = self._durable()
         if backend is not None:
             stored = backend.get_incident(incident_id)
@@ -73,7 +77,21 @@ class Store:
                 return stored
         return self.incidents.get(incident_id)
 
+    def _live(self) -> list[Incident]:
+        from .feeds.liveincidents import current
+        from .graph import entitystore
+
+        return current(entitystore())
+
     def all(self) -> list[Incident]:
+        """What the console lists: live incidents in a deployment that serves them, otherwise the
+        stored ones."""
+        if _get_settings().live_incidents:
+            return self._live()
+        return self.exercises()
+
+    def exercises(self) -> list[Incident]:
+        """The stored scenarios — the training drills' material, whatever the console lists."""
         backend = self._durable()
         if backend is not None:
             stored = backend.list_incidents()

@@ -214,6 +214,14 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    live_incidents: bool = False
+    """List the incidents happening in the world now, built from the stored feeds
+    (`feeds/liveincidents.py`), instead of the stored scenarios.
+
+    On in the deployed API: the console shows real events only. The scenarios stay
+    reachable by id, because the training drills are built on them and say they are
+    exercises. Off by default so tests and a local run keep their fixed fixtures."""
+
     demo_seed: bool = False
     """Replay `benchmark/incidents/` into the graph at startup.
 
