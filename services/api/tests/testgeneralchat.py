@@ -87,3 +87,12 @@ def test_history_is_capped() -> None:
     turns = [e for e in gateway.request.evidence if e.source == "conversation"]
     assert len(turns) == general.MAX_HISTORY
     assert "q19" in turns[-1].content
+
+
+def test_a_quoted_definition_keeps_its_glossary_label() -> None:
+    # A NIST definition is not a model's answer: relabelling it as one (live, 2 Nov: "siddhidatri") would
+    # credit a model with text it did not write.
+    from app.engines.providers.schemas import schema_for
+
+    assert "glossary" in general.AREAS
+    assert "glossary" in schema_for("general_answer_v1")["properties"]["area"]["enum"]

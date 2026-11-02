@@ -178,10 +178,11 @@ GENERAL_ANSWER_V1: dict[str, Any] = {
             "type": "string",
             "enum": [
                 "shailaputri", "brahmacharini", "chandraghanta", "kushmanda", "skandamata",
-                "katyayani", "kalaratri", "mahagauri", "siddhidatri",
+                "katyayani", "kalaratri", "mahagauri", "siddhidatri", "glossary",
             ],
             "description": "Which of the nine Navadurga areas (adr/Navadurga) the "
-            "question belongs to; the answer is framed by that specialism.",
+            "question belongs to; the answer is framed by that specialism. `glossary` is not a model: "
+            "the answer is a published definition quoted with its source (providers/concepts.GLOSSARY).",
         },
         "declined": {
             "type": "boolean",

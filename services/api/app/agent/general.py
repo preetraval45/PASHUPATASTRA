@@ -76,6 +76,9 @@ class Exchange(BaseModel):
 AREAS = (
     "shailaputri", "brahmacharini", "chandraghanta", "kushmanda", "skandamata",
     "katyayani", "kalaratri", "mahagauri", "siddhidatri",
+    # Not a model: a published definition quoted with its source (providers/concepts.GLOSSARY). Labelled as
+    # what it is, so no model is credited with text it did not write.
+    "glossary",
 )
 
 
