@@ -321,7 +321,8 @@ export function KeyValue({ label, children }: { label: string; children: ReactNo
  *
  *  Exported so every surface that prints a confidence says the same thing. */
 export const CONFIDENCE_IS_STATED =
-  "A confidence the scenario's author stated when writing it — not a measured rate. " +
+  "A confidence stated by whoever made the claim — a scenario's author, or for a live " +
+  "incident the fixed figure of the rule that built it from the feeds — not a measured rate. " +
   "Nothing here has yet been scored against a human's later verdict; calibration " +
   "arrives when outcomes exist (R96), and until then no figure is invented for it.";
 

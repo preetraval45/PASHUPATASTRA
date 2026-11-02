@@ -1,11 +1,13 @@
 import { Filter, FilterRow } from "@/components/filter";
 import { HappeningNow } from "@/components/happeningnow";
 import { IncidentView } from "@/components/incident";
+import { IncidentRows } from "@/components/incidentlist";
 import { Scenarios } from "@/components/scenarios";
 import { TriageItem, TriageList } from "@/components/triage";
 import { Empty, Offline, Page } from "@/components/ui";
-import { getActions, getIncidents } from "@/lib/api";
+import { getActions, getIncidents, getPastIncidents } from "@/lib/api";
 import { SEVERITIES, applyQuery, hrefFor, parseQuery } from "@/lib/incidentfilter";
+import { KINDS, type Kind, isReal, kindOf, parseKind } from "@/lib/incidentkinds";
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -13,31 +15,206 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Incidents",
   description:
-    "Open security incidents, each with the evidence behind its diagnosis and the alternative reading it ruled out.",
+    "Security incidents happening in the world now, built from public threat feeds, and thousands from the public record — each citing the records behind it.",
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function IncidentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const q = parseQuery(await searchParams);
-  const [all, actions] = await Promise.all([getIncidents(), getActions()]);
+type Params = Record<string, string | string[] | undefined>;
+
+const PAGE = 25;
+const PAST_KINDS: Kind[] = ["KEV", "BREACH"];
+
+function one(params: Params, key: string): string | undefined {
+  const v = params[key];
+  return Array.isArray(v) ? v[0] : v;
+}
+
+/** The current URL with some parameters changed; empty values are dropped. */
+function link(params: Params, change: Record<string, string | null>, hash = ""): string {
+  const next = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    const value = Array.isArray(v) ? v[0] : v;
+    if (value) next.set(k, value);
+  }
+  for (const [k, v] of Object.entries(change)) {
+    if (v) next.set(k, v);
+    else next.delete(k);
+  }
+  const s = next.toString();
+  return `/incidents${s ? `?${s}` : ""}${hash}`;
+}
+
+export default async function IncidentsPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const params = await searchParams;
+  const q = parseQuery(params);
+  const kind = parseKind(params.kind);
+  const pastKind = parseKind(params.pkind);
+  const pastQuery = (one(params, "pq") ?? "").trim().slice(0, 80);
+  const pastPage = Math.max(1, Number.parseInt(one(params, "ppage") ?? "1", 10) || 1);
+
+  const [all, actions, past] = await Promise.all([
+    getIncidents(),
+    getActions(),
+    getPastIncidents({ offset: (pastPage - 1) * PAGE, limit: PAGE, kind: pastKind, q: pastQuery || null }),
+  ]);
   if (!all) return <Offline />;
+
+  // A deployment without the live feeds serves the written scenarios; they keep their own layout.
+  if (!all.some((i) => isReal(i.id))) return <Scripted all={all} actions={actions} q={q} />;
+
+  const live = applyQuery(all, q).filter((i) => !kind || kindOf(i.id) === kind);
+  const counts = new Map<Kind, number>();
+  for (const i of all) {
+    const k = kindOf(i.id);
+    if (k) counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  const pages = past ? Math.max(1, Math.ceil(past.total / PAGE)) : 1;
+
+  return (
+    <Page
+      title="Incidents"
+      description="What is happening in the world now, from public threat feeds, and the record of what has happened. Every incident cites the records behind it."
+    >
+      <HappeningNow />
+
+      <section aria-labelledby="live" className="space-y-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="live" className="text-xl font-semibold tracking-tight">
+            Live incidents
+          </h2>
+          <p className="text-xs text-[rgb(var(--faint))]" aria-live="polite">
+            {live.length} of {all.length}, rebuilt from the feeds every few minutes
+          </p>
+        </div>
+        <FilterRow label="Kind">
+          <Filter href={link(params, { kind: null })} label={`All ${all.length}`} active={!kind} />
+          {(Object.keys(KINDS) as Kind[])
+            .filter((k) => counts.get(k))
+            .map((k) => (
+              <Filter
+                key={k}
+                href={link(params, { kind: k.toLowerCase() })}
+                label={`${KINDS[k].label} ${counts.get(k)}`}
+                active={kind === k}
+              />
+            ))}
+        </FilterRow>
+        <FilterRow label="Severity">
+          <Filter href={link(params, { severity: null })} label="Any" active={!q.severity} />
+          {SEVERITIES.map((s) => (
+            <Filter key={s} href={link(params, { severity: s })} label={s} active={q.severity === s} />
+          ))}
+        </FilterRow>
+        {live.length === 0 ? (
+          <Empty art="quiet" title="Nothing matches these filters.">
+            <Link className="underline underline-offset-4" href="/incidents">
+              Show every live incident
+            </Link>
+            .
+          </Empty>
+        ) : (
+          <IncidentRows incidents={live} />
+        )}
+      </section>
+
+      <section aria-labelledby="record" className="mt-10 space-y-4" id="record-section">
+        <div>
+          <h2 id="record" className="text-xl font-semibold tracking-tight">
+            From the record
+          </h2>
+          <p className="mt-1 max-w-3xl text-sm text-[rgb(var(--muted))]">
+            Every vulnerability CISA has confirmed exploited since 2021, and every breach Have I Been
+            Pwned has published{past?.total ? `: ${past.total.toLocaleString()} incidents` : ""}. Breach
+            data is HIBP&apos;s, under CC BY 4.0; each incident links its page.
+          </p>
+        </div>
+        <form action="/incidents#record-section" className="flex flex-wrap gap-2" role="search">
+          {Object.entries(params)
+            .filter(([k]) => !["pq", "ppage"].includes(k))
+            .map(([k, v]) => (
+              <input key={k} type="hidden" name={k} value={Array.isArray(v) ? v[0] : (v ?? "")} />
+            ))}
+          <label className="sr-only" htmlFor="pq">
+            Search the record
+          </label>
+          <input
+            id="pq"
+            name="pq"
+            defaultValue={pastQuery}
+            placeholder="Search: log4j, ivanti, adobe…"
+            className="focusable min-w-0 flex-1 rounded-xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-3 py-2 text-sm"
+          />
+          <button
+            type="submit"
+            className="focusable rounded-xl border border-[rgb(var(--edge-strong))] px-4 py-2 text-sm hover:bg-[rgb(var(--raised))]"
+          >
+            Search
+          </button>
+        </form>
+        <FilterRow label="Kind">
+          <Filter href={link(params, { pkind: null, ppage: null }, "#record-section")} label="All" active={!pastKind} />
+          {PAST_KINDS.map((k) => (
+            <Filter
+              key={k}
+              href={link(params, { pkind: k.toLowerCase(), ppage: null }, "#record-section")}
+              label={KINDS[k].label}
+              active={pastKind === k}
+            />
+          ))}
+        </FilterRow>
+        {!past ? (
+          <Empty art="quiet" title="The record is not available right now." />
+        ) : past.items.length === 0 ? (
+          <Empty art="quiet" title={pastQuery ? `Nothing in the record matches “${pastQuery}”.` : "No past incidents."} />
+        ) : (
+          <>
+            <IncidentRows incidents={past.items} />
+            <nav aria-label="Pages of the record" className="flex items-center justify-between text-sm">
+              {pastPage > 1 ? (
+                <Link className="focusable underline underline-offset-4" href={link(params, { ppage: String(pastPage - 1) }, "#record-section")}>
+                  ← Newer
+                </Link>
+              ) : (
+                <span />
+              )}
+              <span className="text-xs text-[rgb(var(--faint))]">
+                Page {pastPage} of {pages.toLocaleString()}
+              </span>
+              {pastPage < pages ? (
+                <Link className="focusable underline underline-offset-4" href={link(params, { ppage: String(pastPage + 1) }, "#record-section")}>
+                  Older →
+                </Link>
+              ) : (
+                <span />
+              )}
+            </nav>
+          </>
+        )}
+      </section>
+    </Page>
+  );
+}
+
+/** The written scenarios, as cards — what a deployment without live feeds shows. */
+function Scripted({
+  all,
+  actions,
+  q,
+}: {
+  all: NonNullable<Awaited<ReturnType<typeof getIncidents>>>;
+  actions: Awaited<ReturnType<typeof getActions>>;
+  q: ReturnType<typeof parseQuery>;
+}) {
   const incidents = applyQuery(all, q);
   const filtered = q.severity !== null || q.status !== null;
-
   const risk = new Map((actions ?? []).map((a) => [a.id, a.base_risk]));
-
   return (
     <Page
       title="Incidents"
       description="One incident per failure, not one per alert. Every diagnosis cites the telemetry that supports it."
     >
       <HappeningNow />
-
       <h2 className="text-xl font-semibold tracking-tight">Investigations</h2>
       {all.length > 0 && (
         <div className="mb-6 space-y-3">
@@ -52,10 +229,6 @@ export default async function IncidentsPage({
               <Filter key={s} href={hrefFor(q, { severity: s })} label={s} active={q.severity === s} />
             ))}
           </FilterRow>
-          <FilterRow label="Sort">
-            <Filter href={hrefFor(q, { sort: "newest" })} label="Newest" active={q.sort === "newest"} />
-            <Filter href={hrefFor(q, { sort: "severity" })} label="Most severe" active={q.sort === "severity"} />
-          </FilterRow>
           <p className="text-xs text-[rgb(var(--faint))]" aria-live="polite">
             Showing {incidents.length} of {all.length}
           </p>
@@ -63,33 +236,19 @@ export default async function IncidentsPage({
       )}
       {all.length > 0 && incidents.length === 0 && filtered ? (
         <Empty art="quiet" title="Nothing matches these filters.">
-          {all.length} incident{all.length === 1 ? "" : "s"} exist under other filters.{" "}
           <Link className="underline underline-offset-4" href="/incidents">
             Show all
           </Link>
           .
         </Empty>
       ) : incidents.length === 0 ? (
-        <Empty art="quiet" title="No incidents.">
-          They appear when Drishti correlates failures that are adjacent in the topology
-          graph and in time — two unrelated accounts alerting in the same minute stay two
-          incidents.
-        </Empty>
+        <Empty art="quiet" title="No incidents." />
       ) : (
         <>
           <Scenarios incidents={all} />
-          {/* Each card is a screen tall, so this list is the one place on the
-              site where reaching the next incident costs a scroll — which is
-              what `j`/`k` are for. The compact list on the overview is not
-              wrapped: every row there is one link and Tab already reaches it,
-              so a second way to move would be a duplicate, not an accelerant. */}
           <TriageList>
             {incidents.map((incident, index) => (
-              <TriageItem
-                key={incident.id}
-                index={index}
-                href={`/incidents/${encodeURIComponent(incident.id)}`}
-              >
+              <TriageItem key={incident.id} index={index} href={`/incidents/${encodeURIComponent(incident.id)}`}>
                 <IncidentView incident={incident} risk={risk} linkToDetail />
               </TriageItem>
             ))}

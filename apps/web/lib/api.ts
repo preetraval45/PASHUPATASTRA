@@ -427,6 +427,31 @@ export interface WrittenDetection extends Omit<DetectionSummary, "href" | "behav
 export const getDetection = (id: string) =>
   get<WrittenDetection>(`/detections/${encodeURIComponent(id)}`);
 export const getIncidents = () => get<Incident[]>("/incidents");
+
+/** A page of real past incidents: CISA's exploited-vulnerability catalogue and HIBP's breaches. */
+export interface PastIncidents {
+  total: number;
+  offset: number;
+  limit: number;
+  generated: string | null;
+  items: Incident[];
+}
+
+export function getPastIncidents(query: {
+  offset?: number;
+  limit?: number;
+  kind?: string | null;
+  q?: string | null;
+  severity?: string | null;
+}) {
+  const params = new URLSearchParams();
+  params.set("limit", String(query.limit ?? 25));
+  if (query.offset) params.set("offset", String(query.offset));
+  if (query.kind) params.set("kind", query.kind.toLowerCase());
+  if (query.q) params.set("q", query.q);
+  if (query.severity) params.set("severity", query.severity);
+  return get<PastIncidents>(`/incidents/past?${params}`);
+}
 export const getActions = () => get<ActionSpec[]>("/actions");
 export const getTopology = () => get<TopologySnapshot>("/topology/graph");
 export const getTopologyCounts = () => get<{ nodes: number; edges: number }>("/topology");

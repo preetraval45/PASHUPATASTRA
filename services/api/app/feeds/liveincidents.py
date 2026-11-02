@@ -46,6 +46,7 @@ from pashupatastra.incidents import Source, Transition
 from pashupatastra.registry import get as get_action
 
 PREFIX = "LIVE-"
+PUBLISHERS = {"threatfox": "ThreatFox", "feodo-tracker": "Feodo Tracker"}
 CACHE_SECONDS = 600
 C2_MIN = 5
 RW_MIN = 3
@@ -213,7 +214,7 @@ def _c2(rows: list[dict], now: datetime) -> list[Incident]:
             hypotheses=[Hypothesis(
                 statement=(
                     f"{family} infrastructure is active: {len(found)} new indicators in the last {C2_HOURS} hours "
-                    f"({', '.join(f'{n} from {s}' for s, n in sources.most_common())})."
+                    f"({', '.join(f'{n} from {PUBLISHERS.get(s, s)}' for s, n in sources.most_common())})."
                 ),
                 confidence=0.7,
                 evidence=cited,
