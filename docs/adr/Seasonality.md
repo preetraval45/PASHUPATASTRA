@@ -171,6 +171,15 @@ false alarms after the switch. **The default is unchanged** until the labelled-d
 ADR asked for — every real NAB series, `sati.seasonal.run` — reports whether it ever misses an
 episode robust-z caught ([models/auto-seasonal.md](../research/models/auto-seasonal.md)).
 
+**Measured the same day (train-sati run 41473044907).** On all 47 real NAB series (110
+labelled episodes), auto-seasonal missed **no** episode robust-z caught, caught 105 against
+robust-z's 100 at the same false-alarm rate (78.6 against 78.7 per 1000), and switched on 8
+series at periods that fit their sampling (24 on hourly ad-exchange data; 49 on NYC taxi's
+half-hourly series, whose day is 48, where it caught 4 of 5 episodes and robust-z none).
+Opting in at a guessed day of 288 samples instead lost 10 episodes, which is this ADR's warning
+measured on real data. Automatic detection is therefore safe on this evidence; whether it
+becomes the default for unconfigured metrics is a separate decision, left open here.
+
 **Guard.** `scripts/benchdetect.py --strict` runs in CI and fails if the recorded
 recommendation stops winning.
 
