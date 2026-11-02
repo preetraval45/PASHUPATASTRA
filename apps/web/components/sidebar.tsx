@@ -102,7 +102,16 @@ export function ConsoleFrame({ status, children }: { status: ReactNode; children
   const [drawer, setDrawer] = useState(false);
   // Inside the Android app (html[data-app], set before first paint), "More" is an app sheet, not a drawer.
   const [inApp, setInApp] = useState(false);
-  useEffect(() => setInApp(document.documentElement.hasAttribute("data-app")), []);
+  useEffect(() => {
+    // The marks are set before first paint (app/layout.tsx), but a page whose first render does not match
+    // the server's is rebuilt from the root, and the rebuild drops attributes React did not render: the
+    // Android app's Impact page then showed the site's header and tab bar under its native ones. Set again.
+    const ua = navigator.userAgent;
+    const html = document.documentElement;
+    if (/PashupatastraApp/.test(ua) || matchMedia("(display-mode: standalone)").matches) html.setAttribute("data-app", "");
+    if (/PashupatastraNative/.test(ua)) html.setAttribute("data-native", "");
+    setInApp(html.hasAttribute("data-app"));
+  }, [pathname]);
 
   useEffect(() => {
     try {
