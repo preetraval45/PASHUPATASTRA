@@ -24,6 +24,7 @@ on:
       - packages/sati/sati/lm/sft.py
       - packages/sati/sati/lm/train.py
       - kaggle/kushmanda/**
+      - .github/workflows/kaggle-kushmanda.yml
 
 permissions:
   contents: write
@@ -56,7 +57,7 @@ jobs:
         with:
           python-version: "3.12"
       - if: steps.gate.outputs.ready == 'true'
-        run: pip install "kaggle==2.2.4"  # the version known to work with this account (2 Nov 2026)
+        run: pip install "kaggle==2.2.4" six  # 2.2.4 works with this account; it imports six without requiring it
       - name: prepare the kernel
         if: steps.gate.outputs.ready == 'true'
         run: |
