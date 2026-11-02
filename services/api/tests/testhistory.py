@@ -36,10 +36,10 @@ def recorded(tmp_path, monkeypatch):
                title="Acme: 2,000,000 accounts exposed", accounts="2000000", exposed="Emails"),
     ]}), encoding="utf-8")
     monkeypatch.setattr(history, "FILE", path)
-    for cached in (history._data, history._by_id, history.incidents):
+    for cached in (history._data, history._by_id, history._index):
         cached.cache_clear()
     yield
-    for cached in (history._data, history._by_id, history.incidents):
+    for cached in (history._data, history._by_id, history._index):
         cached.cache_clear()
 
 
@@ -70,7 +70,7 @@ def test_a_past_incident_opens_and_its_evidence_resolves(recorded) -> None:
 def test_without_the_file_there_is_no_history_and_it_says_so(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(history, "FILE", tmp_path / "absent.json")
     history._data.cache_clear()
-    history.incidents.cache_clear()
+    history._index.cache_clear()
     assert history.available()["records"] == 0 and history.incidents() == ()
     history._data.cache_clear()
-    history.incidents.cache_clear()
+    history._index.cache_clear()

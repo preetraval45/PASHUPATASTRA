@@ -354,8 +354,21 @@ jobs:
             rm -rf services/api/app/sati_models/kushmanda
           fi
           tail -n 40 /tmp/kushmanda.log
-      - name: past incidents (CISA KEV, HIBP)
+      - name: today, for the history cache key
+        id: today
         if: steps.gate.outputs.ready == 'true'
+        run: echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      - name: the record, cached for the day
+        id: history
+        if: steps.gate.outputs.ready == 'true'
+        # The fetch takes minutes (NVD's public rate limit), and a newer push cancels a deploy in
+        # progress; reading the sources once a day keeps every later deploy that day fast.
+        uses: actions/cache@v4
+        with:
+          path: services/api/app/history
+          key: history-v2-${{ steps.today.outputs.date }}
+      - name: past incidents (CISA KEV, NVD, HIBP, ransomwatch, ATT&CK)
+        if: steps.gate.outputs.ready == 'true' && steps.history.outputs.cache-hit != 'true'
         # Fail-soft like Kushmanda: without the file the API serves live incidents and no history.
         run: |
           if ! python scripts/fetchhistory.py > /tmp/history.log 2>&1; then
