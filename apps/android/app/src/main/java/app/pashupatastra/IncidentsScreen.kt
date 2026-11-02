@@ -24,14 +24,14 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
     private class Filter(val key: String, val label: String, val test: (Api.Incident) -> Boolean)
 
     private val filters = listOf(
-        Filter("open", "Open") { it.state != "resolved" && it.state != "rolled_back" },
-        Filter("approval", "Need you") { it.state == "awaiting_approval" },
-        Filter("critical", "Critical") { it.severity == "critical" },
-        Filter("high", "High") { it.severity == "high" },
-        Filter("medium", "Medium") { it.severity == "medium" },
-        Filter("low", "Low") { it.severity == "low" },
-        Filter("closed", "Closed") { it.state == "resolved" || it.state == "rolled_back" },
-        Filter("all", "All") { true },
+        Filter("open", s(R.string.stat_open)) { it.state != "resolved" && it.state != "rolled_back" },
+        Filter("approval", s(R.string.stat_need_you)) { it.state == "awaiting_approval" },
+        Filter("critical", s(R.string.stat_critical)) { it.severity == "critical" },
+        Filter("high", s(R.string.sev_high)) { it.severity == "high" },
+        Filter("medium", s(R.string.sev_medium)) { it.severity == "medium" },
+        Filter("low", s(R.string.sev_low)) { it.severity == "low" },
+        Filter("closed", s(R.string.filter_closed)) { it.state == "resolved" || it.state == "rolled_back" },
+        Filter("all", s(R.string.filter_all)) { true },
     )
 
     override val view = FrameLayout(activity)
@@ -115,7 +115,7 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
 
         if (all == null) {
             list.addView(
-                if (failed) notice("The incidents could not be loaded. Pull down to try again.")
+                if (failed) notice(s(R.string.incidents_failed))
                 else skeleton(4),
                 lp(top = 10),
             )
@@ -124,15 +124,16 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
         if (failed) {
             val at = staleAt
             list.addView(notice(
-                if (at != null) "Offline · showing incidents as of ${Api.clock(at)}. Pull down to try again."
-                else "Showing the last list loaded: the API did not answer just now.",
+                if (at != null) s(R.string.home_offline, Api.clock(at))
+                else s(R.string.incidents_stale),
             ), lp(top = 10))
         }
 
         val chosen = filters.first { it.key == filter }
         val shown = all.filter(chosen.test).sortedWith(compareBy({ Api.rank(it.severity) }, { it.state != "awaiting_approval" }))
         list.addView(text(
-            "${shown.size} ${if (shown.size == 1) "incident" else "incidents"}" + if (chosen.key == "all") "" else " · ${chosen.label.lowercase()}",
+            if (chosen.key == "all") q(R.plurals.incidents_count, shown.size)
+            else s(R.string.filter_suffix, q(R.plurals.incidents_count, shown.size), chosen.label),
             13f, p.muted,
         ), lp(top = 8))
         if (shown.isEmpty()) {
@@ -179,8 +180,8 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
         setPadding(dp(24), dp(36), dp(24), dp(36))
         background = rounded(p.panel, 20, p.edge)
         addView(icon(R.drawable.ic_check, p.ok, 36))
-        addView(text("Nothing here", 16f, p.ink, bold = true), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(12) })
-        addView(text("No incident matches this filter.", 14f, p.muted), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(4) })
+        addView(text(s(R.string.empty_title), 16f, p.ink, bold = true), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(12) })
+        addView(text(s(R.string.empty_body), 14f, p.muted), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(4) })
     }
 
     private fun notice(message: String): View = text(message, 14f, p.warn).apply {

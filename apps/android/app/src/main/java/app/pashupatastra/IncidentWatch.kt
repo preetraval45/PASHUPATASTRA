@@ -68,16 +68,16 @@ class IncidentWatch(context: Context, params: WorkerParameters) : Worker(context
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val title = if (incident.state == "awaiting_approval") {
-            "${incident.id} needs your approval"
+            context.getString(R.string.notif_needs_approval, incident.id)
         } else {
-            "Critical incident: ${incident.id}"
+            context.getString(R.string.notif_critical, incident.id)
         }
         val notification = NotificationCompat.Builder(context, CHANNEL)
             .setSmallIcon(R.drawable.ic_alert)
             .setColor(Palette.DARK.astra)
             .setContentTitle(title)
-            .setContentText(incident.statement.ifBlank { Api.stateLabel(incident.state) })
-            .setStyle(NotificationCompat.BigTextStyle().bigText(incident.statement.ifBlank { Api.stateLabel(incident.state) }))
+            .setContentText(incident.statement.ifBlank { Api.stateLabel(context, incident.state) })
+            .setStyle(NotificationCompat.BigTextStyle().bigText(incident.statement.ifBlank { Api.stateLabel(context, incident.state) }))
             .setSubText(incident.severity.replaceFirstChar { it.uppercase() })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
@@ -98,8 +98,8 @@ class IncidentWatch(context: Context, params: WorkerParameters) : Worker(context
             val manager = context.getSystemService(NotificationManager::class.java)
             if (manager.getNotificationChannel(CHANNEL) != null) return
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL, "Incidents that need you", NotificationManager.IMPORTANCE_HIGH).apply {
-                    description = "An incident awaits approval, or a critical incident opens."
+                NotificationChannel(CHANNEL, context.getString(R.string.notif_channel), NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = context.getString(R.string.notif_channel_desc)
                 },
             )
         }

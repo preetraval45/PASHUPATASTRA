@@ -106,8 +106,8 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         column.removeAllViews()
 
         val me = activity.me
-        column.addView(text(if (me != null && !me.guest) "${greeting()}, ${me.name.substringBefore(' ')}" else greeting(), 14f, p.muted))
-        column.addView(text("What do you want to do?", 24f, p.ink, bold = true), lp(top = 2))
+        column.addView(text(if (me != null && !me.guest) s(R.string.greeting_named, greeting(), me.name.substringBefore(' ')) else greeting(), 14f, p.muted))
+        column.addView(text(s(R.string.home_prompt), 24f, p.ink, bold = true), lp(top = 2))
 
         update?.let { build ->
             column.addView(LinearLayout(activity).apply {
@@ -116,13 +116,13 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
                 setPadding(dp(16), dp(12), dp(12), dp(12))
                 background = ripple(rounded(ColorUtils.setAlphaComponent(p.astra, 36), 16, ColorUtils.setAlphaComponent(p.astra, 120)))
                 pressable { activity.openOutside(android.net.Uri.parse(Api.APK)) }
-                contentDescription = "A new version of the app is ready. Download build $build."
-                addView(text("A new version is ready (build $build)", 14f, p.ink, bold = true), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-                addView(text("Update", 14f, p.astra, bold = true))
+                contentDescription = s(R.string.home_update_desc, build)
+                addView(text(s(R.string.home_update_ready, build), 14f, p.ink, bold = true), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+                addView(text(s(R.string.home_update), 14f, p.astra, bold = true))
             }, lp(top = 12))
         }
         if (!loading) snapshot?.staleAt?.let {
-            column.addView(notice("Offline · showing incidents as of ${Api.clock(it)}. Pull down to try again."), lp(top = 14))
+            column.addView(notice(s(R.string.home_offline, Api.clock(it))), lp(top = 14))
         }
         column.addView(askCard(), lp(top = 18))
 
@@ -132,9 +132,9 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         val critical = live?.count { it.severity == "critical" }
 
         val stats = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
-        stats.addView(stat(live?.size, "Open", p.astra) { activity.open("/incidents") }, weighted(0))
-        stats.addView(stat(awaiting?.size, "Need you", p.warn) { activity.open("/incidents") }, weighted(10))
-        stats.addView(stat(critical, "Critical", p.crit) { activity.open("/incidents?severity=critical") }, weighted(10))
+        stats.addView(stat(live?.size, s(R.string.stat_open), p.astra) { activity.open("/incidents") }, weighted(0))
+        stats.addView(stat(awaiting?.size, s(R.string.stat_need_you), p.warn) { activity.open("/incidents") }, weighted(10))
+        stats.addView(stat(critical, s(R.string.stat_critical), p.crit) { activity.open("/incidents?severity=critical") }, weighted(10))
         column.addView(stats, lp(top = 14))
         column.addView(accountCard(me), lp(top = 14))
 
@@ -142,7 +142,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
             val needs = awaiting.orEmpty()
             val shown = (if (needs.isNotEmpty()) needs else live).sortedBy { Api.rank(it.severity) }.take(3)
             if (shown.isNotEmpty()) {
-                column.addView(heading(if (needs.isNotEmpty()) "Needs your approval" else "Open incidents", "See all") {
+                column.addView(heading(if (needs.isNotEmpty()) s(R.string.home_needs_approval) else s(R.string.home_open_incidents), s(R.string.see_all)) {
                     activity.open("/incidents")
                 }, lp(top = 24))
                 shown.forEach { column.addView(incidentCard(it), lp(top = 10)) }
@@ -150,15 +150,15 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         } else if (snapshot == null) {
             column.addView(skeleton(2), lp(top = 24))
         } else {
-            column.addView(notice("The API could not be reached. Pull down to try again."), lp(top = 18))
+            column.addView(notice(s(R.string.home_api_unreachable)), lp(top = 18))
         }
 
-        column.addView(heading("Explore", null, null), lp(top = 24))
+        column.addView(heading(s(R.string.home_explore), null, null), lp(top = 24))
         val explore = listOf(
-            Triple("/observatory", "Live attacks", R.drawable.ic_radar) to "polled hourly",
-            Triple("/models", "Sati models", R.drawable.ic_cube) to "nine, live",
-            Triple("/training", "Training", R.drawable.ic_cap) to "nine levels and labs",
-            Triple("/findings", "Findings", R.drawable.ic_news) to "what we measured",
+            Triple("/observatory", s(R.string.feed_title), R.drawable.ic_radar) to s(R.string.explore_live_note),
+            Triple("/models", s(R.string.explore_models), R.drawable.ic_cube) to s(R.string.explore_models_note),
+            Triple("/training", s(R.string.explore_training), R.drawable.ic_cap) to s(R.string.explore_training_note),
+            Triple("/findings", s(R.string.explore_findings), R.drawable.ic_news) to s(R.string.explore_findings_note),
         )
         val tones = listOf(p.warn, p.astra, p.ok, p.high)
         explore.chunked(2).forEachIndexed { row, pair ->
@@ -181,22 +181,23 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
         val org = me?.org
         val (title, body, target) = when {
             me == null -> Triple(
-                "Sign in to save your progress",
-                "Your training follows you across devices, and your company can share its policies and required levels.",
+                s(R.string.account_signin_title),
+                s(R.string.account_signin_body),
                 "/login",
             )
             org == null -> Triple(
-                "Join your company's workspace",
-                "Ask your administrator for an invite link, or create a workspace for your team.",
+                s(R.string.account_join_title),
+                s(R.string.account_join_body),
                 "/account",
             )
             else -> {
                 val lines = buildList {
                     if (org.required.isNotEmpty()) {
-                        add("Required training: ${org.requiredPassed} of ${org.required.size} passed" + (org.due?.let { " · due $it" } ?: ""))
+                        add(org.due?.let { s(R.string.account_required_due, org.requiredPassed, org.required.size, it) }
+                            ?: s(R.string.account_required, org.requiredPassed, org.required.size))
                     }
-                    org.policiesToRead?.let { add(if (it == 0) "All policies acknowledged" else "$it ${if (it == 1) "policy" else "policies"} to read and acknowledge") }
-                    if (isEmpty()) add("Your company's policies, training and team")
+                    org.policiesToRead?.let { add(if (it == 0) s(R.string.account_policies_done) else q(R.plurals.account_policies_to_read, it)) }
+                    if (isEmpty()) add(s(R.string.account_company_default))
                 }
                 Triple(org.name, lines.joinToString("\n"), "/company/${org.id}")
             }
@@ -250,14 +251,14 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
                 addView(icon(R.drawable.ic_chat, p.astra, 18))
                 addView(text("Sati AI", 13f, p.astra, bold = true), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(8) })
             })
-            addView(text("Ask about an attack, a technique or a defence", 18f, p.ink, bold = true), lp(top = 10))
-            addView(text("Sati, the investigation agent, and its nine specialist models answer with sources.", 14f, p.muted), lp(top = 4))
+            addView(text(s(R.string.ask_card_title), 18f, p.ink, bold = true), lp(top = 10))
+            addView(text(s(R.string.ask_card_body), 14f, p.muted), lp(top = 4))
             addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(16), dp(6), dp(6), dp(6))
                 background = rounded(ColorUtils.setAlphaComponent(p.ground, 200), 18, p.edge)
-                addView(text("Ask Sati anything…", 14f, p.faint), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+                addView(text(s(R.string.ask_card_hint), 14f, p.faint), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
                 addView(FrameLayout(activity).apply {
                     background = rounded(p.astra, 14)
                     addView(icon(R.drawable.ic_back, p.ground, 18).apply { rotation = 90f }, FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER))
@@ -312,16 +313,13 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
     private fun status(): View {
         val health = snapshot?.health
         val (dot, line) = when {
-            snapshot == null || (loading && health == null) -> p.faint to "Checking the system…"
-            health == null -> p.warn to "API unreachable"
+            snapshot == null || (loading && health == null) -> p.faint to s(R.string.status_checking)
+            health == null -> p.warn to s(R.string.status_unreachable)
             else -> {
                 val dry = health.optBoolean("dry_run", true)
                 val audit = health.optInt("audit_records", -1)
-                (if (dry) p.ok else p.crit) to buildString {
-                    append("System ok · ")
-                    append(if (dry) "dry run, nothing executes" else "LIVE EXECUTION")
-                    if (audit >= 0) append(" · $audit audit records")
-                }
+                val state = s(if (dry) R.string.status_ok_dry else R.string.status_ok_live)
+                (if (dry) p.ok else p.crit) to (if (audit >= 0) s(R.string.status_with_audit, state, audit) else state)
             }
         }
         return LinearLayout(activity).apply {
@@ -335,10 +333,10 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
     private fun greeting(): String {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         return when {
-            hour < 5 -> "Working late"
-            hour < 12 -> "Good morning"
-            hour < 18 -> "Good afternoon"
-            else -> "Good evening"
+            hour < 5 -> s(R.string.greeting_late)
+            hour < 12 -> s(R.string.greeting_morning)
+            hour < 18 -> s(R.string.greeting_afternoon)
+            else -> s(R.string.greeting_evening)
         }
     }
 }

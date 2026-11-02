@@ -94,36 +94,36 @@ class MainActivity : AppCompatActivity() {
 
     private val sections: List<Pair<String, List<Dest>>> by lazy {
         listOf(
-            "Start" to listOf(
-                Dest("/", "Home", R.drawable.ic_home),
-                Dest("/how-it-works", "How it works", R.drawable.ic_book),
+            getString(R.string.sec_start) to listOf(
+                Dest("/", getString(R.string.tab_home), R.drawable.ic_home),
+                Dest("/how-it-works", getString(R.string.dest_how), R.drawable.ic_book),
             ),
-            "Operate" to listOf(
-                Dest("/overview", "Overview", R.drawable.ic_grid),
-                Dest("/incidents", "Incidents", R.drawable.ic_alert),
+            getString(R.string.sec_operate) to listOf(
+                Dest("/overview", getString(R.string.dest_overview), R.drawable.ic_grid),
+                Dest("/incidents", getString(R.string.tab_incidents), R.drawable.ic_alert),
                 Dest("/ask", "Sati AI", R.drawable.ic_chat),
-                Dest("/observatory", "Observatory", R.drawable.ic_radar),
+                Dest("/observatory", getString(R.string.dest_observatory), R.drawable.ic_radar),
             ),
-            "Analyze" to listOf(
-                Dest("/analytics", "Analytics", R.drawable.ic_chart),
-                Dest("/world", "World threats", R.drawable.ic_globe),
-                Dest("/models", "Sati models", R.drawable.ic_cube),
+            getString(R.string.sec_analyze) to listOf(
+                Dest("/analytics", getString(R.string.dest_analytics), R.drawable.ic_chart),
+                Dest("/world", getString(R.string.dest_world), R.drawable.ic_globe),
+                Dest("/models", getString(R.string.explore_models), R.drawable.ic_cube),
             ),
-            "Respond" to listOf(
-                Dest("/actions", "Actions", R.drawable.ic_bolt),
-                Dest("/detections", "Detections", R.drawable.ic_shield),
+            getString(R.string.sec_respond) to listOf(
+                Dest("/actions", getString(R.string.dest_actions), R.drawable.ic_bolt),
+                Dest("/detections", getString(R.string.dest_detections), R.drawable.ic_shield),
                 Dest("/attack", "ATT&CK coverage", R.drawable.ic_matrix),
             ),
-            "Learn" to listOf(
-                Dest("/training", "Training", R.drawable.ic_cap),
-                Dest("/findings", "Findings", R.drawable.ic_news),
-                Dest("/evaluation", "Evaluation", R.drawable.ic_check),
+            getString(R.string.sec_learn) to listOf(
+                Dest("/training", getString(R.string.explore_training), R.drawable.ic_cap),
+                Dest("/findings", getString(R.string.explore_findings), R.drawable.ic_news),
+                Dest("/evaluation", getString(R.string.dest_evaluation), R.drawable.ic_check),
             ),
-            "More" to listOf(
-                Dest("/impact", "Impact", R.drawable.ic_pulse),
-                Dest("/press", "Press", R.drawable.ic_news),
-                Dest("/search", "Search", R.drawable.ic_search),
-                Dest("/privacy", "Privacy", R.drawable.ic_shield),
+            getString(R.string.sec_more) to listOf(
+                Dest("/impact", getString(R.string.dest_impact), R.drawable.ic_pulse),
+                Dest("/press", getString(R.string.dest_press), R.drawable.ic_news),
+                Dest("/search", getString(R.string.action_search), R.drawable.ic_search),
+                Dest("/privacy", getString(R.string.dest_privacy), R.drawable.ic_shield),
             ),
         )
     }
@@ -541,12 +541,12 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
                 open(if (signedIn) "/account" else "/login")
             }
-            val name = account?.name ?: if (signedIn) "Your account" else "Not signed in"
+            val name = account?.name ?: getString(if (signedIn) R.string.acct_your_account else R.string.acct_not_signed_in)
             val detail = when {
-                account == null && !signedIn -> "Save your training and join your company"
-                account == null -> "Open your account"
-                account.guest -> "Guest" + (account.org?.let { " · ${it.name}" } ?: "")
-                else -> listOfNotNull(account.email, account.org?.let { "${it.name} · ${it.role}" }).joinToString(" · ")
+                account == null && !signedIn -> getString(R.string.acct_signin_hint)
+                account == null -> getString(R.string.acct_open)
+                account.guest -> getString(R.string.acct_guest) + (account.org?.let { " · ${it.name}" } ?: "")
+                else -> listOfNotNull(account.email, account.org?.let { "${it.name} · ${roleLabel(it.role)}" }).joinToString(" · ")
             }
             contentDescription = "$name. $detail"
             val avatar: View = if (account == null) {
@@ -584,7 +584,7 @@ class MainActivity : AppCompatActivity() {
                 })
             }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(12) })
             addView(TextView(this@MainActivity).apply {
-                text = if (signedIn) "→" else "Sign in"
+                text = if (signedIn) "→" else getString(R.string.acct_sign_in)
                 textSize = 14f
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 setTextColor(p.astra)
@@ -593,16 +593,16 @@ class MainActivity : AppCompatActivity() {
 
         // The workspace (RP-101, RP-106): what this account's role opens, ahead of the product's sections.
         val workspace = buildList {
-            add(Dest("/apps", "All apps", R.drawable.ic_grid))
+            add(Dest("/apps", getString(R.string.dest_apps), R.drawable.ic_grid))
             account?.org?.let { org ->
                 add(Dest("/company/${org.id}", org.name, R.drawable.ic_company))
-                if (org.role == "owner" || org.role == "admin") add(Dest("/team", "Team", R.drawable.ic_team))
+                if (org.role == "owner" || org.role == "admin") add(Dest("/team", getString(R.string.dest_team), R.drawable.ic_team))
             }
-            if (account?.platformAdmin == true) add(Dest("/admin", "Admin", R.drawable.ic_shield))
-            if (signedIn) add(Dest("/account", "Account", R.drawable.ic_user))
+            if (account?.platformAdmin == true) add(Dest("/admin", getString(R.string.dest_admin), R.drawable.ic_shield))
+            if (signedIn) add(Dest("/account", getString(R.string.dest_account), R.drawable.ic_user))
         }
 
-        for ((title, dests) in listOf("Workspace" to workspace) + sections) {
+        for ((title, dests) in listOf(getString(R.string.sec_workspace) to workspace) + sections) {
             list.addView(TextView(this).apply {
                 text = title.uppercase()
                 textSize = 11f
@@ -689,6 +689,13 @@ class MainActivity : AppCompatActivity() {
             dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
         dialog.show()
+    }
+
+    private fun roleLabel(role: String): String = when (role) {
+        "owner" -> getString(R.string.role_owner)
+        "admin" -> getString(R.string.role_admin)
+        "employee" -> getString(R.string.role_employee)
+        else -> role
     }
 
     /** A tappable row in the More sheet, shaped like the switch rows. */

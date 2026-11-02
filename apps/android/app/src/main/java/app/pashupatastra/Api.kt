@@ -167,23 +167,29 @@ object Api {
         else -> 3
     }
 
-    fun stateLabel(state: String) = when (state) {
-        "awaiting_approval" -> "Awaiting your approval"
+    /** An incident's state in the phone's language; a state not named here is shown as the API spells it. */
+    fun stateLabel(context: Context, state: String): String = when (state) {
+        "awaiting_approval" -> context.getString(R.string.state_awaiting)
+        "escalated" -> context.getString(R.string.state_escalated)
+        "resolved" -> context.getString(R.string.state_resolved)
+        "rolled_back" -> context.getString(R.string.state_rolled_back)
+        "investigating" -> context.getString(R.string.state_investigating)
+        "open" -> context.getString(R.string.state_open)
         else -> state.replace('_', ' ').replaceFirstChar { it.uppercase() }
     }
 
     /** "3 h ago" from the API's UTC timestamp; java.time needs API 26, so SimpleDateFormat. */
-    fun ago(iso: String): String {
+    fun ago(context: Context, iso: String): String {
         val at = runCatching {
             SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT).apply { timeZone = TimeZone.getTimeZone("UTC") }
                 .parse(iso.take(19))?.time
         }.getOrNull() ?: return ""
         val minutes = (System.currentTimeMillis() - at) / 60_000
         return when {
-            minutes < 1 -> "just now"
-            minutes < 60 -> "$minutes min ago"
-            minutes < 60 * 24 -> "${minutes / 60} h ago"
-            else -> "${minutes / (60 * 24)} d ago"
+            minutes < 1 -> context.getString(R.string.ago_now)
+            minutes < 60 -> context.getString(R.string.ago_min, minutes.toInt())
+            minutes < 60 * 24 -> context.getString(R.string.ago_hours, (minutes / 60).toInt())
+            else -> context.getString(R.string.ago_days, (minutes / (60 * 24)).toInt())
         }
     }
 }

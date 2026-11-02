@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The languages the app's own words come in (values, values-hi, values-es). Declared so Android 13+
+     offers them under Settings > Apps > Pashupatastra > Language, for a phone set to another language. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="hi" />
+    <locale android:name="es" />
+</locale-config>

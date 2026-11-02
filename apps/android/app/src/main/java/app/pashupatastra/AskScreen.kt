@@ -61,7 +61,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
         root.addView(scroll, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
 
         input.apply {
-            hint = "Ask about an attack, a technique, a defence or a CVE…"
+            hint = s(R.string.ask_hint)
             textSize = 15f
             maxLines = 5
             minHeight = dp(48)
@@ -75,7 +75,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             }
         }
         send.apply {
-            contentDescription = "Send"
+            contentDescription = s(R.string.ask_send)
             isClickable = true
             setOnClickListener { submit() }
             addView(icon(R.drawable.ic_back, 0, 18).apply { rotation = 90f }, FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER))
@@ -93,7 +93,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             addView(composer, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
             // One quiet line: the disclosure that matters (questions are public, /privacy). That Sati
             // cannot act is said once in the welcome card, not under every keystroke.
-            note.text = "Questions are public in the audit trail · leave out personal details"
+            note.text = s(R.string.ask_note)
             note.maxLines = 1
             note.ellipsize = TextUtils.TruncateAt.END
             note.gravity = Gravity.CENTER
@@ -131,7 +131,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             column.addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.END
-                addView(link("New chat") { turns.clear(); render() })
+                addView(link(s(R.string.ask_new_chat)) { turns.clear(); render() })
             }, lp())
             turns.forEach { turn ->
                 column.addView(userBubble(turn.question), lp(top = 10))
@@ -158,14 +158,14 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
                 addView(icon(R.drawable.ic_chat, p.astra, 20))
                 addView(text("Sati AI", 15f, p.astra, bold = true), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(8) })
             })
-            addView(text("Ask Sati, the investigation agent", 19f, p.ink, bold = true), lp(top = 10))
+            addView(text(s(R.string.ask_welcome_title), 19f, p.ink, bold = true), lp(top = 10))
             addView(text(
-                "About an attack, a technique, a defence or a CVE. Sati routes your question to its own specialist models and every answer cites its sources. It can propose, never act.",
+                s(R.string.ask_welcome_body),
                 14f, p.muted,
             ).apply { setLineSpacing(0f, 1.2f) }, lp(top = 4))
         }, lp())
 
-        column.addView(text("Try one", 13f, p.faint, bold = true).apply { setPadding(dp(4), 0, 0, 0) }, lp(top = 20))
+        column.addView(text(s(R.string.ask_try_one), 13f, p.faint, bold = true).apply { setPadding(dp(4), 0, 0, 0) }, lp(top = 20))
         SUGGESTIONS.forEach { (question, hint) ->
             column.addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -177,7 +177,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
                 addView(LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
                     addView(text(question, 15f, p.ink, bold = true))
-                    addView(text(hint, 12f, p.muted), lp(top = 2))
+                    addView(text(s(hint), 12f, p.muted), lp(top = 2))
                 }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
                 addView(text("→", 16f, p.faint), LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(8) })
             }, lp(top = 8))
@@ -193,8 +193,8 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             addView(icon(R.drawable.ic_cube, p.astra, 22))
             addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
-                addView(text("Open the full Sati AI", 15f, p.ink, bold = true))
-                addView(text("All nine specialists, live model runs and drawn verdicts", 12f, p.muted), lp(top = 2))
+                addView(text(s(R.string.ask_full_title), 15f, p.ink, bold = true))
+                addView(text(s(R.string.ask_full_body), 12f, p.muted), lp(top = 2))
             }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(12) })
             addView(text("↗", 16f, p.faint))
         }, lp(top = 20))
@@ -228,7 +228,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
         when {
             error != null -> {
                 addView(text(error, 14f, p.warn), lp(top = 8))
-                addView(link("Try again") { turns.remove(turn); ask(turn.question) }, lp(top = 8))
+                addView(link(s(R.string.ask_try_again)) { turns.remove(turn); ask(turn.question) }, lp(top = 8))
             }
             answer == null -> addView(typing(), lp(top = 10))
             else -> {
@@ -240,12 +240,12 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
                 }, lp(top = 8))
                 addView(LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
-                    addView(link("Copy") {
+                    addView(link(s(R.string.ask_copy)) {
                         val clip = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clip.setPrimaryClip(ClipData.newPlainText("Sati AI", answer))
-                        Toast.makeText(activity, "Copied", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(activity, s(R.string.ask_copied), Toast.LENGTH_SHORT).show()
                     })
-                    addView(link("Share") { activity.share("Sati AI: " + turn.question, turn.question + "\n\n" + answer) },
+                    addView(link(s(R.string.ask_share)) { activity.share("Sati AI: " + turn.question, turn.question + "\n\n" + answer) },
                         LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(16) })
                 }, lp(top = 10))
             }
@@ -255,7 +255,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
     /** Three dots that pulse while Sati answers. */
     private fun typing(): View = LinearLayout(activity).apply {
         orientation = LinearLayout.HORIZONTAL
-        contentDescription = "Sati is answering"
+        contentDescription = s(R.string.ask_answering)
         repeat(3) { i ->
             addView(View(activity).apply {
                 background = rounded(p.faint, 4)
@@ -282,17 +282,16 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
     /** The answer's byline, job first (adr/Navadurga): what answered, then which model. */
     private fun byline(turn: Turn): String {
         val job = when (turn.area) {
-            "brahmacharini" -> "Technique match"
-            "skandamata" -> "Defences"
-            "kushmanda" -> "Explanation"
-            "katyayani" -> "Root cause"
-            "glossary" -> "Definition"
+            "brahmacharini" -> s(R.string.job_technique)
+            "skandamata" -> s(R.string.job_defences)
+            "kushmanda" -> s(R.string.job_explanation)
+            "katyayani" -> s(R.string.job_root)
             else -> null
         }
         val model = turn.area.replaceFirstChar { it.uppercase() }
         return when {
-            turn.answer == null && turn.error == null -> "Sati is answering"
-            turn.area == "glossary" -> "Sati · Definition · NIST glossary"
+            turn.answer == null && turn.error == null -> s(R.string.ask_answering)
+            turn.area == "glossary" -> s(R.string.ask_byline_glossary)
             job != null -> "Sati · $job · $model"
             turn.area.isNotBlank() -> "Sati · $model"
             else -> "Sati"
@@ -328,12 +327,12 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
                 val json = runCatching { JSONObject(text) }.getOrNull()
                 when {
                     status in 200..299 && json != null -> {
-                        turn.answer = json.optString("answer").ifBlank { "Sati had no answer to that." }
+                        turn.answer = json.optString("answer").ifBlank { s(R.string.ask_no_answer) }
                         turn.area = json.optString("area")
                     }
-                    status == 0 -> turn.error = "Could not reach Sati. Check the connection and try again."
-                    status == 429 -> turn.error = json?.optString("detail")?.ifBlank { null } ?: "Too many questions this minute. Try again shortly."
-                    else -> turn.error = json?.optString("detail")?.ifBlank { null } ?: "Sati is unavailable right now."
+                    status == 0 -> turn.error = s(R.string.ask_unreachable)
+                    status == 429 -> turn.error = json?.optString("detail")?.ifBlank { null } ?: s(R.string.ask_rate)
+                    else -> turn.error = json?.optString("detail")?.ifBlank { null } ?: s(R.string.ask_unavailable)
                 }
                 render()
             }
@@ -354,7 +353,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             // The sources line: each address as a short label (host and last part), linked to
             // the full address, instead of four lines of raw URLs on a phone.
             if (raw.startsWith("Sources:")) {
-                out.append("Sources: ")
+                out.append(s(R.string.ask_sources) + " ")
                 Regex("https://\\S+").findAll(raw).forEachIndexed { n, m ->
                     val url = m.value.trimEnd('.', ',', ';', ')')
                     val uri = android.net.Uri.parse(url)
@@ -408,11 +407,12 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
     private companion object {
         /** The same openers as the site's /ask, each with what it shows. */
         val SUGGESTIONS = listOf(
-            "What is SQL injection?" to "The attack, and the fixes that stop it",
-            "How do we defend against ransomware?" to "Defences, most relevant first",
-            "What should we do about Log4Shell?" to "CISA's required action, cited",
-            "How do we defend against phishing emails?" to "Training first, then the controls",
-            "Which ATT&CK technique is a scheduled task that runs malware at every logon?" to "Names the technique",
+            // The questions stay English: Sati's sources are English, so they are what it can answer.
+            "What is SQL injection?" to R.string.sug_sqli,
+            "How do we defend against ransomware?" to R.string.sug_ransomware,
+            "What should we do about Log4Shell?" to R.string.sug_log4shell,
+            "How do we defend against phishing emails?" to R.string.sug_phishing,
+            "Which ATT&CK technique is a scheduled task that runs malware at every logon?" to R.string.sug_technique,
         )
     }
 }

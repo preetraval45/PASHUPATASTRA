@@ -106,7 +106,7 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
         if (all == null) {
             column.addView(list)
             list.addView(
-                if (failed) notice("The feeds could not be loaded. Pull down to try again.")
+                if (failed) notice(s(R.string.feed_failed))
                 else skeleton(5),
                 lp(top = 10),
             )
@@ -120,16 +120,16 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
         if (failed) {
             val at = staleAt
             list.addView(notice(
-                if (at != null) "Offline · showing reports as of ${Api.clock(at)}. Pull down to try again."
-                else "Showing the last reports loaded: the API did not answer just now.",
+                if (at != null) s(R.string.feed_offline, Api.clock(at))
+                else s(R.string.feed_stale),
             ), lp(top = 10))
         }
 
         val shown = if (source == "all") all else all.filter { it.source == source }
-        val window = if (windowHours > 0) " · reports from the last $windowHours h count as active" else ""
-        list.addView(text("${shown.size} ${if (shown.size == 1) "report" else "reports"}$window", 13f, p.muted), lp(top = 8))
+        val counted = q(R.plurals.reports_count, shown.size)
+        list.addView(text(if (windowHours > 0) s(R.string.feed_window, counted, windowHours) else counted, 13f, p.muted), lp(top = 8))
         shown.forEach { list.addView(card(it), lp(top = 10)) }
-        list.addView(text("Polled hourly from public feeds. Addresses are defanged, so none of them can be tapped by accident.", 12f, p.faint).apply {
+        list.addView(text(s(R.string.feed_footer), 12f, p.faint).apply {
             gravity = Gravity.CENTER
         }, lp(top = 18))
     }
@@ -175,8 +175,8 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
             background = ripple(rounded(p.panel, 18, p.edge))
             val url = report.url
             if (url != null) pressable { activity.openOutside(Uri.parse(url)) }
-            contentDescription = "${label(report.source)}, ${report.verification}. ${report.title}." +
-                if (url != null) " Opens the source record." else ""
+            contentDescription = s(R.string.feed_desc, label(report.source), verification(report.verification), report.title) +
+                if (url != null) " " + s(R.string.feed_opens_source) else ""
             addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
@@ -184,8 +184,8 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
                     setPadding(dp(8), dp(3), dp(8), dp(3))
                     background = rounded(ColorUtils.setAlphaComponent(tone, 40), 10)
                 })
-                addView(text(report.verification, 12f, p.muted), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(10) })
-                addView(text(Api.ago(report.at), 12f, p.faint))
+                addView(text(verification(report.verification), 12f, p.muted), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(10) })
+                addView(text(Api.ago(activity, report.at), 12f, p.faint))
             })
             addView(text(report.title, 15f, p.ink, bold = true).apply {
                 maxLines = 2
@@ -199,11 +199,31 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
                 }, lp(top = 4))
             }
             val footer = buildList {
-                if (report.reports > 1) add("${report.reports} reports")
-                if (url != null) add("Source record ↗")
+                if (report.reports > 1) add(q(R.plurals.reports_count, report.reports))
+                if (url != null) add(s(R.string.feed_source_record))
             }.joinToString(" · ")
             if (footer.isNotEmpty()) addView(text(footer, 12f, p.astra, bold = true), lp(top = 8))
         }
+    }
+
+    /** The feeds by what they report, not by their product names. */
+    private fun label(source: String): String = when (source) {
+        "all" -> s(R.string.src_all)
+        "cisa-kev" -> s(R.string.src_kev)
+        "nvd" -> s(R.string.src_nvd)
+        "feodo-tracker" -> s(R.string.src_feodo)
+        "ransomware-live" -> s(R.string.src_ransomware)
+        "threatfox" -> s(R.string.src_threatfox)
+        "urlhaus" -> s(R.string.src_urlhaus)
+        "hibp" -> s(R.string.src_hibp)
+        else -> source
+    }
+
+    private fun verification(level: String): String = when (level) {
+        "reported" -> s(R.string.ver_reported)
+        "corroborated" -> s(R.string.ver_corroborated)
+        "confirmed" -> s(R.string.ver_confirmed)
+        else -> level
     }
 
     private fun notice(message: String): View = text(message, 14f, p.warn).apply {
@@ -212,19 +232,6 @@ class FeedScreen(activity: MainActivity) : NativeScreen(activity) {
     }
 
     private companion object {
-        /** The feeds by what they report, not by their product names. */
-        fun label(source: String) = when (source) {
-            "all" -> "All"
-            "cisa-kev" -> "Exploited CVEs"
-            "nvd" -> "New CVEs"
-            "feodo-tracker" -> "Botnet servers"
-            "ransomware-live" -> "Ransomware"
-            "threatfox" -> "Indicators"
-            "urlhaus" -> "Malware URLs"
-            "hibp" -> "Breaches"
-            else -> source
-        }
-
         fun parse(body: JSONObject): List<Report> {
             val groups = body.optJSONArray("groups") ?: return emptyList()
             return (0 until groups.length()).map { i ->

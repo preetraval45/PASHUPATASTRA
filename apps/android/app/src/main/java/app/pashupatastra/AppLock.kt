@@ -55,11 +55,11 @@ class AppLock(private val activity: MainActivity, private val host: ViewGroup) {
             return
         }
         if (!available()) {
-            Toast.makeText(activity, "Set up a screen lock on this phone first.", Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, activity.getString(R.string.lock_no_screen_lock), Toast.LENGTH_LONG).show()
             done(false)
             return
         }
-        prompt("Turn on the app lock") { passed ->
+        prompt(activity.getString(R.string.lock_turn_on)) { passed ->
             if (passed) prefs.edit().putBoolean(ENABLED, true).apply()
             done(passed)
         }
@@ -92,20 +92,20 @@ class AppLock(private val activity: MainActivity, private val host: ViewGroup) {
             imageTintList = ColorStateList.valueOf(p.astra)
         }, LinearLayout.LayoutParams(dp(56), dp(56)))
         column.addView(TextView(activity).apply {
-            text = "Pashupatastra is locked"
+            text = activity.getString(R.string.lock_title)
             textSize = 22f
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             setTextColor(p.ink)
             gravity = Gravity.CENTER
         }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(20) })
         column.addView(TextView(activity).apply {
-            text = "Unlock with your fingerprint, face or screen lock."
+            text = activity.getString(R.string.lock_body)
             textSize = 15f
             setTextColor(p.muted)
             gravity = Gravity.CENTER
         }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(8) })
         column.addView(MaterialButton(activity).apply {
-            text = "Unlock"
+            text = activity.getString(R.string.lock_unlock)
             isAllCaps = false
             textSize = 16f
             cornerRadius = dp(26)
@@ -125,7 +125,7 @@ class AppLock(private val activity: MainActivity, private val host: ViewGroup) {
     }
 
     private fun ask() {
-        prompt("Unlock Pashupatastra") { passed ->
+        prompt(activity.getString(R.string.lock_prompt)) { passed ->
             if (passed) {
                 cover?.let { layer -> layer.animate().alpha(0f).setDuration(180).withEndAction { host.removeView(layer) }.start() }
                 cover = null

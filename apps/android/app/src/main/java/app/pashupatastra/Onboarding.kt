@@ -34,18 +34,9 @@ class Onboarding(
     private class Page(val icon: Int, val title: String, val body: String)
 
     private val pages = listOf(
-        Page(
-            R.drawable.ic_shield, "Four alerts are one intrusion",
-            "Pashupatastra assembles scattered signals into one incident with its causal chain, and scores a response before anyone runs it.",
-        ),
-        Page(
-            R.drawable.ic_chat, "Ask Sati AI",
-            "Sati, the investigation agent, and nine specialist models answer questions about attacks, techniques and defences. Every claim is cited; Sati can propose but never act.",
-        ),
-        Page(
-            R.drawable.ic_alert, "Know when you're needed",
-            "Get an alert when an incident awaits your approval or a critical one opens. The phone checks the public API; nothing is sent from it.",
-        ),
+        Page(R.drawable.ic_shield, activity.getString(R.string.ob1_title), activity.getString(R.string.ob1_body)),
+        Page(R.drawable.ic_chat, activity.getString(R.string.ob2_title), activity.getString(R.string.ob2_body)),
+        Page(R.drawable.ic_alert, activity.getString(R.string.ob3_title), activity.getString(R.string.ob3_body)),
     )
 
     private val p get() = activity.palette
@@ -126,10 +117,10 @@ class Onboarding(
             }
         }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { bottomMargin = dp(24) })
 
-        column.addView(button(if (last) "Turn on alerts" else "Next", primary = true) {
+        column.addView(button(activity.getString(if (last) R.string.ob_alerts else R.string.ob_next), primary = true) {
             if (last) finish(alerts = true) else next()
         }, LinearLayout.LayoutParams(MATCH_PARENT, dp(52)))
-        column.addView(button(if (last) "Not now" else "Skip", primary = false) {
+        column.addView(button(activity.getString(if (last) R.string.ob_not_now else R.string.ob_skip), primary = false) {
             finish(alerts = !last)
         }, LinearLayout.LayoutParams(MATCH_PARENT, dp(52)).apply { topMargin = dp(8) })
 

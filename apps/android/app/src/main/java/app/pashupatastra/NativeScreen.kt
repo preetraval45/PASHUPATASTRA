@@ -37,6 +37,20 @@ abstract class NativeScreen(protected val activity: MainActivity) {
     abstract fun applyPalette()
 
     protected val p get() = activity.palette
+
+    /** The app's own words, in the phone's language (res/values, values-hi, values-es). */
+    protected fun s(id: Int, vararg args: Any): String = activity.getString(id, *args)
+
+    /** A count with its noun, by the language's own plural rules ("1 incident", "3 incidents"). */
+    protected fun q(id: Int, count: Int): String = activity.resources.getQuantityString(id, count, count)
+
+    protected fun sevLabel(severity: String): String = when (severity) {
+        "critical" -> s(R.string.stat_critical)
+        "high" -> s(R.string.sev_high)
+        "medium" -> s(R.string.sev_medium)
+        "low" -> s(R.string.sev_low)
+        else -> severity
+    }
     protected fun dp(v: Int) = activity.dp(v)
 
     protected fun incidentCard(incident: Api.Incident): View {
@@ -47,19 +61,19 @@ abstract class NativeScreen(protected val activity: MainActivity) {
             background = ripple(rounded(p.panel, 18, p.edge))
             pressable { activity.open("/incidents/" + incident.id) }
             // One sentence for TalkBack instead of five fragments.
-            contentDescription = "${incident.severity} incident ${incident.id}. ${incident.statement}. ${Api.stateLabel(incident.state)}"
+            contentDescription = s(R.string.incident_desc, sevLabel(incident.severity), incident.id, incident.statement, Api.stateLabel(activity, incident.state))
             addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                addView(text(incident.severity.uppercase(Locale.ROOT), 11f, tone, bold = true).apply {
+                addView(text(sevLabel(incident.severity).uppercase(Locale.getDefault()), 11f, tone, bold = true).apply {
                     letterSpacing = 0.06f
                     setPadding(dp(8), dp(3), dp(8), dp(3))
                     background = rounded(ColorUtils.setAlphaComponent(tone, 40), 10)
                 })
                 addView(text(incident.id, 12f, p.muted).apply { typeface = Typeface.MONOSPACE }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(10) })
-                addView(text(Api.ago(incident.openedAt), 12f, p.faint))
+                addView(text(Api.ago(activity, incident.openedAt), 12f, p.faint))
             })
-            addView(text(incident.statement.ifBlank { "No hypothesis yet" }, 15f, p.ink).apply {
+            addView(text(incident.statement.ifBlank { s(R.string.incident_no_hypothesis) }, 15f, p.ink).apply {
                 maxLines = 3
                 ellipsize = TextUtils.TruncateAt.END
                 setLineSpacing(0f, 1.15f)
@@ -70,7 +84,7 @@ abstract class NativeScreen(protected val activity: MainActivity) {
             }.joinToString(" · ")
             addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
-                addView(text(Api.stateLabel(incident.state), 12f, if (incident.state == "awaiting_approval") p.warn else p.muted, bold = true))
+                addView(text(Api.stateLabel(activity, incident.state), 12f, if (incident.state == "awaiting_approval") p.warn else p.muted, bold = true))
                 if (detail.isNotEmpty()) {
                     addView(text(detail, 12f, p.faint).apply {
                         maxLines = 1

@@ -35,6 +35,16 @@ open /observatory;             shot 6-live-attacks 10
 open /training;                shot 7-training 15
 adb shell input tap 970 2230;  shot 8-more 3      # the More tab, on a 1080x2400 pixel_6
 
+# The app in Hindi and Spanish (per-app language, Android 13+): Home, as a check that the translations
+# render. The app restarts for a new language.
+for lang in hi-IN es-US; do
+  adb shell cmd locale set-app-locales app.pashupatastra --locales "$lang" || true
+  adb shell am force-stop app.pashupatastra
+  adb shell am start -W -n app.pashupatastra/.MainActivity > /dev/null
+  shot "9-home-$lang" 15
+done
+adb shell cmd locale set-app-locales app.pashupatastra --locales "" || true
+
 adb logcat -d -b crash > crash.log || true
 # The whole log, for diagnosis: a WebView renderer that dies takes the app with it without
 # a Java crash, and only the main buffer says so.
