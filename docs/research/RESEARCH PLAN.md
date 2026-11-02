@@ -888,9 +888,9 @@ Items already covered by an RP task stay listed until that RP task closes them.
 
 **Phase 7 — Security Data Foundation · Weeks 25–28 › 7.4 Intel is data, never instruction**
 
-- [ ] Threat-intel text passed to any model is quoted as data, extending the
+- [x] Threat-intel text passed to any model is quoted as data, extending the — *done 2 Nov: advisories reach the model as untrusted `Evidence`, verbatim, and are now screened by Kavach like incident evidence; instruction-shaped text gets our own warning line ahead of the quoted words (`agent/context.py` `intel_evidence`, which had passed advisories unscreened). Evidence: `tests/testfeedpoisoning.py`.*
 - [ ] Ingested intel lands **untrusted** and cannot enter long-term memory
-- [ ] Feed poisoning test — a hostile indicator must not reach an action path
+- [x] Feed poisoning test — a hostile indicator must not reach an action path — *done 2 Nov: `services/api/tests/testfeedpoisoning.py` (5 tests) runs a hostile CISA KEV entry through the real parser and store into an incident chat with a model scripted to obey it. The text arrives verbatim, flagged and untrusted; proposals of `wipe_host`, `block_ip` and `isolate_host` are scored, never autonomous (wipe_host denied), and no execution attempt is recorded.*
 
 **Phase 7 — Security Data Foundation · Weeks 25–28 › 7.5 Data quality as a research object**
 
