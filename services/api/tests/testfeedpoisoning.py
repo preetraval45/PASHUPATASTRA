@@ -74,7 +74,7 @@ def test_an_obedient_model_gets_nothing_executed(monkeypatch, proposed: str) -> 
     from app.agent import chat as chat_engine
     from app.api import routes
     from app.engines import buddhi
-    from app.graph import MIRROR
+    from app.graph import entitystore
     from app.main import app
 
     client = TestClient(app)
@@ -86,7 +86,8 @@ def test_an_obedient_model_gets_nothing_executed(monkeypatch, proposed: str) -> 
     from app.feeds import sources
 
     monkeypatch.setattr(sources, "_get", lambda url: {"vulnerabilities": [POISON]})
-    MIRROR.save_events(sources.fetch_kev())
+    # Whatever store the chat reads: memory locally, Postgres in CI.
+    entitystore().save_events(sources.fetch_kev())
 
     seen: list = []
 
