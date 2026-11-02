@@ -10,7 +10,14 @@ import { API_BASE } from "@/lib/api";
 
 const KEY = "pashu.session";
 
-export type Account = { id: string; name: string; provider: "guest" | "email" | "google"; email: string | null };
+export type Account = {
+  id: string;
+  name: string;
+  provider: "guest" | "email" | "google";
+  email: string | null;
+  /** The address is proven: its emailed link was opened, or Google vouched for it. */
+  verified?: boolean;
+};
 export type OrgSettings = {
   accent: "default" | "series-1" | "series-2" | "series-5" | "series-6" | "series-7";
   logo: string | null;
@@ -201,6 +208,13 @@ export const authConfig = () =>
 /** Asks for a reset email. The answer says whether this deployment can send one at all. */
 export const forgotPassword = (email: string) =>
   call<{ email_reset: boolean }>("/auth/forgot", { method: "POST", body: JSON.stringify({ email }) });
+
+/** Opens an emailed verification link. Needs no session: the link is the proof. */
+export const verifyEmail = (token: string) =>
+  call<{ verified: boolean; user: Account }>("/auth/verify", { method: "POST", body: JSON.stringify({ token }) });
+
+/** Asks for a new verification link. `sent` is false when mail is off, already verified, or sent in the last minute. */
+export const resendVerification = () => call<{ sent: boolean; email_verify: boolean }>("/me/verify", { method: "POST" });
 
 /** Sets a new password from a reset link's token, and signs in with it. */
 export const resetPassword = (token: string, password: string) =>

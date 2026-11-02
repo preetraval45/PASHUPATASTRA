@@ -14,6 +14,7 @@ import {
   resetPassword,
   signIn,
   signInAsGuest,
+  verifyEmail,
 } from "@/lib/account";
 
 /**
@@ -394,6 +395,45 @@ export function ForgotForm() {
           Back to sign in
         </Link>
       </p>
+    </div>
+  );
+}
+
+/** The page an emailed verification link opens: proves the address, then says so. */
+export function VerifyForm() {
+  const params = useSearchParams();
+  const token = params.get("token") ?? "";
+  const [state, setState] = useState<"checking" | "done" | "failed">(token ? "checking" : "failed");
+  const [error, setError] = useState<string | null>(token ? null : "This link is incomplete. Open it again from the email.");
+
+  useEffect(() => {
+    if (!token) return;
+    verifyEmail(token)
+      .then(() => setState("done"))
+      .catch((e) => {
+        setError(message(e));
+        setState("failed");
+      });
+  }, [token]);
+
+  return (
+    <div className="rise">
+      <h1 className="text-3xl font-semibold tracking-tight">
+        {state === "checking" ? "Confirming your email…" : state === "done" ? "Email confirmed" : "That link didn't work"}
+      </h1>
+      <p className="mt-1.5 text-[rgb(var(--muted))]">
+        {state === "done"
+          ? "Your address is verified. Your company can now rely on it."
+          : state === "checking"
+            ? "One moment."
+            : "Ask for a new one from your account."}
+      </p>
+      <Problem text={error} />
+      {state !== "checking" && (
+        <Link href="/account" className={`${PRIMARY} mt-8 block text-center`}>
+          Go to your account
+        </Link>
+      )}
     </div>
   );
 }

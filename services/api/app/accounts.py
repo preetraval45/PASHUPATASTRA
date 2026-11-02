@@ -185,15 +185,20 @@ class User:
     name: str
     provider: str
     email: str | None = None
+    #: The address is proven to be this person's: a link sent to it was opened (or Google vouched for it).
+    verified: bool = False
 
     def public(self) -> dict[str, Any]:
-        return {"id": self.id, "name": self.name, "provider": self.provider, "email": self.email}
+        return {"id": self.id, "name": self.name, "provider": self.provider, "email": self.email,
+                "verified": self.verified}
 
 
 def _user(doc: dict | None) -> User | None:
     if not doc:
         return None
-    return User(id=doc["id"], name=doc["name"], provider=doc["provider"], email=doc.get("email"))
+    # Google only signs in an address it has verified (google() refuses otherwise), so it counts as verified.
+    verified = bool(doc.get("verified")) or doc["provider"] == "google"
+    return User(id=doc["id"], name=doc["name"], provider=doc["provider"], email=doc.get("email"), verified=verified)
 
 
 def get_user(user_id: str) -> User | None:
@@ -451,6 +456,8 @@ def members(org_id: str, actor: User) -> list[dict]:
 # --- passwords and sessions, managed ----------------------------------------------------------
 
 RESET_SECONDS = 60 * 60
+VERIFY_SECONDS = 24 * 60 * 60
+RESEND_SECONDS = 60
 
 
 def _bump(user_id: str) -> None:
@@ -509,6 +516,43 @@ def reset_password(token: str, password: str, now: float | None = None) -> User:
     user = get_user(found["user"])
     if user is None:
         raise AccountError("That account no longer exists.", 404)
+    return user
+
+
+def verification_token(user: User, now: float | None = None) -> str | None:
+    """A one-time link token proving the account's address, for an email account not yet verified; None
+    otherwise, or when one was issued less than a minute ago (resending is not a way to send mail at will).
+    Like reset tokens, only its SHA-256 is stored, with the address it was sent to."""
+    if user.provider != "email" or user.verified or not user.email:
+        return None
+    moment = now or time.time()
+    doc = store().get_doc("USER", user.id) or {}
+    if moment - float(doc.get("verify_sent", 0)) < RESEND_SECONDS:
+        return None
+    doc["verify_sent"] = int(moment)
+    store().put_doc("USER", user.id, doc)
+    token = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    store().put_doc("VERIFY", digest, {"user": user.id, "email": user.email, "exp": int(moment + VERIFY_SECONDS)})
+    return token
+
+
+def confirm_email(token: str, now: float | None = None) -> User:
+    """Marks the address verified from its link. Refused when the link is spent or expired, or when the
+    account's address is no longer the one the link was sent to."""
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    found = store().get_doc("VERIFY", digest)
+    if not found or int(found["exp"]) < (now or time.time()):
+        raise AccountError("That link has expired or was already used. Ask for a new one from your account.", 400)
+    doc = store().get_doc("USER", found["user"])
+    if not doc or doc.get("email") != found["email"]:
+        store().delete_doc("VERIFY", digest)
+        raise AccountError("That link was for a different address. Ask for a new one from your account.", 400)
+    doc["verified"] = True
+    store().put_doc("USER", found["user"], doc)
+    store().delete_doc("VERIFY", digest)
+    user = _user(doc)
+    assert user is not None
     return user
 
 

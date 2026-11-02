@@ -60,7 +60,8 @@ export default function PrivacyPage() {
           <ul className="list-disc space-y-2 pl-5">
             <li>
               <strong>What is kept.</strong> Your name as you typed it. For an email account, the address and a
-              one-way scrypt hash of your password (never the password itself). For Google sign-in, Google's
+              one-way scrypt hash of your password (never the password itself), and whether you have confirmed
+              the address from the link we email (only a hash of that link is kept, for a day). For Google sign-in, Google's
               account id and your verified address, which Google shares when you choose to continue. A guest
               account keeps nothing but a random id.
             </li>

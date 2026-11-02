@@ -301,3 +301,39 @@ def test_an_attempt_must_answer_every_question():
     short = client.post("/api/v1/me/training/phishing/attempt", json={"answers": ["x"]}, headers=auth(token))
     assert short.status_code == 400
     assert client.post("/api/v1/me/training/nope/attempt", json={"answers": []}, headers=auth(token)).status_code == 404
+
+
+def test_an_email_account_starts_unverified_and_a_link_proves_the_address_once():
+    token = register()
+    me = client.get("/api/v1/me", headers=auth(token)).json()["user"]
+    assert me["verified"] is False
+    user = accounts.get_user(me["id"])
+    import time
+
+    link = accounts.verification_token(user)
+    # One a minute: asking again at once sends nothing.
+    assert accounts.verification_token(user, now=time.time() + 10) is None
+    assert link not in str(accounts.store().docs("VERIFY"))  # only its hash is kept
+    done = client.post("/api/v1/auth/verify", json={"token": link})
+    assert done.status_code == 200 and done.json()["user"]["verified"] is True
+    assert client.get("/api/v1/me", headers=auth(token)).json()["user"]["verified"] is True
+    assert client.post("/api/v1/auth/verify", json={"token": link}).status_code == 400  # spent
+    assert accounts.verification_token(accounts.get_user(me["id"]), now=time.time() + 3_600) is None  # nothing to prove
+
+
+def test_a_verification_link_expires_and_mail_off_sends_nothing():
+    token = register()
+    user_id = client.get("/api/v1/me", headers=auth(token)).json()["user"]["id"]
+    link = accounts.verification_token(accounts.get_user(user_id), now=1_000)
+    with pytest.raises(accounts.AccountError):
+        accounts.confirm_email(link, now=1_000 + accounts.VERIFY_SECONDS + 1)
+    # This test deployment has no SES sender: resending says so and sends nothing (fail-soft).
+    sent = client.post("/api/v1/me/verify", headers=auth(token)).json()
+    assert sent == {"sent": False, "email_verify": False}
+    assert client.get("/api/v1/auth/config").json()["email_verify"] is False
+
+
+def test_guests_have_nothing_to_verify():
+    guest = client.post("/api/v1/auth/guest").json()["token"]
+    me = client.get("/api/v1/me", headers=auth(guest)).json()["user"]
+    assert me["verified"] is False and accounts.verification_token(accounts.get_user(me["id"])) is None

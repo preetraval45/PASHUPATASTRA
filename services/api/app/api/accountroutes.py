@@ -126,7 +126,7 @@ class Result(BaseModel):
 def auth_config() -> dict:
     """Which sign-ins this deployment offers. The Google client id is public by design."""
     return {"google_client_id": get_settings().google_client_id, "guest": True, "email": True,
-            "email_reset": mail.enabled()}
+            "email_reset": mail.enabled(), "email_verify": mail.enabled()}
 
 
 @router.post("/auth/guest")
@@ -143,7 +143,44 @@ def auth_register(body: Register) -> dict:
     except accounts.AccountError as error:
         raise _fail(error) from error
     _audit("an account was created", provider="email")
+    _send_verification(user)
     return _session(user)
+
+
+def _send_verification(user: accounts.User) -> bool:
+    """Emails the address a link that proves it, when this deployment can send mail. Fail-soft: with SES
+    off, nothing is sent and nothing pretends it was (the account works; it shows as unverified)."""
+    if not mail.enabled() or not user.email:
+        return False
+    token = accounts.verification_token(user)
+    if token is None:
+        return False
+    link = f"{get_settings().site_url}/verify?token={token}"
+    return mail.send(user.email, "Confirm your email for Pashupatastra",
+                     f"Confirm this address for your Pashupatastra account within a day:\n{link}\n\n"
+                     "If you didn't create an account, ignore this email.")
+
+
+class Verify(BaseModel):
+    token: str = Field(max_length=200)
+
+
+@router.post("/auth/verify")
+def auth_verify(body: Verify) -> dict:
+    """Opens a verification link. Needs no session: the link itself is the proof."""
+    try:
+        user = accounts.confirm_email(body.token)
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    _audit("an email address was verified")
+    return {"verified": True, "user": user.public()}
+
+
+@router.post("/me/verify")
+def me_verify(authorization: str | None = Header(default=None)) -> dict:
+    """Sends a new verification link. `sent` is false when mail is off, the address is already verified, or
+    one went out less than a minute ago."""
+    return {"sent": _send_verification(_user(authorization)), "email_verify": mail.enabled()}
 
 
 @router.post("/auth/login")

@@ -1777,6 +1777,20 @@
         "title": "VerificationCheck",
         "type": "object"
       },
+      "Verify": {
+        "properties": {
+          "token": {
+            "maxLength": 200,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "Verify",
+        "type": "object"
+      },
       "VerifyRequest": {
         "properties": {
           "action_id": {
@@ -2427,6 +2441,47 @@
           }
         },
         "summary": "Auth Reset"
+      }
+    },
+    "/api/v1/auth/verify": {
+      "post": {
+        "description": "Opens a verification link. Needs no session: the link itself is the proof.",
+        "operationId": "auth_verify_api_v1_auth_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Verify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Verify Api V1 Auth Verify Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Verify"
       }
     },
     "/api/v1/detections": {
@@ -3893,6 +3948,55 @@
           }
         },
         "summary": "Me Attempt"
+      }
+    },
+    "/api/v1/me/verify": {
+      "post": {
+        "description": "Sends a new verification link. `sent` is false when mail is off, the address is already verified, or\none went out less than a minute ago.",
+        "operationId": "me_verify_api_v1_me_verify_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Me Verify Api V1 Me Verify Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Me Verify"
       }
     },
     "/api/v1/models": {

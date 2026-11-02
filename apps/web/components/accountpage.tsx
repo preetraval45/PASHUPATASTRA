@@ -12,6 +12,7 @@ import {
   deleteAccount,
   joinCompany,
   rename,
+  resendVerification,
   signOut,
   signOutEverywhere,
 } from "@/lib/account";
@@ -106,6 +107,34 @@ export function AccountPage() {
               {guest ? "Guest session on this device" : me.user.email}
               {" · "}
               {me.user.provider === "google" ? "Google" : me.user.provider === "email" ? "Email and password" : "Guest"}
+              {me.user.provider === "email" && (
+                <>
+                  {" · "}
+                  {me.user.verified ? (
+                    <span className="text-[rgb(var(--ok))]">verified</span>
+                  ) : (
+                    <>
+                      <span className="text-[rgb(var(--warn))]">not verified</span>{" "}
+                      {/* A link to the address proves it is yours (POST /me/verify). With email sending not
+                          yet switched on, the account works the same and says so rather than pretending. */}
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          run(async () => {
+                            const { sent, email_verify } = await resendVerification();
+                            if (!email_verify) throw new AccountFailure("Email isn't switched on for this site yet; your account works without it.", 0);
+                            if (!sent) throw new AccountFailure("A link went out less than a minute ago. Check your inbox.", 0);
+                          }, "Link sent. Open it within a day to confirm your address.")
+                        }
+                        className="focusable underline hover:text-[rgb(var(--ink))]"
+                      >
+                        send link
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
             </p>
             <p className="mt-1 text-xs text-[rgb(var(--faint))]">
               Account id <code className="mono select-all rounded bg-[rgb(var(--raised))] px-1.5 py-0.5">{me.user.id}</code>
