@@ -83,7 +83,7 @@ Category **Utility, Productivity, Communication or Other**. No violence, sexual 
 
 - **App icon 512×512:** `apps/android/store/icon-512.png` (`scripts/buildbrand.py`).
 - **Feature graphic 1024×500:** `apps/android/store/feature-graphic.png` (`scripts/buildbrand.py`): the site's lockup and tagline on the dark ground.
-- **Phone screenshots (2–8):** taken by CI on an emulator on every build, attached to the `android` release as `shot-*.png` (`apps/android/screens.sh`).
+- **Phone screenshots (2–8):** `apps/android/store/screenshots/` (1080×2160). Play refuses a screenshot whose long side is more than twice the short one, and the emulator's are 1080×2400, so these are its shots (`apps/android/screens.sh`, attached to the `android` release) with the status and gesture bars trimmed. Upload 1–6 for every language; 7 (Hindi) and 8 (Spanish) go first in their own listings.
 
 ## What only the owner can do
 
