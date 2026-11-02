@@ -219,6 +219,16 @@
     <string name="detail_failed">यह घटना लोड नहीं हो सकी। फिर कोशिश करने के लिए नीचे खींचें।</string>
     <string name="detail_opened">%1$s खुली</string>
     <string name="detail_ask">इसके बारे में Sati से पूछें</string>
+    <string name="update_title">Pashupatastra अपडेट</string>
+    <string name="update_downloading">अपडेट डाउनलोड हो रहा है। पूरा होने पर इंस्टॉल करने के लिए सूचना पर टैप करें।</string>
+    <string name="update_failed">डाउनलोड शुरू नहीं हो सका। बाद में फिर कोशिश करें।</string>
+    <string name="update_check">अपडेट जाँचें</string>
+    <string name="update_current">बिल्ड %1$d</string>
+    <string name="update_checking">अपडेट जाँचे जा रहे हैं…</string>
+    <string name="update_latest">आपके पास सबसे नया बिल्ड है।</string>
+    <string name="update_available">बिल्ड %1$d तैयार है</string>
+    <string name="update_explain">यह बैकग्राउंड में डाउनलोड होगा। पूरा होने पर सूचना पर टैप करें; Android इंस्टॉल की पुष्टि माँगेगा, और एक बार इस स्रोत से इंस्टॉल की अनुमति माँग सकता है।</string>
+    <string name="update_download">अपडेट डाउनलोड करें</string>
     <plurals name="account_policies_to_read">
         <item quantity="one">पढ़ने और स्वीकार करने के लिए %d नीति</item>
         <item quantity="other">पढ़ने और स्वीकार करने के लिए %d नीतियाँ</item>

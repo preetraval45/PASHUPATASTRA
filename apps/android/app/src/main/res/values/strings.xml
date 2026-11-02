@@ -223,6 +223,16 @@
     <string name="detail_failed">This incident could not be loaded. Pull down to try again.</string>
     <string name="detail_opened">Opened %1$s</string>
     <string name="detail_ask">Ask Sati about this</string>
+    <string name="update_title">Pashupatastra update</string>
+    <string name="update_downloading">Downloading the update. When it finishes, tap the notification to install it.</string>
+    <string name="update_failed">The download could not start. Try again later.</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_current">build %1$d</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_latest">You have the newest build.</string>
+    <string name="update_available">Build %1$d is ready</string>
+    <string name="update_explain">It downloads in the background. Tap the notification when it finishes; Android asks you to confirm the install, and may ask once to allow installs from this source.</string>
+    <string name="update_download">Download update</string>
     <plurals name="account_policies_to_read">
         <item quantity="one">%d policy to read and acknowledge</item>
         <item quantity="other">%d policies to read and acknowledge</item>

@@ -118,7 +118,7 @@ class HomeScreen(activity: MainActivity) : NativeScreen(activity) {
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(16), dp(12), dp(12), dp(12))
                 background = ripple(rounded(ColorUtils.setAlphaComponent(p.astra, 36), 16, ColorUtils.setAlphaComponent(p.astra, 120)))
-                pressable { activity.openOutside(android.net.Uri.parse(Api.APK)) }
+                pressable { Updater.download(activity, build) }
                 contentDescription = s(R.string.home_update_desc, build)
                 addView(text(s(R.string.home_update_ready, build), 14f, p.ink, bold = true), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
                 addView(text(s(R.string.home_update), 14f, p.astra, bold = true))

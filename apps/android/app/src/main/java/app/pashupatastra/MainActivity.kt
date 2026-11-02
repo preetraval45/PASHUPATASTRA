@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -691,6 +692,14 @@ class MainActivity : AppCompatActivity() {
             dialog.dismiss()
             reportProblem()
         }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
+        // Updates for an APK copy (Updater): checked now, not from the hourly cache, and always says which build this is.
+        if (Api.sideloaded(this)) {
+            list.addView(actionRow(R.drawable.ic_pulse, getString(R.string.update_check) + " · " +
+                getString(R.string.update_current, BuildConfig.VERSION_CODE)) {
+                dialog.dismiss()
+                checkForUpdate()
+            }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
+        }
         if (BuildConfig.SUPPORT_EMAIL.isNotBlank()) {
             list.addView(actionRow(R.drawable.ic_chat, getString(R.string.sheet_contact)) {
                 dialog.dismiss()
@@ -732,6 +741,27 @@ class MainActivity : AppCompatActivity() {
         "admin" -> getString(R.string.role_admin)
         "employee" -> getString(R.string.role_employee)
         else -> role
+    }
+
+    /** Asks the release for its newest build now, and offers it, or says this is the newest. */
+    private fun checkForUpdate() {
+        Toast.makeText(this, getString(R.string.update_checking), Toast.LENGTH_SHORT).show()
+        Api.IO.execute {
+            val newer = Api.newerBuild(this, force = true)
+            runOnUiThread {
+                if (isDestroyed) return@runOnUiThread
+                if (newer == null) {
+                    Toast.makeText(this, getString(R.string.update_latest), Toast.LENGTH_LONG).show()
+                } else {
+                    com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                        .setTitle(getString(R.string.update_available, newer))
+                        .setMessage(getString(R.string.update_explain))
+                        .setPositiveButton(getString(R.string.update_download)) { _, _ -> Updater.download(this, newer) }
+                        .setNegativeButton(getString(R.string.ob_not_now), null)
+                        .show()
+                }
+            }
+        }
     }
 
     /** A tappable row in the More sheet, shaped like the switch rows. */

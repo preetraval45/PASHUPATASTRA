@@ -92,7 +92,7 @@ object Api {
      * one; null otherwise, or when this copy came from Google Play (the store updates it).
      * Asked at most once an hour; the release title carries the build ("test build 21").
      */
-    fun newerBuild(context: Context): Int? {
+    fun newerBuild(context: Context, force: Boolean = false): Int? {
         val installer = runCatching {
             if (android.os.Build.VERSION.SDK_INT >= 30) {
                 context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
@@ -105,7 +105,7 @@ object Api {
         val prefs = context.getSharedPreferences(CACHE, Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
         var latest = prefs.getInt("release.build", 0)
-        if (now - prefs.getLong("release.at", 0L) > 3_600_000) {
+        if (force || now - prefs.getLong("release.at", 0L) > 3_600_000) {
             val title = runCatching {
                 val connection = java.net.URL(RELEASE).openConnection() as HttpURLConnection
                 connection.connectTimeout = 8_000
@@ -124,6 +124,19 @@ object Api {
             }
         }
         return latest.takeIf { it > BuildConfig.VERSION_CODE }
+    }
+
+    /** Whether this copy came from the APK rather than Google Play (which updates its copies itself). */
+    fun sideloaded(context: Context): Boolean {
+        val installer = runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getInstallerPackageName(context.packageName)
+            }
+        }.getOrNull()
+        return installer != "com.android.vending"
     }
 
     const val APK = "https://github.com/preetraval45/PASHUPATASTRA/releases/download/android/Pashupatastra.apk"

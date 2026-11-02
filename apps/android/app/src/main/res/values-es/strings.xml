@@ -219,6 +219,16 @@
     <string name="detail_failed">No se pudo cargar este incidente. Desliza hacia abajo para reintentar.</string>
     <string name="detail_opened">Abierto %1$s</string>
     <string name="detail_ask">Pregúntale a Sati sobre esto</string>
+    <string name="update_title">Actualización de Pashupatastra</string>
+    <string name="update_downloading">Descargando la actualización. Cuando termine, toca la notificación para instalarla.</string>
+    <string name="update_failed">No se pudo iniciar la descarga. Inténtalo más tarde.</string>
+    <string name="update_check">Buscar actualizaciones</string>
+    <string name="update_current">compilación %1$d</string>
+    <string name="update_checking">Buscando actualizaciones…</string>
+    <string name="update_latest">Tienes la compilación más reciente.</string>
+    <string name="update_available">La compilación %1$d está lista</string>
+    <string name="update_explain">Se descarga en segundo plano. Toca la notificación cuando termine; Android te pedirá confirmar la instalación y quizá, una vez, permitir instalaciones de este origen.</string>
+    <string name="update_download">Descargar actualización</string>
     <plurals name="account_policies_to_read">
         <item quantity="one">%d política por leer y aceptar</item>
         <item quantity="other">%d políticas por leer y aceptar</item>
