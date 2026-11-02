@@ -124,3 +124,4 @@ Protocol: before every push, write a topic-named file from
 - [KavachFeeds.md](KavachFeeds.md) — feed advisories screened by Kavach; feed-poisoning + intel-never-in-memory tests; SECURITY.md + security.txt (owner must enable private reporting)
 - [LaunchBlockers.md](LaunchBlockers.md) — RP-107: NIST glossary + 31 concept maps, email verification, company intake keys, app support; CI broke at 5ad5088 (peer)
 - [RealIncidents.md](RealIncidents.md) — LIVE-* incidents from feeds (derived on read), PAST-* from deploy-time KEV+HIBP history; scenarios only as drills
+- [AppPhases.md](AppPhases.md) — real-incident tabs/kinds, native detail via onBack/title, Updater (DownloadManager), CI shoots every page; rate-limit lesson
