@@ -742,7 +742,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 **Phase 6 — Research & Open-Source Release · Weeks 21–24 · Dec 28 – Jan 24 2027 › 6.2 Open source**
 
 - [ ] Split the monorepo — core, agent, sdk, connectors, benchmark, docs, ui, examples
-- [~] License, contribution guide, vulnerability disclosure process — *licence done 18 Oct: Apache-2.0 for the open core ([LICENSING.md](../../LICENSING.md)). Remains: licence for the rest at the split, a contribution guide, and a disclosure process*
+- [~] License, contribution guide, vulnerability disclosure process — *licence done 18 Oct: Apache-2.0 for the open core ([LICENSING.md](../../LICENSING.md)). Remains: licence for the rest at the split, and a contribution guide. Disclosure process written 2 Nov: [.github/SECURITY.md](../../.github/SECURITY.md) (private GitHub reporting, scope, response aims, safe harbour) and `/.well-known/security.txt` on the site*
 - [ ] Reproducibility: benchmark runnable by a third party on release day
 
 **Phase 6 — Research & Open-Source Release · Weeks 21–24 · Dec 28 – Jan 24 2027 › 6.3 Commercial**
@@ -1055,7 +1055,7 @@ Items already covered by an RP task stay listed until that RP task closes them.
 - [ ] Threats to validity stated plainly, including the self-authored benchmark,
 - [ ] Open source: schemas, connectors, evaluation harness, benchmark, SDK
 - [ ] Commercial: enterprise connectors, managed intel, tenant memory, premium models
-- [ ] Vulnerability disclosure process published before any public release
+- [~] Vulnerability disclosure process published before any public release — *written 2 Nov: [.github/SECURITY.md](../../.github/SECURITY.md) and the site's `/.well-known/security.txt` (RFC 9116, expires 1 Nov 2027). Remains (**You**): turn on private vulnerability reporting (repository Settings › Code security), without which the report link answers 404.*
 
 **Deployment track *(continuous, not a phase)***
 

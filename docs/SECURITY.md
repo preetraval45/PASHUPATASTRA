@@ -79,5 +79,6 @@ so regulated customers can keep telemetry inside their boundary.
 
 ## Reporting
 
-Vulnerability disclosure process to be published with the open-source release
-(Phase 6). Until then, report privately to the maintainer.
+The disclosure process is [.github/SECURITY.md](../.github/SECURITY.md): reports go
+privately through GitHub's vulnerability reporting, with scope, response aims and safe harbour
+stated there. The site serves the same contact at `/.well-known/security.txt` (RFC 9116).
