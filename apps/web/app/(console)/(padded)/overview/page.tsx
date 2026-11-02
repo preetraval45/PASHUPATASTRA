@@ -17,7 +17,9 @@ import {
   Stated,
   statusForSeverity,
 } from "@/components/ui";
+import { IncidentRows } from "@/components/incidentlist";
 import { getAudit, getHealth, getIncidents, getTopology, getTopologyCounts, type Incident } from "@/lib/api";
+import { isReal, kindOf } from "@/lib/incidentkinds";
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -51,6 +53,14 @@ export default async function OverviewPage() {
   // undo the argument.
   const activity = bucketByHour(audit ?? [], 12);
   const posture = countSeverity(graph?.nodes ?? []);
+
+  // Real incidents from the feeds carry no topology, users or blast radius: the page speaks
+  // about what they do carry instead of showing zeros that look like measurements.
+  const real = open.some((i) => isReal(i.id));
+  const count = (k: string) => open.filter((i) => kindOf(i.id) === k).length;
+  const exploited = count("KEV");
+  const botnets = count("C2");
+  const gangs = count("RW");
 
   const worst = open.reduce<Incident | null>(
     (acc, i) => (acc === null || rank(i) > rank(acc) ? i : acc),
@@ -115,17 +125,35 @@ export default async function OverviewPage() {
             />
           }
         />
-        <Stat
-          label="Accounts affected"
-          value={users}
-          status={users ? "warning" : undefined}
-          hint="estimated, from blast radius"
-        />
-        <Stat
-          label="Entities watched"
-          value={topology?.nodes ?? 0}
-          hint={`${topology?.edges ?? 0} observed access paths`}
-        />
+        {real ? (
+          <>
+            <Stat
+              label="Exploited, 30 days"
+              value={exploited}
+              status={exploited ? "warning" : undefined}
+              hint="CVEs CISA confirmed exploited"
+            />
+            <Stat
+              label="Active threat groups"
+              value={botnets + gangs}
+              hint={`${botnets} botnet families · ${gangs} ransomware groups`}
+            />
+          </>
+        ) : (
+          <>
+            <Stat
+              label="Accounts affected"
+              value={users}
+              status={users ? "warning" : undefined}
+              hint="estimated, from blast radius"
+            />
+            <Stat
+              label="Entities watched"
+              value={topology?.nodes ?? 0}
+              hint={`${topology?.edges ?? 0} observed access paths`}
+            />
+          </>
+        )}
         <Stat
           label="Execution mode"
           value={health.dry_run ? "Dry run" : "Live"}
@@ -134,7 +162,7 @@ export default async function OverviewPage() {
         />
       </section>
 
-      {posture.some((s) => s.count > 0) && (
+      {!real && posture.some((s) => s.count > 0) && (
         <Panel
           title="Posture"
           aside={<Link href="/infrastructure" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">the map →</Link>}
@@ -164,7 +192,9 @@ export default async function OverviewPage() {
           title="Open incidents"
           aside={open.length > 0 && <Link href="/incidents" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">all incidents →</Link>}
         >
-          {open.length === 0 ? (
+          {real ? (
+            <IncidentRows stacked incidents={[...open].sort((a, b) => rank(b) - rank(a) || b.opened_at.localeCompare(a.opened_at)).slice(0, 8)} />
+          ) : open.length === 0 ? (
             <Empty art="quiet" title="Quiet." action={{ href: "/incidents", label: "Open a scenario →" }}>
               Incidents appear here when Drishti correlates related detections. Quiet
               means nothing was detected, which is not the same as nothing happening.
@@ -227,8 +257,9 @@ export default async function OverviewPage() {
         <div className="space-y-6">
           <Panel title="Perception" aside={<Ago at={audit?.[0]?.at} />}>
             <dl className="space-y-3 text-sm">
-              <Row label="Entities" value={topology?.nodes ?? 0} />
-              <Row label="Observed access paths" value={topology?.edges ?? 0} />
+              {!real && <Row label="Entities" value={topology?.nodes ?? 0} />}
+              {!real && <Row label="Observed access paths" value={topology?.edges ?? 0} />}
+              {real && <Row label="Live incidents" value={open.length} />}
               <Row label="Audit records" value={health.audit_records} />
               {/* The backend names itself. This read
                   `audit_storage === "postgres" ? "durable" : "in memory"`, so a

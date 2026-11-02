@@ -87,6 +87,14 @@ def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:40] or "unknown"
 
 
+def _clip(text: str, limit: int) -> str:
+    """At most `limit` characters, cut at a word, ending a sentence either way."""
+    text = text.strip()
+    if len(text) > limit:
+        text = text[:limit].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+    return text if text.endswith((".", "…")) else text + "."
+
+
 def _plan(*action_ids: str) -> list[PlanStep]:
     return [
         PlanStep(
@@ -169,7 +177,7 @@ def _nvd(rows: list[dict], now: datetime) -> list[Incident]:
             hypotheses=[Hypothesis(
                 statement=(
                     f"{cve} was disclosed with CVSS {score:.1f} ({labels.get('cvss_severity', 'critical').lower()}): "
-                    f"{labels.get('summary', '')[:240]} Reported, not yet known to be exploited."
+                    f"{_clip(labels.get('summary', ''), 240)} Reported, not yet known to be exploited."
                 ),
                 confidence=0.6,
                 evidence=[row["id"]],
