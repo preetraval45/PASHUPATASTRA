@@ -21,7 +21,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { useAccount } from "@/components/account";
 import { AnswerText } from "@/components/answertext";
 import { TurnView, type Turn as IncidentTurn } from "@/components/chat";
-import { examplesFor, runSpecialist, specialist, SPECIALISTS, type Example, type Specialist, type Verdict } from "@/components/specialists";
+import { examplesFor, runSpecialist, served, specialist, SPECIALISTS, type Example, type Specialist, type Verdict } from "@/components/specialists";
 import { Icon } from "@/components/sidebar";
 import { Badge, Stated, statusForSeverity } from "@/components/ui";
 import { askAgent, askGeneral, type GeneralAnswer, type Incident, type ModelChoice } from "@/lib/api";
@@ -211,8 +211,9 @@ export function ChatConsole({
 
   const chooseModel = (id: string) => setModel(id);
 
+  const modelIds = models.map((m) => m.id);
   const chooseSpecialist = (id: string) => {
-    const s = specialist(id);
+    const s = served(specialist(id), modelIds);
     setSpecial(s.id);
     try {
       localStorage.setItem(SPECIALIST_KEY, s.id);
@@ -223,7 +224,9 @@ export function ChatConsole({
     if (s.kind === "auto") chooseModel(models.find((m) => m.default)?.id ?? "default");
   };
 
-  const chosen = specialist(special);
+  const modelKey = modelIds.join(",");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const chosen = useMemo(() => served(specialist(special), modelIds), [special, modelKey]);
   useEffect(() => {
     if (!["tree", "cases", "servers"].includes(chosen.kind)) {
       setExamples(undefined);
@@ -537,6 +540,7 @@ export function ChatConsole({
                 onSpecialist={chooseSpecialist}
                 examples={examples}
                 onExample={runExample}
+                modelIds={modelIds}
               />
             ) : (
               <div className="space-y-8">
@@ -1003,7 +1007,9 @@ function Welcome({
   onSpecialist,
   examples,
   onExample,
+  modelIds = [],
 }: {
+  modelIds?: string[];
   incident: Incident | null;
   onAsk: (question: string) => void;
   busy: boolean;
@@ -1029,7 +1035,7 @@ function Welcome({
     );
   }
 
-  const chosen = specialist(special);
+  const chosen = served(specialist(special), modelIds);
   return (
     <div className="space-y-6 py-2">
       <div className="relative isolate overflow-hidden rounded-3xl border border-[rgb(var(--edge))] bg-[rgb(var(--panel))] px-5 py-7 sm:px-8">
@@ -1051,7 +1057,7 @@ function Welcome({
       </div>
 
       <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
-        {SPECIALISTS.map((s) => {
+        {SPECIALISTS.map((x) => served(x, modelIds)).map((s) => {
           const active = s.id === chosen.id;
           const tag = s.kind === "auto" || s.kind === "ask" ? "Q&A" : s.kind === "private" ? "private" : "live data";
           return (

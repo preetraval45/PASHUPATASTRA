@@ -47,6 +47,13 @@ export const SPECIALISTS: Specialist[] = [
   { id: "kushmanda", name: "Kushmanda", job: job("Kushmanda") || "Sati's own language model", kind: "private" },
 ];
 
+/** A specialist as the live API serves it: one marked private answers questions once its model is listed
+ *  (Kushmanda, when the deploy has its weights). The list comes from GET /models, so the site never offers
+ *  a model the API cannot run. */
+export function served(s: Specialist, modelIds: string[]): Specialist {
+  return s.kind === "private" && modelIds.includes(`sati:${s.id}`) ? { ...s, kind: "ask", model: `sati:${s.id}` } : s;
+}
+
 export function specialist(id: string): Specialist {
   return SPECIALISTS.find((s) => s.id === id) ?? SPECIALISTS[0];
 }
