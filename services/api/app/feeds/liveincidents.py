@@ -111,19 +111,19 @@ def _source(row: dict, title: str, publisher: str) -> list[Source]:
 # --- the five rules -------------------------------------------------------------------------------
 
 
-def _kev(rows: list[dict], now: datetime) -> list[Incident]:
+def _kev(rows: list[dict], now: datetime, days: int | None = KEV_DAYS, prefix: str = PREFIX) -> list[Incident]:
     out = []
     for row in rows:
         at = _when(row)
         cve = (row.get("entity_key") or "").removeprefix("vulnerability:")
-        if at is None or not cve or now - at > timedelta(days=KEV_DAYS):
+        if at is None or not cve or (days is not None and now - at > timedelta(days=days)):
             continue
         labels = row.get("labels") or {}
         ransomware = labels.get("ransomware") == "known"
         entity = EntityRef(kind=EntityKind.VULNERABILITY, id=cve, name=cve)
         due = labels.get("due_date")
         out.append(Incident(
-            id=f"{PREFIX}KEV-{cve}",
+            id=f"{prefix}KEV-{cve}",
             severity=IncidentSeverity.CRITICAL if ransomware else IncidentSeverity.HIGH,
             opened_at=at,
             affected_entities=[entity],
@@ -269,11 +269,11 @@ def _ransomware(rows: list[dict], now: datetime) -> list[Incident]:
     return out
 
 
-def _breaches(rows: list[dict], now: datetime) -> list[Incident]:
+def _breaches(rows: list[dict], now: datetime, days: int | None = BREACH_DAYS, prefix: str = PREFIX) -> list[Incident]:
     out = []
     for row in rows:
         at = _when(row)
-        if at is None or now - at > timedelta(days=BREACH_DAYS):
+        if at is None or (days is not None and now - at > timedelta(days=days)):
             continue
         labels = row.get("labels") or {}
         name = (row.get("entity_key") or "").removeprefix("organisation:breach:")
@@ -283,7 +283,7 @@ def _breaches(rows: list[dict], now: datetime) -> list[Incident]:
             accounts = 0
         entity = EntityRef(kind=EntityKind.ORGANISATION, id=f"breach:{name}", name=labels.get("title", name))
         out.append(Incident(
-            id=f"{PREFIX}BREACH-{_slug(name)}",
+            id=f"{prefix}BREACH-{_slug(name)}",
             severity=IncidentSeverity.HIGH if accounts >= 1_000_000 else IncidentSeverity.MEDIUM,
             opened_at=at,
             affected_entities=[entity],

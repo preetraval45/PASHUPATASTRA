@@ -64,3 +64,5 @@ logs/
 
 # Kushmanda's weights are private (owner decision, 27 Oct 2026): fetched at deploy time, never committed.
 services/api/app/sati_models/kushmanda/
+# Past incidents, fetched at deploy time (scripts/fetchhistory.py).
+services/api/app/history/

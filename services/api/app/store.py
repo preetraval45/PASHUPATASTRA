@@ -70,6 +70,10 @@ class Store:
 
         if is_live(incident_id):
             return next((i for i in self._live() if i.id == incident_id), None)
+        from .feeds import history
+
+        if history.is_past(incident_id):
+            return history.get(incident_id)
         backend = self._durable()
         if backend is not None:
             stored = backend.get_incident(incident_id)

@@ -94,6 +94,18 @@ def list_incidents() -> list[Incident]:
     return STORE.all()
 
 
+@router.get("/incidents/past")
+def past_incidents(
+    limit: int = 50, offset: int = 0, kind: str | None = None, q: str | None = None,
+    severity: str | None = None,
+) -> dict[str, object]:
+    """Real incidents from the record: every CVE CISA has catalogued as exploited, every breach
+    HIBP has published (`feeds/history.py`). Paged, because there are thousands."""
+    from ..feeds import history
+
+    return history.page(limit=limit, offset=offset, kind=kind, q=q, severity=severity)
+
+
 @router.get("/incidents/{incident_id}", response_model=Incident)
 def get_incident(incident_id: str) -> Incident:
     incident = STORE.get(incident_id)
@@ -1468,6 +1480,11 @@ def event(event_id: str) -> dict[str, object]:
     invented reference is indistinguishable from a real one.
     """
     record = entitystore().event(event_id)
+    if record is None and event_id.startswith("hist-"):
+        # A past incident's evidence: the catalogue record it was built from.
+        from ..feeds import history
+
+        record = history.event(event_id)
     if record is None:
         raise HTTPException(status_code=404, detail=f"unknown event {event_id}")
     # Kavach's reading of the observation's own words (R117), so the page can
