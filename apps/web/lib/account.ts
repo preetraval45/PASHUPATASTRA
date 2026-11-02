@@ -209,6 +209,27 @@ export const authConfig = () =>
 export const forgotPassword = (email: string) =>
   call<{ email_reset: boolean }>("/auth/forgot", { method: "POST", body: JSON.stringify({ email }) });
 
+/** One alert a company's own systems sent in (POST /ingest/{org}, accounts.ingest). */
+export type Signal = {
+  id: string;
+  title: string;
+  severity: "info" | "low" | "medium" | "high" | "critical";
+  source: string;
+  entity: string;
+  details: string;
+  observed: string;
+  received: number;
+};
+
+/** The company's alerts, newest first; admins also learn whether an intake key exists (its last four characters). */
+export const companySignals = (org: string) =>
+  call<{ signals: Signal[]; intake?: { created: number; end: string } | null }>(`/orgs/${org}/signals`);
+
+/** A new intake key, shown once, and the path its alerts go to. Any earlier key stops working. */
+export const createIntakeKey = (org: string) => call<{ key: string; path: string }>(`/orgs/${org}/ingest-key`, { method: "POST" });
+
+export const revokeIntakeKey = (org: string) => call<{ ok: boolean }>(`/orgs/${org}/ingest-key`, { method: "DELETE" });
+
 /** Opens an emailed verification link. Needs no session: the link is the proof. */
 export const verifyEmail = (token: string) =>
   call<{ verified: boolean; user: Account }>("/auth/verify", { method: "POST", body: JSON.stringify({ token }) });

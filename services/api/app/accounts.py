@@ -735,3 +735,74 @@ def mark_attempt(user: User, slug: str, answers: list[str]) -> dict:
     passed = score >= float(keys["pass_mark"])
     training = record_training(user.id, slug, score, passed, verified=True)
     return {"score": score, "passed": passed, "correct": correct, "training": training}
+
+# --- a company's own systems -----------------------------------------------------------------
+#
+# The first way in for a company's own telemetry (RP-107): its tools (a SIEM, CloudWatch alarms, an EDR,
+# a script) POST alerts to /ingest/{org} with the company's intake key, and its members see them in the
+# workspace. Observation only: nothing here proposes or runs an action, so Dharma is not bypassed (rule 2).
+# Each alert is kept as received and never edited (rule 6); the public audit trail records only that a
+# company key was created or revoked, never whose or what its alerts say.
+
+SEVERITIES = ("info", "low", "medium", "high", "critical")
+SIGNAL_CAP = 5_000
+SIGNAL_TITLE, SIGNAL_DETAILS = 200, 4_000
+
+
+def create_ingest_key(org_id: str, actor: User) -> str:
+    """A new intake key for the company, replacing any previous one. Shown once: only its SHA-256 is kept."""
+    org = require(org_id, actor, "owner", "admin")
+    key = f"pk_{secrets.token_urlsafe(24)}"
+    org["ingest"] = {"hash": hashlib.sha256(key.encode()).hexdigest(), "created": int(time.time()), "end": key[-4:]}
+    store().put_doc("ORG", org_id, org)
+    return key
+
+
+def revoke_ingest_key(org_id: str, actor: User) -> None:
+    org = require(org_id, actor, "owner", "admin")
+    org.pop("ingest", None)
+    store().put_doc("ORG", org_id, org)
+
+
+def ingest_status(org: dict) -> dict | None:
+    """Whether the company has a key, and its last four characters, never the key itself."""
+    ingest = org.get("ingest")
+    return {"created": ingest["created"], "end": ingest["end"]} if ingest else None
+
+
+def ingest(org_id: str, key: str | None, alert: dict) -> dict:
+    """Stores one alert from the company's own systems, given its intake key."""
+    org = get_org(org_id)
+    expected = (org or {}).get("ingest", {}).get("hash")
+    given = hashlib.sha256((key or "").encode()).hexdigest()
+    if not org or not expected or not hmac.compare_digest(given, expected):
+        raise AccountError("That intake key isn't valid for this company.", 401)
+    title = str(alert.get("title") or "").strip()
+    if not title:
+        raise AccountError("An alert needs a title.")
+    severity = str(alert.get("severity") or "medium").lower()
+    if severity not in SEVERITIES:
+        raise AccountError(f"Severity is one of: {', '.join(SEVERITIES)}.")
+    s = store()
+    if len(s.docs("SIGNAL", f"{org_id}#")) >= SIGNAL_CAP:
+        raise AccountError(f"This company has reached {SIGNAL_CAP:,} stored alerts.", 507)
+    now = time.time()
+    signal = {
+        "id": f"s_{secrets.token_hex(6)}",
+        "title": title[:SIGNAL_TITLE],
+        "severity": severity,
+        "source": str(alert.get("source") or "").strip()[:60],
+        "entity": str(alert.get("entity") or "").strip()[:120],
+        "details": str(alert.get("details") or "").strip()[:SIGNAL_DETAILS],
+        "observed": str(alert.get("observed_at") or "").strip()[:40],
+        "received": int(now),
+    }
+    s.put_doc("SIGNAL", f"{org_id}#{int(now * 1000):013d}#{signal['id']}", signal)
+    return signal
+
+
+def signals(org_id: str, user: User, limit: int = 100) -> list[dict]:
+    """The company's alerts, newest first; members only."""
+    require(org_id, user)
+    found = store().docs("SIGNAL", f"{org_id}#")
+    return [doc for _, doc in sorted(found, key=lambda kv: kv[0], reverse=True)[:limit]]

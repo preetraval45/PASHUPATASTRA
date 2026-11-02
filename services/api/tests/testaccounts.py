@@ -337,3 +337,35 @@ def test_guests_have_nothing_to_verify():
     guest = client.post("/api/v1/auth/guest").json()["token"]
     me = client.get("/api/v1/me", headers=auth(guest)).json()["user"]
     assert me["verified"] is False and accounts.verification_token(accounts.get_user(me["id"])) is None
+
+
+def test_a_company_connects_its_own_systems_with_an_intake_key():
+    owner = register()
+    org = client.post("/api/v1/orgs", json={"name": "Northwind"}, headers=auth(owner)).json()["orgs"][0]
+    bo = register("bo@northwind.example", name="Bo")
+    client.post("/api/v1/orgs/join", json={"code": org["invite"]}, headers=auth(bo))
+    # Only owners and admins make keys; the key is shown once and only its hash is kept.
+    assert client.post(f"/api/v1/orgs/{org['id']}/ingest-key", headers=auth(bo)).status_code == 403
+    made = client.post(f"/api/v1/orgs/{org['id']}/ingest-key", headers=auth(owner)).json()
+    key, path = made["key"], made["path"]
+    assert key.startswith("pk_") and path == f"/ingest/{org['id']}"
+    assert key not in str(accounts.get_org(org["id"]))
+    alert = {"title": "Impossible travel for ana@northwind", "severity": "high", "source": "Okta", "entity": "ana"}
+    assert client.post(f"/api/v1{path}", json=alert).status_code == 401  # no key
+    assert client.post(f"/api/v1{path}", json=alert, headers={"X-Pashupatastra-Key": "pk_wrong"}).status_code == 401
+    assert client.post(f"/api/v1{path}", json={**alert, "severity": "severe"},
+                       headers={"X-Pashupatastra-Key": key}).status_code == 400
+    sent = client.post(f"/api/v1{path}", json=alert, headers={"X-Pashupatastra-Key": key})
+    assert sent.status_code == 200 and sent.json()["accepted"] is True
+    # Every member sees the company's alerts; admins also see that a key exists (its last four characters).
+    seen = client.get(f"/api/v1/orgs/{org['id']}/signals", headers=auth(bo)).json()
+    assert seen["signals"][0]["title"] == alert["title"] and seen["signals"][0]["severity"] == "high"
+    assert "intake" not in seen
+    assert client.get(f"/api/v1/orgs/{org['id']}/signals", headers=auth(owner)).json()["intake"]["end"] == key[-4:]
+    # An outsider sees nothing; a new key retires the old one; revoking stops intake.
+    stranger = register("eve@elsewhere.example", name="Eve")
+    assert client.get(f"/api/v1/orgs/{org['id']}/signals", headers=auth(stranger)).status_code == 404
+    newer = client.post(f"/api/v1/orgs/{org['id']}/ingest-key", headers=auth(owner)).json()["key"]
+    assert client.post(f"/api/v1{path}", json=alert, headers={"X-Pashupatastra-Key": key}).status_code == 401
+    client.delete(f"/api/v1/orgs/{org['id']}/ingest-key", headers=auth(owner))
+    assert client.post(f"/api/v1{path}", json=alert, headers={"X-Pashupatastra-Key": newer}).status_code == 401

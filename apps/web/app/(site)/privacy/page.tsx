@@ -75,6 +75,12 @@ export default function PrivacyPage() {
               admins can see your name, email, training record and when you were last active. Nobody else can.
             </li>
             <li>
+              <strong>A company&apos;s own alerts.</strong> If a company connects its systems, the alerts they send
+              (a title, severity, source, the account or host involved, and details) are kept with that company and
+              shown only to its members. The company decides what its systems send; nothing in them reaches the
+              public audit trail, which records only that an intake key was made or revoked.
+            </li>
+            <li>
               <strong>Never public.</strong> The audit trail records that an account or company was created, never
               whose. No IP address or device detail is kept with an account.
             </li>

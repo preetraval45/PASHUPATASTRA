@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { useAccount } from "@/components/account";
+import { CompanySignals } from "@/components/companysignals";
 import { OrgLogo } from "@/components/orgbrand";
 import { daysUntil } from "@/lib/duedate";
 import {
@@ -253,6 +254,8 @@ export function CompanyPage({ orgId }: { orgId: string }) {
           </ul>
         )}
       </section>
+
+      <CompanySignals orgId={orgId} admin={admin} />
     </div>
   );
 }

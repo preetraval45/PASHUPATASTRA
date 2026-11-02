@@ -76,6 +76,50 @@
         "title": "ActionSpec",
         "type": "object"
       },
+      "Alert": {
+        "properties": {
+          "details": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Details",
+            "type": "string"
+          },
+          "entity": {
+            "default": "",
+            "maxLength": 240,
+            "title": "Entity",
+            "type": "string"
+          },
+          "observed_at": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Observed At",
+            "type": "string"
+          },
+          "severity": {
+            "default": "medium",
+            "maxLength": 10,
+            "title": "Severity",
+            "type": "string"
+          },
+          "source": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 400,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "Alert",
+        "type": "object"
+      },
       "AnswerRequest": {
         "properties": {
           "action_id": {
@@ -3437,6 +3481,74 @@
         "summary": "Ingest Otlp"
       }
     },
+    "/api/v1/ingest/{org_id}": {
+      "post": {
+        "description": "One alert from the company's own systems, sent with its intake key in `X-Pashupatastra-Key`.\nObservation only: nothing here proposes or runs an action.",
+        "operationId": "ingest_alert_api_v1_ingest__org_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-pashupatastra-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Pashupatastra-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Alert"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Ingest Alert Api V1 Ingest  Org Id  Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ingest Alert"
+      }
+    },
     "/api/v1/intel": {
       "get": {
         "description": "Recent threat intelligence, as stored.\n\nServed from our own store, never proxied. A route that fetched from CISA or\nabuse.ch on request would tell those services who is reading what, and would\nfail whenever they do; the schedule already put this on disk.\n\nEntries keep their `verification` label. A reader deciding what to do with\n\"somebody submitted this URL an hour ago\" needs it to be distinguishable\nfrom \"CISA has observed this being exploited\", and by the time both are\nrendered as cards they look identical without it.",
@@ -4355,6 +4467,119 @@
         "summary": "Org Join"
       }
     },
+    "/api/v1/orgs/{org_id}/ingest-key": {
+      "delete": {
+        "operationId": "org_ingest_revoke_api_v1_orgs__org_id__ingest_key_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Ingest Revoke Api V1 Orgs  Org Id  Ingest Key Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Ingest Revoke"
+      },
+      "post": {
+        "description": "A new intake key, shown once; any earlier key stops working.",
+        "operationId": "org_ingest_key_api_v1_orgs__org_id__ingest_key_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Ingest Key Api V1 Orgs  Org Id  Ingest Key Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Ingest Key"
+      }
+    },
     "/api/v1/orgs/{org_id}/invite": {
       "post": {
         "operationId": "org_rotate_api_v1_orgs__org_id__invite_post",
@@ -4996,6 +5221,63 @@
           }
         },
         "summary": "Org Settings"
+      }
+    },
+    "/api/v1/orgs/{org_id}/signals": {
+      "get": {
+        "operationId": "org_signals_api_v1_orgs__org_id__signals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "title": "Org Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Org Signals Api V1 Orgs  Org Id  Signals Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Org Signals"
       }
     },
     "/api/v1/policy/approvals/fatigue": {

@@ -411,3 +411,59 @@ def me_attempt(slug: str, body: Attempt, authorization: str | None = Header(defa
         return accounts.mark_attempt(user, slug, body.answers)
     except accounts.AccountError as error:
         raise _fail(error) from error
+
+
+# --- a company's own systems (accounts.ingest) --------------------------------------------------
+
+
+class Alert(BaseModel):
+    title: str = Field(max_length=400)
+    severity: str = Field(default="medium", max_length=10)
+    source: str = Field(default="", max_length=120)
+    entity: str = Field(default="", max_length=240)
+    details: str = Field(default="", max_length=8_000)
+    observed_at: str = Field(default="", max_length=40)
+
+
+@router.post("/orgs/{org_id}/ingest-key")
+def org_ingest_key(org_id: str, authorization: str | None = Header(default=None)) -> dict:
+    """A new intake key, shown once; any earlier key stops working."""
+    try:
+        key = accounts.create_ingest_key(org_id, _user(authorization))
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    _audit("a company created an intake key")
+    return {"key": key, "path": f"/ingest/{org_id}"}
+
+
+@router.delete("/orgs/{org_id}/ingest-key")
+def org_ingest_revoke(org_id: str, authorization: str | None = Header(default=None)) -> dict:
+    try:
+        accounts.revoke_ingest_key(org_id, _user(authorization))
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    _audit("a company revoked its intake key")
+    return {"ok": True}
+
+
+@router.post("/ingest/{org_id}")
+def ingest_alert(org_id: str, body: Alert, x_pashupatastra_key: str | None = Header(default=None)) -> dict:
+    """One alert from the company's own systems, sent with its intake key in `X-Pashupatastra-Key`.
+    Observation only: nothing here proposes or runs an action."""
+    try:
+        signal = accounts.ingest(org_id, x_pashupatastra_key, body.model_dump())
+    except accounts.AccountError as error:
+        raise _fail(error) from error
+    return {"accepted": True, "id": signal["id"]}
+
+
+@router.get("/orgs/{org_id}/signals")
+def org_signals(org_id: str, authorization: str | None = Header(default=None)) -> dict:
+    user = _user(authorization)
+    try:
+        org = accounts.require(org_id, user)
+        admin = accounts.role_in(org_id, user.id) in ("owner", "admin")
+        return {"signals": accounts.signals(org_id, user),
+                **({"intake": accounts.ingest_status(org)} if admin else {})}
+    except accounts.AccountError as error:
+        raise _fail(error) from error
