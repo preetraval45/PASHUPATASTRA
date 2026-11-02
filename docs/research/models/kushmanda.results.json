@@ -13,75 +13,75 @@
   },
   "device": "cuda",
   "corpus": {
-    "documents": 365861,
+    "documents": 397616,
     "by_source": {
       "mitre-attack": 3652,
       "mitre-attack-procedure": 14431,
       "mitre-capec": 1207,
-      "mitre-cwe": 917,
-      "cisa-kev": 1686,
-      "repository": 282,
-      "nvd-cve": 343686
+      "mitre-cwe": 872,
+      "cisa-kev": 1696,
+      "repository": 378,
+      "nvd-cve": 375380
     },
-    "held_out_documents": 18410,
-    "train_tokens": 32236866,
-    "held_out_tokens": 1723293
+    "held_out_documents": 19973,
+    "train_tokens": 35101514,
+    "held_out_tokens": 1871818
   },
   "tokenizer": {
     "vocab": 16384,
-    "tokens_per_line_held_out": 47.75,
-    "gpt2_tokens_per_line_held_out": 50.27
+    "tokens_per_line_held_out": 47.56,
+    "gpt2_tokens_per_line_held_out": 50.09
   },
   "held_out": {
-    "loss": 2.1186,
-    "perplexity": 8.32,
-    "bits_per_byte": 0.7562
+    "loss": 2.1126,
+    "perplexity": 8.27,
+    "bits_per_byte": 0.7544
   },
   "sft": {
-    "train_pairs": 22608,
+    "train_pairs": 22582,
     "held_out_pairs": 1462,
-    "held_out_answer_loss": 0.3282,
+    "held_out_answer_loss": 0.3498,
     "passages": 3,
     "unanswerable_share": 0.1,
     "evaluated_questions": 1200,
     "grounded": {
       "kushmanda": {
         "classify": {
-          "cited_right_passage": 0.4366,
-          "false_abstention": 0.1269,
-          "exact_match": 0.4234,
+          "cited_right_passage": 0.5206,
+          "false_abstention": 0.0165,
+          "exact_match": 0.4629,
           "n": 607
         },
         "define": {
-          "cited_right_passage": 0.8531,
-          "false_abstention": 0.0,
-          "rouge_l": 0.785,
-          "copy_precision": 0.779,
-          "n": 245
+          "cited_right_passage": 0.6583,
+          "false_abstention": 0.0375,
+          "rouge_l": 0.7396,
+          "copy_precision": 0.7419,
+          "n": 240
         },
         "lookup": {
-          "cited_right_passage": 0.7358,
-          "false_abstention": 0.0377,
-          "exact_match": 0.5283,
+          "cited_right_passage": 0.4717,
+          "false_abstention": 0.0,
+          "exact_match": 0.434,
           "n": 53
         },
         "mitigate": {
-          "cited_right_passage": 1.0,
+          "cited_right_passage": 0.8571,
           "false_abstention": 0.0,
-          "rouge_l": 0.9983,
-          "copy_precision": 0.3941,
+          "rouge_l": 0.937,
+          "copy_precision": 0.3825,
           "n": 42
         },
         "remediate": {
-          "cited_right_passage": 0.9206,
+          "cited_right_passage": 0.5969,
           "false_abstention": 0.0,
-          "rouge_l": 0.9384,
-          "copy_precision": 1.0,
-          "n": 126
+          "rouge_l": 0.933,
+          "copy_precision": 0.9989,
+          "n": 129
         },
         "unanswerable": {
-          "abstained": 0.5433,
-          "n": 127
+          "abstained": 0.1938,
+          "n": 129
         }
       },
       "lexical baseline": {
@@ -94,9 +94,9 @@
         "define": {
           "cited_right_passage": 1.0,
           "false_abstention": 0.0,
-          "rouge_l": 0.683,
+          "rouge_l": 0.7142,
           "copy_precision": 1.0,
-          "n": 245
+          "n": 240
         },
         "lookup": {
           "cited_right_passage": 0.9623,
@@ -112,15 +112,15 @@
           "n": 42
         },
         "remediate": {
-          "cited_right_passage": 0.9524,
+          "cited_right_passage": 0.9535,
           "false_abstention": 0.0,
-          "rouge_l": 0.3609,
+          "rouge_l": 0.3611,
           "copy_precision": 1.0,
-          "n": 126
+          "n": 129
         },
         "unanswerable": {
           "abstained": 0.0,
-          "n": 127
+          "n": 129
         }
       },
       "chance": {
@@ -131,11 +131,11 @@
           "n": 607
         },
         "define": {
-          "cited_right_passage": 0.351,
+          "cited_right_passage": 0.325,
           "false_abstention": 0.0,
-          "rouge_l": 0.3208,
+          "rouge_l": 0.3185,
           "copy_precision": 1.0,
-          "n": 245
+          "n": 240
         },
         "lookup": {
           "cited_right_passage": 0.3962,
@@ -151,15 +151,15 @@
           "n": 42
         },
         "remediate": {
-          "cited_right_passage": 0.3333,
+          "cited_right_passage": 0.2868,
           "false_abstention": 0.0,
-          "rouge_l": 0.2575,
+          "rouge_l": 0.2224,
           "copy_precision": 1.0,
-          "n": 126
+          "n": 129
         },
         "unanswerable": {
           "abstained": 0.0,
-          "n": 127
+          "n": 129
         }
       }
     },
@@ -173,18 +173,18 @@
           "T1556.007 Hybrid Identity: Adversaries may patch, modify, or otherwise backdoor cloud authentication processes that are tied to on-premises user identities in o"
         ],
         "expected": "T1217 \u2014 Browser Information Discovery [1]",
-        "answer": "T1619 \u2014 Cloud Storage Object Discovery [2]"
+        "answer": "T1556.007 \u2014 code usesiveiveiveiveiveiveiveiveiveiveiveiveiveiveiveive"
       },
       {
         "kind": "remediate",
-        "question": "What should be done about CVE-2020-8196?",
+        "question": "What should be done about CVE-2018-0296?",
         "context": [
-          "CVE-2020-8599 Trend Micro Apex One and OfficeScan Authentication Bypass Vulnerability. Trend Micro Apex One and OfficeScan server contain a vulnerable EXE file ",
-          "CVE-2020-8196 Citrix ADC, Gateway, and SD-WAN WANOP Appliance Information Disclosure Vulnerability. Citrix ADC, Citrix Gateway, and multiple Citrix SD-WAN WANOP",
-          "CVE-2025-32709 Microsoft Windows Ancillary Function Driver for WinSock Use-After-Free Vulnerability. Microsoft Windows Ancillary Function Driver for WinSock con"
+          "CVE-2018-0296 Cisco Adaptive Security Appliance (ASA) Denial-of-Service Vulnerability. Cisco Adaptive Security Appliance (ASA) contains an improper input valida",
+          "CVE-2025-59230 Microsoft Windows Improper Access Control Vulnerability. Microsoft Windows contains an improper access control vulnerability in Windows Remote Ac",
+          "CVE-2020-9859 Apple Multiple Products Code Execution Vulnerability. Apple iOS, iPadOS, macOS, watchOS, and tvOS contain an unspecified vulnerability that may al"
         ],
-        "expected": "Apply updates per vendor instructions. [2]",
-        "answer": "Apply updates per vendor instructions. [2]"
+        "expected": "Apply updates per vendor instructions. [1]",
+        "answer": "Apply updates per vendor instructions. [1]"
       },
       {
         "kind": "define",
@@ -206,7 +206,7 @@
           "T1610 Deploy Container: Adversaries may deploy a container into an environment to facilitate execution or evade defenses. In some cases, adversaries may deploy "
         ],
         "expected": "The context does not answer this.",
-        "answer": "The context does not answer this."
+        "answer": "T1137.006 \u2014 Add-ins [2]"
       },
       {
         "kind": "lookup",
@@ -217,7 +217,7 @@
           "T1053.002 At: Adversaries may abuse the [at](https://attack.mitre.org/software/S0110) utility to perform task scheduling for initial or recurring execution of m"
         ],
         "expected": "T1556.009 [1]",
-        "answer": "T1053.002 [3]"
+        "answer": "T1556.009 [1]"
       },
       {
         "kind": "mitigate",
@@ -236,262 +236,262 @@
     {
       "phase": "pretrain",
       "step": 200,
-      "train_loss": 3.7141,
-      "val_loss": 5.1837
+      "train_loss": 4.0405,
+      "val_loss": 5.2285
     },
     {
       "phase": "pretrain",
       "step": 400,
-      "train_loss": 3.1062,
-      "val_loss": 4.2626
+      "train_loss": 3.2963,
+      "val_loss": 4.2663
     },
     {
       "phase": "pretrain",
       "step": 600,
-      "train_loss": 2.9244,
-      "val_loss": 3.8707
+      "train_loss": 2.8871,
+      "val_loss": 3.8896
     },
     {
       "phase": "pretrain",
       "step": 800,
-      "train_loss": 2.6622,
-      "val_loss": 3.6337
+      "train_loss": 2.9432,
+      "val_loss": 3.6724
     },
     {
       "phase": "pretrain",
       "step": 1000,
-      "train_loss": 2.5105,
-      "val_loss": 3.4689
+      "train_loss": 2.6449,
+      "val_loss": 3.492
     },
     {
       "phase": "pretrain",
       "step": 1200,
-      "train_loss": 2.1376,
-      "val_loss": 3.3391
+      "train_loss": 2.3143,
+      "val_loss": 3.3623
     },
     {
       "phase": "pretrain",
       "step": 1400,
-      "train_loss": 2.2615,
-      "val_loss": 3.2422
+      "train_loss": 2.4024,
+      "val_loss": 3.2603
     },
     {
       "phase": "pretrain",
       "step": 1600,
-      "train_loss": 2.1586,
-      "val_loss": 3.1794
+      "train_loss": 2.1162,
+      "val_loss": 3.2038
     },
     {
       "phase": "pretrain",
       "step": 1800,
-      "train_loss": 2.036,
-      "val_loss": 3.1208
+      "train_loss": 2.1048,
+      "val_loss": 3.1312
     },
     {
       "phase": "pretrain",
       "step": 2000,
-      "train_loss": 2.0531,
-      "val_loss": 3.0591
+      "train_loss": 2.1128,
+      "val_loss": 3.0863
     },
     {
       "phase": "pretrain",
       "step": 2200,
-      "train_loss": 2.0617,
-      "val_loss": 3.0296
+      "train_loss": 1.9095,
+      "val_loss": 3.0311
     },
     {
       "phase": "pretrain",
       "step": 2400,
-      "train_loss": 1.8633,
-      "val_loss": 2.9882
+      "train_loss": 1.8883,
+      "val_loss": 2.992
     },
     {
       "phase": "pretrain",
       "step": 2600,
-      "train_loss": 2.3102,
-      "val_loss": 2.9468
+      "train_loss": 1.9613,
+      "val_loss": 2.9498
     },
     {
       "phase": "pretrain",
       "step": 2800,
-      "train_loss": 2.1506,
-      "val_loss": 2.9261
+      "train_loss": 2.0138,
+      "val_loss": 2.9293
     },
     {
       "phase": "pretrain",
       "step": 3000,
-      "train_loss": 1.981,
-      "val_loss": 2.902
+      "train_loss": 2.1052,
+      "val_loss": 2.9042
     },
     {
       "phase": "pretrain",
       "step": 3200,
-      "train_loss": 2.019,
-      "val_loss": 2.8804
+      "train_loss": 1.7833,
+      "val_loss": 2.8843
     },
     {
       "phase": "pretrain",
       "step": 3400,
-      "train_loss": 1.8318,
-      "val_loss": 2.8721
+      "train_loss": 1.6748,
+      "val_loss": 2.8723
     },
     {
       "phase": "pretrain",
       "step": 3600,
-      "train_loss": 1.966,
-      "val_loss": 2.8555
+      "train_loss": 1.9695,
+      "val_loss": 2.8595
     },
     {
       "phase": "pretrain",
       "step": 3800,
-      "train_loss": 1.7943,
-      "val_loss": 2.8411
+      "train_loss": 1.7512,
+      "val_loss": 2.8493
     },
     {
       "phase": "pretrain",
       "step": 4000,
-      "train_loss": 1.8139,
-      "val_loss": 2.8406
+      "train_loss": 1.6335,
+      "val_loss": 2.8454
     },
     {
       "phase": "sft",
       "step": 150,
-      "train_loss": 0.3514,
-      "val_loss": 0.5181
+      "train_loss": 0.306,
+      "val_loss": 0.4461
     },
     {
       "phase": "sft",
       "step": 300,
-      "train_loss": 0.3045,
-      "val_loss": 0.4061
+      "train_loss": 0.2653,
+      "val_loss": 0.4052
     },
     {
       "phase": "sft",
       "step": 450,
-      "train_loss": 0.1853,
-      "val_loss": 0.3743
+      "train_loss": 0.3051,
+      "val_loss": 0.381
     },
     {
       "phase": "sft",
       "step": 600,
-      "train_loss": 0.201,
-      "val_loss": 0.3488
+      "train_loss": 0.1696,
+      "val_loss": 0.3925
     },
     {
       "phase": "sft",
       "step": 750,
-      "train_loss": 0.0674,
-      "val_loss": 0.3435
+      "train_loss": 0.1758,
+      "val_loss": 0.3772
     },
     {
       "phase": "sft",
       "step": 900,
-      "train_loss": 0.1244,
-      "val_loss": 0.3599
+      "train_loss": 0.1673,
+      "val_loss": 0.404
     },
     {
       "phase": "sft",
       "step": 1050,
-      "train_loss": 0.0908,
-      "val_loss": 0.334
+      "train_loss": 0.1085,
+      "val_loss": 0.3872
     },
     {
       "phase": "sft",
       "step": 1200,
-      "train_loss": 0.0459,
-      "val_loss": 0.3885
+      "train_loss": 0.0726,
+      "val_loss": 0.3597
     },
     {
       "phase": "sft",
       "step": 1350,
-      "train_loss": 0.0611,
-      "val_loss": 0.3718
+      "train_loss": 0.0757,
+      "val_loss": 0.3988
     },
     {
       "phase": "sft",
       "step": 1500,
-      "train_loss": 0.2047,
-      "val_loss": 0.3655
+      "train_loss": 0.1697,
+      "val_loss": 0.3498
     },
     {
       "phase": "sft",
       "step": 1650,
-      "train_loss": 0.148,
+      "train_loss": 0.0711,
       "val_loss": 0.3533
     },
     {
       "phase": "sft",
       "step": 1800,
-      "train_loss": 0.0855,
-      "val_loss": 0.391
+      "train_loss": 0.0736,
+      "val_loss": 0.3531
     },
     {
       "phase": "sft",
       "step": 1950,
-      "train_loss": 0.0308,
-      "val_loss": 0.3475
+      "train_loss": 0.0721,
+      "val_loss": 0.3605
     },
     {
       "phase": "sft",
       "step": 2100,
-      "train_loss": 0.0722,
-      "val_loss": 0.3668
+      "train_loss": 0.0372,
+      "val_loss": 0.3823
     },
     {
       "phase": "sft",
       "step": 2250,
-      "train_loss": 0.01,
-      "val_loss": 0.3412
+      "train_loss": 0.023,
+      "val_loss": 0.3677
     },
     {
       "phase": "sft",
       "step": 2400,
-      "train_loss": 0.1124,
-      "val_loss": 0.3551
+      "train_loss": 0.0477,
+      "val_loss": 0.3658
     },
     {
       "phase": "sft",
       "step": 2550,
-      "train_loss": 0.0324,
-      "val_loss": 0.3343
+      "train_loss": 0.0851,
+      "val_loss": 0.3586
     },
     {
       "phase": "sft",
       "step": 2700,
-      "train_loss": 0.0523,
-      "val_loss": 0.3429
+      "train_loss": 0.0455,
+      "val_loss": 0.3579
     },
     {
       "phase": "sft",
       "step": 2850,
-      "train_loss": 0.0106,
-      "val_loss": 0.3282
+      "train_loss": 0.0195,
+      "val_loss": 0.3635
     },
     {
       "phase": "sft",
       "step": 3000,
-      "train_loss": 0.0137,
-      "val_loss": 0.3367
+      "train_loss": 0.0248,
+      "val_loss": 0.3765
     }
   ],
   "samples": [
     {
       "prompt": "Credential stuffing is",
-      "completion": " [ [1]  [1]  [1] The context?? CWE-2026-2026. The takeover of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of"
+      "completion": "11111111111111111111111111111111111111111111111111111111111111111111111111111111"
     },
     {
       "prompt": "To contain a host that is beaconing to a command-and-control server,",
-      "completion": ",,,,,,,,,,,,,,,,,,,,,,,,,,, [ [ [ [ []  [ \u2014] The context does not answer this. The context does not answer thisrough due to the [1] "
+      "completion": ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
     },
     {
       "prompt": "T1566 Phishing",
-      "completion": " Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing [ [3]  [1]  [1]  [1]  [1]  [1]  [1]  [1]  [1"
+      "completion": " Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing"
     }
   ],
   "steps": {
     "pretrain": 4000,
     "sft": 3000
   },
-  "epochs": 5.1,
-  "seconds": 15142.8
+  "epochs": 4.7,
+  "seconds": 13531.7
 }

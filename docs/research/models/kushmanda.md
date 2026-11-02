@@ -4,54 +4,54 @@
 
 decoder-only transformer: RMSNorm, RoPE, SwiGLU, fused causal attention, tied embeddings, **16.9M parameters**, trained from random initialisation on `cuda`: 4,000 pretraining steps, then 3,000 instruction-tuning steps.
 
-**Corpus** (cleaned and deduplicated): 365,861 documents — mitre-attack 3,652, mitre-attack-procedure 14,431, mitre-capec 1,207, mitre-cwe 917, cisa-kev 1,686, repository 282, nvd-cve 343,686. 18,410 held out by document; 32,236,866 training tokens.
+**Corpus** (cleaned and deduplicated): 397,616 documents — mitre-attack 3,652, mitre-attack-procedure 14,431, mitre-capec 1,207, mitre-cwe 872, cisa-kev 1,696, repository 378, nvd-cve 375,380. 19,973 held out by document; 35,101,514 training tokens.
 
 ## Language modelling, held-out documents
 
 | Measure | Value |
 |---|---:|
-| Loss | 2.1186 |
-| Perplexity (own tokens) | 8.32 |
-| Bits per byte | 0.7562 |
+| Loss | 2.1126 |
+| Perplexity (own tokens) | 8.27 |
+| Bits per byte | 0.7544 |
 
 ## Its own tokenizer
 
 | Tokenizer | Vocabulary | Tokens per held-out line |
 |---|---:|---:|
-| **Kushmanda BPE** | 16,384 | 47.75 |
-| GPT-2 (generic) | 50,257 | 50.27 |
+| **Kushmanda BPE** | 16,384 | 47.56 |
+| GPT-2 (generic) | 50,257 | 50.09 |
 
 ## What the training curve shows
 
-Held-out loss was still falling at the last step (2.8406); more steps may help.
+Held-out loss was still falling at the last step (2.8454); more steps may help.
 
-Pretraining read the corpus about 5.1 times.
+Pretraining read the corpus about 4.7 times.
 
 ## Answering from given passages — held out by entity
 
-22,608 training pairs. 1,200 of 1,462 held-out questions are scored here, all about techniques, CVEs and CWEs never seen in tuning. Each question comes with 3 passages; in about 10% of them none holds the answer, and the right reply is to say so. Held-out answer loss: 0.3282.
+22,582 training pairs. 1,200 of 1,462 held-out questions are scored here, all about techniques, CVEs and CWEs never seen in tuning. Each question comes with 3 passages; in about 10% of them none holds the answer, and the right reply is to say so. Held-out answer loss: 0.3498.
 
 | Question type | Measure | **Kushmanda** | Lexical baseline | Chance | n |
 |---|---|---:|---:|---:|---:|
-| classify | cited right passage | **0.437** | 0.690 | 0.305 | 607 |
-| classify | false abstention | **0.127** | 0.000 | 0.000 | 607 |
-| classify | exact match | **0.423** | 0.690 | 0.305 | 607 |
-| define | cited right passage | **0.853** | 1.000 | 0.351 | 245 |
-| define | false abstention | **0.000** | 0.000 | 0.000 | 245 |
-| define | rouge l | **0.785** | 0.683 | 0.321 | 245 |
-| define | copy precision | **0.779** | 1.000 | 1.000 | 245 |
-| lookup | cited right passage | **0.736** | 0.962 | 0.396 | 53 |
-| lookup | false abstention | **0.038** | 0.000 | 0.000 | 53 |
-| lookup | exact match | **0.528** | 0.962 | 0.396 | 53 |
-| mitigate | cited right passage | **1.000** | 1.000 | 0.357 | 42 |
+| classify | cited right passage | **0.521** | 0.690 | 0.305 | 607 |
+| classify | false abstention | **0.017** | 0.000 | 0.000 | 607 |
+| classify | exact match | **0.463** | 0.690 | 0.305 | 607 |
+| define | cited right passage | **0.658** | 1.000 | 0.325 | 240 |
+| define | false abstention | **0.037** | 0.000 | 0.000 | 240 |
+| define | rouge l | **0.740** | 0.714 | 0.319 | 240 |
+| define | copy precision | **0.742** | 1.000 | 1.000 | 240 |
+| lookup | cited right passage | **0.472** | 0.962 | 0.396 | 53 |
+| lookup | false abstention | **0.000** | 0.000 | 0.000 | 53 |
+| lookup | exact match | **0.434** | 0.962 | 0.396 | 53 |
+| mitigate | cited right passage | **0.857** | 1.000 | 0.357 | 42 |
 | mitigate | false abstention | **0.000** | 0.000 | 0.000 | 42 |
-| mitigate | rouge l | **0.998** | 0.613 | 0.264 | 42 |
-| mitigate | copy precision | **0.394** | 1.000 | 1.000 | 42 |
-| remediate | cited right passage | **0.921** | 0.952 | 0.333 | 126 |
-| remediate | false abstention | **0.000** | 0.000 | 0.000 | 126 |
-| remediate | rouge l | **0.938** | 0.361 | 0.258 | 126 |
-| remediate | copy precision | **1.000** | 1.000 | 1.000 | 126 |
-| unanswerable | abstained | **0.543** | 0.000 | 0.000 | 127 |
+| mitigate | rouge l | **0.937** | 0.613 | 0.264 | 42 |
+| mitigate | copy precision | **0.383** | 1.000 | 1.000 | 42 |
+| remediate | cited right passage | **0.597** | 0.954 | 0.287 | 129 |
+| remediate | false abstention | **0.000** | 0.000 | 0.000 | 129 |
+| remediate | rouge l | **0.933** | 0.361 | 0.222 | 129 |
+| remediate | copy precision | **0.999** | 1.000 | 1.000 | 129 |
+| unanswerable | abstained | **0.194** | 0.000 | 0.000 | 129 |
 
 *Copy precision* is the share of the answer's word 4-grams found in its passages. A grounded answer scores high; one written from memory scores low. The lexical baseline answers with a whole passage, so its copy precision is 1 by construction.
 
@@ -59,19 +59,19 @@ Pretraining read the corpus about 5.1 times.
 
 - **classify** — **Q:** Which ATT&CK technique does this behaviour describe? [SUGARDUMP](https://attack.mitre.org/software/S1042) has collected browser bookmark and history information.
   **Expected:** T1217 — Browser Information Discovery [1]
-  **Kushmanda:** T1619 — Cloud Storage Object Discovery [2]
-- **remediate** — **Q:** What should be done about CVE-2020-8196?
-  **Expected:** Apply updates per vendor instructions. [2]
-  **Kushmanda:** Apply updates per vendor instructions. [2]
+  **Kushmanda:** T1556.007 — code usesiveiveiveiveiveiveiveiveiveiveiveiveiveiveiveive
+- **remediate** — **Q:** What should be done about CVE-2018-0296?
+  **Expected:** Apply updates per vendor instructions. [1]
+  **Kushmanda:** Apply updates per vendor instructions. [1]
 - **define** — **Q:** What is MITRE ATT&CK technique T1055.014?
   **Expected:** T1055.014 is VDSO Hijacking. Adversaries may inject malicious code into processes via VDSO hijacking in order to evade process-based defenses as well as possibly elevate privileges. [3]
   **Kushmanda:** T1055.014 is VDSO Hijacking. Adversaries may inject malicious code into processes via VDSO hijacking in order to evade process-based defenses as well as possibly elevate privileges. [3]
 - **unanswerable** — **Q:** Which ATT&CK technique does this behaviour describe? [Empire](https://attack.mitre.org/software/S0363) can utilize Invoke-DCOM to leverage remote COM execution for lateral movement.
   **Expected:** The context does not answer this.
-  **Kushmanda:** The context does not answer this.
+  **Kushmanda:** T1137.006 — Add-ins [2]
 - **lookup** — **Q:** Which ATT&CK technique ID is 'Conditional Access Policies'?
   **Expected:** T1556.009 [1]
-  **Kushmanda:** T1053.002 [3]
+  **Kushmanda:** T1556.009 [1]
 - **mitigate** — **Q:** How can T1078.001 (Default Accounts) be mitigated?
   **Expected:** Mitigations for T1078.001: Multi-factor Authentication; Password Policies. [1]
   **Kushmanda:** Mitigations for T1078.001: Multi-factor Authentication; Password Policies. [1]
@@ -80,8 +80,8 @@ Pretraining read the corpus about 5.1 times.
 
 A small, narrow model: it knows the domain's language, but it is not a source of facts. That's why Sati never treats generated text as evidence (rule 1).
 
-- **Credential stuffing is** [ [1]  [1]  [1] The context?? CWE-2026-2026. The takeover of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of
-- **To contain a host that is beaconing to a command-and-control server,**,,,,,,,,,,,,,,,,,,,,,,,,,,, [ [ [ [ []  [ —] The context does not answer this. The context does not answer thisrough due to the [1] 
-- **T1566 Phishing** Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing [ [3]  [1]  [1]  [1]  [1]  [1]  [1]  [1]  [1
+- **Credential stuffing is**11111111111111111111111111111111111111111111111111111111111111111111111111111111
+- **To contain a host that is beaconing to a command-and-control server,**,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+- **T1566 Phishing** Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing Phishing
 
 Designed, written and trained by an AI assistant under the owner's direction ([adr/RealDataModels](../../adr/RealDataModels.md)). Includes MITRE ATT&CK, CAPEC and CWE content, © The MITRE Corporation, used under MITRE's royalty-free licences.

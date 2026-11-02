@@ -1,0 +1,71 @@
+{
+  "options": {
+    "version": "v2",
+    "cve": true,
+    "more": false,
+    "tiny": false
+  },
+  "split_rule": "sha256(source:id) mod 1000 < 50 is held out (5%)",
+  "total": {
+    "documents": 397616,
+    "characters": 149540087,
+    "ids_sha256": "148041c975a377fe14c2cd61bdc5570fcfec4ed6e35ac9e06fb1f29d260d67ae",
+    "texts_sha256": "30ecbeed9e93bca7c00be089738986209190ef30c5d670e2f89c1ad4ed913d0a"
+  },
+  "train": {
+    "documents": 377643,
+    "characters": 142001119,
+    "ids_sha256": "a40ad2d7767d59446e909a6ea246470fbb5cd0ce05e5aca2ff59ce6ff1c2e719",
+    "texts_sha256": "da2991f31fe2f7abca5cdad1e8e2344e737b9614cdfc50e6877516b9c2ec0c2e"
+  },
+  "held_out": {
+    "documents": 19973,
+    "characters": 7538968,
+    "ids_sha256": "e81d6a9a4030f110048aed15d2f02bdc9673f8da752281bc7f0b6bf768b08745",
+    "texts_sha256": "206941bb9eda11e15693594c44879ad621e16286cf735d8a953775a5a02b7cf0"
+  },
+  "by_source": {
+    "cisa-kev": {
+      "documents": 1696,
+      "characters": 768675,
+      "ids_sha256": "13af9cc24e8736afe8fb6d11dd07f034985c917e55a8cebb86ae3d403e3d7684",
+      "texts_sha256": "c712ffad7ceaa2c80aba2c0cd7f275ad17d564bebe7d9be89f072267df3398d5"
+    },
+    "mitre-attack": {
+      "documents": 3652,
+      "characters": 1805212,
+      "ids_sha256": "626545f4e22e375ea51bec5c7079501fd1eb9fdc93d2afbc09017fc1436f85c4",
+      "texts_sha256": "2f30a6d93a7feafbae0d5d72caf8da51dc24fa031e1bbb541c40b39a1217d2a4"
+    },
+    "mitre-attack-procedure": {
+      "documents": 14431,
+      "characters": 1924976,
+      "ids_sha256": "d871749c929dbd5108fe80b3d4afed0474f3b29277d1dbe575a462a2a9d5b558",
+      "texts_sha256": "67a31078cade21dec2ff73e51c5e60ccbcda553b3f30f636c6781fe0de4dd81a"
+    },
+    "mitre-capec": {
+      "documents": 1207,
+      "characters": 433980,
+      "ids_sha256": "5363b981c30697cc2e4619fbaf7c6c102432da332585a410d9c479daf5718c8e",
+      "texts_sha256": "39f6c577c4f8fb6976a8c355494e2b5394a090c167c9a1f86ecb54df5673311b"
+    },
+    "mitre-cwe": {
+      "documents": 872,
+      "characters": 310813,
+      "ids_sha256": "d0de62d73a0a5b2ee5bf270beaa08813a645dfbfb463ecd9de39792a78f89a05",
+      "texts_sha256": "cc004cecc5a2cc5bd2dfdf27c6d064eaed5593dbd65ab48479ecaa0354ffc4cf"
+    },
+    "nvd-cve": {
+      "documents": 375380,
+      "characters": 143844497,
+      "ids_sha256": "a5f658637c73baa39735a59479660dc7c1af0196f64d13142854506a76cdd0c9",
+      "texts_sha256": "415ad02ead1b697e78a0f611df6e6b2375e98b7f55d3ef981884f0aaf68e49f3"
+    },
+    "repository": {
+      "documents": 378,
+      "characters": 451934,
+      "ids_sha256": "bf637c83931a711c968ec17aee9f466afd5936f1bdfc5e2397ddc8e3222b7a86",
+      "texts_sha256": "35801380125736137d94202f894c3669f599885f0544ed59774b11b30f909660"
+    }
+  }
+}
