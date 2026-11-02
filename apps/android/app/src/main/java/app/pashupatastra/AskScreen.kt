@@ -50,6 +50,27 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
     private val note = text("", 11f, 0)
     private val turns = mutableListOf<Turn>()
     private var busy = false
+    private val prefs = activity.getSharedPreferences("app", android.content.Context.MODE_PRIVATE)
+
+    /**
+     * The conversation outlives the app: the last 20 answered turns are kept on the phone (they are the
+     * person's own questions and Sati's public answers; the questions are in the public audit trail anyway).
+     */
+    private fun save() {
+        val kept = JSONArray()
+        turns.filter { it.answer != null }.takeLast(KEEP).forEach {
+            kept.put(JSONObject().put("q", it.question).put("a", it.answer).put("area", it.area))
+        }
+        prefs.edit().putString(HISTORY, kept.toString()).apply()
+    }
+
+    private fun restore() {
+        val kept = runCatching { JSONArray(prefs.getString(HISTORY, "[]")) }.getOrNull() ?: return
+        for (i in 0 until kept.length()) {
+            val t = kept.optJSONObject(i) ?: continue
+            turns.add(Turn(t.optString("q"), t.optString("a"), t.optString("area")))
+        }
+    }
 
     init {
         root.orientation = LinearLayout.VERTICAL
@@ -101,6 +122,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
         }
         root.addView(bottom, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { gravity = android.view.Gravity.CENTER_HORIZONTAL })
         view.addView(root, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        restore()
         applyPalette()
     }
 
@@ -131,7 +153,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
             column.addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.END
-                addView(link(s(R.string.ask_new_chat)) { turns.clear(); render() })
+                addView(link(s(R.string.ask_new_chat)) { turns.clear(); save(); render() })
             }, lp())
             turns.forEach { turn ->
                 column.addView(userBubble(turn.question), lp(top = 10))
@@ -334,6 +356,7 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
                     status == 429 -> turn.error = json?.optString("detail")?.ifBlank { null } ?: s(R.string.ask_rate)
                     else -> turn.error = json?.optString("detail")?.ifBlank { null } ?: s(R.string.ask_unavailable)
                 }
+                save()
                 render()
             }
         }
@@ -405,6 +428,9 @@ class AskScreen(activity: MainActivity) : NativeScreen(activity) {
     }
 
     private companion object {
+        const val HISTORY = "ask.history"
+        const val KEEP = 20
+
         /** The same openers as the site's /ask, each with what it shows. */
         val SUGGESTIONS = listOf(
             // The questions stay English: Sati's sources are English, so they are what it can answer.

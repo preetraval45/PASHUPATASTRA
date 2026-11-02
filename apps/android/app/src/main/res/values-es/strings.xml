@@ -218,6 +218,7 @@
     <string name="detail_full_body">Plan, cronología y la evidencia</string>
     <string name="detail_failed">No se pudo cargar este incidente. Desliza hacia abajo para reintentar.</string>
     <string name="detail_opened">Abierto %1$s</string>
+    <string name="detail_ask">Pregúntale a Sati sobre esto</string>
     <plurals name="account_policies_to_read">
         <item quantity="one">%d política por leer y aceptar</item>
         <item quantity="other">%d políticas por leer y aceptar</item>

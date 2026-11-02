@@ -436,6 +436,33 @@ class IncidentsScreen(activity: MainActivity) : NativeScreen(activity) {
             }, lp(top = 6))
         }
 
+        // Ask Sati about what this incident names: a CVE, or a technique a step used. The question is
+        // English, because Sati's sources are; the answer comes back in the chat.
+        val cve = Regex("CVE-\\d{4}-\\d{4,}").find(id)?.value
+        val technique = (0 until (chain?.length() ?: 0)).firstNotNullOfOrNull { i ->
+            chain?.optJSONObject(i)?.optString("attack_technique")?.takeIf { it.isNotBlank() && it != "null" }
+        }
+        val question = when {
+            cve != null -> "What should we do about $cve?"
+            technique != null -> "How do we defend against $technique?"
+            else -> null
+        }
+        if (question != null) {
+            body.addView(LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(16), dp(14), dp(16), dp(14))
+                background = ripple(rounded(ColorUtils.setAlphaComponent(p.astra, 36), 18, ColorUtils.setAlphaComponent(p.astra, 110)))
+                pressable { activity.open("/ask?q=" + java.net.URLEncoder.encode(question, "UTF-8")) }
+                addView(icon(R.drawable.ic_chat, p.astra, 20))
+                addView(LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    addView(text(s(R.string.detail_ask), 15f, p.ink, bold = true))
+                    addView(text(question, 12f, p.muted), lp(top = 2))
+                }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { marginStart = dp(12) })
+            }, lp(top = 22))
+        }
+
         // Everything else, on the site.
         body.addView(LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL

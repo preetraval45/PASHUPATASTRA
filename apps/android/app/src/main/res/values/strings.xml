@@ -222,6 +222,7 @@
     <string name="detail_full_body">Plan, timeline and the evidence itself</string>
     <string name="detail_failed">This incident could not be loaded. Pull down to try again.</string>
     <string name="detail_opened">Opened %1$s</string>
+    <string name="detail_ask">Ask Sati about this</string>
     <plurals name="account_policies_to_read">
         <item quantity="one">%d policy to read and acknowledge</item>
         <item quantity="other">%d policies to read and acknowledge</item>

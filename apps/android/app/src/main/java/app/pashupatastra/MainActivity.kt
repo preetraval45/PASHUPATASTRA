@@ -428,6 +428,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun open(path: String) {
+        // "/ask?q=…" asks Sati in the native chat, from inside the app too (an incident's "Ask Sati").
+        if (path.startsWith("/ask?q=")) {
+            val question = Uri.parse(url(path)).getQueryParameter("q")?.trim().orEmpty()
+            dropPage(R.id.tab_ask)
+            select(R.id.tab_ask)
+            if (question.isNotEmpty()) (native(R.id.tab_ask) as? AskScreen)?.ask(question.take(500))
+            return
+        }
         // A real incident (LIVE-… or PAST-…) opens natively inside the Incidents tab.
         if (REAL_INCIDENT.matches(path)) {
             dropPage(R.id.tab_incidents)
