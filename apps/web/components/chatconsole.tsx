@@ -1056,38 +1056,6 @@ function Welcome({
         </p>
       </div>
 
-      <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
-        {SPECIALISTS.map((x) => served(x, modelIds)).map((s) => {
-          const active = s.id === chosen.id;
-          const tag = s.kind === "auto" || s.kind === "ask" ? "Q&A" : s.kind === "private" ? "private" : "live data";
-          return (
-            <li key={s.id}>
-              <button
-                type="button"
-                onClick={() => onSpecialist?.(s.id)}
-                aria-pressed={active}
-                style={hueOf(s)}
-                className={`focusable lift flex h-full w-full flex-col rounded-2xl border p-3.5 text-left transition ${
-                  active ? "sp-card" : "sp-hover border-[rgb(var(--edge))] bg-[rgb(var(--panel))]"
-                }`}
-              >
-                <span className="flex items-center justify-between gap-2">
-                  <Monogram s={s} size={active ? "lg" : "md"} />
-                  <span
-                    title={s.kind === "private" ? "Not served publicly" : "Live"}
-                    className={`h-2 w-2 rounded-full ${s.kind === "private" ? "bg-[rgb(var(--faint))]" : "bg-[rgb(var(--ok))] shadow-[0_0_0_3px_rgb(var(--ok)/0.2)]"}`}
-                  />
-                </span>
-                <span className="mt-2.5 text-sm font-semibold">{s.name}</span>
-                <span className="mt-0.5 text-xs leading-snug text-[rgb(var(--muted))]">{s.job}</span>
-                <span className="flex-1" />
-                <span className="sp-tint mt-2.5 self-start whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">{tag}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
       <div className="rise" key={chosen.id}>
         {chosen.kind === "private" ? (
           <p className="rounded-xl border border-dashed border-[rgb(var(--edge-strong))] p-4 text-sm leading-relaxed text-[rgb(var(--muted))]">
