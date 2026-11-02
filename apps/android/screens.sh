@@ -37,6 +37,12 @@ open /observatory;             shot 6-live-attacks 10
 open /training;                shot 7-training 15
 adb shell input tap 970 2230;  shot 8-more 3      # the More tab, on a 1080x2400 pixel_6
 
+# Every other page in the app, as a reader reaches it from More: each one photographed, so every page is
+# checked in the native frame (phase 2 of "complete all pages").
+for page in how-it-works overview analytics world models actions detections attack findings evaluation impact press search privacy apps account login; do
+  open "/$page"; shot "p-$page" 9
+done
+
 # The app in Hindi and Spanish (per-app language, Android 13+): Home, as a check that the translations
 # render. The app restarts for a new language.
 for lang in hi-IN es-US; do
