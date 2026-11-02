@@ -200,12 +200,13 @@
     <string name="inc_tab_live">Live</string>
     <string name="inc_tab_past">From the record</string>
     <string name="inc_live_note">built from public feeds, each citing its records</string>
-    <string name="inc_past_note">from CISA KEV, NVD, Have I Been Pwned, the ransomware archive and MITRE ATT&amp;CK campaigns</string>
+    <string name="inc_past_note">from CISA KEV, NVD, Have I Been Pwned, the ransomware archive, MITRE ATT&amp;CK campaigns and OpenSSF malicious packages</string>
     <string name="kind_kev">Actively exploited</string>
     <string name="kind_nvd">Serious disclosure</string>
     <string name="kind_c2">Botnet infrastructure</string>
     <string name="kind_rw">Ransomware campaign</string>
     <string name="kind_campaign">Intrusion campaign</string>
+    <string name="kind_pkg">Malicious package</string>
     <string name="kind_breach">Data breach</string>
     <string name="past_search_hint">Search the record: a product, CVE or company</string>
     <string name="past_count">%1$d of %2$d</string>

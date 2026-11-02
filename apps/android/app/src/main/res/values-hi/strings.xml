@@ -196,12 +196,13 @@
     <string name="inc_tab_live">लाइव</string>
     <string name="inc_tab_past">रिकॉर्ड से</string>
     <string name="inc_live_note">सार्वजनिक फ़ीड से बनी, हर एक अपने रिकॉर्ड के साथ</string>
-    <string name="inc_past_note">CISA KEV, NVD, Have I Been Pwned, रैनसमवेयर संग्रह और MITRE ATT&amp;CK अभियानों से</string>
+    <string name="inc_past_note">CISA KEV, NVD, Have I Been Pwned, रैनसमवेयर संग्रह, MITRE ATT&amp;CK अभियानों और OpenSSF दुर्भावनापूर्ण पैकेजों से</string>
     <string name="kind_kev">सक्रिय रूप से शोषित</string>
     <string name="kind_nvd">गंभीर खुलासा</string>
     <string name="kind_c2">बॉटनेट ढाँचा</string>
     <string name="kind_rw">रैनसमवेयर अभियान</string>
     <string name="kind_campaign">घुसपैठ अभियान</string>
+    <string name="kind_pkg">दुर्भावनापूर्ण पैकेज</string>
     <string name="kind_breach">डेटा उल्लंघन</string>
     <string name="past_search_hint">रिकॉर्ड खोजें: कोई उत्पाद, CVE या कंपनी</string>
     <string name="past_count">%2$d में से %1$d</string>
