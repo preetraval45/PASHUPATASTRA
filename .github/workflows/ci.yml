@@ -366,8 +366,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: services/api/app/history
-          key: history-v2-${{ steps.today.outputs.date }}
-      - name: past incidents (CISA KEV, NVD, HIBP, ransomwatch, ATT&CK)
+          key: history-v3-${{ steps.today.outputs.date }}
+      - name: past incidents (CISA KEV, NVD, HIBP, ransomwatch, ATT&CK, OSV)
         if: steps.gate.outputs.ready == 'true' && steps.history.outputs.cache-hit != 'true'
         # Fail-soft like Kushmanda: without the file the API serves live incidents and no history.
         run: |

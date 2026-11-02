@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 type Params = Record<string, string | string[] | undefined>;
 
 const PAGE = 25;
-const PAST_KINDS: Kind[] = ["KEV", "NVD", "RW", "BREACH", "CAMPAIGN"];
+const PAST_KINDS: Kind[] = ["KEV", "NVD", "PKG", "RW", "BREACH", "CAMPAIGN"];
 
 function one(params: Params, key: string): string | undefined {
   const v = params[key];
@@ -139,7 +139,8 @@ export default async function IncidentsPage({ searchParams }: { searchParams: Pr
             Every vulnerability CISA has confirmed exploited since 2021; three years of NVD&apos;s critical
             CVEs and a year of its high ones; ransomware groups&apos; monthly claims from the ransomwatch
             archive (2020–2025, never naming victims); MITRE ATT&amp;CK&apos;s documented intrusion
-            campaigns, step by technique; and every breach Have I Been {past?.total ? `: ${past.total.toLocaleString()} incidents` : ""}. Breach data is HIBP&apos;s,
+            campaigns, step by technique; a year of malicious packages OpenSSF reported on npm, PyPI and six
+            other ecosystems; and every breach Have I Been {past?.total ? `: ${past.total.toLocaleString()} incidents` : ""}. Breach data is HIBP&apos;s,
             under CC BY 4.0, and campaigns are © The MITRE Corporation; each incident links its source.
           </p>
         </div>

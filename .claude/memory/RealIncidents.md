@@ -27,3 +27,7 @@ Owner: no demo data; big real dataset, live and past.
 ## Next session should
 
 - Move overview/analytics/observatory onto live data; add NVD critical history.
+
+## Later the same day
+
+Sources in the record: KEV, NVD (critical 3y, high 1y), HIBP, ransomwatch (group-months), ATT&CK campaigns, OSV malicious packages (8 ecosystems, 1y, cap 10k each; live window 7d). history.py keeps an index and builds only the page shown; CI caches the record daily (key history-vN-date: bump N when sources change). Lambda 1024 MB. Kinds: KEV NVD C2 RW BREACH CAMPAIGN PKG (web lib/incidentkinds.ts; the app matches the id pattern).

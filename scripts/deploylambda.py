@@ -36,10 +36,11 @@ RUNTIME = "python3.13"
 HANDLER = "app.handler.handler"
 REGION = "us-east-1"
 
-MEMORY_MB = 512
+MEMORY_MB = 1024
 """Lambda bills memory × duration, and a larger size gets proportionally more
-CPU. 512 MB imports the app noticeably faster than 256 MB for the same cost per
-request, because the extra CPU shortens the cold start it is billed for."""
+CPU. 512 MB imported the app noticeably faster than 256 MB for the same cost per
+request; 1024 MB since 2 Nov 2026, when the record of past incidents (tens of
+thousands, indexed in memory) joined the models in the same function."""
 
 TIMEOUT_SECONDS = 30
 

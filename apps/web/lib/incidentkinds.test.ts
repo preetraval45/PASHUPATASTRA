@@ -8,6 +8,7 @@ test("the kind is read from the id the API built", () => {
   assert.equal(kindOf("PAST-BREACH-adobe"), "BREACH");
   assert.equal(kindOf("LIVE-C2-amos-20261102"), "C2");
   assert.equal(kindOf("PAST-CAMPAIGN-C0024"), "CAMPAIGN");
+  assert.equal(kindOf("LIVE-PKG-MAL-2026-18435"), "PKG");
   assert.equal(kindOf("INC-2026-0901"), null);
 });
 

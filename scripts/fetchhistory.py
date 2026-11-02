@@ -12,6 +12,7 @@ stores, so the API builds past incidents with the same rules it builds live ones
 - Ransomware leak-site claims from the ransomwatch archive (public domain), counted per group
   per month, never naming a victim.
 - MITRE ATT&CK's documented intrusion campaigns, with their techniques (ATT&CK terms of use).
+- A year of malicious packages OpenSSF reported across eight ecosystems (Apache-2.0, via OSV).
 
 Into a git-ignored file, services/api/app/history/history.json, so it reaches the Lambda archive
 and nothing else. A failure here is reported and the API deploys without history.
@@ -229,6 +230,66 @@ def attack_campaigns() -> list[dict]:
     return rows
 
 
+OSV = "https://osv-vulnerabilities.storage.googleapis.com/{ecosystem}/all.zip"
+ECOSYSTEMS = ("npm", "PyPI", "crates.io", "RubyGems", "NuGet", "Go", "Maven", "Packagist")
+
+
+def _first_finding(details: str) -> str:
+    """OSV's malicious-package details are one section per reporting source; keep the first
+    report's own words."""
+    for block in details.split("## Source:")[1:]:
+        lines = [line.strip() for line in block.splitlines()[1:] if line.strip()]
+        if lines:
+            return " ".join(lines)[:500]
+    return ""
+
+
+def osv_malicious(days: int = 365, cap: int = 10_000) -> list[dict]:
+    """Packages OpenSSF's malicious-packages project reported in the last `days` (Apache-2.0, served
+    by OSV), the newest `cap` per ecosystem. Each is a package published with code meant to harm
+    whoever installs it: a supply-chain attack that happened."""
+    import tempfile
+    import zipfile
+    from datetime import timedelta
+
+    since = (datetime.now(UTC) - timedelta(days=days)).isoformat()
+    rows = []
+    for ecosystem in ECOSYSTEMS:
+        request = urllib.request.Request(OSV.format(ecosystem=ecosystem), headers={"User-Agent": UA})
+        found = []
+        with tempfile.TemporaryFile() as spool:
+            with urllib.request.urlopen(request, timeout=600) as response:
+                while chunk := response.read(1 << 20):
+                    spool.write(chunk)
+            spool.seek(0)
+            with zipfile.ZipFile(spool) as archive:
+                for name in archive.namelist():
+                    if not name.startswith("MAL-"):
+                        continue
+                    entry = json.loads(archive.read(name))
+                    published = str(entry.get("published") or "")
+                    if published < since or entry.get("withdrawn"):
+                        continue
+                    package = next(iter(entry.get("affected") or []), {}).get("package") or {}
+                    if package.get("name"):
+                        found.append((published, entry, package))
+        found.sort(key=lambda f: f[0], reverse=True)
+        for published, entry, package in found[:cap]:
+            rows.append({
+                "id": f"hist-osv-{entry['id']}",
+                "source": "osv-malicious",
+                "occurred_at": published.replace("Z", "+00:00"),
+                "entity_key": f"indicator:package:{ecosystem}/{package['name']}",
+                "labels": {"package": str(package["name"])[:120], "ecosystem": ecosystem, "osv": entry["id"],
+                           "summary": _first_finding(str(entry.get("details") or "")) or str(entry.get("summary") or ""),
+                           "verification": "reported"},
+                "provenance": {"source_system": "osv-malicious", "url": f"https://osv.dev/vulnerability/{entry['id']}",
+                               "offset": published, "license": "Apache-2.0 (OpenSSF malicious-packages)"},
+            })
+        print(f"osv {ecosystem}: {min(len(found), cap)} of {len(found)}")
+    return rows
+
+
 def main() -> int:
     records = kev() + hibp()
     # Each source on its own: one that fails costs its records, never the others'.
@@ -237,6 +298,7 @@ def main() -> int:
         ("nvd high, 1 year", lambda: nvd("HIGH", 365)),
         ("ransomwatch", ransomwatch),
         ("mitre attack campaigns", attack_campaigns),
+        ("osv malicious packages", osv_malicious),
     ):
         try:
             records += fetcher()
@@ -245,7 +307,7 @@ def main() -> int:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({"generated": datetime.now(UTC).isoformat(timespec="seconds"),
                                "records": records}, separators=(",", ":")), encoding="utf-8")
-    counts = {s: sum(1 for r in records if r["source"] == s) for s in ("cisa-kev", "hibp", "nvd", "ransomwatch", "mitre-attack")}
+    counts = {s: sum(1 for r in records if r["source"] == s) for s in ("cisa-kev", "hibp", "nvd", "ransomwatch", "mitre-attack", "osv-malicious")}
     print(f"history: {counts}, {OUT.stat().st_size // 1024} KB")
     return 0
 

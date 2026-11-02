@@ -13,11 +13,12 @@ export const KINDS = {
   RW: { label: "Ransomware campaign", source: "ransomware.live" },
   BREACH: { label: "Data breach", source: "Have I Been Pwned" },
   CAMPAIGN: { label: "Intrusion campaign", source: "MITRE ATT&CK" },
+  PKG: { label: "Malicious package", source: "OpenSSF via OSV" },
 } as const;
 
 export type Kind = keyof typeof KINDS;
 
-const PATTERN = /^(LIVE|PAST)-(KEV|NVD|C2|RW|BREACH|CAMPAIGN)-/;
+const PATTERN = /^(LIVE|PAST)-(KEV|NVD|C2|RW|BREACH|CAMPAIGN|PKG)-/;
 
 export function kindOf(id: string): Kind | null {
   const match = PATTERN.exec(id);

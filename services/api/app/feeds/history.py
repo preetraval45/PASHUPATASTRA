@@ -150,10 +150,12 @@ def _builders(records: list[dict]) -> dict[str, object]:
                                        now, days=None, prefix=PREFIX),
         "ransomwatch": _ransomware_months,
         "mitre-attack": _campaigns,
+        "osv-malicious": lambda rows: rules._packages(rows, now, days=None, prefix=PREFIX),
     }
 
 
-WINDOWS = {"cisa-kev": rules.KEV_DAYS, "hibp": rules.BREACH_DAYS, "nvd": rules.NVD_DAYS}
+WINDOWS = {"cisa-kev": rules.KEV_DAYS, "hibp": rules.BREACH_DAYS, "nvd": rules.NVD_DAYS,
+           "osv-malicious": rules.PACKAGE_DAYS}
 """The past begins where each live window ends, so no incident is listed twice."""
 
 

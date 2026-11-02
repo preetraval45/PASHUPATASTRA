@@ -18,6 +18,8 @@ Five kinds, each a rule a reader can check against the source:
   last 7 days. Victims are counted by sector and country, never named here: the claim is the
   attacker's, and repeating names is publishing the extortion.
 - **Data breach** — a breach Have I Been Pwned published in the last 90 days.
+- **Malicious package** — a package OpenSSF reported as malicious in the last 7 days, on npm,
+  PyPI or six other ecosystems (from the deploy-time record, refreshed daily).
 
 They are derived, not stored: a pure function of the event store, rebuilt at most every
 `CACHE_SECONDS` per process. An incident leaves the list when its window passes, so there is no
@@ -59,6 +61,7 @@ NVD_HIGH = 7.0
 C2_HOURS = 24
 RW_HOURS = 24 * 7
 BREACH_DAYS = 90
+PACKAGE_DAYS = 7
 
 LIMITS = {
     "cisa-kev": 100,
@@ -311,12 +314,42 @@ def _breaches(rows: list[dict], now: datetime, days: int | None = BREACH_DAYS, p
     return out
 
 
+def _packages(rows: list[dict], now: datetime, days: int | None = PACKAGE_DAYS, prefix: str = PREFIX) -> list[Incident]:
+    out = []
+    for row in rows:
+        at = _when(row)
+        if at is None or (days is not None and now - at > timedelta(days=days)):
+            continue
+        labels = row.get("labels") or {}
+        name, ecosystem = labels.get("package", "?"), labels.get("ecosystem", "?")
+        entity = EntityRef(kind=EntityKind.INDICATOR, id=f"package:{ecosystem}/{name}", name=f"{name} ({ecosystem})")
+        finding = labels.get("summary") or "reported as malicious"
+        out.append(Incident(
+            id=f"{prefix}PKG-{labels.get('osv', row['id'])}",
+            severity=IncidentSeverity.HIGH,
+            opened_at=at,
+            affected_entities=[entity],
+            event_ids=[row["id"]],
+            hypotheses=[Hypothesis(
+                statement=f"{name} on {ecosystem} was published with malicious code: {_clip(finding, 300)}",
+                confidence=0.8,
+                evidence=[row["id"]],
+            )],
+            causal_chain=[CausalLink(entity=entity, transition="published as a malicious package", evidence=[row["id"]])],
+            plan=_plan("query_threat_intel", "notify_analyst"),
+            transitions=_opened(at, "drishti:osv"),
+            sources=_source(row, f"{labels.get('osv', '')} on OSV", "OpenSSF malicious-packages via OSV"),
+        ))
+    return out
+
+
 RULES = {
     "cisa-kev": _kev,
     "nvd": _nvd,
     "threatfox": _c2,
     "ransomware-live": _ransomware,
     "hibp": _breaches,
+    "osv-malicious": _packages,
 }
 
 
@@ -330,7 +363,7 @@ def build(store, now: datetime | None = None) -> list[Incident]:
             rows = [row for s in sources for row in store.recent_events(sources=[s], limit=LIMITS[s])]
         except Exception:  # noqa: BLE001 - one unreadable source must not empty the page
             continue
-        if source in ("cisa-kev", "hibp", "nvd"):
+        if source in ("cisa-kev", "hibp", "nvd", "osv-malicious"):
             # The poll has stored only what arrived since it began; the deploy-time record holds
             # the rest of each window. Stored rows come first, so they are the ones cited.
             from . import history
