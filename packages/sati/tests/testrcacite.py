@@ -59,3 +59,26 @@ def test_a_fabricated_ref_suppresses_the_hypothesis(ranker):
     assert result.hypotheses == []
     assert any(s.reason is SuppressionReason.FABRICATED_CITATION and "evt-not-shown" in s.detail
                for s in result.suppressed)
+
+
+def test_citations_lead_with_the_events_that_drove_the_ranking():
+    from sati.rca.cite import ranked_refs
+
+    roles = {"a": {"n_anomalous"}, "b": {"n_anomalous", "peak"}, "c": {"error_log"}, "d": {"deploy_before"}}
+    contribution = {"n_anomalous": 0.1, "peak": 0.9, "error_log": -0.5, "deploy_before": 0.3}
+    # peak drove it most, then the deploy; a feature that pushed the score down supports nothing.
+    assert ranked_refs(["a", "b", "c", "d"], roles, contribution) == ["b", "d", "a", "c"]
+
+
+def test_every_kaal_citation_has_a_role_and_the_strongest_anomaly_is_cited(ranker):
+    from sati.rca.cite import event_features
+
+    inc = _incidents(1)[0]
+    roles = event_features(inc)
+    root = str(inc.label["root_service"])
+    peaks = [ref for ref, r in roles.get(root, {}).items() if "peak" in r]
+    assert len(peaks) <= 1
+    result = Reasoner(Gateway(SatiRCAProvider(ranker, inc))).analyse(inc.id, inc.events)
+    top = next((h for h in result.hypotheses if h.statement.startswith(root + " ")), None)
+    if top and peaks:
+        assert peaks[0] in top.evidence
