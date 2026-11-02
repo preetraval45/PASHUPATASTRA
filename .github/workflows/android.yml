@@ -91,9 +91,12 @@ jobs:
             gh release upload android Pashupatastra.apk --clobber --repo "$REPO"
           else
             for attempt in 1 2 3 4; do
-              gh release create android Pashupatastra.apk --repo "$REPO" --target "$SHA" --title "$TITLE" --notes "$NOTES" && exit 0
+              if out=$(gh release create android Pashupatastra.apk --repo "$REPO" --target "$SHA" --title "$TITLE" --notes "$NOTES" 2>&1); then exit 0; fi
+              echo "$out"
               sleep 15
             done
+            # GitHub's own words, readable without opening the log.
+            echo "::error title=Publish failed::$(echo "$out" | tail -5 | paste -sd ' ')"
             exit 1
           fi
 
