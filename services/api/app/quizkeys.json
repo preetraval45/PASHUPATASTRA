@@ -1,0 +1,483 @@
+{
+ "pass_mark": 0.8,
+ "modules": {
+  "incident-response": [
+   {
+    "q": "In NIST SP 800-61 Rev. 2, which phase comes directly after Detection and Analysis?",
+    "options": [
+     "Preparation",
+     "Containment, Eradication and Recovery",
+     "Post-Incident Activity",
+     "Threat hunting"
+    ],
+    "answer": "Containment, Eradication and Recovery"
+   },
+   {
+    "q": "An alert fires for unusual sign-ins. What is the next step?",
+    "options": [
+     "Reset every password in the company",
+     "Analyse whether it is an incident and what caused it",
+     "Close it if nobody complains",
+     "Reimage the server"
+    ],
+    "answer": "Analyse whether it is an incident and what caused it"
+   },
+   {
+    "q": "Why decide the rollback before running a containment action?",
+    "options": [
+     "It is a legal requirement",
+     "So a wrong or harmful action can be undone safely",
+     "It makes the action faster",
+     "Attackers cannot see it"
+    ],
+    "answer": "So a wrong or harmful action can be undone safely"
+   },
+   {
+    "q": "What is the main output of Post-Incident Activity?",
+    "options": [
+     "A new firewall",
+     "Lessons that improve preparation and detection",
+     "Blame for the person on call",
+     "Deleting the logs"
+    ],
+    "answer": "Lessons that improve preparation and detection"
+   },
+   {
+    "q": "Which is the most dangerous mistake during analysis?",
+    "options": [
+     "Taking notes",
+     "Acting on a conclusion no evidence supports",
+     "Asking a colleague",
+     "Checking a second log source"
+    ],
+    "answer": "Acting on a conclusion no evidence supports"
+   }
+  ],
+  "att-and-ck": [
+   {
+    "q": "In ATT&CK, a 'tactic' is…",
+    "options": [
+     "A specific tool",
+     "The adversary's goal, such as Persistence",
+     "A malware family",
+     "A CVE"
+    ],
+    "answer": "The adversary's goal, such as Persistence"
+   },
+   {
+    "q": "T1566.002 is a sub-technique of…",
+    "options": [
+     "T1110 Brute Force",
+     "T1566 Phishing",
+     "T1071 Application Layer Protocol",
+     "T1021 Remote Services"
+    ],
+    "answer": "T1566 Phishing"
+   },
+   {
+    "q": "Why describe attacks by technique rather than tool name?",
+    "options": [
+     "Tools are illegal to name",
+     "Tools change while behaviour repeats, so techniques transfer across attacks",
+     "Techniques are shorter",
+     "Tool names are secret"
+    ],
+    "answer": "Tools change while behaviour repeats, so techniques transfer across attacks"
+   },
+   {
+    "q": "Mapping detections to ATT&CK mainly helps you…",
+    "options": [
+     "Speed up servers",
+     "See which techniques you cannot detect",
+     "Avoid writing documentation",
+     "Encrypt logs"
+    ],
+    "answer": "See which techniques you cannot detect"
+   }
+  ],
+  "phishing": [
+   {
+    "q": "Which sender domain is most likely impersonating Microsoft?",
+    "options": [
+     "microsoft.com",
+     "rn1crosoft-billing.com",
+     "outlook.office365.com",
+     "login.microsoftonline.com"
+    ],
+    "answer": "rn1crosoft-billing.com"
+   },
+   {
+    "q": "An email shows 'IT Support' as the sender. What does that prove?",
+    "options": [
+     "It came from IT",
+     "Nothing; the display name is set by the sender",
+     "It passed DMARC",
+     "It is internal"
+    ],
+    "answer": "Nothing; the display name is set by the sender"
+   },
+   {
+    "q": "A message passes SPF and DKIM. What can you conclude?",
+    "options": [
+     "It is safe",
+     "The sending domain authorised it, which may still be an attacker's domain",
+     "It came from your company",
+     "It has no links"
+    ],
+    "answer": "The sending domain authorised it, which may still be an attacker's domain"
+   },
+   {
+    "q": "A user entered their password on a phishing page. What is the right first response?",
+    "options": [
+     "Reset the password only",
+     "Reset the password and revoke active sessions",
+     "Wait to see if anything happens",
+     "Delete the email"
+    ],
+    "answer": "Reset the password and revoke active sessions"
+   },
+   {
+    "q": "Which ATT&CK technique ID is Phishing?",
+    "options": [
+     "T1110",
+     "T1566",
+     "T1071",
+     "T1486"
+    ],
+    "answer": "T1566"
+   }
+  ],
+  "threat-intel": [
+   {
+    "q": "An IP on a threat feed appears in your logs. What does that mean?",
+    "options": [
+     "You are definitely breached",
+     "It is a reason to investigate, not proof",
+     "The feed is wrong",
+     "Nothing"
+    ],
+    "answer": "It is a reason to investigate, not proof"
+   },
+   {
+    "q": "Which is a correctly defanged URL?",
+    "options": [
+     "http://evil.com",
+     "hxxp://evil[.]com",
+     "evil.com/",
+     "https://evil.com"
+    ],
+    "answer": "hxxp://evil[.]com"
+   },
+   {
+    "q": "What does CISA's KEV catalogue tell you?",
+    "options": [
+     "Every possible vulnerability",
+     "Vulnerabilities known to be exploited in the wild",
+     "Vulnerabilities fixed last year",
+     "Only Windows flaws"
+    ],
+    "answer": "Vulnerabilities known to be exploited in the wild"
+   },
+   {
+    "q": "Why do indicators expire?",
+    "options": [
+     "They don't",
+     "Infrastructure is reused and changes hands, so old indicators can point at innocent systems",
+     "Feeds delete them for fun",
+     "IP addresses are random"
+    ],
+    "answer": "Infrastructure is reused and changes hands, so old indicators can point at innocent systems"
+   }
+  ],
+  "credential-attacks": [
+   {
+    "q": "A few common passwords tried against thousands of accounts is…",
+    "options": [
+     "Brute force",
+     "Password spraying",
+     "Credential stuffing",
+     "Phishing"
+    ],
+    "answer": "Password spraying"
+   },
+   {
+    "q": "Username and password pairs from another site's breach are replayed. Which technique is this?",
+    "options": [
+     "T1110.004 Credential Stuffing",
+     "T1110.003 Password Spraying",
+     "T1566 Phishing",
+     "T1486 Data Encrypted for Impact"
+    ],
+    "answer": "T1110.004 Credential Stuffing"
+   },
+   {
+    "q": "During a stuffing attack, which event matters most?",
+    "options": [
+     "The first failure",
+     "The total number of failures",
+     "A successful sign-in among the failures",
+     "The attacker's country"
+    ],
+    "answer": "A successful sign-in among the failures"
+   },
+   {
+    "q": "Which control best defeats a stolen password used on its own?",
+    "options": [
+     "Longer session timeouts",
+     "Multi-factor authentication",
+     "Changing the login page colour",
+     "Disabling logging"
+    ],
+    "answer": "Multi-factor authentication"
+   },
+   {
+    "q": "Why prefer phishing-resistant MFA such as FIDO2 or passkeys?",
+    "options": [
+     "It is cheaper",
+     "It resists real-time phishing that relays one-time codes",
+     "It removes the need for passwords to be secret",
+     "It works without a device"
+    ],
+    "answer": "It resists real-time phishing that relays one-time codes"
+   }
+  ],
+  "c2-and-lateral-movement": [
+   {
+    "q": "What makes beaconing stand out from normal browsing?",
+    "options": [
+     "It uses HTTPS",
+     "It repeats at regular intervals to a rare destination",
+     "It is always at night",
+     "It uses port 80 only"
+    ],
+    "answer": "It repeats at regular intervals to a rare destination"
+   },
+   {
+    "q": "Which ATT&CK technique covers C2 over ordinary web traffic?",
+    "options": [
+     "T1071.001",
+     "T1021.002",
+     "T1053.005",
+     "T1566"
+    ],
+    "answer": "T1071.001"
+   },
+   {
+    "q": "A host opens SMB to two machines it has never contacted, then a scheduled task appears on one. This most likely indicates…",
+    "options": [
+     "A backup job",
+     "Lateral movement with persistence",
+     "A printer update",
+     "Normal patching"
+    ],
+    "answer": "Lateral movement with persistence"
+   },
+   {
+    "q": "Why scope before containing?",
+    "options": [
+     "Containment is slow",
+     "If the attacker holds another host, containing only one alerts them and leaves them inside",
+     "Scoping is required by law",
+     "It saves money"
+    ],
+    "answer": "If the attacker holds another host, containing only one alerts them and leaves them inside"
+   },
+   {
+    "q": "What is the purpose of a scheduled task in an intrusion?",
+    "options": [
+     "Speed up the network",
+     "Persistence: running again after a reboot",
+     "Encrypting traffic",
+     "Hiding the IP address"
+    ],
+    "answer": "Persistence: running again after a reboot"
+   }
+  ],
+  "logs-and-detection": [
+   {
+    "q": "Why must log sources have synchronised clocks?",
+    "options": [
+     "To save storage",
+     "So events from different systems can be put in the right order",
+     "Attackers cannot read them",
+     "It is faster"
+    ],
+    "answer": "So events from different systems can be put in the right order"
+   },
+   {
+    "q": "On Windows, which event ID records a successful logon?",
+    "options": [
+     "4625",
+     "4624",
+     "4688",
+     "7045"
+    ],
+    "answer": "4624"
+   },
+   {
+    "q": "What is alert fatigue?",
+    "options": [
+     "Servers overheating",
+     "So many low-value alerts that real ones get missed",
+     "Analysts working at night",
+     "A type of malware"
+    ],
+    "answer": "So many low-value alerts that real ones get missed"
+   },
+   {
+    "q": "What is Sigma?",
+    "options": [
+     "A SIEM product",
+     "An open, generic format for detection rules that converts to many SIEM queries",
+     "A malware family",
+     "A log shipper"
+    ],
+    "answer": "An open, generic format for detection rules that converts to many SIEM queries"
+   },
+   {
+    "q": "Why does an anomaly depend on a baseline?",
+    "options": [
+     "It doesn't",
+     "Unusual only means something relative to what is normal for that system and time",
+     "Baselines are required by law",
+     "Anomalies are always attacks"
+    ],
+    "answer": "Unusual only means something relative to what is normal for that system and time"
+   }
+  ],
+  "recovery-and-verification": [
+   {
+    "q": "The 3-2-1 backup rule means…",
+    "options": [
+     "3 backups a day, 2 admins, 1 password",
+     "3 copies, on 2 types of media, 1 offsite",
+     "Back up every 3 hours for 2 days",
+     "3 servers in 2 regions with 1 backup"
+    ],
+    "answer": "3 copies, on 2 types of media, 1 offsite"
+   },
+   {
+    "q": "Why keep an offline or immutable backup against ransomware?",
+    "options": [
+     "It is cheaper",
+     "Attackers find and destroy reachable backups before encrypting",
+     "Ransomware cannot read tape",
+     "It is faster to restore"
+    ],
+    "answer": "Attackers find and destroy reachable backups before encrypting"
+   },
+   {
+    "q": "What must happen before restoring a compromised host?",
+    "options": [
+     "Nothing; restore immediately",
+     "Remove persistence, close the entry point and reset credentials",
+     "Email the attacker",
+     "Delete all logs"
+    ],
+    "answer": "Remove persistence, close the entry point and reset credentials"
+   },
+   {
+    "q": "When is recovery complete?",
+    "options": [
+     "When the server reboots",
+     "When the observed state is verified to match the expected state",
+     "When the ticket is closed",
+     "After 24 hours"
+    ],
+    "answer": "When the observed state is verified to match the expected state"
+   },
+   {
+    "q": "What is an untested backup worth?",
+    "options": [
+     "The same as a tested one",
+     "Unknown; you don't know whether it restores",
+     "More, because it is newer",
+     "Nothing; delete it"
+    ],
+    "answer": "Unknown; you don't know whether it restores"
+   }
+  ],
+  "capstone": [
+   {
+    "q": "412 failed sign-ins from one new network, then one success. What comes first?",
+    "options": [
+     "Block the whole country",
+     "Investigate what the successful account did, and revoke its sessions",
+     "Wait for more failures",
+     "Reset every password in the company"
+    ],
+    "answer": "Investigate what the successful account did, and revoke its sessions"
+   },
+   {
+    "q": "A workstation beacons every 60 s to a rare domain and has new SMB peers. What do you do?",
+    "options": [
+     "Isolate the workstation and close the case",
+     "Scope which hosts are involved, then contain all of them",
+     "Ignore it; HTTPS is encrypted",
+     "Reboot the workstation"
+    ],
+    "answer": "Scope which hosts are involved, then contain all of them"
+   },
+   {
+    "q": "A user approved an OAuth consent on a phishing page, and a token read their mailbox. What must be revoked?",
+    "options": [
+     "Only the password",
+     "The OAuth grant and its tokens",
+     "The user's laptop",
+     "Nothing; it was only consent"
+    ],
+    "answer": "The OAuth grant and its tokens"
+   },
+   {
+    "q": "Two vulnerabilities: one CVSS 9.8 with no known exploitation, one CVSS 7.5 listed in CISA KEV. Patch which first?",
+    "options": [
+     "The 9.8",
+     "The KEV-listed one",
+     "Neither",
+     "Whichever is older"
+    ],
+    "answer": "The KEV-listed one"
+   },
+   {
+    "q": "Ransomware hits; the backups were on a file share in the same domain. What is the likely problem?",
+    "options": [
+     "None",
+     "The backups were reachable and are probably encrypted too",
+     "Backups are too slow",
+     "The share was full"
+    ],
+    "answer": "The backups were reachable and are probably encrypted too"
+   },
+   {
+    "q": "An alert matches an IP from an 18-month-old threat feed. What is it?",
+    "options": [
+     "Proof of compromise",
+     "A lead to check, since the address may have changed hands",
+     "A false alarm to ignore",
+     "A reason to shut down the network"
+    ],
+    "answer": "A lead to check, since the address may have changed hands"
+   },
+   {
+    "q": "You find T1053.005 on a host. What has the attacker done?",
+    "options": [
+     "Encrypted files",
+     "Set up persistence with a scheduled task",
+     "Sent phishing",
+     "Stolen a password from a browser"
+    ],
+    "answer": "Set up persistence with a scheduled task"
+   },
+   {
+    "q": "Before isolating a production database server, what must be ready?",
+    "options": [
+     "Nothing",
+     "The rollback, the expected state afterwards, and approval proportionate to the risk",
+     "A press release",
+     "A new server"
+    ],
+    "answer": "The rollback, the expected state afterwards, and approval proportionate to the risk"
+   }
+  ]
+ }
+}

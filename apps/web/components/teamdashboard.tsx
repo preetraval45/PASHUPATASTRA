@@ -240,8 +240,16 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
                 {MODULES.map((x) => (
                   <span
                     key={x.slug}
-                    title={`Level ${x.level}: ${x.title}`}
-                    className={`h-6 w-3 rounded-sm ${m.passed.includes(x.slug) ? "bg-[rgb(var(--ok))]" : "bg-[rgb(var(--raised))]"}`}
+                    title={`Level ${x.level}: ${x.title}${
+                      m.verified?.includes(x.slug) ? " · passed, server-marked" : m.passed.includes(x.slug) ? " · passed, self-reported" : ""
+                    }`}
+                    className={`h-6 w-3 rounded-sm ${
+                      m.verified?.includes(x.slug)
+                        ? "bg-[rgb(var(--ok))]"
+                        : m.passed.includes(x.slug)
+                          ? "bg-[rgb(var(--ok))]/40"
+                          : "bg-[rgb(var(--raised))]"
+                    }`}
                   />
                 ))}
               </span>
@@ -292,7 +300,8 @@ export function TeamDashboard({ orgId }: { orgId: string }) {
         </ul>
       </section>
       <p className="text-xs text-[rgb(var(--faint))]">
-        Scores are marked in each person's browser: read them as their own training record, not a supervised exam.
+        Solid green: passed in a test the server marked from the answers given. Pale green: a pass reported by the
+        browser (from before signing in). Neither is a supervised exam: the tests are open-book.
       </p>
     </div>
   );

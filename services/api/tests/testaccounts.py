@@ -275,3 +275,29 @@ def test_only_a_platform_admin_sees_everything_and_approves_when_required(monkey
     done = client.post("/api/v1/policy/approve", json=body, headers=auth(owner))
     if verdict["tier"] not in ("denied",):
         assert done.status_code == 200 and done.json()["granted_by"] == f"human:Ana ({owner_id})"
+
+
+def test_a_test_is_marked_from_the_answers_and_recorded_as_verified():
+    keys = accounts._keys()["modules"]["phishing"]
+    token = register()
+    right = [q["answer"] for q in keys]
+    wrong = [next(o for o in q["options"] if o != q["answer"]) for q in keys]
+
+    failed = client.post("/api/v1/me/training/phishing/attempt", json={"answers": wrong}, headers=auth(token)).json()
+    assert failed["score"] == 0 and failed["passed"] is False and not any(failed["correct"])
+    done = client.post("/api/v1/me/training/phishing/attempt", json={"answers": right}, headers=auth(token)).json()
+    assert done["score"] == 1 and done["passed"] is True
+    record = done["training"]["phishing"]
+    assert record["verified_passed"] is True and record["attempts"] == 2
+
+    # A self-reported pass is kept, but it is not verified.
+    client.put("/api/v1/me/training/incident-response", json={"score": 1, "passed": True}, headers=auth(token))
+    me = client.get("/api/v1/me", headers=auth(token)).json()["training"]
+    assert me["incident-response"]["passed"] and not me["incident-response"].get("verified_passed")
+
+
+def test_an_attempt_must_answer_every_question():
+    token = register()
+    short = client.post("/api/v1/me/training/phishing/attempt", json={"answers": ["x"]}, headers=auth(token))
+    assert short.status_code == 400
+    assert client.post("/api/v1/me/training/nope/attempt", json={"answers": []}, headers=auth(token)).status_code == 404

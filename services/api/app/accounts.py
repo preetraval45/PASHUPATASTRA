@@ -37,6 +37,8 @@ import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from .config import get_settings
@@ -397,7 +399,7 @@ def training(user_id: str) -> dict[str, dict]:
     return (store().get_doc("TRAINING", user_id) or {}).get("modules", {})
 
 
-def record_training(user_id: str, slug: str, score: float, passed: bool) -> dict[str, dict]:
+def record_training(user_id: str, slug: str, score: float, passed: bool, verified: bool = False) -> dict[str, dict]:
     """Folds one test result into the account's record: best score kept, passing is never undone.
 
     The score is the browser's own marking of the module test, so it is self-reported; a company sees
@@ -412,6 +414,9 @@ def record_training(user_id: str, slug: str, score: float, passed: bool) -> dict
         "last": score,
         "attempts": int(before.get("attempts", 0)) + 1,
         "passed": bool(before.get("passed")) or bool(passed),
+        # Marked by the server from the answers given (mark_attempt), not reported by the browser.
+        "verified_passed": bool(before.get("verified_passed")) or (verified and bool(passed)),
+        "verified_best": max(float(before.get("verified_best", 0)), score if verified else 0.0),
         "at": int(time.time()),
     }
     store().put_doc("TRAINING", user_id, {"modules": modules})
@@ -433,6 +438,7 @@ def members(org_id: str, actor: User) -> list[dict]:
             "role": doc["role"],
             "joined": doc.get("joined"),
             "passed": sorted(slug for slug, m in modules.items() if m.get("passed")),
+            "verified": sorted(slug for slug, m in modules.items() if m.get("verified_passed")),
             "attempts": sum(int(m.get("attempts", 0)) for m in modules.values()),
             "last_active": max((int(m.get("at", 0)) for m in modules.values()), default=None),
             "average": round(sum(float(m.get("best", 0)) for m in modules.values()) / len(modules), 3) if modules else None,
@@ -654,3 +660,34 @@ def overview(actor: User) -> dict:
             key=lambda o: -(o["created"] or 0),
         ),
     }
+
+
+# --- server-marked tests ----------------------------------------------------------------------
+#
+# The answer keys are exported from the site's own questions (scripts/exportquiz.mjs → quizkeys.json, with
+# a web test that fails if they drift). The browser sends the option it chose for each question; the score
+# is worked out here, so a record marked this way cannot be a number someone typed. The questions are
+# also in the page, so this is an open-book test, not a proctored exam: what it guarantees is that the
+# score is the score of the answers given.
+
+QUIZ_KEYS = Path(__file__).with_name("quizkeys.json")
+
+
+@lru_cache
+def _keys() -> dict:
+    return json.loads(QUIZ_KEYS.read_text(encoding="utf-8"))
+
+
+def mark_attempt(user: User, slug: str, answers: list[str]) -> dict:
+    """Marks one test from the options chosen, records it as verified, and says which were right."""
+    keys = _keys()
+    questions = keys["modules"].get(slug)
+    if questions is None:
+        raise AccountError("Unknown module.", 404)
+    if len(answers) != len(questions):
+        raise AccountError(f"Answer all {len(questions)} questions.")
+    correct = [given == q["answer"] for given, q in zip(answers, questions, strict=True)]
+    score = sum(correct) / len(questions)
+    passed = score >= float(keys["pass_mark"])
+    training = record_training(user.id, slug, score, passed, verified=True)
+    return {"score": score, "passed": passed, "correct": correct, "training": training}

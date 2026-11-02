@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui";
-import { saveTraining, snapshot, subscribe } from "@/lib/account";
+import { saveTraining, snapshot, submitAttempt, subscribe } from "@/lib/account";
 import { arranged, levelReached, MODULES, PASS_MARK, type Question } from "@/lib/training";
 
 const KEY = "pashu.training.v1";
@@ -75,7 +75,9 @@ export function useCourse() {
       if (merged) setStore(merged);
     });
   }, []);
-  const record = useCallback((slug: string, score: number) => {
+  /** Keeps a result in this browser; `upload` also saves it to the account as a self-reported score
+   *  (a server-marked attempt has already been saved, so it passes false). */
+  const record = useCallback((slug: string, score: number, upload = true) => {
     const prior = read();
     const before = prior[slug];
     const next: Store = {
@@ -90,7 +92,7 @@ export function useCourse() {
     };
     write(next);
     setStore(next);
-    saveTraining(slug, score, score >= PASS_MARK);
+    if (upload) saveTraining(slug, score, score >= PASS_MARK);
   }, []);
   const reset = useCallback(() => {
     write({});
@@ -113,14 +115,32 @@ export function Quiz({ slug, questions: written }: { slug: string; questions: Qu
   const complete = answers.every((a) => a !== null);
   const prior = store[slug];
 
-  const submit = () => {
+  const [verified, setVerified] = useState<boolean | null>(null);
+  const submit = async () => {
     setSubmitted(true);
+    // Signed in, the server marks the chosen options and keeps the record as verified; its score is the
+    // one recorded. Signed out, or if the server can't be reached, this browser marks it as before.
+    try {
+      const marked = await submitAttempt(
+        slug,
+        questions.map((q, i) => q.options[answers[i] ?? -1] ?? ""),
+      );
+      if (marked) {
+        setVerified(true);
+        record(slug, marked.score, false);
+        return;
+      }
+    } catch {
+      // Fall through to marking here.
+    }
+    setVerified(false);
     record(slug, score);
   };
 
   const retry = () => {
     setAnswers(questions.map(() => null));
     setSubmitted(false);
+    setVerified(null);
   };
 
   return (
@@ -194,6 +214,7 @@ export function Quiz({ slug, questions: written }: { slug: string; questions: Qu
             {correct}/{questions.length} · {Math.round(score * 100)}%
           </p>
           <Badge status={score >= PASS_MARK ? "ok" : "warning"}>{score >= PASS_MARK ? "passed" : "not yet"}</Badge>
+          {verified && <Badge status="neutral">marked by the server · verified</Badge>}
           <p className="text-sm text-[rgb(var(--muted))]">
             {score >= PASS_MARK ? "This module is complete." : `Pass mark is ${PASS_MARK * 100}%. Re-read the lesson and try again.`}
           </p>

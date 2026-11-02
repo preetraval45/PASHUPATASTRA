@@ -35,5 +35,5 @@ one is bought, will be registered in Route 53.
 ## Consequences
 
 - API Gateway and the Function URL must allow the `Authorization` header and the PUT, PATCH and DELETE methods (`scripts/deployapigateway.py`, `scripts/deploylambda.py`).
-- **Self-reported scores:** a company that needs proctored certification needs server-marked tests. That means moving module quizzes into the API and marking answers there, as `progress.py` already does for the game.
+- **Server-marked tests (2 Nov 2026):** signed in, a module test sends the option chosen for each question and the API marks it against keys exported from the site's own questions (`scripts/exportquiz.mjs` → `services/api/app/quizkeys.json`; a web test fails if they drift). Those passes are flagged `verified_passed`; the dashboard shows them solid and self-reported ones pale. The questions are in the page, so these are open-book tests, not proctored exams: what is guaranteed is that a verified score is the score of the answers given.
 - **Rate limiting:** ten wrong passwords for one email in 15 minutes lock it for the rest of that window. Email verification is not built yet and should land before the product is sold.

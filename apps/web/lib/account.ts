@@ -19,12 +19,22 @@ export type OrgSettings = {
   due: string | null;
 };
 export type Membership = { id: string; name: string; role: "owner" | "admin" | "employee"; invite?: string; settings: OrgSettings };
-export type ModuleRecord = { best: number; last: number; attempts: number; passed: boolean; at: number };
+export type ModuleRecord = {
+  best: number;
+  last: number;
+  attempts: number;
+  passed: boolean;
+  at: number;
+  /** Passed in a test the server marked from the answers given (not a self-reported score). */
+  verified_passed?: boolean;
+};
 export type Me = { user: Account; orgs: Membership[]; training: Record<string, ModuleRecord>; platform_admin: boolean };
 export type Member = Account & {
   role: Membership["role"];
   joined: number | null;
   passed: string[];
+  /** Levels passed in server-marked tests. */
+  verified: string[];
   attempts: number;
   last_active: number | null;
   average: number | null;
@@ -270,4 +280,18 @@ export async function denyAction(question: PolicyQuestion, reason: string, prese
     method: "POST",
     body: JSON.stringify({ verdict, approver: state.me?.user.name ?? "administrator", reason, presented_at: presented.toISOString() }),
   });
+}
+
+/** Sends a test's chosen options to be marked by the server. Null when signed out (the browser marks it). */
+export async function submitAttempt(
+  slug: string,
+  answers: string[],
+): Promise<{ score: number; passed: boolean; correct: boolean[] } | null> {
+  if (!state.token) return null;
+  const result = await call<{ score: number; passed: boolean; correct: boolean[]; training: Me["training"] }>(
+    `/me/training/${encodeURIComponent(slug)}/attempt`,
+    { method: "POST", body: JSON.stringify({ answers }) },
+  );
+  if (state.me) set({ me: { ...state.me, training: result.training } });
+  return result;
 }

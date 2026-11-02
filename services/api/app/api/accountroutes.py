@@ -113,6 +113,10 @@ class Settings(BaseModel):
     due: str | None = Field(default=None, max_length=10)
 
 
+class Attempt(BaseModel):
+    answers: list[str] = Field(max_length=50)
+
+
 class Result(BaseModel):
     score: float = Field(ge=0, le=1)
     passed: bool
@@ -360,3 +364,13 @@ def approver(authorization: str | None, claimed: str) -> str:
     if not accounts.is_platform_admin(user):
         raise HTTPException(status_code=403, detail="Only a platform administrator can approve or deny actions.")
     return f"{user.name} ({user.id})"
+
+
+@router.post("/me/training/{slug}/attempt")
+def me_attempt(slug: str, body: Attempt, authorization: str | None = Header(default=None)) -> dict:
+    """A test marked here from the answers chosen; the record it makes is flagged verified."""
+    user = _user(authorization)
+    try:
+        return accounts.mark_attempt(user, slug, body.answers)
+    except accounts.AccountError as error:
+        raise _fail(error) from error

@@ -167,6 +167,23 @@
         "title": "AttackTechnique",
         "type": "object"
       },
+      "Attempt": {
+        "properties": {
+          "answers": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Answers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "title": "Attempt",
+        "type": "object"
+      },
       "AuditKind": {
         "enum": [
           "observation",
@@ -3797,6 +3814,74 @@
           }
         },
         "summary": "Me Training"
+      }
+    },
+    "/api/v1/me/training/{slug}/attempt": {
+      "post": {
+        "description": "A test marked here from the answers chosen; the record it makes is flagged verified.",
+        "operationId": "me_attempt_api_v1_me_training__slug__attempt_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Attempt"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Me Attempt Api V1 Me Training  Slug  Attempt Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Me Attempt"
       }
     },
     "/api/v1/models": {
