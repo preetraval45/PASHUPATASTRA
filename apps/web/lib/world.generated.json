@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-02T15:58:47+00:00",
+  "as_of": "2026-11-03T14:19:28+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
@@ -204,12 +204,8 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-29",
-        "value": 5
-      },
-      {
         "label": "2026-10-30",
-        "value": 39
+        "value": 20
       },
       {
         "label": "2026-10-31",
@@ -221,33 +217,45 @@
       },
       {
         "label": "2026-11-02",
-        "value": 9
+        "value": 20
+      },
+      {
+        "label": "2026-11-03",
+        "value": 13
       }
     ],
     "by_group": [
       {
+        "label": "N0n",
+        "value": 12
+      },
+      {
         "label": "qilin",
-        "value": 21
+        "value": 12
       },
       {
         "label": "safepay",
         "value": 10
       },
       {
-        "label": "genesis",
-        "value": 9
-      },
-      {
-        "label": "N0n",
+        "label": "SilentRansomGroup",
         "value": 7
       },
       {
-        "label": "SilentRansomGroup",
+        "label": "genesis",
         "value": 6
       },
       {
-        "label": "Shiba",
-        "value": 5
+        "label": "rhysida",
+        "value": 4
+      },
+      {
+        "label": "payload",
+        "value": 4
+      },
+      {
+        "label": "Orova",
+        "value": 4
       },
       {
         "label": "thegentlemen",
@@ -256,40 +264,36 @@
       {
         "label": "AuditTeam",
         "value": 4
-      },
-      {
-        "label": "Whitearmor",
-        "value": 3
-      },
-      {
-        "label": "payload",
-        "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 35
+        "value": 33
       },
       {
         "label": "DE",
         "value": 7
       },
       {
-        "label": "MX",
-        "value": 6
+        "label": "MY",
+        "value": 4
       },
       {
-        "label": "GB",
+        "label": "SG",
         "value": 3
       },
       {
-        "label": "PH",
+        "label": "AR",
         "value": 3
       },
       {
-        "label": "TW",
-        "value": 3
+        "label": "IT",
+        "value": 2
+      },
+      {
+        "label": "AE",
+        "value": 2
       },
       {
         "label": "TR",
@@ -298,36 +302,32 @@
       {
         "label": "JP",
         "value": 2
-      },
-      {
-        "label": "AR",
-        "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 22
+        "value": 32
       },
       {
         "label": "Professional Services",
-        "value": 16
+        "value": 14
       },
       {
         "label": "Manufacturing",
-        "value": 12
+        "value": 9
       },
       {
         "label": "Technology",
-        "value": 10
+        "value": 8
+      },
+      {
+        "label": "Retail & E-Commerce",
+        "value": 7
       },
       {
         "label": "Other",
         "value": 7
-      },
-      {
-        "label": "Retail & E-Commerce",
-        "value": 6
       },
       {
         "label": "Education",
@@ -335,15 +335,15 @@
       },
       {
         "label": "Healthcare",
-        "value": 6
+        "value": 5
+      },
+      {
+        "label": "Financial Services",
+        "value": 4
       },
       {
         "label": "Transportation",
-        "value": 6
-      },
-      {
-        "label": "Energy & Utilities",
-        "value": 3
+        "value": 4
       }
     ]
   },
@@ -380,12 +380,12 @@
   "breaches": {
     "ok": true,
     "source": "https://haveibeenpwned.com/api/v3/breaches",
-    "breaches": 1048,
-    "accounts": 17846896404,
+    "breaches": 1049,
+    "accounts": 17847746941,
     "top_data_classes": [
       {
         "label": "Email addresses",
-        "value": 1041
+        "value": 1042
       },
       {
         "label": "Passwords",
@@ -393,7 +393,7 @@
       },
       {
         "label": "Names",
-        "value": 566
+        "value": 567
       },
       {
         "label": "Usernames",
@@ -405,19 +405,19 @@
       },
       {
         "label": "Phone numbers",
-        "value": 383
+        "value": 384
       },
       {
         "label": "Physical addresses",
-        "value": 309
+        "value": 310
       },
       {
         "label": "Dates of birth",
-        "value": 288
+        "value": 289
       },
       {
         "label": "Genders",
-        "value": 198
+        "value": 199
       },
       {
         "label": "Geographic locations",
@@ -425,6 +425,14 @@
       }
     ],
     "latest": [
+      {
+        "title": "Harvard",
+        "domain": "harvard.edu",
+        "breach_date": "2025-11-18",
+        "added": "2026-11-03",
+        "accounts": 850537,
+        "verified": true
+      },
       {
         "title": "AfD",
         "domain": "afd.de",
@@ -495,14 +503,6 @@
         "breach_date": "2023-04-01",
         "added": "2026-10-07",
         "accounts": 6765054,
-        "verified": true
-      },
-      {
-        "title": "Medela",
-        "domain": "medela.com",
-        "breach_date": "2026-09-07",
-        "added": "2026-09-30",
-        "accounts": 423947,
         "verified": true
       }
     ]
