@@ -1,10 +1,10 @@
 {
-  "as_of": "2026-11-03T14:19:28+00:00",
+  "as_of": "2026-11-04T14:36:26+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.10.30",
-    "total": 1766,
+    "catalog_version": "2026.11.03",
+    "total": 1767,
     "added_last_30_days": 33,
     "known_ransomware_use": 361,
     "by_month": [
@@ -55,6 +55,10 @@
       {
         "label": "2026-10",
         "value": 36
+      },
+      {
+        "label": "2026-11",
+        "value": 1
       }
     ],
     "top_vendors": [
@@ -100,6 +104,14 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-119977",
+        "vendor": "WordPress",
+        "product": "WordPress Core",
+        "name": "WordPress WordPress Core Time-of-check Time-of-use (TOCTOU) Race Condition Vulnerability",
+        "added": "2026-11-03",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-118527",
         "vendor": "Ivanti",
@@ -187,14 +199,6 @@
         "name": "Arista VeloCloud Orchestrator SQL Injection Vulnerability",
         "added": "2026-10-23",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-110447",
-        "vendor": "Collabora",
-        "product": "Collabora Online – Built-in CODE Server",
-        "name": "Collabora Online – Built-in CODE Server OS Command Injection Vulnerability",
-        "added": "2026-10-23",
-        "ransomware": false
       }
     ]
   },
@@ -204,12 +208,8 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-30",
-        "value": 20
-      },
-      {
         "label": "2026-10-31",
-        "value": 31
+        "value": 18
       },
       {
         "label": "2026-11-01",
@@ -217,36 +217,44 @@
       },
       {
         "label": "2026-11-02",
-        "value": 20
+        "value": 19
       },
       {
         "label": "2026-11-03",
-        "value": 13
+        "value": 37
+      },
+      {
+        "label": "2026-11-04",
+        "value": 10
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 12
+        "value": 15
       },
       {
         "label": "qilin",
-        "value": 12
+        "value": 13
       },
       {
         "label": "safepay",
         "value": 10
       },
       {
-        "label": "SilentRansomGroup",
-        "value": 7
-      },
-      {
-        "label": "genesis",
+        "label": "incransom",
         "value": 6
       },
       {
-        "label": "rhysida",
+        "label": "akira",
+        "value": 6
+      },
+      {
+        "label": "Aoqin",
+        "value": 4
+      },
+      {
+        "label": "Booba Project",
         "value": 4
       },
       {
@@ -258,45 +266,41 @@
         "value": 4
       },
       {
-        "label": "thegentlemen",
-        "value": 4
-      },
-      {
-        "label": "AuditTeam",
-        "value": 4
+        "label": "rhysida",
+        "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 33
+        "value": 36
       },
       {
         "label": "DE",
         "value": 7
       },
       {
+        "label": "TR",
+        "value": 3
+      },
+      {
+        "label": "GB",
+        "value": 3
+      },
+      {
+        "label": "CL",
+        "value": 2
+      },
+      {
+        "label": "KR",
+        "value": 2
+      },
+      {
         "label": "MY",
-        "value": 4
+        "value": 2
       },
       {
         "label": "SG",
-        "value": 3
-      },
-      {
-        "label": "AR",
-        "value": 3
-      },
-      {
-        "label": "IT",
-        "value": 2
-      },
-      {
-        "label": "AE",
-        "value": 2
-      },
-      {
-        "label": "TR",
         "value": 2
       },
       {
@@ -307,14 +311,18 @@
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 32
-      },
-      {
-        "label": "Professional Services",
-        "value": 14
+        "value": 28
       },
       {
         "label": "Manufacturing",
+        "value": 13
+      },
+      {
+        "label": "Professional Services",
+        "value": 11
+      },
+      {
+        "label": "Other",
         "value": 9
       },
       {
@@ -322,19 +330,15 @@
         "value": 8
       },
       {
+        "label": "Healthcare",
+        "value": 7
+      },
+      {
         "label": "Retail & E-Commerce",
-        "value": 7
-      },
-      {
-        "label": "Other",
-        "value": 7
-      },
-      {
-        "label": "Education",
         "value": 6
       },
       {
-        "label": "Healthcare",
+        "label": "Education",
         "value": 5
       },
       {
@@ -343,7 +347,7 @@
       },
       {
         "label": "Transportation",
-        "value": 4
+        "value": 3
       }
     ]
   },
