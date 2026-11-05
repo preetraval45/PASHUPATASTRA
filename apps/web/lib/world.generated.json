@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-04T14:36:26+00:00",
+  "as_of": "2026-11-05T14:41:56+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.11.03",
-    "total": 1767,
-    "added_last_30_days": 33,
+    "catalog_version": "2026.11.04",
+    "total": 1768,
+    "added_last_30_days": 34,
     "known_ransomware_use": 361,
     "by_month": [
       {
         "label": "2025-11",
-        "value": 11
+        "value": 9
       },
       {
         "label": "2025-12",
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-11",
-        "value": 1
+        "value": 2
       }
     ],
     "top_vendors": [
@@ -72,7 +72,7 @@
       },
       {
         "label": "Apple",
-        "value": 95
+        "value": 96
       },
       {
         "label": "Adobe",
@@ -104,6 +104,14 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2024-27834",
+        "vendor": "Apple",
+        "product": "Multiple Products",
+        "name": "Apple Multiple Products Improper Authentication Vulnerability",
+        "added": "2026-11-04",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-119977",
         "vendor": "WordPress",
@@ -191,14 +199,6 @@
         "name": "PHP Stale Internal Request-State Vulnerability",
         "added": "2026-10-26",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-114625",
-        "vendor": "Arista",
-        "product": "VeloCloud Orchestrator",
-        "name": "Arista VeloCloud Orchestrator SQL Injection Vulnerability",
-        "added": "2026-10-23",
-        "ransomware": false
       }
     ]
   },
@@ -208,46 +208,46 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-10-31",
-        "value": 18
-      },
-      {
-        "label": "2026-11-01",
-        "value": 16
-      },
-      {
-        "label": "2026-11-02",
-        "value": 19
-      },
-      {
         "label": "2026-11-03",
-        "value": 37
+        "value": 26
       },
       {
         "label": "2026-11-04",
+        "value": 64
+      },
+      {
+        "label": "2026-11-05",
         "value": 10
       }
     ],
     "by_group": [
       {
-        "label": "N0n",
-        "value": 15
+        "label": "medusalocker",
+        "value": 17
       },
       {
-        "label": "qilin",
-        "value": 13
+        "label": "N0n",
+        "value": 16
+      },
+      {
+        "label": "BrainCipher",
+        "value": 11
       },
       {
         "label": "safepay",
-        "value": 10
+        "value": 8
+      },
+      {
+        "label": "play",
+        "value": 5
       },
       {
         "label": "incransom",
-        "value": 6
+        "value": 5
       },
       {
-        "label": "akira",
-        "value": 6
+        "label": "Dark Project",
+        "value": 4
       },
       {
         "label": "Aoqin",
@@ -258,75 +258,67 @@
         "value": 4
       },
       {
-        "label": "payload",
-        "value": 4
-      },
-      {
-        "label": "Orova",
-        "value": 4
-      },
-      {
-        "label": "rhysida",
+        "label": "SilentRansomGroup",
         "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 36
+        "value": 38
       },
       {
         "label": "DE",
-        "value": 7
+        "value": 8
       },
       {
-        "label": "TR",
-        "value": 3
+        "label": "CA",
+        "value": 4
       },
       {
         "label": "GB",
         "value": 3
       },
       {
-        "label": "CL",
+        "label": "BR",
+        "value": 3
+      },
+      {
+        "label": "AU",
         "value": 2
       },
       {
-        "label": "KR",
+        "label": "CN",
         "value": 2
       },
       {
-        "label": "MY",
+        "label": "CH",
         "value": 2
       },
       {
-        "label": "SG",
-        "value": 2
-      },
-      {
-        "label": "JP",
+        "label": "ES",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 28
+        "value": 29
       },
       {
         "label": "Manufacturing",
-        "value": 13
-      },
-      {
-        "label": "Professional Services",
-        "value": 11
-      },
-      {
-        "label": "Other",
-        "value": 9
+        "value": 16
       },
       {
         "label": "Technology",
+        "value": 9
+      },
+      {
+        "label": "Professional Services",
+        "value": 9
+      },
+      {
+        "label": "Other",
         "value": 8
       },
       {
@@ -334,19 +326,19 @@
         "value": 7
       },
       {
-        "label": "Retail & E-Commerce",
-        "value": 6
-      },
-      {
-        "label": "Education",
-        "value": 5
-      },
-      {
         "label": "Financial Services",
+        "value": 7
+      },
+      {
+        "label": "Retail & E-Commerce",
         "value": 4
       },
       {
-        "label": "Transportation",
+        "label": "Education",
+        "value": 3
+      },
+      {
+        "label": "Agriculture and Food Production",
         "value": 3
       }
     ]
