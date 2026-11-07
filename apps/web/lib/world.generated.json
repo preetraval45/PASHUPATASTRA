@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-06T14:19:18+00:00",
+  "as_of": "2026-11-07T13:05:52+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.11.04",
-    "total": 1768,
-    "added_last_30_days": 34,
+    "catalog_version": "2026.11.06",
+    "total": 1769,
+    "added_last_30_days": 35,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-11",
-        "value": 2
+        "value": 3
       }
     ],
     "top_vendors": [
@@ -104,6 +104,14 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-19868",
+        "vendor": "SonicWall",
+        "product": "SonicOS SSLVPN",
+        "name": "SonicWall SonicOS SSLVPN Use of Single-factor Authentication Vulnerability",
+        "added": "2026-11-06",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2024-27834",
         "vendor": "Apple",
@@ -191,14 +199,6 @@
         "name": "PHP Memory Corruption Vulnerability",
         "added": "2026-10-26",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-109619",
-        "vendor": "PHP Group",
-        "product": "PHP",
-        "name": "PHP Stale Internal Request-State Vulnerability",
-        "added": "2026-10-26",
-        "ransomware": false
       }
     ]
   },
@@ -208,26 +208,26 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-11-03",
-        "value": 8
-      },
-      {
         "label": "2026-11-04",
-        "value": 64
+        "value": 48
       },
       {
         "label": "2026-11-05",
-        "value": 24
+        "value": 22
       },
       {
         "label": "2026-11-06",
-        "value": 4
+        "value": 24
+      },
+      {
+        "label": "2026-11-07",
+        "value": 6
       }
     ],
     "by_group": [
       {
         "label": "medusalocker",
-        "value": 17
+        "value": 16
       },
       {
         "label": "N0n",
@@ -235,7 +235,11 @@
       },
       {
         "label": "BrainCipher",
-        "value": 11
+        "value": 12
+      },
+      {
+        "label": "SilentRansomGroup",
+        "value": 8
       },
       {
         "label": "safepay",
@@ -243,99 +247,95 @@
       },
       {
         "label": "akira",
-        "value": 6
-      },
-      {
-        "label": "Aoqin",
-        "value": 5
+        "value": 7
       },
       {
         "label": "play",
         "value": 5
       },
       {
-        "label": "incransom",
-        "value": 5
-      },
-      {
-        "label": "SilentRansomGroup",
+        "label": "qilin",
         "value": 4
       },
       {
         "label": "Dark Project",
         "value": 4
+      },
+      {
+        "label": "rhysida",
+        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 38
-      },
-      {
-        "label": "CA",
-        "value": 6
+        "value": 37
       },
       {
         "label": "DE",
-        "value": 6
+        "value": 8
       },
       {
-        "label": "BR",
-        "value": 4
-      },
-      {
-        "label": "AU",
-        "value": 2
-      },
-      {
-        "label": "CN",
-        "value": 2
-      },
-      {
-        "label": "GB",
-        "value": 2
+        "label": "CA",
+        "value": 7
       },
       {
         "label": "CH",
         "value": 2
       },
       {
-        "label": "ES",
+        "label": "DK",
+        "value": 2
+      },
+      {
+        "label": "IT",
+        "value": 2
+      },
+      {
+        "label": "BR",
+        "value": 2
+      },
+      {
+        "label": "AU",
+        "value": 2
+      },
+      {
+        "label": "GB",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 25
+        "value": 20
+      },
+      {
+        "label": "Manufacturing",
+        "value": 14
+      },
+      {
+        "label": "Professional Services",
+        "value": 14
       },
       {
         "label": "Technology",
         "value": 13
       },
       {
-        "label": "Manufacturing",
-        "value": 13
-      },
-      {
-        "label": "Professional Services",
-        "value": 12
-      },
-      {
-        "label": "Other",
-        "value": 7
-      },
-      {
-        "label": "Financial Services",
+        "label": "Healthcare",
         "value": 7
       },
       {
         "label": "Retail & E-Commerce",
+        "value": 7
+      },
+      {
+        "label": "Financial Services",
         "value": 6
       },
       {
-        "label": "Healthcare",
-        "value": 5
+        "label": "Other",
+        "value": 6
       },
       {
         "label": "Hospitality",
