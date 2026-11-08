@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-07T13:05:52+00:00",
+  "as_of": "2026-11-08T13:28:09+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.11.06",
     "total": 1769,
-    "added_last_30_days": 35,
+    "added_last_30_days": 30,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -209,7 +209,7 @@
     "by_day": [
       {
         "label": "2026-11-04",
-        "value": 48
+        "value": 6
       },
       {
         "label": "2026-11-05",
@@ -221,48 +221,52 @@
       },
       {
         "label": "2026-11-07",
+        "value": 42
+      },
+      {
+        "label": "2026-11-08",
         "value": 6
       }
     ],
     "by_group": [
       {
-        "label": "medusalocker",
-        "value": 16
-      },
-      {
         "label": "N0n",
-        "value": 15
+        "value": 29
       },
       {
-        "label": "BrainCipher",
-        "value": 12
+        "label": "qilin",
+        "value": 13
       },
       {
-        "label": "SilentRansomGroup",
-        "value": 8
-      },
-      {
-        "label": "safepay",
-        "value": 8
+        "label": "metaencryptor",
+        "value": 7
       },
       {
         "label": "akira",
         "value": 7
       },
       {
-        "label": "play",
+        "label": "SilentRansomGroup",
+        "value": 6
+      },
+      {
+        "label": "medusalocker",
+        "value": 6
+      },
+      {
+        "label": "incransom",
         "value": 5
       },
       {
-        "label": "qilin",
+        "label": "payload",
         "value": 4
       },
       {
-        "label": "Dark Project",
-        "value": 4
+        "label": "BYOD",
+        "value": 3
       },
       {
-        "label": "rhysida",
+        "label": "Whitearmor",
         "value": 2
       }
     ],
@@ -273,48 +277,48 @@
       },
       {
         "label": "DE",
-        "value": 8
+        "value": 6
+      },
+      {
+        "label": "KR",
+        "value": 5
       },
       {
         "label": "CA",
-        "value": 7
+        "value": 5
       },
       {
-        "label": "CH",
+        "label": "MX",
+        "value": 3
+      },
+      {
+        "label": "BR",
+        "value": 3
+      },
+      {
+        "label": "GB",
+        "value": 3
+      },
+      {
+        "label": "IL",
         "value": 2
       },
       {
         "label": "DK",
-        "value": 2
-      },
-      {
-        "label": "IT",
-        "value": 2
-      },
-      {
-        "label": "BR",
-        "value": 2
-      },
-      {
-        "label": "AU",
-        "value": 2
-      },
-      {
-        "label": "GB",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 20
-      },
-      {
-        "label": "Manufacturing",
-        "value": 14
+        "value": 27
       },
       {
         "label": "Professional Services",
+        "value": 14
+      },
+      {
+        "label": "Manufacturing",
         "value": 14
       },
       {
@@ -322,28 +326,28 @@
         "value": 13
       },
       {
-        "label": "Healthcare",
-        "value": 7
-      },
-      {
         "label": "Retail & E-Commerce",
-        "value": 7
+        "value": 8
       },
       {
-        "label": "Financial Services",
+        "label": "Healthcare",
         "value": 6
       },
       {
         "label": "Other",
-        "value": 6
+        "value": 5
       },
       {
-        "label": "Hospitality",
+        "label": "Transportation",
+        "value": 3
+      },
+      {
+        "label": "Financial Services",
         "value": 3
       },
       {
         "label": "Education",
-        "value": 3
+        "value": 2
       }
     ]
   },
