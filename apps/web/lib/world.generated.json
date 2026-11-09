@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-08T13:28:09+00:00",
+  "as_of": "2026-11-09T16:25:12+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
@@ -208,146 +208,138 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-11-04",
-        "value": 6
-      },
-      {
-        "label": "2026-11-05",
-        "value": 22
-      },
-      {
-        "label": "2026-11-06",
-        "value": 24
-      },
-      {
         "label": "2026-11-07",
-        "value": 42
+        "value": 20
       },
       {
         "label": "2026-11-08",
-        "value": 6
+        "value": 17
+      },
+      {
+        "label": "2026-11-09",
+        "value": 63
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 29
-      },
-      {
-        "label": "qilin",
-        "value": 13
+        "value": 61
       },
       {
         "label": "metaencryptor",
-        "value": 7
-      },
-      {
-        "label": "akira",
-        "value": 7
-      },
-      {
-        "label": "SilentRansomGroup",
         "value": 6
       },
       {
-        "label": "medusalocker",
+        "label": "Deadlock",
         "value": 6
       },
       {
-        "label": "incransom",
+        "label": "krybit",
         "value": 5
+      },
+      {
+        "label": "lockbit5",
+        "value": 4
       },
       {
         "label": "payload",
         "value": 4
       },
       {
-        "label": "BYOD",
+        "label": "incransom",
         "value": 3
       },
       {
-        "label": "Whitearmor",
-        "value": 2
+        "label": "morpheus",
+        "value": 1
+      },
+      {
+        "label": "Scarlettgroup",
+        "value": 1
+      },
+      {
+        "label": "anubis",
+        "value": 1
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 37
+        "value": 47
       },
       {
-        "label": "DE",
-        "value": 6
+        "label": "CA",
+        "value": 13
       },
       {
         "label": "KR",
         "value": 5
       },
       {
-        "label": "CA",
-        "value": 5
-      },
-      {
-        "label": "MX",
-        "value": 3
-      },
-      {
-        "label": "BR",
-        "value": 3
-      },
-      {
         "label": "GB",
         "value": 3
       },
       {
-        "label": "IL",
+        "label": "HK",
+        "value": 3
+      },
+      {
+        "label": "TH",
+        "value": 3
+      },
+      {
+        "label": "DE",
+        "value": 3
+      },
+      {
+        "label": "MX",
         "value": 2
       },
       {
-        "label": "DK",
+        "label": "BR",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 27
-      },
-      {
-        "label": "Professional Services",
-        "value": 14
-      },
-      {
-        "label": "Manufacturing",
-        "value": 14
+        "value": 66
       },
       {
         "label": "Technology",
-        "value": 13
+        "value": 7
       },
       {
-        "label": "Retail & E-Commerce",
-        "value": 8
-      },
-      {
-        "label": "Healthcare",
-        "value": 6
-      },
-      {
-        "label": "Other",
+        "label": "Manufacturing",
         "value": 5
       },
       {
+        "label": "Other",
+        "value": 4
+      },
+      {
+        "label": "Hospitality",
+        "value": 3
+      },
+      {
+        "label": "Healthcare",
+        "value": 3
+      },
+      {
+        "label": "Retail & E-Commerce",
+        "value": 3
+      },
+      {
+        "label": "Professional Services",
+        "value": 3
+      },
+      {
         "label": "Transportation",
-        "value": 3
-      },
-      {
-        "label": "Financial Services",
-        "value": 3
-      },
-      {
-        "label": "Education",
         "value": 2
+      },
+      {
+        "label": "Energy & Utilities",
+        "value": 1
       }
     ]
   },
