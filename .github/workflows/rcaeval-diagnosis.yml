@@ -33,12 +33,12 @@ jobs:
       PASHU_BASELINE_BASE_URL: http://localhost:11434/v1
       PASHU_BASELINE_TEMPERATURE: "0.2"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/rcaeval
           key: rcaeval-v1
@@ -55,7 +55,7 @@ jobs:
       - name: name the artifact
         id: slug
         run: echo "slug=$(echo '${{ matrix.diagnoser }}' | tr -c 'a-zA-Z0-9' '_')" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: rcaeval-${{ steps.slug.outputs.slug }}
           path: benchmark/results/rcaeval/
@@ -68,11 +68,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: rcaeval-*
           path: benchmark/results/rcaeval
