@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-10T14:56:09+00:00",
+  "as_of": "2026-11-11T14:26:42+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.11.09",
-    "total": 1773,
-    "added_last_30_days": 34,
+    "catalog_version": "2026.11.10",
+    "total": 1779,
+    "added_last_30_days": 40,
     "known_ransomware_use": 361,
     "by_month": [
       {
         "label": "2025-11",
-        "value": 9
+        "value": 8
       },
       {
         "label": "2025-12",
@@ -58,17 +58,17 @@
       },
       {
         "label": "2026-11",
-        "value": 7
+        "value": 13
       }
     ],
     "top_vendors": [
       {
         "label": "Microsoft",
-        "value": 390
+        "value": 391
       },
       {
         "label": "Cisco",
-        "value": 102
+        "value": 103
       },
       {
         "label": "Apple",
@@ -80,7 +80,7 @@
       },
       {
         "label": "Google",
-        "value": 76
+        "value": 77
       },
       {
         "label": "Oracle",
@@ -104,6 +104,54 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-124194",
+        "vendor": "Microsoft",
+        "product": "Office",
+        "name": "Microsoft Office Outlook Missing User Interaction for Potentially Unsafe Action Vulnerability",
+        "added": "2026-11-10",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-111793",
+        "vendor": "Openwave Messaging Limited",
+        "product": "Webtop Media Transcoder",
+        "name": "Openwave Messaging Limited Webtop Media Transcoder Incorrect Resource Transfer Between Spheres Vulnerability",
+        "added": "2026-11-10",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-20320",
+        "vendor": "Cisco",
+        "product": "BroadWorks",
+        "name": "Cisco BroadWorks Improper Restriction of XML External Entity Reference Vulnerability",
+        "added": "2026-11-10",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-111560",
+        "vendor": "Barracuda Networks",
+        "product": "Multiple Products",
+        "name": "Barracuda Networks Multiple Products OS Command Injection Vulnerability",
+        "added": "2026-11-10",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-116606",
+        "vendor": "Barracuda Networks",
+        "product": "Barracuda Email Security Gateway (ESG)",
+        "name": "Barracuda Networks Email Security Gateway (ESG) Authentication Bypass Using an Alternate Path or Channel Vulnerability",
+        "added": "2026-11-10",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-125350",
+        "vendor": "Google",
+        "product": "Chromium",
+        "name": "Google Chromium Use-After-Free Vulnerability",
+        "added": "2026-11-10",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-102895",
         "vendor": "GPUStack",
@@ -151,54 +199,6 @@
         "name": "Apple Multiple Products Improper Authentication Vulnerability",
         "added": "2026-11-04",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-119977",
-        "vendor": "WordPress",
-        "product": "WordPress Core",
-        "name": "WordPress WordPress Core Time-of-check Time-of-use (TOCTOU) Race Condition Vulnerability",
-        "added": "2026-11-03",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-118527",
-        "vendor": "Ivanti",
-        "product": "Connect Secure",
-        "name": "Ivanti Connect Secure Generation of Predictable Numbers or Identifiers Vulnerability",
-        "added": "2026-10-30",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-111357",
-        "vendor": "Ivanti",
-        "product": "Connect Secure",
-        "name": "Ivanti Connect Secure Missing Authentication for Critical Function Vulnerability",
-        "added": "2026-10-30",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-97229",
-        "vendor": "GitLab",
-        "product": "Community Edition and Enterprise Edition",
-        "name": "GitLab Community Edition and Enterprise Edition Integer Overflow or Wraparound Vulnerability",
-        "added": "2026-10-29",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-76418",
-        "vendor": "Cisco",
-        "product": "Secure Firewall ASA Software and Cisco Secure FTD Software",
-        "name": "Cisco Secure Firewall ASA Software and Cisco Secure FTD Software Unchecked Return Value to NULL Pointer Dereference Vulnerability",
-        "added": "2026-10-29",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-41709",
-        "vendor": "Broadcom",
-        "product": "VMware ESX",
-        "name": "Broadcom VMWare ESX Insufficient Logging Vulnerability",
-        "added": "2026-10-28",
-        "ransomware": false
       }
     ]
   },
@@ -209,70 +209,74 @@
     "by_day": [
       {
         "label": "2026-11-09",
-        "value": 86
+        "value": 60
       },
       {
         "label": "2026-11-10",
-        "value": 14
+        "value": 36
+      },
+      {
+        "label": "2026-11-11",
+        "value": 4
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 67
+        "value": 46
       },
       {
         "label": "interlock",
-        "value": 8
+        "value": 9
       },
       {
-        "label": "krybit",
-        "value": 5
+        "label": "Booba Project",
+        "value": 6
+      },
+      {
+        "label": "SilentRansomGroup",
+        "value": 4
+      },
+      {
+        "label": "Aoqin",
+        "value": 3
+      },
+      {
+        "label": "play",
+        "value": 3
       },
       {
         "label": "Vortex",
         "value": 3
       },
       {
-        "label": "Aoqin",
-        "value": 2
+        "label": "BYOD",
+        "value": 3
       },
       {
-        "label": "SilentRansomGroup",
-        "value": 2
+        "label": "Climax Inc",
+        "value": 3
       },
       {
-        "label": "Global Secret Group",
+        "label": "Dark Project",
         "value": 2
-      },
-      {
-        "label": "Black X",
-        "value": 2
-      },
-      {
-        "label": "metaencryptor",
-        "value": 2
-      },
-      {
-        "label": "iah6477",
-        "value": 1
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 57
+        "value": 56
       },
       {
         "label": "CA",
-        "value": 12
+        "value": 11
       },
       {
-        "label": "GB",
+        "label": "ES",
         "value": 3
       },
       {
-        "label": "HK",
+        "label": "GB",
         "value": 3
       },
       {
@@ -280,61 +284,61 @@
         "value": 2
       },
       {
-        "label": "TH",
-        "value": 2
-      },
-      {
-        "label": "ES",
-        "value": 2
+        "label": "DE",
+        "value": 1
       },
       {
         "label": "AE",
         "value": 1
       },
       {
-        "label": "CM",
+        "label": "AU",
+        "value": 1
+      },
+      {
+        "label": "MX",
         "value": 1
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 66
+        "value": 50
       },
       {
         "label": "Healthcare",
-        "value": 8
+        "value": 14
       },
       {
         "label": "Retail & E-Commerce",
+        "value": 8
+      },
+      {
+        "label": "Professional Services",
         "value": 6
       },
       {
         "label": "Technology",
-        "value": 6
+        "value": 5
       },
       {
         "label": "Education",
-        "value": 3
-      },
-      {
-        "label": "Professional Services",
-        "value": 3
-      },
-      {
-        "label": "Hospitality",
-        "value": 2
-      },
-      {
-        "label": "Agriculture and Food Production",
-        "value": 1
+        "value": 4
       },
       {
         "label": "Manufacturing",
-        "value": 1
+        "value": 4
       },
       {
-        "label": "Government & Defense",
+        "label": "Other",
+        "value": 3
+      },
+      {
+        "label": "Energy & Utilities",
+        "value": 2
+      },
+      {
+        "label": "Transportation",
         "value": 1
       }
     ]
@@ -372,16 +376,16 @@
   "breaches": {
     "ok": true,
     "source": "https://haveibeenpwned.com/api/v3/breaches",
-    "breaches": 1049,
-    "accounts": 17847746941,
+    "breaches": 1051,
+    "accounts": 17858196501,
     "top_data_classes": [
       {
         "label": "Email addresses",
-        "value": 1042
+        "value": 1044
       },
       {
         "label": "Passwords",
-        "value": 674
+        "value": 675
       },
       {
         "label": "Names",
@@ -389,15 +393,15 @@
       },
       {
         "label": "Usernames",
-        "value": 485
+        "value": 486
       },
       {
         "label": "IP addresses",
-        "value": 387
+        "value": 388
       },
       {
         "label": "Phone numbers",
-        "value": 384
+        "value": 385
       },
       {
         "label": "Physical addresses",
@@ -405,7 +409,7 @@
       },
       {
         "label": "Dates of birth",
-        "value": 289
+        "value": 290
       },
       {
         "label": "Genders",
@@ -417,6 +421,22 @@
       }
     ],
     "latest": [
+      {
+        "title": "YouHack",
+        "domain": "youhack.ru",
+        "breach_date": "2013-05-29",
+        "added": "2026-11-11",
+        "accounts": 7160849,
+        "verified": true
+      },
+      {
+        "title": "СберСпасибо (SberSpasibo)",
+        "domain": "spasibosberbank.ru",
+        "breach_date": "2023-03-09",
+        "added": "2026-11-11",
+        "accounts": 3288711,
+        "verified": true
+      },
       {
         "title": "Harvard",
         "domain": "harvard.edu",
@@ -479,22 +499,6 @@
         "breach_date": "2026-08-05",
         "added": "2026-10-07",
         "accounts": 373460,
-        "verified": true
-      },
-      {
-        "title": "Double Counter",
-        "domain": "doublecounter.gg",
-        "breach_date": "2026-10-04",
-        "added": "2026-10-07",
-        "accounts": 274922,
-        "verified": true
-      },
-      {
-        "title": "Angel One",
-        "domain": "angelone.in",
-        "breach_date": "2023-04-01",
-        "added": "2026-10-07",
-        "accounts": 6765054,
         "verified": true
       }
     ]
