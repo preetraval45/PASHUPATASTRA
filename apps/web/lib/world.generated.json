@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-11T14:26:42+00:00",
+  "as_of": "2026-11-12T15:18:57+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
@@ -209,7 +209,7 @@
     "by_day": [
       {
         "label": "2026-11-09",
-        "value": 60
+        "value": 11
       },
       {
         "label": "2026-11-10",
@@ -217,13 +217,21 @@
       },
       {
         "label": "2026-11-11",
-        "value": 4
+        "value": 24
+      },
+      {
+        "label": "2026-11-12",
+        "value": 29
       }
     ],
     "by_group": [
       {
-        "label": "N0n",
-        "value": 46
+        "label": "thegentlemen",
+        "value": 22
+      },
+      {
+        "label": "Curious Worm",
+        "value": 9
       },
       {
         "label": "interlock",
@@ -234,112 +242,108 @@
         "value": 6
       },
       {
+        "label": "play",
+        "value": 4
+      },
+      {
+        "label": "incransom",
+        "value": 4
+      },
+      {
         "label": "SilentRansomGroup",
         "value": 4
       },
       {
-        "label": "Aoqin",
+        "label": "qilin",
         "value": 3
       },
       {
-        "label": "play",
+        "label": "akira",
         "value": 3
       },
       {
         "label": "Vortex",
         "value": 3
-      },
-      {
-        "label": "BYOD",
-        "value": 3
-      },
-      {
-        "label": "Climax Inc",
-        "value": 3
-      },
-      {
-        "label": "Dark Project",
-        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 56
+        "value": 42
       },
       {
         "label": "CA",
-        "value": 11
+        "value": 7
       },
       {
         "label": "ES",
-        "value": 3
+        "value": 4
       },
       {
         "label": "GB",
         "value": 3
       },
       {
-        "label": "ZA",
+        "label": "SA",
+        "value": 3
+      },
+      {
+        "label": "MX",
+        "value": 3
+      },
+      {
+        "label": "JP",
+        "value": 2
+      },
+      {
+        "label": "BR",
         "value": 2
       },
       {
         "label": "DE",
-        "value": 1
-      },
-      {
-        "label": "AE",
-        "value": 1
-      },
-      {
-        "label": "AU",
-        "value": 1
-      },
-      {
-        "label": "MX",
-        "value": 1
+        "value": 2
       }
     ],
     "by_sector": [
       {
-        "label": "Not Found",
-        "value": 50
+        "label": "Healthcare",
+        "value": 19
       },
       {
-        "label": "Healthcare",
+        "label": "Professional Services",
         "value": 14
+      },
+      {
+        "label": "Not Found",
+        "value": 13
+      },
+      {
+        "label": "Manufacturing",
+        "value": 9
+      },
+      {
+        "label": "Technology",
+        "value": 8
       },
       {
         "label": "Retail & E-Commerce",
         "value": 8
       },
       {
-        "label": "Professional Services",
-        "value": 6
-      },
-      {
-        "label": "Technology",
-        "value": 5
-      },
-      {
         "label": "Education",
-        "value": 4
-      },
-      {
-        "label": "Manufacturing",
-        "value": 4
+        "value": 7
       },
       {
         "label": "Other",
-        "value": 3
+        "value": 6
       },
       {
-        "label": "Energy & Utilities",
-        "value": 2
+        "label": "Government & Defense",
+        "value": 5
       },
       {
         "label": "Transportation",
-        "value": 1
+        "value": 4
       }
     ]
   },
