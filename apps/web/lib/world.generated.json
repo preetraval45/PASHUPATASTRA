@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-12T15:18:57+00:00",
+  "as_of": "2026-11-13T14:37:20+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.11.10",
     "total": 1779,
-    "added_last_30_days": 40,
+    "added_last_30_days": 38,
     "known_ransomware_use": 361,
     "by_month": [
       {
         "label": "2025-11",
-        "value": 8
+        "value": 5
       },
       {
         "label": "2025-12",
@@ -209,11 +209,11 @@
     "by_day": [
       {
         "label": "2026-11-09",
-        "value": 11
+        "value": 2
       },
       {
         "label": "2026-11-10",
-        "value": 36
+        "value": 34
       },
       {
         "label": "2026-11-11",
@@ -221,7 +221,11 @@
       },
       {
         "label": "2026-11-12",
-        "value": 29
+        "value": 39
+      },
+      {
+        "label": "2026-11-13",
+        "value": 1
       }
     ],
     "by_group": [
@@ -231,7 +235,7 @@
       },
       {
         "label": "Curious Worm",
-        "value": 9
+        "value": 10
       },
       {
         "label": "interlock",
@@ -242,42 +246,42 @@
         "value": 6
       },
       {
+        "label": "incransom",
+        "value": 5
+      },
+      {
         "label": "play",
         "value": 4
       },
       {
-        "label": "incransom",
-        "value": 4
+        "label": "N0n",
+        "value": 3
       },
       {
-        "label": "SilentRansomGroup",
-        "value": 4
+        "label": "Aoqin",
+        "value": 3
+      },
+      {
+        "label": "Vexy Ransomware",
+        "value": 3
       },
       {
         "label": "qilin",
-        "value": 3
-      },
-      {
-        "label": "akira",
-        "value": 3
-      },
-      {
-        "label": "Vortex",
         "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 42
+        "value": 41
       },
       {
         "label": "CA",
         "value": 7
       },
       {
-        "label": "ES",
-        "value": 4
+        "label": "BR",
+        "value": 3
       },
       {
         "label": "GB",
@@ -292,15 +296,15 @@
         "value": 3
       },
       {
+        "label": "IN",
+        "value": 2
+      },
+      {
         "label": "JP",
         "value": 2
       },
       {
-        "label": "BR",
-        "value": 2
-      },
-      {
-        "label": "DE",
+        "label": "ES",
         "value": 2
       }
     ],
@@ -310,40 +314,40 @@
         "value": 19
       },
       {
-        "label": "Professional Services",
+        "label": "Not Found",
         "value": 14
       },
       {
-        "label": "Not Found",
-        "value": 13
+        "label": "Professional Services",
+        "value": 12
       },
       {
         "label": "Manufacturing",
-        "value": 9
+        "value": 10
       },
       {
         "label": "Technology",
-        "value": 8
-      },
-      {
-        "label": "Retail & E-Commerce",
-        "value": 8
+        "value": 10
       },
       {
         "label": "Education",
-        "value": 7
+        "value": 6
       },
       {
         "label": "Other",
         "value": 6
       },
       {
-        "label": "Government & Defense",
-        "value": 5
+        "label": "Retail & E-Commerce",
+        "value": 6
       },
       {
         "label": "Transportation",
-        "value": 4
+        "value": 5
+      },
+      {
+        "label": "Government & Defense",
+        "value": 5
       }
     ]
   },
@@ -380,16 +384,16 @@
   "breaches": {
     "ok": true,
     "source": "https://haveibeenpwned.com/api/v3/breaches",
-    "breaches": 1051,
-    "accounts": 17858196501,
+    "breaches": 1052,
+    "accounts": 17858376246,
     "top_data_classes": [
       {
         "label": "Email addresses",
-        "value": 1044
+        "value": 1045
       },
       {
         "label": "Passwords",
-        "value": 675
+        "value": 676
       },
       {
         "label": "Names",
@@ -425,6 +429,14 @@
       }
     ],
     "latest": [
+      {
+        "title": "CastleRAT",
+        "domain": "",
+        "breach_date": "2026-11-12",
+        "added": "2026-11-13",
+        "accounts": 179745,
+        "verified": true
+      },
       {
         "title": "YouHack",
         "domain": "youhack.ru",
@@ -495,14 +507,6 @@
         "breach_date": "2026-08-29",
         "added": "2026-10-09",
         "accounts": 435963,
-        "verified": true
-      },
-      {
-        "title": "CyrusOne",
-        "domain": "cyrusone.com",
-        "breach_date": "2026-08-05",
-        "added": "2026-10-07",
-        "accounts": 373460,
         "verified": true
       }
     ]
