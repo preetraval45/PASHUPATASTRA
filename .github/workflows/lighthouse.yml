@@ -1,0 +1,49 @@
+name: Lighthouse
+
+# How fast, accessible and well-built the production site is, measured on GitHub's runners rather
+# than anyone's PC: Lighthouse on the key pages, as a phone and as a desktop, summarised into
+# docs/research/lighthouse.md. Weekly, on demand, and when this file or the summariser changes.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/lighthouse.yml
+      - scripts/lighthousereport.py
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: audit the key pages
+        run: |
+          mkdir -p reports
+          live=$(curl -s https://265d0hsmwa.execute-api.us-east-1.amazonaws.com/api/v1/incidents | python3 -c "import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if d else '')")
+          for page in "" incidents ask overview training "incidents/$live"; do
+            name=$(echo "${page:-home}" | tr '/' '_' | cut -c1-60)
+            for form in mobile desktop; do
+              preset=""; [ "$form" = desktop ] && preset="--preset=desktop"
+              npx --yes lighthouse@12.6.0 "https://pashupatastra.vercel.app/$page" $preset \
+                --output=json --output-path="reports/$name-$form.json" --quiet \
+                --chrome-flags="--headless=new --no-sandbox" \
+                --only-categories=performance,accessibility,best-practices,seo || echo "::warning::$page $form failed"
+            done
+          done
+      - name: commit the summary
+        run: |
+          python3 scripts/lighthousereport.py reports > docs/research/lighthouse.md
+          cat docs/research/lighthouse.md
+          bash scripts/pushresults.sh "docs(perf): Lighthouse on the production site, run ${{ github.run_id }}" docs/research/lighthouse.md
