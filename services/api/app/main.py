@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from pashupatastra.dharma import ActionDomain
 
@@ -29,6 +30,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Compressed when the client accepts it. The incident list is about 750 KB of JSON and about 60 KB
+# gzipped; the app's background check fetches it every 15 minutes on a phone's data plan. Mangum
+# base64-encodes the gzip body for API Gateway, as it does any body that is not text.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 app.include_router(router, prefix="/api/v1")
 app.include_router(account_router, prefix="/api/v1")
