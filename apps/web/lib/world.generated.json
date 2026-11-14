@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-13T14:37:20+00:00",
+  "as_of": "2026-11-14T13:34:42+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.11.10",
-    "total": 1779,
-    "added_last_30_days": 38,
+    "catalog_version": "2026.11.13",
+    "total": 1781,
+    "added_last_30_days": 36,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-11",
-        "value": 13
+        "value": 15
       }
     ],
     "top_vendors": [
@@ -104,6 +104,22 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-114713",
+        "vendor": "UnrealIRCd",
+        "product": "UnrealIRCd",
+        "name": "UnrealIRCd Improper Neutralization of Delimiters Vulnerability",
+        "added": "2026-11-13",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-123039",
+        "vendor": "Check Point",
+        "product": "Multiple Products",
+        "name": "Check Point Multiple Products Incorrect Permission Assignment for Critical Resource Vulnerability",
+        "added": "2026-11-13",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-124194",
         "vendor": "Microsoft",
@@ -183,22 +199,6 @@
         "name": "IBM Aspera Faspex Incorrect Authorization Vulnerability",
         "added": "2026-11-09",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-19868",
-        "vendor": "SonicWall",
-        "product": "SonicOS SSLVPN",
-        "name": "SonicWall SonicOS SSLVPN Use of Single-factor Authentication Vulnerability",
-        "added": "2026-11-06",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2024-27834",
-        "vendor": "Apple",
-        "product": "Multiple Products",
-        "name": "Apple Multiple Products Improper Authentication Vulnerability",
-        "added": "2026-11-04",
-        "ransomware": false
       }
     ]
   },
@@ -208,24 +208,24 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-11-09",
-        "value": 2
-      },
-      {
         "label": "2026-11-10",
-        "value": 34
+        "value": 20
       },
       {
         "label": "2026-11-11",
-        "value": 24
+        "value": 23
       },
       {
         "label": "2026-11-12",
-        "value": 39
+        "value": 36
       },
       {
         "label": "2026-11-13",
-        "value": 1
+        "value": 19
+      },
+      {
+        "label": "2026-11-14",
+        "value": 2
       }
     ],
     "by_group": [
@@ -235,53 +235,53 @@
       },
       {
         "label": "Curious Worm",
-        "value": 10
+        "value": 12
       },
       {
-        "label": "interlock",
-        "value": 9
+        "label": "play",
+        "value": 6
+      },
+      {
+        "label": "akira",
+        "value": 6
       },
       {
         "label": "Booba Project",
         "value": 6
       },
       {
-        "label": "incransom",
+        "label": "interlock",
         "value": 5
       },
       {
-        "label": "play",
+        "label": "incransom",
         "value": 4
-      },
-      {
-        "label": "N0n",
-        "value": 3
       },
       {
         "label": "Aoqin",
         "value": 3
       },
       {
-        "label": "Vexy Ransomware",
+        "label": "Panzer",
         "value": 3
       },
       {
-        "label": "qilin",
+        "label": "Dark Project",
         "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 41
+        "value": 38
       },
       {
         "label": "CA",
         "value": 7
       },
       {
-        "label": "BR",
-        "value": 3
+        "label": "DE",
+        "value": 4
       },
       {
         "label": "GB",
@@ -296,49 +296,49 @@
         "value": 3
       },
       {
-        "label": "IN",
+        "label": "AU",
         "value": 2
       },
       {
-        "label": "JP",
+        "label": "MY",
         "value": 2
       },
       {
-        "label": "ES",
+        "label": "BR",
         "value": 2
       }
     ],
     "by_sector": [
       {
-        "label": "Healthcare",
-        "value": 19
-      },
-      {
         "label": "Not Found",
-        "value": 14
+        "value": 17
       },
       {
         "label": "Professional Services",
-        "value": 12
+        "value": 14
       },
       {
         "label": "Manufacturing",
-        "value": 10
+        "value": 13
       },
       {
         "label": "Technology",
-        "value": 10
+        "value": 11
       },
       {
-        "label": "Education",
-        "value": 6
+        "label": "Healthcare",
+        "value": 11
+      },
+      {
+        "label": "Retail & E-Commerce",
+        "value": 7
       },
       {
         "label": "Other",
         "value": 6
       },
       {
-        "label": "Retail & E-Commerce",
+        "label": "Government & Defense",
         "value": 6
       },
       {
@@ -346,7 +346,7 @@
         "value": 5
       },
       {
-        "label": "Government & Defense",
+        "label": "Education",
         "value": 5
       }
     ]
