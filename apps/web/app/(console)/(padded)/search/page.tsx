@@ -65,7 +65,7 @@ export default async function SearchPage({
       }
     >
       {!query && (
-        <Empty art="search" title="Nothing searched yet" action={{ href: "/incidents", label: "Open a scenario →" }}>
+        <Empty art="search" title="Nothing searched yet" action={{ href: "/incidents", label: "Browse incidents →" }}>
           Type an account, host, asset, or incident id.
         </Empty>
       )}

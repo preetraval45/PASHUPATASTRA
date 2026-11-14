@@ -1707,7 +1707,18 @@ def attack_matrix() -> dict[str, object]:
     """
     from pashupatastra.attack import matrix
 
-    result = matrix(STORE.all())
+    from ..feeds import history
+
+    incidents = STORE.all()
+    library = f"{len(incidents)} written scenarios"
+    if get_settings().live_incidents:
+        # Live incidents come from feeds that carry no technique mapping, so on their own they
+        # leave every column empty. The record's documented campaigns carry one per step.
+        documented = history.campaigns()
+        library = (f"{len(incidents)} live incidents and {len(documented)} intrusion campaigns MITRE "
+                   "ATT&CK documents, step by step")
+        incidents = [*incidents, *documented]
+    result = matrix(incidents)
     return {
         "incident_count": result.incident_count,
         "step_count": result.step_count,
@@ -1732,11 +1743,12 @@ def attack_matrix() -> dict[str, object]:
             }
             for column in result.columns
         ],
+        "library": library,
         "meaning": {
             "observed": "at least one step in an incident in this library carries the technique",
             "not_observed": (
                 "no incident in this library carries a step under this tactic — a fact "
-                "about what was written, not a claim about what would be detected"
+                "about what the library holds, not a claim about what would be detected"
             ),
         },
     }

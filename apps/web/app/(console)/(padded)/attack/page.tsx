@@ -122,12 +122,16 @@ export default async function AttackPage() {
       <Panel title="What an empty column means" aside="and what it does not">
         <p className="text-sm leading-relaxed text-[rgb(var(--muted))]">
           <em>Observed</em> means {matrix.meaning.observed}. <em>Not observed</em> means{" "}
-          {matrix.meaning.not_observed}. The library is{" "}
-          <span className="tnum">{matrix.incident_count}</span> written scenarios carrying{" "}
-          <span className="tnum">{matrix.step_count}</span> technique-mapped steps; the{" "}
-          <span className="tnum">{matrix.unobserved_tactics.length}</span> tactics with nothing
-          under them — {matrix.unobserved_tactics.join(", ")} — are tactics no scenario was
-          written to show, and this page will not say anything else about them.
+          {matrix.meaning.not_observed}. The library is {matrix.library ?? `${matrix.incident_count} incidents`},
+          carrying <span className="tnum">{matrix.step_count}</span> technique-mapped steps
+          {matrix.unobserved_tactics.length > 0 && (
+            <>
+              ; the <span className="tnum">{matrix.unobserved_tactics.length}</span> tactics with
+              nothing under them — {matrix.unobserved_tactics.join(", ")} — are tactics nothing in
+              it shows, and this page will not say anything else about them
+            </>
+          )}
+          .
         </p>
         <p className="mt-3 text-xs text-[rgb(var(--faint))]">
           A technique identifier is a citation, not a finding: it says what a step resembles,

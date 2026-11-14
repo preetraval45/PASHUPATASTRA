@@ -195,7 +195,7 @@ export default async function OverviewPage() {
           {real ? (
             <IncidentRows stacked incidents={[...open].sort((a, b) => rank(b) - rank(a) || b.opened_at.localeCompare(a.opened_at)).slice(0, 8)} />
           ) : open.length === 0 ? (
-            <Empty art="quiet" title="Quiet." action={{ href: "/incidents", label: "Open a scenario →" }}>
+            <Empty art="quiet" title="Quiet." action={{ href: "/incidents", label: "Browse incidents →" }}>
               Incidents appear here when Drishti correlates related detections. Quiet
               means nothing was detected, which is not the same as nothing happening.
             </Empty>
@@ -284,7 +284,7 @@ export default async function OverviewPage() {
             aside={<Link href="/audit" className="focusable inline-flex min-h-6 items-center rounded hover:text-[rgb(var(--ink))]">audit →</Link>}
           >
             {!audit?.length ? (
-              <Empty art="ledger" title="No activity recorded yet." action={{ href: "/incidents", label: "Open a scenario →" }}>
+              <Empty art="ledger" title="No activity recorded yet." action={{ href: "/incidents", label: "Browse incidents →" }}>
                 Records are written before an action runs, never after, so an empty log
                 means nothing has been attempted — not that something was attempted and
                 lost.

@@ -205,6 +205,12 @@ def incidents() -> tuple[Incident, ...]:
     return tuple(i for e in _index() if (i := _build(e)) is not None)
 
 
+def campaigns() -> list[Incident]:
+    """MITRE ATT&CK's documented intrusion campaigns from the record, built: the real incidents
+    that carry technique-mapped steps."""
+    return [i for e in _index() if e["id"].startswith(f"{PREFIX}CAMPAIGN-") if (i := _build(e)) is not None]
+
+
 def count() -> int:
     return len(_index())
 

@@ -344,6 +344,8 @@ export interface AttackMatrix {
     observed: boolean;
     techniques: { id: string; name: string; url: string; refs: string[]; incidents: string[] }[];
   }[];
+  /** What the library is made of, in a sentence. */
+  library?: string;
   meaning: { observed: string; not_observed: string };
 }
 export const getAttackMatrix = () => get<AttackMatrix>("/attack/matrix");

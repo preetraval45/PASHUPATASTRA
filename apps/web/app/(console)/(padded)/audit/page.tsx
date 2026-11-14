@@ -76,7 +76,7 @@ export default async function AuditPage({
           <Empty
           art="ledger"
           title="Nothing recorded yet."
-          action={{ href: "/incidents", label: "Open a scenario →" }}
+          action={{ href: "/incidents", label: "Browse incidents →" }}
         >
             Records appear as Drishti polls, Dharma evaluates, and Astra executes.
           </Empty>

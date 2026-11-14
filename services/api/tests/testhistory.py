@@ -100,3 +100,33 @@ def test_seen_before_ranks_by_rare_shared_words_and_says_which(tmp_path, monkeyp
     finally:
         for cached in (history._data, history._by_id, history._index, history._postings):
             cached.cache_clear()
+
+
+def test_the_attack_matrix_reads_the_documented_campaigns_when_live(tmp_path, monkeypatch) -> None:
+    """Live incidents carry no technique mapping, so on their own the matrix is empty; the record's
+    ATT&CK campaigns fill it, and the response says what the library is made of."""
+    campaign = {
+        "id": "hist-attack-C0024", "source": "mitre-attack", "occurred_at": "2019-08-01T04:00:00+00:00",
+        "entity_key": "organisation:campaign:C0024",
+        "labels": {"campaign": "C0024", "name": "SolarWinds Compromise", "group": "APT29", "summary": "Supply chain.",
+                   "first_seen": "2019-08-01", "last_seen": "2021-01-01",
+                   "techniques": "T1195.002|Compromise Software Supply Chain|Initial Access"},
+        "provenance": {"url": "https://attack.mitre.org/campaigns/C0024/"},
+    }
+    path = tmp_path / "history.json"
+    path.write_text(json.dumps({"generated": NOW.isoformat(), "records": [campaign]}), encoding="utf-8")
+    monkeypatch.setattr(history, "FILE", path)
+    for cached in (history._data, history._by_id, history._index, history._postings):
+        cached.cache_clear()
+    from app.api import routes
+
+    monkeypatch.setattr(routes, "get_settings", lambda: type("S", (), {"live_incidents": True})())
+    monkeypatch.setattr(routes.STORE, "all", lambda: [])
+    try:
+        matrix = routes.attack_matrix()
+        assert matrix["technique_count"] == 1
+        assert "Initial Access" in matrix["observed_tactics"]
+        assert "1 intrusion campaigns MITRE ATT&CK documents" in matrix["library"]
+    finally:
+        for cached in (history._data, history._by_id, history._index, history._postings):
+            cached.cache_clear()

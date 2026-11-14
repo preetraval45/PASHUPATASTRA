@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Filter, FilterRow } from "@/components/filter";
 import { Badge, Empty, Ident, Offline, Page, Panel } from "@/components/ui";
 import { getDetections, type DetectionSummary } from "@/lib/api";
+import { isReal } from "@/lib/incidentkinds";
 
 export const metadata: Metadata = {
   title: "Detections",
@@ -96,13 +97,15 @@ export default async function DetectionsPage({
       {[...byIncident.entries()].map(([incident, rules]) => (
         <Panel
           key={incident}
-          title={incident}
+          // A rule written against a scenario is real detection content; the incident it was
+          // written against is a drill, and says so rather than passing for one that happened.
+          title={isReal(incident) ? incident : `${incident} · training drill`}
           aside={
             <Link
               href={`/incidents/${encodeURIComponent(incident)}`}
               className="focusable rounded underline decoration-dotted underline-offset-2 hover:text-[rgb(var(--ink))]"
             >
-              the incident →
+              {isReal(incident) ? "the incident →" : "the drill →"}
             </Link>
           }
         >

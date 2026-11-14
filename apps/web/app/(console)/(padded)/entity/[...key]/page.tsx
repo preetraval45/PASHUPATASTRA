@@ -125,7 +125,7 @@ export default async function EntityPage({ params }: { params: Promise<{ key: st
           <Empty
             art="signal"
             title="No events recorded for this entity yet."
-            action={{ href: "/incidents", label: "Open a scenario →" }}
+            action={{ href: "/incidents", label: "Browse incidents →" }}
           >
             It is in the graph because something referenced it — an owner, or the other
             end of a connection — but no collector has reported on it directly.
