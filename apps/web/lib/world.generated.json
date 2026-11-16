@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-15T13:57:44+00:00",
+  "as_of": "2026-11-16T15:50:39+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.11.13",
     "total": 1781,
-    "added_last_30_days": 35,
+    "added_last_30_days": 33,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -209,11 +209,11 @@
     "by_day": [
       {
         "label": "2026-11-11",
-        "value": 18
+        "value": 15
       },
       {
         "label": "2026-11-12",
-        "value": 35
+        "value": 15
       },
       {
         "label": "2026-11-13",
@@ -225,28 +225,40 @@
       },
       {
         "label": "2026-11-15",
-        "value": 20
+        "value": 31
+      },
+      {
+        "label": "2026-11-16",
+        "value": 12
       }
     ],
     "by_group": [
       {
-        "label": "thegentlemen",
-        "value": 22
-      },
-      {
         "label": "PixelLeaks",
-        "value": 20
+        "value": 23
       },
       {
         "label": "Curious Worm",
         "value": 12
       },
       {
-        "label": "akira",
+        "label": "qilin",
+        "value": 9
+      },
+      {
+        "label": "metaencryptor",
+        "value": 5
+      },
+      {
+        "label": "ShadowByt3$",
+        "value": 5
+      },
+      {
+        "label": "incransom",
         "value": 4
       },
       {
-        "label": "qilin",
+        "label": "Aoqin",
         "value": 3
       },
       {
@@ -254,99 +266,91 @@
         "value": 3
       },
       {
-        "label": "Aoqin",
-        "value": 3
-      },
-      {
-        "label": "incransom",
-        "value": 3
-      },
-      {
         "label": "N0n",
         "value": 3
       },
       {
-        "label": "Vexy Ransomware",
+        "label": "akira",
         "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 32
+        "value": 39
       },
       {
         "label": "CA",
-        "value": 6
+        "value": 5
       },
       {
-        "label": "HK",
-        "value": 3
+        "label": "IN",
+        "value": 4
+      },
+      {
+        "label": "MY",
+        "value": 4
       },
       {
         "label": "DE",
         "value": 3
       },
       {
-        "label": "MY",
+        "label": "GB",
         "value": 3
       },
       {
-        "label": "SA",
-        "value": 3
+        "label": "ID",
+        "value": 2
       },
       {
         "label": "CN",
         "value": 2
       },
       {
-        "label": "ES",
-        "value": 2
-      },
-      {
-        "label": "GB",
+        "label": "HK",
         "value": 2
       }
     ],
     "by_sector": [
       {
-        "label": "Technology",
-        "value": 17
+        "label": "Manufacturing",
+        "value": 19
       },
       {
         "label": "Not Found",
-        "value": 16
+        "value": 15
       },
       {
-        "label": "Manufacturing",
-        "value": 13
-      },
-      {
-        "label": "Professional Services",
-        "value": 11
+        "label": "Technology",
+        "value": 14
       },
       {
         "label": "Healthcare",
+        "value": 11
+      },
+      {
+        "label": "Professional Services",
         "value": 9
+      },
+      {
+        "label": "Retail & E-Commerce",
+        "value": 7
       },
       {
         "label": "Financial Services",
         "value": 7
       },
       {
-        "label": "Government & Defense",
-        "value": 6
-      },
-      {
-        "label": "Other",
+        "label": "Energy & Utilities",
         "value": 5
       },
       {
-        "label": "Energy & Utilities",
+        "label": "Education",
         "value": 4
       },
       {
-        "label": "Education",
+        "label": "Other",
         "value": 4
       }
     ]
