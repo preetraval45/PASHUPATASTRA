@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-16T15:50:39+00:00",
+  "as_of": "2026-11-17T16:03:50+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
@@ -208,117 +208,109 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-11-11",
-        "value": 15
-      },
-      {
-        "label": "2026-11-12",
-        "value": 15
-      },
-      {
-        "label": "2026-11-13",
-        "value": 19
-      },
-      {
-        "label": "2026-11-14",
-        "value": 8
-      },
-      {
         "label": "2026-11-15",
-        "value": 31
+        "value": 27
       },
       {
         "label": "2026-11-16",
-        "value": 12
+        "value": 59
+      },
+      {
+        "label": "2026-11-17",
+        "value": 14
       }
     ],
     "by_group": [
       {
         "label": "PixelLeaks",
-        "value": 23
-      },
-      {
-        "label": "Curious Worm",
-        "value": 12
+        "value": 24
       },
       {
         "label": "qilin",
-        "value": 9
+        "value": 17
       },
       {
-        "label": "metaencryptor",
-        "value": 5
+        "label": "N0n",
+        "value": 13
+      },
+      {
+        "label": "Vortex",
+        "value": 9
       },
       {
         "label": "ShadowByt3$",
         "value": 5
       },
       {
-        "label": "incransom",
+        "label": "Inception",
+        "value": 4
+      },
+      {
+        "label": "Curious Worm",
+        "value": 4
+      },
+      {
+        "label": "metaencryptor",
         "value": 4
       },
       {
         "label": "Aoqin",
-        "value": 3
+        "value": 2
       },
       {
-        "label": "play",
-        "value": 3
-      },
-      {
-        "label": "N0n",
-        "value": 3
-      },
-      {
-        "label": "akira",
-        "value": 3
+        "label": "chaos",
+        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 39
+        "value": 42
       },
       {
         "label": "CA",
-        "value": 5
+        "value": 8
+      },
+      {
+        "label": "DE",
+        "value": 4
       },
       {
         "label": "IN",
         "value": 4
       },
       {
-        "label": "MY",
-        "value": 4
-      },
-      {
-        "label": "DE",
-        "value": 3
-      },
-      {
         "label": "GB",
         "value": 3
       },
       {
-        "label": "ID",
+        "label": "PH",
+        "value": 3
+      },
+      {
+        "label": "IT",
+        "value": 2
+      },
+      {
+        "label": "AU",
         "value": 2
       },
       {
         "label": "CN",
         "value": 2
-      },
-      {
-        "label": "HK",
-        "value": 2
       }
     ],
     "by_sector": [
       {
-        "label": "Manufacturing",
-        "value": 19
+        "label": "Healthcare",
+        "value": 18
       },
       {
-        "label": "Not Found",
+        "label": "Financial Services",
+        "value": 15
+      },
+      {
+        "label": "Manufacturing",
         "value": 15
       },
       {
@@ -326,32 +318,28 @@
         "value": 14
       },
       {
-        "label": "Healthcare",
-        "value": 11
-      },
-      {
-        "label": "Professional Services",
-        "value": 9
+        "label": "Not Found",
+        "value": 7
       },
       {
         "label": "Retail & E-Commerce",
         "value": 7
       },
       {
-        "label": "Financial Services",
-        "value": 7
+        "label": "Professional Services",
+        "value": 6
+      },
+      {
+        "label": "Other",
+        "value": 5
       },
       {
         "label": "Energy & Utilities",
         "value": 5
       },
       {
-        "label": "Education",
-        "value": 4
-      },
-      {
-        "label": "Other",
-        "value": 4
+        "label": "Agriculture and Food Production",
+        "value": 2
       }
     ]
   },
