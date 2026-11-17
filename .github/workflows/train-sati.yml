@@ -58,8 +58,8 @@ jobs:
       serve-smd: ${{ steps.filter.outputs.serve-smd }}
       auto-seasonal: ${{ steps.filter.outputs.auto-seasonal }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -148,8 +148,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       # packages/core is a dependency and is not on PyPI, so it is installed
@@ -170,8 +170,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati tokenizers
@@ -190,21 +190,21 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
       # The download is cached per dataset revision inside the cache directory,
       # so a new upload to RCAEval is fetched fresh rather than mixed in.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/rcaeval
           key: rcaeval-v1
       - name: train and evaluate on RCAEval
         working-directory: packages/sati
         run: python -m sati.rca.run --cache ../../.cache/rcaeval --out ../../results/sati-rca
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sati-rca
           path: results/sati-rca/
@@ -229,12 +229,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/nab
           key: nab-v1
@@ -259,12 +259,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/nab
           key: nab-v1
@@ -273,7 +273,7 @@ jobs:
         # Pinned: the commit every reported number was measured at. Bumping it
         # is a deliberate change, not something a rerun does on its own.
         run: python -m sati.detect.run --cache ../../.cache/nab --out ../../results/shailaputri --revision ea702d75cc2258d9d7dd35ca8e5e2539d71f3140
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: shailaputri
           path: results/shailaputri/
@@ -297,12 +297,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/smd
           key: smd-omnianomaly-pinned
@@ -330,12 +330,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/smd
           key: smd-omnianomaly-pinned
@@ -361,13 +361,13 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/corpus
           key: corpus-mitigations
@@ -395,12 +395,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/smd
           key: smd-omnianomaly-pinned
@@ -425,8 +425,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
@@ -450,12 +450,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/rcaeval
           key: rcaeval-v1
@@ -480,12 +480,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/rcaeval
           key: rcaeval-v1
@@ -508,12 +508,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/rcaeval
           key: rcaeval-v1
@@ -540,12 +540,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/smd
           key: smd-omnianomaly-pinned
@@ -567,19 +567,19 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/loghub
           key: loghub-hdfs-v1
       - name: train and evaluate on LogHub HDFS
         working-directory: packages/sati
         run: python -m sati.loganomaly.run --cache ../../.cache/loghub --out ../../results/kalaratri
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/loghub-bgl
           key: loghub-bgl-v1
@@ -609,13 +609,13 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e packages/core -e packages/sati
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/corpus
           key: attack-corpus-v1
@@ -625,7 +625,7 @@ jobs:
       - name: export the served model for the API
         working-directory: packages/sati
         run: python -m sati.embed.export --cache ../../.cache/corpus --out ../../services/api/app/sati_models
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: brahmacharini
           path: results/brahmacharini/
