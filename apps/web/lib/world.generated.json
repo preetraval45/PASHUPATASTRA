@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-17T16:03:50+00:00",
+  "as_of": "2026-11-18T15:42:15+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.11.13",
-    "total": 1781,
-    "added_last_30_days": 33,
+    "catalog_version": "2026.11.17",
+    "total": 1782,
+    "added_last_30_days": 34,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-11",
-        "value": 15
+        "value": 16
       }
     ],
     "top_vendors": [
@@ -104,6 +104,14 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-115731",
+        "vendor": "Perforce",
+        "product": "Puppet Enterprise",
+        "name": "Perforce Puppet Enterprise Deserialization of Untrusted Data Vulnerability",
+        "added": "2026-11-17",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-114713",
         "vendor": "UnrealIRCd",
@@ -191,14 +199,6 @@
         "name": "SignalWire FreeSwitch Code Injection Vulnerability",
         "added": "2026-11-09",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-123218",
-        "vendor": "IBM",
-        "product": "Aspera Faspex",
-        "name": "IBM Aspera Faspex Incorrect Authorization Vulnerability",
-        "added": "2026-11-09",
-        "ransomware": false
       }
     ]
   },
@@ -208,26 +208,22 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-11-15",
-        "value": 27
-      },
-      {
         "label": "2026-11-16",
-        "value": 59
+        "value": 33
       },
       {
         "label": "2026-11-17",
-        "value": 14
+        "value": 51
+      },
+      {
+        "label": "2026-11-18",
+        "value": 16
       }
     ],
     "by_group": [
       {
-        "label": "PixelLeaks",
-        "value": 24
-      },
-      {
-        "label": "qilin",
-        "value": 17
+        "label": "thegentlemen",
+        "value": 18
       },
       {
         "label": "N0n",
@@ -235,110 +231,114 @@
       },
       {
         "label": "Vortex",
-        "value": 9
+        "value": 8
       },
       {
-        "label": "ShadowByt3$",
+        "label": "PixelLeaks",
+        "value": 7
+      },
+      {
+        "label": "Booba Project",
+        "value": 6
+      },
+      {
+        "label": "rhysida",
         "value": 5
+      },
+      {
+        "label": "Curious Worm",
+        "value": 5
+      },
+      {
+        "label": "Aoqin",
+        "value": 4
+      },
+      {
+        "label": "BrainCipher",
+        "value": 4
       },
       {
         "label": "Inception",
         "value": 4
-      },
-      {
-        "label": "Curious Worm",
-        "value": 4
-      },
-      {
-        "label": "metaencryptor",
-        "value": 4
-      },
-      {
-        "label": "Aoqin",
-        "value": 2
-      },
-      {
-        "label": "chaos",
-        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 42
-      },
-      {
-        "label": "CA",
-        "value": 8
+        "value": 48
       },
       {
         "label": "DE",
-        "value": 4
+        "value": 6
       },
       {
-        "label": "IN",
-        "value": 4
+        "label": "CA",
+        "value": 6
+      },
+      {
+        "label": "MX",
+        "value": 3
+      },
+      {
+        "label": "AR",
+        "value": 3
       },
       {
         "label": "GB",
         "value": 3
       },
       {
-        "label": "PH",
-        "value": 3
-      },
-      {
-        "label": "IT",
+        "label": "TW",
         "value": 2
       },
       {
-        "label": "AU",
-        "value": 2
+        "label": "IN",
+        "value": 1
       },
       {
-        "label": "CN",
-        "value": 2
+        "label": "KE",
+        "value": 1
       }
     ],
     "by_sector": [
       {
         "label": "Healthcare",
-        "value": 18
-      },
-      {
-        "label": "Financial Services",
-        "value": 15
+        "value": 26
       },
       {
         "label": "Manufacturing",
-        "value": 15
+        "value": 16
       },
       {
         "label": "Technology",
         "value": 14
       },
       {
+        "label": "Financial Services",
+        "value": 11
+      },
+      {
         "label": "Not Found",
+        "value": 9
+      },
+      {
+        "label": "Professional Services",
         "value": 7
       },
       {
         "label": "Retail & E-Commerce",
-        "value": 7
-      },
-      {
-        "label": "Professional Services",
         "value": 6
       },
       {
         "label": "Other",
-        "value": 5
-      },
-      {
-        "label": "Energy & Utilities",
-        "value": 5
+        "value": 4
       },
       {
         "label": "Agriculture and Food Production",
+        "value": 3
+      },
+      {
+        "label": "Government & Defense",
         "value": 2
       }
     ]
