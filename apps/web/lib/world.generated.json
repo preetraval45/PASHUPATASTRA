@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-20T15:29:34+00:00",
+  "as_of": "2026-11-21T14:42:04+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "catalog_version": "2026.11.18",
-    "total": 1786,
-    "added_last_30_days": 32,
+    "catalog_version": "2026.11.20",
+    "total": 1790,
+    "added_last_30_days": 36,
     "known_ransomware_use": 361,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-11",
-        "value": 20
+        "value": 24
       }
     ],
     "top_vendors": [
@@ -68,7 +68,7 @@
       },
       {
         "label": "Cisco",
-        "value": 103
+        "value": 104
       },
       {
         "label": "Apple",
@@ -88,7 +88,7 @@
       },
       {
         "label": "Apache",
-        "value": 42
+        "value": 43
       },
       {
         "label": "Ivanti",
@@ -104,6 +104,38 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-129448",
+        "vendor": "Apache",
+        "product": "Roller",
+        "name": "Apache Roller Deserialization of Untrusted Data Vulnerability",
+        "added": "2026-11-20",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-123890",
+        "vendor": "Broadcom",
+        "product": "VMware vCenter",
+        "name": "VMWare vCenter Authentication Bypass Using an Alternate Path or Channel Vulnerability",
+        "added": "2026-11-20",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2025-42884",
+        "vendor": "SAP",
+        "product": "NetWeaver",
+        "name": "SAP NetWeaver Improper Neutralization of Special Elements in Data Query Logic Vulnerability",
+        "added": "2026-11-20",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-76466",
+        "vendor": "Cisco",
+        "product": "Expressway Series",
+        "name": "Cisco Expressway Series Use of Hard-coded Credentials Vulnerability",
+        "added": "2026-11-20",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2024-10441",
         "vendor": "Synology",
@@ -167,38 +199,6 @@
         "name": "Microsoft Office Outlook Missing User Interaction for Potentially Unsafe Action Vulnerability",
         "added": "2026-11-10",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-111793",
-        "vendor": "Openwave Messaging Limited",
-        "product": "Webtop Media Transcoder",
-        "name": "Openwave Messaging Limited Webtop Media Transcoder Incorrect Resource Transfer Between Spheres Vulnerability",
-        "added": "2026-11-10",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-20320",
-        "vendor": "Cisco",
-        "product": "BroadWorks",
-        "name": "Cisco BroadWorks Improper Restriction of XML External Entity Reference Vulnerability",
-        "added": "2026-11-10",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-111560",
-        "vendor": "Barracuda Networks",
-        "product": "Multiple Products",
-        "name": "Barracuda Networks Multiple Products OS Command Injection Vulnerability",
-        "added": "2026-11-10",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-116606",
-        "vendor": "Barracuda Networks",
-        "product": "Barracuda Email Security Gateway (ESG)",
-        "name": "Barracuda Networks Email Security Gateway (ESG) Authentication Bypass Using an Alternate Path or Channel Vulnerability",
-        "added": "2026-11-10",
-        "ransomware": false
       }
     ]
   },
@@ -209,7 +209,7 @@
     "by_day": [
       {
         "label": "2026-11-18",
-        "value": 38
+        "value": 6
       },
       {
         "label": "2026-11-19",
@@ -217,7 +217,11 @@
       },
       {
         "label": "2026-11-20",
-        "value": 8
+        "value": 36
+      },
+      {
+        "label": "2026-11-21",
+        "value": 4
       }
     ],
     "by_group": [
@@ -226,19 +230,27 @@
         "value": 26
       },
       {
-        "label": "N0n",
-        "value": 25
+        "label": "everest",
+        "value": 10
       },
       {
         "label": "Vortex",
         "value": 9
       },
       {
-        "label": "SilentRansomGroup",
+        "label": "PixelLeaks",
         "value": 5
       },
       {
-        "label": "lockbit5",
+        "label": "rhysida",
+        "value": 5
+      },
+      {
+        "label": "aurora",
+        "value": 5
+      },
+      {
+        "label": "N0n",
         "value": 5
       },
       {
@@ -246,100 +258,92 @@
         "value": 4
       },
       {
-        "label": "krybit",
-        "value": 4
-      },
-      {
-        "label": "Handsome Boy Hacking Club",
+        "label": "SilentRansomGroup",
         "value": 3
       },
       {
-        "label": "rhysida",
-        "value": 3
-      },
-      {
-        "label": "HYFLOCK",
+        "label": "Whitearmor",
         "value": 3
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 56
+        "value": 45
       },
       {
         "label": "GB",
-        "value": 6
+        "value": 4
       },
       {
         "label": "CA",
-        "value": 5
+        "value": 3
       },
       {
-        "label": "ES",
+        "label": "IT",
+        "value": 3
+      },
+      {
+        "label": "IE",
         "value": 2
       },
       {
-        "label": "VN",
+        "label": "EG",
         "value": 2
       },
       {
-        "label": "MX",
+        "label": "FR",
         "value": 2
       },
       {
         "label": "JP",
-        "value": 1
+        "value": 2
       },
       {
-        "label": "CH",
-        "value": 1
-      },
-      {
-        "label": "PA",
-        "value": 1
+        "label": "CO",
+        "value": 2
       }
     ],
     "by_sector": [
       {
-        "label": "Not Found",
-        "value": 28
+        "label": "Healthcare",
+        "value": 20
       },
       {
         "label": "Professional Services",
-        "value": 15
-      },
-      {
-        "label": "Healthcare",
-        "value": 15
+        "value": 17
       },
       {
         "label": "Manufacturing",
-        "value": 12
-      },
-      {
-        "label": "Other",
-        "value": 9
+        "value": 14
       },
       {
         "label": "Technology",
-        "value": 6
+        "value": 11
       },
       {
-        "label": "Retail & E-Commerce",
-        "value": 4
+        "label": "Other",
+        "value": 10
+      },
+      {
+        "label": "Not Found",
+        "value": 9
+      },
+      {
+        "label": "Transportation",
+        "value": 3
+      },
+      {
+        "label": "Government & Defense",
+        "value": 3
+      },
+      {
+        "label": "Energy & Utilities",
+        "value": 3
       },
       {
         "label": "Hospitality",
         "value": 3
-      },
-      {
-        "label": "Transportation",
-        "value": 2
-      },
-      {
-        "label": "Energy & Utilities",
-        "value": 2
       }
     ]
   },
@@ -376,28 +380,28 @@
   "breaches": {
     "ok": true,
     "source": "https://haveibeenpwned.com/api/v3/breaches",
-    "breaches": 1053,
-    "accounts": 17861985667,
+    "breaches": 1054,
+    "accounts": 17862709990,
     "top_data_classes": [
       {
         "label": "Email addresses",
-        "value": 1046
+        "value": 1047
       },
       {
         "label": "Passwords",
-        "value": 676
+        "value": 677
       },
       {
         "label": "Names",
-        "value": 568
+        "value": 569
       },
       {
         "label": "Usernames",
-        "value": 486
+        "value": 487
       },
       {
         "label": "IP addresses",
-        "value": 388
+        "value": 389
       },
       {
         "label": "Phone numbers",
@@ -405,11 +409,11 @@
       },
       {
         "label": "Physical addresses",
-        "value": 310
+        "value": 311
       },
       {
         "label": "Dates of birth",
-        "value": 290
+        "value": 291
       },
       {
         "label": "Genders",
@@ -421,6 +425,14 @@
       }
     ],
     "latest": [
+      {
+        "title": "Too Lost",
+        "domain": "toolost.com",
+        "breach_date": "2026-11-02",
+        "added": "2026-11-20",
+        "accounts": 724323,
+        "verified": true
+      },
       {
         "title": "Careers360",
         "domain": "careers360.com",
@@ -491,14 +503,6 @@
         "breach_date": "2026-01-22",
         "added": "2026-10-14",
         "accounts": 559908,
-        "verified": true
-      },
-      {
-        "title": "Sharecare",
-        "domain": "sharecare.com",
-        "breach_date": "2026-08-12",
-        "added": "2026-10-12",
-        "accounts": 318185,
         "verified": true
       }
     ]
