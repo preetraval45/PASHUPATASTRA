@@ -3,63 +3,67 @@
   "data": "Natural Questions (open), CC BY-SA 3.0; passages from Wikipedia introductions, CC BY-SA 4.0",
   "train_questions": 3000,
   "test_questions": 800,
-  "trained_on_questions": 1457,
-  "best_iteration": 63,
+  "not_fetched": {
+    "train": 0,
+    "test": 0
+  },
+  "trained_on_questions": 1659,
+  "best_iteration": 8,
   "answer_at_1": {
     "ranker": {
-      "rate": 0.1837,
+      "rate": 0.2,
       "ci95": [
-        0.1584,
-        0.2121
+        0.1737,
+        0.2291
       ]
     },
     "heuristic": {
-      "rate": 0.1675,
+      "rate": 0.175,
       "ci95": [
-        0.1432,
-        0.195
+        0.1502,
+        0.2029
       ]
     },
     "source order": {
-      "rate": 0.1537,
+      "rate": 0.1737,
       "ci95": [
-        0.1304,
-        0.1804
+        0.1491,
+        0.2015
       ]
     }
   },
   "ceiling": {
-    "rate": 0.5613,
+    "rate": 0.6375,
     "ci95": [
-      0.5267,
-      0.5953
+      0.6036,
+      0.6701
     ],
     "meaning": "a candidate passage contains the answer at all"
   },
   "ranker_vs_heuristic": {
-    "wins": 48,
-    "losses": 35,
-    "p": 0.18746
+    "wins": 51,
+    "losses": 31,
+    "p": 0.035241
   },
   "importance": {
-    "coverage": 13893.61910533905,
-    "weighted": 10527.428562641144,
-    "position": 9159.545777320862,
-    "doc_rank": 2735.4439611434937,
-    "lead": 1689.0638728141785,
-    "phrase": 1460.1920080184937,
-    "title_fit": 1319.1922330856323,
-    "wants_number": 983.681113243103,
-    "length": 938.3546280860901,
-    "has_year": 717.6036734580994,
-    "who_name": 243.80905675888062,
-    "number_match": 158.93801069259644,
-    "meta": 130.14615964889526,
-    "has_number": 123.37635040283203,
-    "qualified": 98.72560024261475,
+    "weighted": 7212.9967975616455,
+    "coverage": 4935.590320587158,
+    "position": 4670.572216033936,
+    "lead": 835.2131118774414,
+    "doc_rank": 813.5657939910889,
+    "phrase": 804.0130977630615,
+    "title_fit": 373.00450325012207,
+    "length": 194.16389846801758,
+    "has_year": 105.45819854736328,
+    "wants_number": 95.6515998840332,
+    "number_match": 69.12080001831055,
+    "meta": 33.292598724365234,
     "title_exact": 0.0,
     "title_primary": 0.0,
+    "qualified": 0.0,
     "definition": 0.0,
+    "has_number": 0.0,
+    "who_name": 0.0,
     "refers": 0.0
   },
   "params": {
