@@ -141,6 +141,9 @@ def _environment(cors: list[str]) -> str:
                 # The console lists what is happening in the world now, built from the
                 # stored feeds; the seeded scenarios remain only as training drills.
                 "PASHU_LIVE_INCIDENTS": "true",
+                "PASHU_WEB_SOURCES": "wikipedia,searxng" if os.environ.get("PASHU_WEB_SEARCH_URL") else "wikipedia",
+                **({"PASHU_WEB_SEARCH_URL": os.environ["PASHU_WEB_SEARCH_URL"]}
+                   if os.environ.get("PASHU_WEB_SEARCH_URL") else {}),
                 # The site is a blue-team console, so it is offered blue-team
                 # actions. A filter on the view, not a second registry — every
                 # action stays resolvable so a plan's rollback cannot vanish.

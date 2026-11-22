@@ -19,6 +19,7 @@ on:
       - packages/core/pashupatastra/kaal/**
       - packages/core/pashupatastra/period.py
       - packages/core/pashupatastra/strategies.py
+      - packages/core/pashupatastra/webread.py
       - docs/research/datasets/**
       - .github/workflows/train-sati.yml
 
@@ -57,6 +58,7 @@ jobs:
       katyayani-events: ${{ steps.filter.outputs.katyayani-events }}
       serve-smd: ${{ steps.filter.outputs.serve-smd }}
       auto-seasonal: ${{ steps.filter.outputs.auto-seasonal }}
+      brahmacharini-ranker: ${{ steps.filter.outputs.brahmacharini-ranker }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -144,6 +146,11 @@ jobs:
             brahmacharini:
               - *shared
               - 'packages/sati/sati/embed/**'
+            brahmacharini-ranker:
+              - *shared
+              - 'packages/sati/sati/webqa/**'
+              - 'packages/core/pashupatastra/webread.py'
+              - 'packages/core/pashupatastra/trees.py'
 
   test:
     runs-on: ubuntu-latest
@@ -636,3 +643,41 @@ jobs:
           cp results/brahmacharini/results.json apps/web/lib/models/brahmacharini.results.json
           (cd packages/sati && python -m sati.embed.report ../../results/brahmacharini/results.json) > docs/research/models/brahmacharini.md
           bash scripts/pushresults.sh "docs(models): Brahmacharini v0 results and served model from run ${{ github.run_id }}" docs/research/models/brahmacharini.results.json docs/research/models/brahmacharini.md apps/web/lib/models/brahmacharini.results.json services/api/app/sati_models/brahmacharini.json services/api/app/sati_models/brahmacharini.bag services/api/app/sati_models/knowledge.json services/api/app/sati_models/knowledge.vec services/api/app/sati_models/technique_classifier.json
+
+  brahmacharini-ranker:
+    # Model 2 of the nine (adr/Navadurga), its passage ranker: which passage of the pages Sati AI read
+    # from the web answers the question. Natural Questions (open) put through the served pipeline,
+    # LightGBM lambdarank, tested on NQ's own validation questions. CPU; reads Wikipedia politely.
+    needs: [test, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.brahmacharini-ranker == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e packages/core -e packages/sati pyarrow pyyaml
+      - uses: actions/cache@v4
+        with:
+          path: .cache/webqa
+          key: webqa-${{ hashFiles('packages/core/pashupatastra/webread.py') }}
+          restore-keys: webqa-
+      - name: collect, train and evaluate on Natural Questions
+        working-directory: packages/sati
+        run: python -m sati.webqa.run --cache ../../.cache/webqa --out ../../results/brahmacharini-ranker --export ../../services/api/app/sati_models
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brahmacharini-ranker
+          path: results/brahmacharini-ranker/
+      - name: commit the generated results
+        run: |
+          mkdir -p docs/research/models apps/web/lib/models
+          cp results/brahmacharini-ranker/results.json docs/research/models/brahmacharini-ranker.results.json
+          cp results/brahmacharini-ranker/results.json apps/web/lib/models/brahmacharini-ranker.results.json
+          (cd packages/sati && python -m sati.webqa.report ../../results/brahmacharini-ranker/results.json) > docs/research/models/brahmacharini-ranker.md
+          files="docs/research/models/brahmacharini-ranker.results.json docs/research/models/brahmacharini-ranker.md apps/web/lib/models/brahmacharini-ranker.results.json"
+          [ -f services/api/app/sati_models/brahmacharini_ranker.json ] && files="$files services/api/app/sati_models/brahmacharini_ranker.json"
+          bash scripts/pushresults.sh "docs(models): Brahmacharini passage ranker from run ${{ github.run_id }}" $files

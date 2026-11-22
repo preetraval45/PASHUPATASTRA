@@ -125,3 +125,4 @@ Protocol: before every push, write a topic-named file from
 - [LaunchBlockers.md](LaunchBlockers.md) — RP-107: NIST glossary + 31 concept maps, email verification, company intake keys, app support; CI broke at 5ad5088 (peer)
 - [RealIncidents.md](RealIncidents.md) — LIVE-* incidents from feeds (derived on read), PAST-* from deploy-time KEV+HIBP history; scenarios only as drills
 - [AppPhases.md](AppPhases.md) — real-incident tabs/kinds, native detail via onBack/title, Updater (DownloadManager), CI shoots every page; rate-limit lesson
+- [WebAnswers.md](WebAnswers.md) — RP-109: Sati AI reads Wikipedia/SearXNG, KB only when it covers better; benchmark/ask dev/test2; brahmacharini-ranker CI job serves only if it wins

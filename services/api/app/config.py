@@ -214,6 +214,14 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    web_sources: str = ""
+    """Comma-separated sources Sati AI may read when its own knowledge base has no answer
+    (`providers/web.py`): `wikipedia`, `searxng`. Off by default so tests and on-prem installs
+    make no outbound calls; on in the deployed API."""
+
+    web_search_url: str | None = None
+    """A self-hosted SearXNG instance for the `searxng` source, e.g. https://search.example.org."""
+
     live_incidents: bool = False
     """List the incidents happening in the world now, built from the stored feeds
     (`feeds/liveincidents.py`), instead of the stored scenarios.

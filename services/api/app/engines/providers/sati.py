@@ -32,7 +32,7 @@ from typing import Any
 from pashupatastra.gateway import ModelRequest, SchemaViolation, Usage
 
 from .. import techniqueclassifier
-from . import concepts
+from . import concepts, web
 from .echo import EchoProvider
 from .schemas import schema_for
 
@@ -57,13 +57,16 @@ HARMFUL = re.compile(
 
 #: Questions about defending, which Skandamata answers.
 MITIGATE = re.compile(
-    r"\b(mitigat\w*|defend\w*|defen[cs]e|prevent\w*|protect\w*|stop|harden\w*|block\w*|remediat\w*|"
+    r"\b(mitigat\w*|defend\w*|defen[cs]e|prevent\w*|protect\w*|stop|harden\w*|block(?:s|ed|ing)?|remediat\w*|"
     r"counter\w*|how (do|can|should) (i|we) (fix|respond))\b",
     re.IGNORECASE,
 )
 
 #: Questions asking which ATT&CK technique a behaviour is.
 WHICH_TECHNIQUE = re.compile(r"\b(which|what)\b[^?]{0,60}\b(technique|ttp|att&ck)", re.IGNORECASE)
+
+#: A web passage must contain at least this share of the question's informative words to be an answer.
+WEB_COVERAGE = 0.5
 
 #: Below this probability a mitigation is not recommended.
 RECOMMEND = 0.2
@@ -82,7 +85,7 @@ AREA_BY_KIND = {
 FRAMING = re.compile(
     r"\b(how|what|which|do|does|can|could|should|would|we|i|you|our|my|us|me|the|a|an|is|are|to|from|for|"
     r"against|best|ways?|way|good|steps?|it|this|that|be|of|in|on|with|about|tell|explain|please|"
-    r"mitigat\w*|defend\w*|defen[cs]es?|prevent\w*|protect\w*|stop|harden\w*|block\w*|remediat\w*|"
+    r"mitigat\w*|defend\w*|defen[cs]es?|prevent\w*|protect\w*|stop|harden\w*|block(?:s|ed|ing)?|remediat\w*|"
     r"counter\w*|fix|respond|guard|secure|safe|work|works|happen|happens|mean|means)\b|[?!.,]",
     re.IGNORECASE,
 )
@@ -577,7 +580,7 @@ class SatiProvider:
             }
         asked = question
         question = resolve(question, request.evidence)
-        if question == asked and REFERS.search(question) and len(terms(question)) <= 2:
+        if question == asked and REFERS.search(question) and not terms(FRAMING.sub(" ", question)):
             # "How does it work?" with nothing before it: ask, rather than guess what "it" is.
             return {
                 "answer": "What would you like to know about? Name the attack, technique, defence or CVE, "
@@ -633,6 +636,8 @@ class SatiProvider:
             if written:
                 return written
         if not hits or hits[0][0] < ANSWERABLE:
+            if (found := self._from_web(question)) is not None:
+                return found
             return {
                 "answer": "I answer cyber security questions, and I couldn't find one in that. Ask me how an "
                 "attack works, which ATT&CK technique a behaviour is, how to defend against something, or "
@@ -652,6 +657,8 @@ class SatiProvider:
         if exact is not None:
             hits = [exact] + [h for h in hits if h[1]["id"] != exact[1]["id"]]
         score, best = hits[0]
+        if not known and exact is None and (found := self._from_web(question, against=best)) is not None:
+            return found
         lines = [f"**{best['title']}** ({best['id']})", "", first_sentences(best["text"], 520)]
         # The answer goes on to what to do, so one question gets the explanation and the defence:
         # Brahmacharini found the subject, ATT&CK or CAPEC names the defences, Skandamata orders them.
@@ -683,6 +690,37 @@ class SatiProvider:
             "area": AREA_BY_KIND.get(best["kind"], "brahmacharini"),
             "declined": False,
         }
+
+    def _from_web(self, question: str, against: dict | None = None) -> dict[str, Any] | None:
+        """The best passage from the web sources, when one covers the question better than the knowledge
+        base's own best entry does. Measured the same way on both sides (web.quality), so a security entry
+        that merely shares a word ("rainbow" in Rainbow Table Password Cracking) loses to the page that is
+        about the subject, and keeps the question when it is the better fit."""
+        from app.config import get_settings
+
+        settings = get_settings()
+        sources = tuple(s.strip() for s in settings.web_sources.split(",") if s.strip())
+        if not sources or self.mode != "auto":
+            return None
+        matches = web.rank(question, web.fetch(question, sources, settings.web_search_url))
+        if not matches or matches[0].coverage < WEB_COVERAGE:
+            return None
+        best = matches[0]
+        if against is not None:
+            asked = web.query_terms(question)
+            kb = sum(web.quality(asked, against["title"], against["text"]))
+            if best.coverage + best.title_fit <= kb:
+                return None
+        lines = [f"**{best.doc.title}**", "", first_sentences(best.text, 600)]
+        others = [m.doc for m in matches[1:] if m.doc.url != best.doc.url and m.score >= best.score * 0.8]
+        seen = {best.doc.url}
+        related = [d for d in others if not (d.url in seen or seen.add(d.url))][:2]
+        if related:
+            lines += ["", "See also: " + "; ".join(d.title for d in related) + "."]
+        licence = f" ({best.doc.licence})" if best.doc.licence else ""
+        lines += ["", f"Quoted from {best.doc.source}{licence}.", "",
+                  "Sources: " + " · ".join([best.doc.url] + [d.url for d in related])]
+        return {"answer": "\n".join(lines), "topic": "general", "area": "brahmacharini", "declined": False}
 
     def _which_technique(self, question: str, query: list[float], hits: list[tuple[float, dict]]) -> dict | None:
         """Answers "which technique is this?" from the fused ranking, the three most likely first.
