@@ -23,6 +23,7 @@ import random
 import string
 import sys
 import time
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -36,7 +37,7 @@ PARAMS = {"objective": "lambdarank", "metric": "ndcg", "ndcg_eval_at": [1, 3], "
           "deterministic": True}
 ROUNDS = 400
 #: Bump when the fetch or the features change, so cached candidates are not reused.
-CACHE_VERSION = "v3"
+CACHE_VERSION = "v4"
 
 
 def normalise(text: str) -> str:
@@ -73,18 +74,24 @@ def held_out_questions() -> set[str]:
     return found
 
 
-def fetch(question: str) -> list[webread.Document]:
-    for attempt in range(4):
+def fetch(question: str) -> list[webread.Document] | None:
+    """Wikipedia's pages for a question, or None when they could not be fetched. Wikipedia throttles
+    (HTTP 429): its Retry-After is honoured, and a question that still fails is left out of the data
+    rather than recorded as one with no answer."""
+    for attempt in range(6):
         try:
-            return webread.wikipedia(question)
+            return webread.wikipedia(question, strict=True)
+        except urllib.error.HTTPError as error:
+            wait = float(error.headers.get("retry-after") or 0) or 5 * 2**attempt
         except Exception:
-            time.sleep(2 ** attempt)
-    return []
+            wait = 2**attempt
+        time.sleep(min(wait, 120))
+    return None
 
 
-def collect(items: list[dict], path: Path, workers: int = 3) -> list[dict]:
+def collect(items: list[dict], path: Path, workers: int = 1) -> list[dict]:
     """Every question's candidates with features and labels, cached as JSON lines so a rerun only
-    fetches what is missing."""
+    fetches what is missing. Questions whose pages could not be fetched are not cached or returned."""
     done = {}
     if path.exists():
         for line in path.read_text(encoding="utf-8").splitlines():
@@ -92,19 +99,26 @@ def collect(items: list[dict], path: Path, workers: int = 3) -> list[dict]:
             done[row["q"]] = row
     todo = [it for it in items if it["q"] not in done]
 
-    def one(item: dict) -> dict:
+    def one(item: dict) -> dict | None:
         docs = fetch(item["q"])
+        time.sleep(0.2)
+        if docs is None:
+            return None
         rows = [{"f": f, "y": int(contains(text, item["answers"])), "title": doc.title}
                 for doc, text, f in webread.candidates(item["q"], docs)]
         return {"q": item["q"], "answers": item["answers"], "candidates": rows}
 
     with path.open("a", encoding="utf-8") as out, ThreadPoolExecutor(max_workers=workers) as pool:
         for i, row in enumerate(pool.map(one, todo), 1):
-            out.write(json.dumps(row) + "\n")
-            done[row["q"]] = row
+            if row is not None:
+                out.write(json.dumps(row) + "\n")
+                done[row["q"]] = row
             if i % 100 == 0:
                 print(f"  fetched {i}/{len(todo)}", flush=True)
-    return [done[it["q"]] for it in items]
+    failed = sum(1 for it in items if it["q"] not in done)
+    if failed:
+        print(f"  {failed} of {len(items)} questions could not be fetched and are left out", flush=True)
+    return [done[it["q"]] for it in items if it["q"] in done]
 
 
 def matrix(rows: list[dict]):
@@ -194,6 +208,7 @@ def main() -> None:
         "model": "brahmacharini-ranker-v0",
         "data": "Natural Questions (open), CC BY-SA 3.0; passages from Wikipedia introductions, CC BY-SA 4.0",
         "train_questions": len(train_rows), "test_questions": n,
+        "not_fetched": {"train": len(train_items) - len(train_rows), "test": len(test_items) - len(test_rows)},
         "trained_on_questions": len(g), "best_iteration": booster.best_iteration,
         "answer_at_1": {k: {"rate": round(sum(v) / n, 4), "ci95": wilson(sum(v), n)} for k, v in arms.items()},
         "ceiling": {"rate": round(sum(ceiling) / n, 4), "ci95": wilson(sum(ceiling), n),

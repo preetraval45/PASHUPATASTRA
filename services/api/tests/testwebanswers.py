@@ -97,3 +97,11 @@ def test_page_text_drops_scripts_and_menus() -> None:
         "<html><title>T</title><nav>Home About Contact</nav><script>alert(1)</script>"
         "<p>This paragraph is long enough to be prose that answers something about the subject.</p></html>")
     assert title == "T" and "alert" not in text and "Home" not in text and "prose" in text
+
+
+def test_an_unreachable_source_is_said_not_passed_off_as_no_answer(online, monkeypatch) -> None:
+    def down(*a):
+        raise web.Unreachable("wikipedia")
+    monkeypatch.setattr(web, "fetch", down)
+    assert "couldn't reach" in ask("How does photosynthesis work?")["answer"]
+    assert "SQL" in ask("What is SQL injection?")["answer"]

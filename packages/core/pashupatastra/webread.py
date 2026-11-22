@@ -132,19 +132,22 @@ def _wiki_pages(params: dict) -> list[Document]:
             if p.get("extract") and "disambiguation" not in p.get("pageprops", {})]
 
 
-def _wiki_full(doc: Document) -> Document:
-    """The whole article in place of its introduction; the introduction if the fetch fails."""
+def _wiki_full(doc: Document, strict: bool = False) -> Document:
+    """The whole article in place of its introduction; the introduction if the fetch fails, unless
+    strict, when the failure is raised (training must not mistake a throttled fetch for a short page)."""
     try:
         params = {k: v for k, v in WIKI_PAGE.items() if k != "exintro"}  # any exintro value means true
         params |= {"titles": doc.title, "exlimit": 1, "exsectionformat": "plain"}
         pages = json.loads(get(WIKI, {"action": "query", **params}).decode("utf-8")).get("query", {}).get("pages", [])
         text = pages[0].get("extract", "") if pages else ""
     except Exception:
+        if strict:
+            raise
         return doc
     return Document(doc.title, doc.url, text[:60_000], doc.source, doc.licence, doc.exact, doc.rank) if text else doc
 
 
-def wikipedia(question: str, limit: int = 6, full: int = 2) -> list[Document]:
+def wikipedia(question: str, limit: int = 6, full: int = 2, strict: bool = False) -> list[Document]:
     """Wikipedia's top articles for the question, and for a definition question the article titled
     exactly what was asked about ("what is DNA?" → DNA). The first `full` are read whole; the rest by
     their introductions."""
@@ -162,7 +165,7 @@ def wikipedia(question: str, limit: int = 6, full: int = 2) -> list[Document]:
     docs = sorted(unique.values(), key=lambda d: (not d.exact, d.rank))
     if full:
         with ThreadPoolExecutor(max_workers=full) as pool:
-            docs[:full] = list(pool.map(_wiki_full, docs[:full]))
+            docs[:full] = list(pool.map(lambda d: _wiki_full(d, strict), docs[:full]))
     return docs
 
 

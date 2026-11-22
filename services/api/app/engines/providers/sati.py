@@ -638,6 +638,12 @@ class SatiProvider:
         if not hits or hits[0][0] < ANSWERABLE:
             if (found := self._from_web(question)) is not None:
                 return found
+            if self._web_sources():
+                return {
+                    "answer": "I couldn't find a source that answers that, so I won't guess. Try asking it another "
+                    "way, or name the thing you mean more exactly.",
+                    "topic": "general", "area": "brahmacharini", "declined": False,
+                }
             return {
                 "answer": "I answer cyber security questions, and I couldn't find one in that. Ask me how an "
                 "attack works, which ATT&CK technique a behaviour is, how to defend against something, or "
@@ -699,10 +705,16 @@ class SatiProvider:
         from app.config import get_settings
 
         settings = get_settings()
-        sources = tuple(s.strip() for s in settings.web_sources.split(",") if s.strip())
+        sources = self._web_sources()
         if not sources or self.mode != "auto":
             return None
-        matches = web.rank(question, web.fetch(question, sources, settings.web_search_url))
+        try:
+            matches = web.rank(question, web.fetch(question, sources, settings.web_search_url))
+        except web.Unreachable:
+            if against is not None:
+                return None
+            return {"answer": "I couldn't reach my web sources just now, so I can't answer that from them. "
+                    "Try again in a minute.", "topic": "general", "area": "brahmacharini", "declined": False}
         if not matches or matches[0].coverage < WEB_COVERAGE:
             return None
         best = matches[0]
@@ -721,6 +733,12 @@ class SatiProvider:
         lines += ["", f"Quoted from {best.doc.source}{licence}.", "",
                   "Sources: " + " · ".join([best.doc.url] + [d.url for d in related])]
         return {"answer": "\n".join(lines), "topic": "general", "area": "brahmacharini", "declined": False}
+
+    @staticmethod
+    def _web_sources() -> tuple[str, ...]:
+        from app.config import get_settings
+
+        return tuple(s.strip() for s in get_settings().web_sources.split(",") if s.strip())
 
     def _which_technique(self, question: str, query: list[float], hits: list[tuple[float, dict]]) -> dict | None:
         """Answers "which technique is this?" from the fused ranking, the three most likely first.

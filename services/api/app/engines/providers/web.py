@@ -115,17 +115,32 @@ def searxng(question: str, base: str, limit: int = 4) -> list[Document]:
     return pages or snippets
 
 
-@lru_cache(maxsize=512)
+class Unreachable(Exception):
+    """Every source failed (throttled or down): not the same as a question nothing answers."""
+
+
 def fetch(question: str, sources: tuple[str, ...], search_url: str | None) -> tuple[Document, ...]:
+    """Cached per process; a failure raises and so is never cached."""
+    return _fetch(question, sources, search_url)
+
+
+@lru_cache(maxsize=512)
+def _fetch(question: str, sources: tuple[str, ...], search_url: str | None) -> tuple[Document, ...]:
     found: list[Document] = []
+    reached = False
     for name in sources:
         try:
             if name == "wikipedia":
                 found += wikipedia(question)
             elif name == "searxng" and search_url:
                 found += searxng(question, search_url)
+            else:
+                continue
+            reached = True
         except Exception:
             continue  # one unreachable source must not silence the others
+    if not reached:
+        raise Unreachable(", ".join(sources))
     return tuple(found)
 
 
