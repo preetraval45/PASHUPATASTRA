@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-23T18:14:19+00:00",
+  "as_of": "2026-11-24T17:49:25+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.11.23",
-    "total": 1790,
-    "added_last_30_days": 34,
+    "total": 1792,
+    "added_last_30_days": 36,
     "known_ransomware_use": 362,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-11",
-        "value": 24
+        "value": 26
       }
     ],
     "top_vendors": [
@@ -104,6 +104,22 @@
       }
     ],
     "latest": [
+      {
+        "cve": "CVE-2026-133968",
+        "vendor": "Project MONAI",
+        "product": "MONAI Label",
+        "name": "Project MONAI MONAI Label Path Traversal Vulnerability",
+        "added": "2026-11-23",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-134624",
+        "vendor": "N-able",
+        "product": "MailAssure",
+        "name": "N-able MailAssure (SpamExperts) Server-Side Request Forgery (SSRF) Vulnerability",
+        "added": "2026-11-23",
+        "ransomware": false
+      },
       {
         "cve": "CVE-2026-129448",
         "vendor": "Apache",
@@ -183,22 +199,6 @@
         "name": "UnrealIRCd Improper Neutralization of Delimiters Vulnerability",
         "added": "2026-11-13",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-123039",
-        "vendor": "Check Point",
-        "product": "Multiple Products",
-        "name": "Check Point Multiple Products Incorrect Permission Assignment for Critical Resource Vulnerability",
-        "added": "2026-11-13",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-124194",
-        "vendor": "Microsoft",
-        "product": "Office",
-        "name": "Microsoft Office Outlook Missing User Interaction for Potentially Unsafe Action Vulnerability",
-        "added": "2026-11-10",
-        "ransomware": false
       }
     ]
   },
@@ -208,12 +208,8 @@
     "victims": 100,
     "by_day": [
       {
-        "label": "2026-11-20",
-        "value": 17
-      },
-      {
         "label": "2026-11-21",
-        "value": 17
+        "value": 15
       },
       {
         "label": "2026-11-22",
@@ -221,7 +217,11 @@
       },
       {
         "label": "2026-11-23",
-        "value": 49
+        "value": 58
+      },
+      {
+        "label": "2026-11-24",
+        "value": 10
       }
     ],
     "by_group": [
@@ -231,15 +231,15 @@
       },
       {
         "label": "safepay",
-        "value": 18
-      },
-      {
-        "label": "everest",
-        "value": 9
+        "value": 19
       },
       {
         "label": "PixelLeaks",
-        "value": 8
+        "value": 5
+      },
+      {
+        "label": "qilin",
+        "value": 5
       },
       {
         "label": "medusalocker",
@@ -250,33 +250,33 @@
         "value": 4
       },
       {
+        "label": "incransom",
+        "value": 3
+      },
+      {
+        "label": "Aoqin",
+        "value": 3
+      },
+      {
         "label": "rhysida",
         "value": 3
       },
       {
-        "label": "qilin",
+        "label": "aurora",
         "value": 3
-      },
-      {
-        "label": "HYFLOCK",
-        "value": 3
-      },
-      {
-        "label": "lockbit5",
-        "value": 2
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 29
-      },
-      {
-        "label": "CA",
-        "value": 5
+        "value": 37
       },
       {
         "label": "DE",
+        "value": 6
+      },
+      {
+        "label": "IN",
         "value": 4
       },
       {
@@ -284,7 +284,7 @@
         "value": 4
       },
       {
-        "label": "FR",
+        "label": "CA",
         "value": 4
       },
       {
@@ -292,57 +292,57 @@
         "value": 3
       },
       {
-        "label": "IN",
+        "label": "FR",
         "value": 3
       },
       {
-        "label": "ES",
+        "label": "BR",
         "value": 2
       },
       {
-        "label": "IL",
+        "label": "ES",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 32
-      },
-      {
-        "label": "Technology",
-        "value": 11
+        "value": 33
       },
       {
         "label": "Manufacturing",
+        "value": 15
+      },
+      {
+        "label": "Professional Services",
         "value": 10
       },
       {
         "label": "Healthcare",
-        "value": 10
+        "value": 9
       },
       {
-        "label": "Professional Services",
-        "value": 9
+        "label": "Technology",
+        "value": 6
       },
       {
         "label": "Other",
-        "value": 9
+        "value": 6
       },
       {
-        "label": "Retail & E-Commerce",
-        "value": 3
-      },
-      {
-        "label": "Transportation",
-        "value": 3
+        "label": "Education",
+        "value": 4
       },
       {
         "label": "Financial Services",
         "value": 3
       },
       {
-        "label": "Energy & Utilities",
+        "label": "Government & Defense",
+        "value": 3
+      },
+      {
+        "label": "Agriculture and Food Production",
         "value": 3
       }
     ]
@@ -381,7 +381,7 @@
     "ok": true,
     "source": "https://haveibeenpwned.com/api/v3/breaches",
     "breaches": 1055,
-    "accounts": 17863065041,
+    "accounts": 17863315853,
     "top_data_classes": [
       {
         "label": "Email addresses",
@@ -454,7 +454,7 @@
         "domain": "",
         "breach_date": "2026-11-12",
         "added": "2026-11-13",
-        "accounts": 179745,
+        "accounts": 430557,
         "verified": true
       },
       {
