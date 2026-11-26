@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-25T17:16:45+00:00",
+  "as_of": "2026-11-26T16:56:32+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.11.25",
-    "total": 1796,
-    "added_last_30_days": 40,
+    "total": 1805,
+    "added_last_30_days": 47,
     "known_ransomware_use": 362,
     "by_month": [
       {
@@ -58,7 +58,7 @@
       },
       {
         "label": "2026-11",
-        "value": 30
+        "value": 39
       }
     ],
     "top_vendors": [
@@ -113,6 +113,78 @@
         "ransomware": false
       },
       {
+        "cve": "CVE-2026-133469",
+        "vendor": "Vates",
+        "product": "Xen Orchestra",
+        "name": "Vates Xen Orchestra Improper Validation of Specified Type of Input Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2025-41450",
+        "vendor": "Danfoss",
+        "product": "AK-SM 800A Series",
+        "name": "Danfoss AK-SM 800A Series Improper Authentication Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2023-25914",
+        "vendor": "Danfoss",
+        "product": "AK-SM 800A Series",
+        "name": "Danfoss AK-SM 800A Series Path Traversal Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2023-25915",
+        "vendor": "Danfoss",
+        "product": "AK-SM 800A Series",
+        "name": "Danfoss AK-SM 800A Series Improper Input Validation Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-133324",
+        "vendor": "Mitel",
+        "product": "MiCollab",
+        "name": "Mitel MiCollab Not Failing Securely Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-133275",
+        "vendor": "Mitel",
+        "product": "MiCollab",
+        "name": "Mitel MiCollab Unrestricted Upload of File with Dangerous Type Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-133311",
+        "vendor": "Mitel",
+        "product": "MiCollab",
+        "name": "Mitel MiCollab Weak Authentication Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-133303",
+        "vendor": "Mitel",
+        "product": "MiCollab",
+        "name": "Mitel MiCollab XML Injection Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
+        "cve": "CVE-2026-133323",
+        "vendor": "Mitel",
+        "product": "MiCollab",
+        "name": "Mitel MiCollab OS Command Injection Vulnerability",
+        "added": "2026-11-25",
+        "ransomware": false
+      },
+      {
         "cve": "CVE-2026-132224",
         "vendor": "Optimizely",
         "product": "Web Experimentation",
@@ -127,78 +199,6 @@
         "name": "Idunno AntiCsrf Deserialization of Untrusted Data Vulnerability",
         "added": "2026-11-24",
         "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-132165",
-        "vendor": "Drupal",
-        "product": "Core",
-        "name": "Drupal Core Remote Code Execution Vulnerability",
-        "added": "2026-11-24",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-133968",
-        "vendor": "Project MONAI",
-        "product": "MONAI Label",
-        "name": "Project MONAI MONAI Label Path Traversal Vulnerability",
-        "added": "2026-11-23",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-134624",
-        "vendor": "N-able",
-        "product": "MailAssure",
-        "name": "N-able MailAssure (SpamExperts) Server-Side Request Forgery (SSRF) Vulnerability",
-        "added": "2026-11-23",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-129448",
-        "vendor": "Apache",
-        "product": "Roller",
-        "name": "Apache Roller Deserialization of Untrusted Data Vulnerability",
-        "added": "2026-11-20",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-123890",
-        "vendor": "Broadcom",
-        "product": "VMware vCenter",
-        "name": "VMWare vCenter Authentication Bypass Using an Alternate Path or Channel Vulnerability",
-        "added": "2026-11-20",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2025-42884",
-        "vendor": "SAP",
-        "product": "NetWeaver",
-        "name": "SAP NetWeaver Improper Neutralization of Special Elements in Data Query Logic Vulnerability",
-        "added": "2026-11-20",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2026-76466",
-        "vendor": "Cisco",
-        "product": "Expressway Series",
-        "name": "Cisco Expressway Series Use of Hard-coded Credentials Vulnerability",
-        "added": "2026-11-20",
-        "ransomware": false
-      },
-      {
-        "cve": "CVE-2024-10441",
-        "vendor": "Synology",
-        "product": "DiskStation Manager (DSM)",
-        "name": "Synology DiskStation Manager (DSM) Improper Encoding or Escaping of Output Vulnerability",
-        "added": "2026-11-18",
-        "ransomware": true
-      },
-      {
-        "cve": "CVE-2026-40217",
-        "vendor": "BerriAI",
-        "product": "LiteLLM",
-        "name": "BerriAI LiteLLM Unprotected Alternate Channel Vulnerability",
-        "added": "2026-11-18",
-        "ransomware": false
       }
     ]
   },
@@ -207,6 +207,10 @@
     "source": "https://api.ransomware.live/v2/recentvictims",
     "victims": 100,
     "by_day": [
+      {
+        "label": "2024-03-17",
+        "value": 1
+      },
       {
         "label": "2026-08-10",
         "value": 1
@@ -217,44 +221,48 @@
       },
       {
         "label": "2026-11-23",
-        "value": 37
+        "value": 2
       },
       {
         "label": "2026-11-24",
-        "value": 46
+        "value": 38
       },
       {
         "label": "2026-11-25",
-        "value": 15
+        "value": 48
+      },
+      {
+        "label": "2026-11-26",
+        "value": 9
       }
     ],
     "by_group": [
       {
         "label": "N0n",
-        "value": 23
-      },
-      {
-        "label": "safepay",
-        "value": 10
-      },
-      {
-        "label": "thegentlemen",
-        "value": 10
+        "value": 21
       },
       {
         "label": "SilentRansomGroup",
-        "value": 9
+        "value": 11
       },
       {
-        "label": "spacebears",
+        "label": "rhysida",
         "value": 7
+      },
+      {
+        "label": "aurora",
+        "value": 6
+      },
+      {
+        "label": "SilentVault",
+        "value": 6
       },
       {
         "label": "play",
         "value": 5
       },
       {
-        "label": "qilin",
+        "label": "medusalocker",
         "value": 4
       },
       {
@@ -262,83 +270,83 @@
         "value": 4
       },
       {
-        "label": "aurora",
-        "value": 3
+        "label": "spacebears",
+        "value": 4
       },
       {
-        "label": "medusalocker",
-        "value": 3
+        "label": "qilin",
+        "value": 4
       }
     ],
     "by_country": [
       {
         "label": "US",
-        "value": 37
+        "value": 31
       },
       {
         "label": "DE",
         "value": 9
       },
       {
-        "label": "IT",
-        "value": 4
-      },
-      {
         "label": "CA",
-        "value": 3
+        "value": 6
       },
       {
-        "label": "ES",
-        "value": 3
+        "label": "IT",
+        "value": 5
       },
       {
         "label": "IN",
         "value": 3
       },
       {
+        "label": "ID",
+        "value": 2
+      },
+      {
         "label": "GB",
-        "value": 3
+        "value": 2
       },
       {
         "label": "MK",
         "value": 2
       },
       {
-        "label": "AU",
+        "label": "ES",
         "value": 2
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 32
+        "value": 34
       },
       {
         "label": "Manufacturing",
-        "value": 17
+        "value": 13
       },
       {
         "label": "Professional Services",
-        "value": 14
+        "value": 12
+      },
+      {
+        "label": "Education",
+        "value": 7
+      },
+      {
+        "label": "Technology",
+        "value": 6
       },
       {
         "label": "Other",
         "value": 6
       },
       {
-        "label": "Education",
-        "value": 6
+        "label": "Financial Services",
+        "value": 4
       },
       {
         "label": "Healthcare",
-        "value": 6
-      },
-      {
-        "label": "Technology",
-        "value": 5
-      },
-      {
-        "label": "Agriculture and Food Production",
         "value": 4
       },
       {
@@ -346,8 +354,8 @@
         "value": 4
       },
       {
-        "label": "Government & Defense",
-        "value": 2
+        "label": "Agriculture and Food Production",
+        "value": 3
       }
     ]
   },
