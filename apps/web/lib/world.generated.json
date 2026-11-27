@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-11-26T16:56:32+00:00",
+  "as_of": "2026-11-27T16:42:17+00:00",
   "kev": {
     "ok": true,
     "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
     "catalog_version": "2026.11.25",
     "total": 1805,
-    "added_last_30_days": 47,
+    "added_last_30_days": 45,
     "known_ransomware_use": 362,
     "by_month": [
       {
@@ -212,20 +212,12 @@
         "value": 1
       },
       {
-        "label": "2026-08-10",
-        "value": 1
-      },
-      {
         "label": "2026-11-20",
         "value": 1
       },
       {
-        "label": "2026-11-23",
-        "value": 2
-      },
-      {
         "label": "2026-11-24",
-        "value": 38
+        "value": 11
       },
       {
         "label": "2026-11-25",
@@ -233,7 +225,11 @@
       },
       {
         "label": "2026-11-26",
-        "value": 9
+        "value": 31
+      },
+      {
+        "label": "2026-11-27",
+        "value": 8
       }
     ],
     "by_group": [
@@ -242,12 +238,20 @@
         "value": 21
       },
       {
-        "label": "SilentRansomGroup",
-        "value": 11
-      },
-      {
         "label": "rhysida",
         "value": 7
+      },
+      {
+        "label": "PixelLeaks",
+        "value": 7
+      },
+      {
+        "label": "SilentRansomGroup",
+        "value": 7
+      },
+      {
+        "label": "Inception",
+        "value": 6
       },
       {
         "label": "aurora",
@@ -258,20 +262,12 @@
         "value": 6
       },
       {
-        "label": "play",
+        "label": "spacebears",
         "value": 5
       },
       {
-        "label": "medusalocker",
-        "value": 4
-      },
-      {
-        "label": "PixelLeaks",
-        "value": 4
-      },
-      {
-        "label": "spacebears",
-        "value": 4
+        "label": "Orova",
+        "value": 5
       },
       {
         "label": "qilin",
@@ -281,18 +277,14 @@
     "by_country": [
       {
         "label": "US",
-        "value": 31
+        "value": 34
       },
       {
         "label": "DE",
-        "value": 9
-      },
-      {
-        "label": "CA",
         "value": 6
       },
       {
-        "label": "IT",
+        "label": "CA",
         "value": 5
       },
       {
@@ -301,6 +293,14 @@
       },
       {
         "label": "ID",
+        "value": 3
+      },
+      {
+        "label": "IT",
+        "value": 3
+      },
+      {
+        "label": "ES",
         "value": 2
       },
       {
@@ -308,53 +308,49 @@
         "value": 2
       },
       {
-        "label": "MK",
-        "value": 2
-      },
-      {
-        "label": "ES",
-        "value": 2
+        "label": "CH",
+        "value": 1
       }
     ],
     "by_sector": [
       {
         "label": "Not Found",
-        "value": 34
-      },
-      {
-        "label": "Manufacturing",
-        "value": 13
+        "value": 30
       },
       {
         "label": "Professional Services",
         "value": 12
       },
       {
-        "label": "Education",
-        "value": 7
+        "label": "Manufacturing",
+        "value": 10
       },
       {
         "label": "Technology",
-        "value": 6
-      },
-      {
-        "label": "Other",
-        "value": 6
+        "value": 9
       },
       {
         "label": "Financial Services",
-        "value": 4
+        "value": 7
       },
       {
-        "label": "Healthcare",
-        "value": 4
+        "label": "Education",
+        "value": 6
       },
       {
         "label": "Retail & E-Commerce",
+        "value": 6
+      },
+      {
+        "label": "Healthcare",
+        "value": 5
+      },
+      {
+        "label": "Other",
         "value": 4
       },
       {
-        "label": "Agriculture and Food Production",
+        "label": "Energy & Utilities",
         "value": 3
       }
     ]
